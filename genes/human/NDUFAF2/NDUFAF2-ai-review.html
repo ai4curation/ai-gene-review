@@ -1,0 +1,3403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDUFAF2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NDUFAF2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8N183" target="_blank" class="term-link">
+                        Q8N183
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NDUFAF2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8N183" data-a="DESCRIPTION: NDUFAF2 (also known as NDUFA12L, B17.2L, and Mimit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NDUFAF2 (also known as NDUFA12L, B17.2L, and Mimitin) is a nuclear-encoded, mitochondrially targeted assembly factor for respiratory chain complex I (NADH:ubiquinone oxidoreductase). It is a paralog of the structural complex I subunit NDUFA12 (B17.2) but, unlike its paralog, it is not a stable component of the mature holoenzyme. Instead it acts as a molecular chaperone that binds transiently to a large (~830 kDa) late-stage complex I assembly intermediate containing subunits of both the matrix (peripheral) and membrane arms, and is released once assembly is complete. By stabilizing this subassembly it increases the efficiency of complex I biogenesis, although residual assembly can occur in its absence. The protein carries an N-terminal mitochondrial transit peptide and a C-terminal disordered region. Loss-of-function variants cause autosomal recessive mitochondrial complex I deficiency nuclear type 10 (MC1DN10), presenting as progressive encephalopathy/leukoencephalopathy and Leigh syndrome. A more recently reported pleiotropic role links NDUFAF2 to primary cilium formation through interaction with the basal-body protein ARMC9.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization is correct and well supported. NDUFAF2 has an N-terminal mitochondrial transit peptide and UniProt records it as mitochondrial. This IBA localization is consistent with all experimental evidence and with its role as a mitochondrial complex I assembly factor.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF2/NDUFAF2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0032981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core biological process of NDUFAF2. The phylogenetic (IBA) inference agrees with direct experimental evidence that NDUFAF2 is a molecular chaperone essential for assembly of mitochondrial complex I.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                        PMID:16200211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results demonstrate that B17.2L is a bona fide molecular chaperone that is essential for the assembly of complex I</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt Swiss-Prot subcellular-location vocabulary; correct and consistent with the experimental mitochondrial localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF2/NDUFAF2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-general InterPro-based electronic annotation. &#34;Membrane&#34; is uninformative for this protein; NDUFAF2 is a soluble/peripheral chaperone that associates transiently with membrane-embedded complex I assembly intermediates but is not itself an integral membrane protein. The more specific mitochondrial inner membrane localization (from Reactome) already captures its site of action. Recommend removing this uninformative IEA.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045271" target="_blank" class="term-link">
+                                    GO:0045271
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0045271" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect. This InterPro-based IEA annotation asserts that NDUFAF2 is part_of the respiratory chain complex I (the mature holoenzyme), but NDUFAF2 is an assembly factor that is explicitly NOT a component of the mature complex. The primary experimental study showed the anti-NDUFAF2 antibody does not associate with the holoenzyme, and Reactome models the factor dissociating before the mature complex forms. The InterPro rule over-applies the structural-subunit annotation of its NDUFA12 paralog. Remove.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                        PMID:16200211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An anti-B17.2L antibody did not associate with the holoenzyme complex but specifically recognized an 830-kDa subassembly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid binary interactome screen (HuRI). Uninformative as a molecular function and not indicative of a specific biochemical activity. Per curation policy this IPI is retained but flagged as over-annotated; the informative binding activity of NDUFAF2 is captured by protein-containing complex binding (GO:0044877).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale affinity-purification MS interactome (BioPlex 3.0). The recorded partner is the complex I subunit NDUFA7, consistent with the assembly role, but the generic GO:0005515 term is uninformative. Retained but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34819669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34819669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A multi-scale map of cell structure fusing protein images an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005515" data-r="PMID:34819669" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; derived from a multi-scale image/interaction map (MuSIC), again reporting an NDUFA7 association. Uninformative MF term; retained but marked over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38949024
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Primary cilia formation requires the Leigh syndrome-associat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005515" data-r="PMID:38949024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; IPI recording the experimentally validated interaction between NDUFAF2 and the basal-body protein ARMC9. The interaction itself is genuine and biologically meaningful (it underlies the pleiotropic ciliogenesis role), but the generic GO:0005515 term is uninformative. Retained but marked over-annotated; the ciliary role is captured separately by the cilium assembly annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" target="_blank" class="term-link">
+                                        PMID:38949024
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a ciliary protein, armadillo repeat containing 9 (ARMC9), interacts with NDUFAF2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-based (HPA) direct localization to mitochondrion. Correct and concordant with all other evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF2/NDUFAF2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38949024
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Primary cilia formation requires the Leigh syndrome-associat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0060271" data-r="PMID:38949024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported (IMP) moonlighting role. NDUFAF2 knockout in RPE cells and knockdown in zebrafish impair primary cilium formation, and the protein participates in early ciliogenesis steps (CP110 removal, ciliary vesicle docking, transition-zone establishment) via interaction with ARMC9. This is a genuine but non-core, recently discovered pleiotropic function distinct from the protein&#39;s primary complex I assembly role, and part of the effect appears indirect (rescued by NAD+ supplementation). Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" target="_blank" class="term-link">
+                                        PMID:38949024
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NDUFAF2 is involved in the initial steps of cilia formation, including the docking of membrane vesicles, removal of CP110, and establishment of the transition zone</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial-proteome identification placing NDUFAF2 in mitochondrion. Concordant with curated localization; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF2/NDUFAF2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044877" target="_blank" class="term-link">
+                                    GO:0044877
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16200211
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A molecular chaperone for mitochondrial complex I assembly i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0044877" data-r="PMID:16200211" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Directly supported molecular function and the most informative MF available for this protein. The anti-NDUFAF2 antibody co-immunoprecipitated a subset of complex I structural subunits and recognized an ~830 kDa assembly subcomplex, demonstrating that NDUFAF2 binds a multi-subunit complex I assembly intermediate. This binding underlies its chaperone/assembly-factor function. Accept as a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                        PMID:16200211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">coimmunoprecipitated a subset of complex I structural subunits from normal human heart mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16200211
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A molecular chaperone for mitochondrial complex I assembly i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="PMID:16200211" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental mitochondrial localization from the defining functional study. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF2/NDUFAF2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16200211
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A molecular chaperone for mitochondrial complex I assembly i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0032981" data-r="PMID:16200211" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, supported by strong experimental evidence (IMP). A null mutation in NDUFAF2 causes a complex I assembly defect that is fully rescued by re-expression of wild-type NDUFAF2, and the protein associates with a late (~830 kDa) assembly intermediate. This is the central, well-established function of the gene. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                        PMID:16200211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results demonstrate that B17.2L is a bona fide molecular chaperone that is essential for the assembly of complex I</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799179
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005743" data-r="Reactome:R-HSA-6799179" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (Reactome) placing NDUFAF2 at the mitochondrial inner membrane, the site of complex I assembly, where it associates with the membrane-embedded assembly intermediate. This is a more specific and biologically appropriate location than the generic InterPro &#34;membrane&#34; term. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799196
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005743" data-r="Reactome:R-HSA-6799196" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS for mitochondrial inner membrane localization, from the complex I biogenesis pathway step in which the assembly factors (including NDUFAF2) dissociate from the 980 kDa complex. Consistent with its transient inner-membrane-associated assembly role. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800870
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005743" data-r="Reactome:R-HSA-6800870" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS for mitochondrial inner membrane localization (FP subcomplex assembly step). Redundant with the other two Reactome inner-membrane annotations but consistent with the assembly site. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22587331" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22587331
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Effects of the novel mitochondrial protein mimitin in insuli...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N183" data-a="GO:0005739" data-r="PMID:22587331" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct mitochondrial localization annotation (MGI) from the mimitin study in insulin-secreting cells. The paper describes mimitin (NDUFAF2) as a mitochondrial protein acting as a complex I chaperone. Concordant with all other localization evidence. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22587331" target="_blank" class="term-link">
+                                        PMID:22587331
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mimitin, a novel mitochondrial protein, has been shown to act as a molecular chaperone for the mitochondrial complex I and to regulate ATP synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Molecular chaperone / assembly factor for mitochondrial respiratory chain complex I. NDUFAF2 binds a large late-stage complex I assembly intermediate (containing subunits of both the matrix and membrane arms) at the mitochondrial inner membrane, stabilizing it and promoting efficient assembly of the holoenzyme, from which NDUFAF2 is then released. It is not a stable structural subunit and has no catalytic activity of its own.</h3>
+                <span class="vote-buttons" data-g="Q8N183" data-a="FUNCTION: Molecular chaperone / assembly factor for mitochon..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044877" target="_blank" class="term-link">
+                            protein-containing complex binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                PMID:16200211
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These results demonstrate that B17.2L is a bona fide molecular chaperone that is essential for the assembly of complex I</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                                PMID:16200211
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">coimmunoprecipitated a subset of complex I structural subunits from normal human heart mitochondria</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" target="_blank" class="term-link">
+                            PMID:16200211
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A molecular chaperone for mitochondrial complex I assembly is mutated in a progressive encephalopathy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFAF2 (B17.2L) is a paralog of the B17.2/NDUFA12 structural subunit and is a bona fide molecular chaperone essential for complex I assembly; a null mutation causes complex I deficiency rescued by re-expression.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFAF2 does not associate with the mature holoenzyme but binds an ~830 kDa late assembly intermediate and co-immunoprecipitates a subset of complex I structural subunits from human heart mitochondria.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22587331" target="_blank" class="term-link">
+                            PMID:22587331
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Effects of the novel mitochondrial protein mimitin in insulin-secreting cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mimitin (NDUFAF2) is a mitochondrial protein that acts as a molecular chaperone for complex I and regulates ATP synthesis; it modulates insulin-secreting beta-cell function.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFAF2 is detected as a high-confidence component of the human mitochondrial proteome.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34819669" target="_blank" class="term-link">
+                            PMID:34819669
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A multi-scale map of cell structure fusing protein images and interactions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" target="_blank" class="term-link">
+                            PMID:38949024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Primary cilia formation requires the Leigh syndrome-associated mitochondrial protein NDUFAF2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFAF2 interacts with the basal-body protein ARMC9 and is required for the initial steps of primary cilium formation (CP110 removal, ciliary vesicle docking, transition-zone establishment).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799179
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799196
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting in Complex I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In the final biogenesis step the assembly factors including NDUFAF2 dissociate from the 980 kDa complex to leave mature Complex I, confirming NDUFAF2 is not a component of the mature holoenzyme.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800870
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NDUF subunits bind to form the FP subcomplex</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NDUFAF2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N183" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ndufaf2-q8n183-review-notes">NDUFAF2 (Q8N183) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>HGNC symbol <strong>NDUFAF2</strong>; synonym <strong>NDUFA12L</strong>; alias <strong>B17.2L / B17.2-like</strong>; alias <strong>Mimitin / MMTN</strong> (Myc-induced mitochondrial protein).</li>
+<li>UniProt name: "NADH dehydrogenase [ubiquinone] 1 alpha subcomplex assembly factor 2" [file:human/NDUFAF2/NDUFAF2-uniprot.txt "RecName: Full=NADH dehydrogenase [ubiquinone] 1 alpha subcomplex assembly factor 2"].</li>
+<li>169 aa precursor with an N-terminal mitochondrial transit peptide [file:human/NDUFAF2/NDUFAF2-uniprot.txt "TRANSIT         1..?"], C-terminal disordered region (116-169).</li>
+<li>Belongs to the complex I NDUFA12 subunit family [file:human/NDUFAF2/NDUFAF2-uniprot.txt "Belongs to the complex I NDUFA12 subunit family."]. It is a <strong>paralog of the structural subunit NDUFA12 (B17.2)</strong> but acts as an assembly factor, NOT a stable structural subunit.</li>
+</ul>
+<h2 id="core-function-complex-i-assembly-factor-molecular-chaperone">Core function: Complex I assembly factor / molecular chaperone</h2>
+<ul>
+<li>Identified as a paralog of the B17.2 (NDUFA12) structural subunit; a bona fide molecular chaperone essential for complex I assembly <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" title="we identified a paralogue (B17.2L) of the B17.2 structural subunit">PMID:16200211</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" title="These results demonstrate that B17.2L is a bona fide molecular chaperone that is essential for the assembly of complex I and for the normal function of the nervous system.">PMID:16200211</a>.</li>
+<li><strong>Transient binding to a late assembly intermediate, absent from the mature holoenzyme.</strong> An anti-B17.2L antibody did NOT associate with the holoenzyme but recognized an ~830-kDa subassembly and co-immunoprecipitated a subset of complex I structural subunits <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" title="An anti-B17.2L antibody did not associate with the holoenzyme complex but specifically recognized an 830-kDa subassembly in several patients with complex I assembly defects and coimmunoprecipitated a subset of complex I structural subunits from normal human heart mitochondria.">PMID:16200211</a>.</li>
+<li>Acts in <strong>late</strong> assembly: "the observation that B17.2L specifically associates with a large subassembly of 830 kDa indicates that it is required until the late stages of assembly, as the holoenzyme has an estimated molecular mass of 980 kDa" <a href="https://pubmed.ncbi.nlm.nih.gov/16200211">PMID:16200211</a>. It co-IPs subunits of BOTH the matrix and membrane arms, likely stabilizing a large subassembly at the arm junction.</li>
+<li>Model: chaperone/facilitator that stabilizes subassemblies, increasing assembly efficiency; not absolutely required (residual complex I activity persists in the null patient) <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" title="The complete absence of full-length B17.2L does not entirely prevent assembly of mature complex I ... showed the presence of residual enzyme activity in the patient cells and tissues.">PMID:16200211</a>.</li>
+<li>Reactome models NDUFAF2 with peripheral-arm (flavoprotein/FP) subunits during assembly, then dissociating from the 980 kDa complex to leave mature Complex I [file:reactome/R-HSA-6799196.md "the MCIA complex and it is assumed all of the assembly factors (NDUFAF2-7, TIMMDC1) dissociate from the 980kDa complex to leave mature Complex I"]. NOTE: Reactome places NDUFAF2 with the FP subcomplex; the primary experimental paper (PMID:16200211) shows it is on an ~830 kDa subassembly containing both arms, not the mature enzyme.</li>
+</ul>
+<h2 id="no-catalytic-activity">No catalytic activity</h2>
+<ul>
+<li>NDUFAF2 has no NADH dehydrogenase / oxidoreductase activity; it is an assembly factor. UniProt describes it only as a chaperone [file:human/NDUFAF2/NDUFAF2-uniprot.txt "Acts as a molecular chaperone for mitochondrial complex I assembly"]. Complex I catalysis is a property of the holoenzyme, not this factor.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion [file:human/NDUFAF2/NDUFAF2-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:15774466}."]. Has a mitochondrial transit peptide. IDA in mitochondrion (PMID:16200211, HPA, MGI PMID:22587331) and HTP mitochondrial-proteome (PMID:34800366) all consistent.</li>
+<li>Reactome TAS annotations place it at the mitochondrial inner membrane (site of complex I assembly), consistent with its transient association with membrane-embedded assembly intermediates.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Autosomal recessive <strong>Mitochondrial complex I deficiency, nuclear type 10 (MC1DN10, MIM 618233)</strong>; presentations include progressive encephalopathy, leukoencephalopathy, and Leigh syndrome [file:human/NDUFAF2/NDUFAF2-uniprot.txt "Mitochondrial complex I deficiency, nuclear type 10 (MC1DN10)"], <a href="https://pubmed.ncbi.nlm.nih.gov/16200211" title="We found a null mutation in B17.2L in a patient with a progressive encephalopathy">PMID:16200211</a>.</li>
+</ul>
+<h2 id="mimitin-myc-target">Mimitin / Myc target</h2>
+<ul>
+<li>Same protein independently found as "mimitin" (myc-induced mitochondrial protein), a direct MYC transcriptional target [file:human/NDUFAF2/NDUFAF2-uniprot.txt "By MYC. Direct transcriptional target of MYC."]. Effects on cell proliferation / insulin secretion are downstream of its complex I chaperone role <a href="https://pubmed.ncbi.nlm.nih.gov/22587331" title="Mimitin, a novel mitochondrial protein, has been shown to act as a molecular chaperone for the mitochondrial complex I and to regulate ATP synthesis.">PMID:22587331</a>.</li>
+</ul>
+<h2 id="moonlighting-primary-cilium-formation-2024">Moonlighting: primary cilium formation (2024)</h2>
+<ul>
+<li>Loss of NDUFAF2 causes ciliary defects; NDUFAF2 binds the basal-body/centriole protein ARMC9 and is required for early ciliogenesis steps — CP110 removal from mother centrioles, ciliary-vesicle docking, and transition-zone establishment <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" title="NDUFAF2 is involved in the initial steps of cilia formation, including the docking of membrane vesicles, removal of CP110, and establishment of the transition zone.">PMID:38949024</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" title="we found that a ciliary protein, armadillo repeat containing 9 (ARMC9), interacts with NDUFAF2">PMID:38949024</a>.</li>
+<li>This is a genuine but non-core, recently discovered pleiotropic role; keep the corresponding GO terms as non-core. The mechanism appears partly indirect (via mitochondrial NAD+/complex I metabolism supporting ciliogenesis): NAD+ supplementation rescues ciliary defects <a href="https://pubmed.ncbi.nlm.nih.gov/38949024" title="NAD+ supplementation rescues the mitochondrial and cilia defects">PMID:38949024</a>.</li>
+</ul>
+<h2 id="interactions-intact-interactome-screens">Interactions (IntAct / interactome screens)</h2>
+<ul>
+<li>Curated binary/AP-MS interactions include NDUFA7 (a complex I subunit — consistent with the assembly role), ARMC9, and various screen hits (CYB5B, LAT, LPAR3, SEC22B, SMIM1, SPG21, STX8, TMEM201, TMEM97) [file:human/NDUFAF2/NDUFAF2-uniprot.txt "Interacts with ARMC9."]. Many high-throughput hits (PMID:32296183 HuRI Y2H, PMID:33961781 BioPlex, PMID:34819669 MuSIC) are bare "protein binding" (GO:0005515) IPI annotations; kept as non-core.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<ul>
+<li>Core function: chaperone-like binding that drives mitochondrial respiratory chain complex I assembly.</li>
+<li>MF core: GO:0044877 protein-containing complex binding (IDA, PMID:16200211 — co-IP of complex I subunits). Honest, specific MF; NOT NADH dehydrogenase/oxidoreductase.</li>
+<li>BP core: GO:0032981 mitochondrial respiratory chain complex I assembly (IMP, PMID:16200211; also IBA).</li>
+<li>Localization core: mitochondrion (GO:0005739); mitochondrial inner membrane (GO:0005743) accepted from Reactome as the assembly site.</li>
+<li>REMOVE (IEA only, biologically wrong for an assembly factor): GO:0045271 respiratory chain complex I "part_of" (InterPro IEA) — NDUFAF2 is explicitly NOT part of the mature holoenzyme <a href="https://pubmed.ncbi.nlm.nih.gov/16200211">PMID:16200211</a>. Also GO:0016020 membrane (InterPro IEA) is uninformative/over-general given specific inner-membrane annotation.</li>
+<li>KEEP_AS_NON_CORE: cilium assembly (IMP PMID:38949024) and the ARMC9 IPI — real but pleiotropic/moonlighting.</li>
+<li>Bare protein binding (GO:0005515) IPI from high-throughput screens: MARK_AS_OVER_ANNOTATED (uninformative MF; policy forbids REMOVE of IPI protein binding).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8N183
+gene_symbol: NDUFAF2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NDUFAF2 (also known as NDUFA12L, B17.2L, and Mimitin) is a nuclear-encoded,
+  mitochondrially targeted assembly factor for respiratory chain complex I
+  (NADH:ubiquinone oxidoreductase). It is a paralog of the structural complex I
+  subunit NDUFA12 (B17.2) but, unlike its paralog, it is not a stable component
+  of the mature holoenzyme. Instead it acts as a molecular chaperone that binds
+  transiently to a large (~830 kDa) late-stage complex I assembly intermediate
+  containing subunits of both the matrix (peripheral) and membrane arms, and is
+  released once assembly is complete. By stabilizing this subassembly it increases
+  the efficiency of complex I biogenesis, although residual assembly can occur in
+  its absence. The protein carries an N-terminal mitochondrial transit peptide and
+  a C-terminal disordered region. Loss-of-function variants cause autosomal
+  recessive mitochondrial complex I deficiency nuclear type 10 (MC1DN10),
+  presenting as progressive encephalopathy/leukoencephalopathy and Leigh syndrome.
+  A more recently reported pleiotropic role links NDUFAF2 to primary cilium
+  formation through interaction with the basal-body protein ARMC9.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization is correct and well supported. NDUFAF2 has an
+      N-terminal mitochondrial transit peptide and UniProt records it as
+      mitochondrial. This IBA localization is consistent with all experimental
+      evidence and with its role as a mitochondrial complex I assembly factor.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFAF2/NDUFAF2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This is the core biological process of NDUFAF2. The phylogenetic (IBA)
+      inference agrees with direct experimental evidence that NDUFAF2 is a
+      molecular chaperone essential for assembly of mitochondrial complex I.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16200211
+      supporting_text: &gt;-
+        These results demonstrate that B17.2L is a bona fide molecular chaperone
+        that is essential for the assembly of complex I
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt Swiss-Prot subcellular-location
+      vocabulary; correct and consistent with the experimental mitochondrial
+      localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFAF2/NDUFAF2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Over-general InterPro-based electronic annotation. &#34;Membrane&#34; is
+      uninformative for this protein; NDUFAF2 is a soluble/peripheral chaperone
+      that associates transiently with membrane-embedded complex I assembly
+      intermediates but is not itself an integral membrane protein. The more
+      specific mitochondrial inner membrane localization (from Reactome) already
+      captures its site of action. Recommend removing this uninformative IEA.
+    action: REMOVE
+- term:
+    id: GO:0045271
+    label: respiratory chain complex I
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Incorrect. This InterPro-based IEA annotation asserts that NDUFAF2 is
+      part_of the respiratory chain complex I (the mature holoenzyme), but NDUFAF2
+      is an assembly factor that is explicitly NOT a component of the mature
+      complex. The primary experimental study showed the anti-NDUFAF2 antibody
+      does not associate with the holoenzyme, and Reactome models the factor
+      dissociating before the mature complex forms. The InterPro rule over-applies
+      the structural-subunit annotation of its NDUFA12 paralog. Remove.
+    action: REMOVE
+    supported_by:
+    - reference_id: PMID:16200211
+      supporting_text: &gt;-
+        An anti-B17.2L antibody did not associate with the holoenzyme complex but
+        specifically recognized an 830-kDa subassembly
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput yeast two-hybrid binary
+      interactome screen (HuRI). Uninformative as a molecular function and not
+      indicative of a specific biochemical activity. Per curation policy this IPI
+      is retained but flagged as over-annotated; the informative binding activity
+      of NDUFAF2 is captured by protein-containing complex binding (GO:0044877).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale affinity-purification MS
+      interactome (BioPlex 3.0). The recorded partner is the complex I subunit
+      NDUFA7, consistent with the assembly role, but the generic GO:0005515 term
+      is uninformative. Retained but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34819669
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; derived from a multi-scale image/interaction map
+      (MuSIC), again reporting an NDUFA7 association. Uninformative MF term;
+      retained but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:38949024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; IPI recording the experimentally validated
+      interaction between NDUFAF2 and the basal-body protein ARMC9. The
+      interaction itself is genuine and biologically meaningful (it underlies the
+      pleiotropic ciliogenesis role), but the generic GO:0005515 term is
+      uninformative. Retained but marked over-annotated; the ciliary role is
+      captured separately by the cilium assembly annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:38949024
+      supporting_text: &gt;-
+        a ciliary protein, armadillo repeat containing 9 (ARMC9), interacts with
+        NDUFAF2
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence-based (HPA) direct localization to mitochondrion.
+      Correct and concordant with all other evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFAF2/NDUFAF2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:38949024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimentally supported (IMP) moonlighting role. NDUFAF2 knockout in RPE
+      cells and knockdown in zebrafish impair primary cilium formation, and the
+      protein participates in early ciliogenesis steps (CP110 removal, ciliary
+      vesicle docking, transition-zone establishment) via interaction with ARMC9.
+      This is a genuine but non-core, recently discovered pleiotropic function
+      distinct from the protein&#39;s primary complex I assembly role, and part of the
+      effect appears indirect (rescued by NAD+ supplementation). Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:38949024
+      supporting_text: &gt;-
+        NDUFAF2 is involved in the initial steps of cilia formation, including the
+        docking of membrane vesicles, removal of CP110, and establishment of the
+        transition zone
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial-proteome identification placing NDUFAF2 in
+      mitochondrion. Concordant with curated localization; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFAF2/NDUFAF2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0044877
+    label: protein-containing complex binding
+  evidence_type: IDA
+  original_reference_id: PMID:16200211
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Directly supported molecular function and the most informative MF available
+      for this protein. The anti-NDUFAF2 antibody co-immunoprecipitated a subset
+      of complex I structural subunits and recognized an ~830 kDa assembly
+      subcomplex, demonstrating that NDUFAF2 binds a multi-subunit complex I
+      assembly intermediate. This binding underlies its chaperone/assembly-factor
+      function. Accept as a core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16200211
+      supporting_text: &gt;-
+        coimmunoprecipitated a subset of complex I structural subunits from normal
+        human heart mitochondria
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:16200211
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental mitochondrial localization from the defining functional
+      study. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/NDUFAF2/NDUFAF2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IMP
+  original_reference_id: PMID:16200211
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, supported by strong experimental evidence (IMP).
+      A null mutation in NDUFAF2 causes a complex I assembly defect that is fully
+      rescued by re-expression of wild-type NDUFAF2, and the protein associates
+      with a late (~830 kDa) assembly intermediate. This is the central,
+      well-established function of the gene. Accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16200211
+      supporting_text: &gt;-
+        These results demonstrate that B17.2L is a bona fide molecular chaperone
+        that is essential for the assembly of complex I
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799179
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable author statement (Reactome) placing NDUFAF2 at the mitochondrial
+      inner membrane, the site of complex I assembly, where it associates with
+      the membrane-embedded assembly intermediate. This is a more specific and
+      biologically appropriate location than the generic InterPro &#34;membrane&#34;
+      term. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799196
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS for mitochondrial inner membrane localization, from the
+      complex I biogenesis pathway step in which the assembly factors (including
+      NDUFAF2) dissociate from the 980 kDa complex. Consistent with its transient
+      inner-membrane-associated assembly role. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800870
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS for mitochondrial inner membrane localization (FP subcomplex
+      assembly step). Redundant with the other two Reactome inner-membrane
+      annotations but consistent with the assembly site. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:22587331
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct mitochondrial localization annotation (MGI) from the mimitin study
+      in insulin-secreting cells. The paper describes mimitin (NDUFAF2) as a
+      mitochondrial protein acting as a complex I chaperone. Concordant with all
+      other localization evidence. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22587331
+      supporting_text: &gt;-
+        Mimitin, a novel mitochondrial protein, has been shown to act as a
+        molecular chaperone for the mitochondrial complex I and to regulate ATP
+        synthesis.
+core_functions:
+- description: &gt;-
+    Molecular chaperone / assembly factor for mitochondrial respiratory chain
+    complex I. NDUFAF2 binds a large late-stage complex I assembly intermediate
+    (containing subunits of both the matrix and membrane arms) at the
+    mitochondrial inner membrane, stabilizing it and promoting efficient assembly
+    of the holoenzyme, from which NDUFAF2 is then released. It is not a stable
+    structural subunit and has no catalytic activity of its own.
+  molecular_function:
+    id: GO:0044877
+    label: protein-containing complex binding
+  directly_involved_in:
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:16200211
+    supporting_text: &gt;-
+      These results demonstrate that B17.2L is a bona fide molecular chaperone
+      that is essential for the assembly of complex I
+  - reference_id: PMID:16200211
+    supporting_text: &gt;-
+      coimmunoprecipitated a subset of complex I structural subunits from normal
+      human heart mitochondria
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:16200211
+  title: A molecular chaperone for mitochondrial complex I assembly is mutated in
+    a progressive encephalopathy.
+  findings:
+  - statement: &gt;-
+      NDUFAF2 (B17.2L) is a paralog of the B17.2/NDUFA12 structural subunit and is
+      a bona fide molecular chaperone essential for complex I assembly; a null
+      mutation causes complex I deficiency rescued by re-expression.
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      NDUFAF2 does not associate with the mature holoenzyme but binds an ~830 kDa
+      late assembly intermediate and co-immunoprecipitates a subset of complex I
+      structural subunits from human heart mitochondria.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text available and read; defining functional study establishing the
+      chaperone / assembly-factor role and its transient association with a late
+      complex I subassembly. Supporting_text quotes verified verbatim.
+- id: PMID:22587331
+  title: Effects of the novel mitochondrial protein mimitin in insulin-secreting cells.
+  findings:
+  - statement: &gt;-
+      Mimitin (NDUFAF2) is a mitochondrial protein that acts as a molecular
+      chaperone for complex I and regulates ATP synthesis; it modulates
+      insulin-secreting beta-cell function.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (full_text_available false). Supports mitochondrial
+      localization and the complex I chaperone role under an alias (mimitin);
+      beta-cell effects are downstream/physiological context.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI yeast two-hybrid binary interactome; source of several bare
+      GO:0005515 protein-binding IPI annotations. High-throughput screen with no
+      NDUFAF2-specific functional insight.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 affinity-purification MS interactome; source of a bare
+      protein-binding IPI (partner NDUFA7). No specific functional claim about
+      NDUFAF2.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: NDUFAF2 is detected as a high-confidence component of the human mitochondrial proteome.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial-proteome study; supports mitochondrial
+      localization only.
+- id: PMID:34819669
+  title: A multi-scale map of cell structure fusing protein images and interactions.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      MuSIC multi-scale cell map; source of a bare protein-binding IPI (partner
+      NDUFA7). No NDUFAF2-specific functional insight.
+- id: PMID:38949024
+  title: Primary cilia formation requires the Leigh syndrome-associated mitochondrial
+    protein NDUFAF2.
+  findings:
+  - statement: &gt;-
+      NDUFAF2 interacts with the basal-body protein ARMC9 and is required for the
+      initial steps of primary cilium formation (CP110 removal, ciliary vesicle
+      docking, transition-zone establishment).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text read; establishes the pleiotropic ciliogenesis role and the
+      ARMC9 interaction. Supports the cilium assembly (IMP) and ARMC9 IPI
+      annotations. Role is non-core relative to complex I assembly.
+- id: Reactome:R-HSA-6799179
+  title: Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome complex I biogenesis step; supports mitochondrial inner membrane
+      localization during assembly.
+- id: Reactome:R-HSA-6799196
+  title: The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting
+    in Complex I
+  findings:
+  - statement: &gt;-
+      In the final biogenesis step the assembly factors including NDUFAF2
+      dissociate from the 980 kDa complex to leave mature Complex I, confirming
+      NDUFAF2 is not a component of the mature holoenzyme.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome step; explicitly models NDUFAF2 as an assembly factor that
+      dissociates before the mature complex, supporting removal of the
+      &#34;part_of complex I&#34; IEA.
+- id: Reactome:R-HSA-6800870
+  title: NDUF subunits bind to form the FP subcomplex
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome FP subcomplex assembly step; supports mitochondrial inner membrane
+      localization during assembly.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

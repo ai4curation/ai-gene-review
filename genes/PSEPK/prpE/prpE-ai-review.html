@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>prpE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>prpE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KD9" target="_blank" class="term-link">
+                        Q88KD9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "prpE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KD9" data-a="DESCRIPTION: PrpE is the AMP-forming propionyl-CoA synthetase o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PrpE is the AMP-forming propionyl-CoA synthetase of the 2-methylcitrate cycle in Pseudomonas putida KT2440. It activates propionate with CoA and ATP to provide the propionyl-CoA substrate used by PrpC at the entry to propionate catabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KD9" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for this soluble bacterial metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpE is a soluble acyl-CoA synthetase acting on cytoplasmic pathway metabolites.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016874" target="_blank" class="term-link">
+                                    GO:0016874
+                                </a>
+                            </span>
+                            <span class="term-label">ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KD9" data-a="GO:0016874" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with the substrate-specific ligase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns propionyl-CoA synthetase, EC 6.2.1.17.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpE/prpE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Propionyl-CoA synthetase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050218" target="_blank" class="term-link">
+                                    GO:0050218
+                                </a>
+                            </span>
+                            <span class="term-label">propionate-CoA ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KD9" data-a="GO:0050218" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core activity, with substrate specificity inferred from family and pathway context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact target is named propionyl-CoA synthetase and KEGG K01908 independently supports EC 6.2.1.17 in the prp pathway, although no KT2440-specific enzymology was found.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpE/prpE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Propionyl-CoA synthetase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_2351 | prpE | K01908 | **propionyl-CoA synthetase, EC 6.2.1.17**</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/prpE/prpE-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Q88KD9 as a *bona fide* propionyl-CoA synthetase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070013" target="_blank" class="term-link">
+                                    GO:0070013
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular organelle lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KD9" data-a="GO:0070013" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Taxonomically invalid localization for a Pseudomonas metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pseudomonas putida is a bacterium without the membrane-bounded intracellular organelle lumen described by this term. The coexisting cytoplasm annotation is the biologically appropriate localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                    GO:0019543
+                                </a>
+                            </span>
+                            <span class="term-label">propionate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KD9" data-a="GO:0019543" data-r="file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing process annotation for the pathway-entry synthetase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PrpE supplies propionyl-CoA to the 2-methylcitrate cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Propionate activation to **propionyl-CoA** — PrpE (ATP-dependent, AMP-forming ligase).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activates propionate to propionyl-CoA for entry into the 2-methylcitrate cycle.</h3>
+                <span class="vote-buttons" data-g="Q88KD9" data-a="FUNCTION: Activates propionate to propionyl-CoA for entry in..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050218" target="_blank" class="term-link">
+                            propionate-CoA ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                propionate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/prpE/prpE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Propionyl-CoA synthetase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Propionate activation to **propionyl-CoA** — PrpE (ATP-dependent, AMP-forming ligase).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/prpE/prpE-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Q88KD9 as a *bona fide* propionyl-CoA synthetase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/prpE/prpE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88KD9 for Pseudomonas putida KT2440 prpE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names Q88KD9 as propionyl-CoA synthetase.</div>
+
+                        <div class="finding-text">"SubName: Full=Propionyl-CoA synthetase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist PSEPK 2-methylcitrate-cycle pathway report</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The pathway analysis maps PrpE to propionate activation and confirms its KEGG EC assignment.</div>
+
+                        <div class="finding-text">"PP_2351 | prpE | K01908 | **propionyl-CoA synthetase, EC 6.2.1.17**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/prpE/prpE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK prpE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies Q88KD9 as a propionyl-CoA synthetase.</div>
+
+                        <div class="finding-text">"Q88KD9 as a *bona fide* propionyl-CoA synthetase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative catalytic efficiency of KT2440 PrpE for propionate versus acetate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KD9" data-a="Q: What is the relative catalytic efficiency of KT244..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure purified PrpE kinetics with short-chain carboxylates and test prpE complementation during growth on propionate.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KD9" data-a="EXPERIMENT: Measure purified PrpE kinetics with short-chain ca..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(prpE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KD9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *prpE* (Propionyl-CoA Synthetase, PP_2351 / Q88KD9) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T09:17:06.484855</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="prpE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-prpe-propionyl-coa-synthetase-pp_2351-q88kd9-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>prpE</em> (Propionyl-CoA Synthetase, PP_2351 / Q88KD9) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>prpE</strong> (locus tag <strong>PP_2351</strong>; UniProt <strong>Q88KD9</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>propionyl-CoA synthetase</strong> (also called propionate–CoA ligase, <strong>EC 6.2.1.17</strong>). It is a soluble, cytoplasmic enzyme of the <strong>ATP-dependent AMP-binding (adenylate-forming acyl-CoA synthetase, "ANL") superfamily</strong>, defined by the InterPro AMP-binding domains supplied in the target identification (IPR000873, IPR020845, IPR025110, IPR045851) and the N-terminal ACAS_N region (IPR032387). The gene symbol, EC number, protein family, and domain architecture given for Q88KD9 are all internally consistent, and the surrounding literature on orthologous PrpE enzymes (most extensively from <em>Salmonella enterica</em>) maps cleanly onto this protein. This report therefore treats Q88KD9 as a <em>bona fide</em> propionyl-CoA synthetase and describes its function primarily by inference from close, well-characterized orthologs together with the conserved biochemistry of the enzyme family.</p>
+<p>The <strong>primary function</strong> of PrpE is to catalyze the ATP-dependent activation of the short-chain fatty acid <strong>propionate</strong> into its coenzyme A thioester: <strong>propionate + ATP + CoA → propionyl-CoA + AMP + PPi</strong>. Like all members of its family, it performs this in two half-reactions through a tightly bound <strong>propionyl-AMP (acyl-adenylate) intermediate</strong>. Enzymological characterization of the orthologous <em>Salmonella</em> PrpE established that <strong>propionate is the strongly preferred substrate</strong> (kcat/Km ≈ 1644 mM⁻¹·s⁻¹; Km ≈ 50 µM), with acetate, butyrate, and 3-hydroxypropionate activated far less efficiently. This substrate preference distinguishes PrpE from its paralog acetyl-CoA synthetase (Acs), which prefers acetate.</p>
+<p>Functionally, PrpE catalyzes the <strong>committed first step of propionate catabolism via the 2-methylcitrate cycle (2-MCC)</strong>. It is the "E" gene of the <strong>prpBCDE operon</strong>, whose products — 2-methylisocitrate lyase (PrpB), 2-methylcitrate synthase (PrpC), 2-methylcitrate dehydratase (PrpD), and propionyl-CoA synthetase (PrpE) — together convert propionyl-CoA to pyruvate. This pathway serves a dual role: it <strong>assimilates propionate</strong> as a carbon/energy source and <strong>detoxifies</strong> propionate and its downstream metabolite 2-methylcitrate, which are growth-inhibitory. PrpE activity is further governed <strong>post-translationally</strong> by reversible N-lysine acylation of a conserved active-site lysine (Lys592 in <em>Salmonella</em>), which blocks the adenylation half-reaction and is reversed by NAD⁺-dependent sirtuin deacylases (bacterial CobB / Sir2). The enzyme operates in the <strong>cytosol</strong>, where propionate activation and the 2-MCC take place.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity check was performed:</p>
+<table>
+<thead>
+<tr>
+<th>Verification item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol <em>prpE</em> matches protein description</td>
+<td><strong>Yes</strong> — <em>prpE</em> is the canonical symbol for propionyl-CoA synthetase across bacteria</td>
+</tr>
+<tr>
+<td>EC 6.2.1.17 consistent with "propionyl-CoA synthetase"</td>
+<td><strong>Yes</strong> — EC 6.2.1.17 is propionate–CoA ligase</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) — confirmed</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>ATP-dependent AMP-binding enzyme family — consistent with adenylate-forming acyl-CoA synthetases</td>
+</tr>
+<tr>
+<td>Domains (IPR000873, IPR020845, IPR025110, IPR045851, IPR032387)</td>
+<td>AMP-binding / adenylate-forming domains — consistent with an acyl-CoA synthetase</td>
+</tr>
+</tbody>
+</table>
+<p>No conflicting-identity problem was encountered. The literature retrieved describes propionyl-CoA synthetase enzymes and the propionate/2-methylcitrate pathway, which align with the target. Where direct experimental data on the <em>P. putida</em> KT2440 protein itself were unavailable, function is inferred from <strong>close orthologs</strong> (chiefly <em>Salmonella enterica</em> PrpE, the most rigorously characterized member) and from the <strong>conserved mechanism of the adenylate-forming enzyme family</strong>. This inferential basis is stated explicitly throughout.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-prpe-is-a-propionyl-coa-synthetase-ec-62117-that-activates-propionate-through-a-propionyl-amp-intermediate">Finding 1 — PrpE is a propionyl-CoA synthetase (EC 6.2.1.17) that activates propionate through a propionyl-AMP intermediate</h3>
+<p><em>P. putida</em> PrpE belongs to the ATP-dependent AMP-binding family of adenylate-forming acyl-CoA synthetases, as indicated by its InterPro AMP-binding domain complement (IPR000873/IPR020845) and its EC assignment 6.2.1.17. The defining reaction of the enzyme is the two-step activation of a carboxylic acid to its CoA thioester at the expense of ATP:</p>
+<div class="codehilite"><pre><span></span><code>Step 1 (adenylation):        propionate + ATP  →  propionyl-AMP + PPi
+Step 2 (thioesterification):  propionyl-AMP + CoA  →  propionyl-CoA + AMP
+Net:  propionate + ATP + CoA  →  propionyl-CoA + AMP + PPi
+</code></pre></div>
+
+<p>The strongest direct evidence comes from the orthologous <em>Salmonella enterica</em> PrpE, which was purified and characterized enzymatically. Kinetic experiments demonstrated that <strong>propionate is the preferred acyl substrate (kcat/Km = 1644 mM⁻¹·s⁻¹)</strong>, and inhibition studies using the intermediate analog adenosine-5′-propylphosphate identified a <strong>Bi Uni Uni Bi Ping Pong mechanism</strong>, consistent with formation and consumption of an enzyme-bound acyl-adenylate intermediate (<a href="https://pubmed.ncbi.nlm.nih.gov/11841231/">PMID: 11841231</a>).</p>
+<p>A second characterization of recombinant <em>Salmonella</em> PrpE quantified the substrate specificity directly: with propionate as substrate the enzyme showed a <strong>Km of 50 µM and a specific activity of 120 µmol·min⁻¹·mg⁻¹</strong> at saturation. The enzyme also activated <strong>acetate, 3-hydroxypropionate, and butyrate</strong> to their corresponding CoA esters, but <strong>much less efficiently than propionate</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/11097899/">PMID: 11097899</a>). This establishes that PrpE is a genuine short-chain acyl-CoA synthetase with a marked preference for the three-carbon acid propionate — the biochemical rationale for the enzyme being named for, and physiologically dedicated to, propionate.</p>
+<p>The generality of the two-step, acyl-AMP mechanism across this enzyme family is well supported by structural and biochemical work on close relatives such as acetyl-CoA synthetase and 4-chlorobenzoate:CoA ligase (see Finding 3 and the Evidence Base). The narrow, short-chain acyl-binding pocket typical of these enzymes underlies the C3 preference, as comparative structural analysis of acyl-CoA synthetases has shown (<a href="https://pubmed.ncbi.nlm.nih.gov/19544569/">PMID: 19544569</a>).</p>
+<h3 id="finding-2-prpe-feeds-the-2-methylcitrate-cycle-the-pathway-for-propionate-assimilation-and-detoxification">Finding 2 — PrpE feeds the 2-methylcitrate cycle, the pathway for propionate assimilation and detoxification</h3>
+<p><em>prpE</em> is the terminal gene of the <strong>prpBCDE operon</strong>, which in bacteria typically comprises <em>prpB</em>, <em>prpC</em>, <em>prpD</em>, and <em>prpE</em>, encoding <strong>2-methylisocitrate lyase, 2-methylcitrate synthase, 2-methylcitrate dehydratase, and propionyl-CoA synthetase</strong>, respectively. Together these enzymes constitute the <strong>2-methylcitrate cycle (2-MCC)</strong>, the principal microbial route for propionate metabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/42271202/">PMID: 42271202</a>).</p>
+<p>PrpE performs the <strong>committed, activating step</strong> of this pathway. The propionyl-CoA that PrpE produces is the direct substrate for PrpC (2-methylcitrate synthase), which condenses propionyl-CoA with oxaloacetate to form 2-methylcitrate. This substrate dependency was made explicit in studies of <em>Salmonella</em>, where the <em>prpE</em> gene "encoding the propionyl-CoA synthetase enzyme is part of the prpBCDE operon," and where 2-methylcitrate synthesis by PrpC "requires propionyl-CoA as a substrate" (<a href="https://pubmed.ncbi.nlm.nih.gov/12700259/">PMID: 12700259</a>). Through the successive action of PrpC, PrpD, an aconitase, and PrpB, the 2-MCC ultimately converts propionyl-CoA to <strong>pyruvate</strong>, which enters central carbon metabolism.</p>
+<p>The pathway has a <strong>dual physiological logic</strong>. On one hand, it lets the cell use propionate as a carbon and energy source. On the other, <strong>propionate and propionate-derived catabolites are toxic</strong>, so propionate catabolism "can alternatively be viewed as a detoxification mechanism" (<a href="https://pubmed.ncbi.nlm.nih.gov/29458664/">PMID: 29458664</a>). The toxicity is not diffuse: in <em>Salmonella</em>, the specific metabolite <strong>2-methylcitrate</strong> was identified as a potent inhibitor of growth, and blocking the 2-MCC increased propionate sensitivity (<a href="https://pubmed.ncbi.nlm.nih.gov/11376009/">PMID: 11376009</a>). By initiating the pathway that both consumes propionate and prevents accumulation of these toxic intermediates, PrpE occupies a pivotal control point.</p>
+<p>In <em>Pseudomonas</em> and other PHA-producing bacteria, PrpE-initiated propionate flux is also biotechnologically relevant because propionyl-CoA is a precursor of odd-chain-length hydroxyalkanoate monomers such as 3-hydroxyvalerate. Disrupting downstream 2-MCC steps (e.g., <em>prpB</em>) diverts propionyl-CoA toward odd-chain PHA (<a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">PMID: 37995793</a>), and the 2-MCC's detoxifying capacity governs how much propionate a producing strain can tolerate (<a href="https://pubmed.ncbi.nlm.nih.gov/39729712/">PMID: 39729712</a>). <em>P. putida</em> KT2440 grows on propionate and other short-chain carboxylic acids as carbon sources (<a href="https://pubmed.ncbi.nlm.nih.gov/40988068/">PMID: 40988068</a>). In the related <em>P. aeruginosa</em>, the 2-MCC is interlinked with the glyoxylate shunt through enzymatic redundancy, showing the cycle is embedded in central metabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/40015638/">PMID: 40015638</a>).</p>
+<h3 id="finding-3-prpe-activity-is-regulated-post-translationally-by-reversible-n-lysine-acylation-of-an-active-site-lysine-and-the-enzyme-is-a-soluble-cytoplasmic-two-step-adenylating-enzyme">Finding 3 — PrpE activity is regulated post-translationally by reversible N-lysine acylation of an active-site lysine, and the enzyme is a soluble cytoplasmic two-step adenylating enzyme</h3>
+<p>PrpE is regulated not only at the level of operon transcription (via the PrpR activator using 2-methylcitrate as coactivator; <a href="https://pubmed.ncbi.nlm.nih.gov/12700259/">PMID: 12700259</a>) but also <strong>post-translationally</strong>. In <em>Salmonella enterica</em>, PrpE is <strong>propionylated in vivo at lysine 592, and this modification inactivates the enzyme</strong>. The propionyl-lysine mark is installed by bacterial GCN5-related N-acetyltransferases and removed by bacterial and human Sir2 enzymes (sirtuins) (<a href="https://pubmed.ncbi.nlm.nih.gov/17684016/">PMID: 17684016</a>).</p>
+<p>The mechanistic basis for this switch lies in the catalytic role of the modified lysine. Site-directed mutagenesis of <em>Salmonella</em> PrpE showed that both K592A and K592E mutants <strong>failed to convert propionate to propionyl-CoA</strong>, yet both mutants <strong>could still convert propionyl-AMP to propionyl-CoA</strong> — demonstrating that <strong>Lys592 is specifically required for the adenylation (propionyl-AMP-forming) half-reaction but plays no discernible role in thioester bond formation</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/11841231/">PMID: 11841231</a>). Acylating this lysine therefore blocks step 1 of the reaction while leaving step 2 intact, effectively switching the enzyme off.</p>
+<p>This regulatory logic is directly paralleled by the homologous <strong>acetyl-CoA synthetase (Acs)</strong>, the paradigm for the system. In Acs, acetylation of the active-site lysine (Lys609 in <em>Salmonella</em>) "blocks synthesis of the adenylate intermediate but does not affect the thioester-forming activity," and reactivation "requires the NAD⁺-dependent protein deacetylase activity of the CobB Sir2 protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/12493915/">PMID: 12493915</a>). The acetyltransferase responsible (Pat) modifies Acs-Lys609 using acetyl-CoA (<a href="https://pubmed.ncbi.nlm.nih.gov/15236963/">PMID: 15236963</a>), and the CobB sirtuin removes it in an NAD⁺-dependent reaction (<a href="https://pubmed.ncbi.nlm.nih.gov/15019790/">PMID: 15019790</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/29253849/">PMID: 29253849</a>).</p>
+<p>The structural explanation for why a single lysine can control one half-reaction but not the other comes from crystallographic studies of this enzyme family. These adenylate-forming enzymes possess a <strong>single active site that alternates between the two half-reactions</strong>: "upon completion of the initial adenylation reaction, the C-terminal domain of these enzymes undergoes a <strong>140° rotation</strong> to perform the second thioester-forming half-reaction" (<a href="https://pubmed.ncbi.nlm.nih.gov/17497934/">PMID: 17497934</a>). The catalytic lysine sits on this mobile C-terminal domain and is presented to the active site only in the adenylation-competent conformation (<a href="https://pubmed.ncbi.nlm.nih.gov/12627952/">PMID: 12627952</a>). Acylating that lysine therefore selectively disables the adenylation chemistry.</p>
+<p>Regarding <strong>localization</strong>: PrpE possesses no signal peptide or membrane-spanning features and, like its Acs/PrpE family relatives, is a <strong>soluble cytoplasmic protein</strong>. This is consistent with the 2-MCC operating in the cytosol, where propionate is activated and metabolized. (The mammalian short-chain acyl-CoA synthetase ACSS3, a distant relative with propionyl-CoA synthetase activity, is targeted to the mitochondrial matrix in eukaryotes — <a href="https://pubmed.ncbi.nlm.nih.gov/28003429/">PMID: 28003429</a> — but bacterial PrpE lacks any such targeting and functions in the bacterial cytoplasm.)</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent picture of PrpE as the <strong>gatekeeper of propionate metabolism</strong> in <em>P. putida</em> KT2440.</p>
+<p><strong>1. Reaction and mechanism (the "what").</strong> PrpE activates propionate at the cost of one ATP (hydrolyzed to AMP + PPi), producing propionyl-CoA via a bound propionyl-AMP intermediate. It strongly prefers propionate (Km ≈ 50 µM in the <em>Salmonella</em> ortholog) over acetate, butyrate, and 3-hydroxypropionate.</p>
+<p><strong>2. Pathway context (the "where in metabolism").</strong> Propionyl-CoA is the entry metabolite of the 2-methylcitrate cycle:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nv">propionate</span>
+<span class="w">      </span>│<span class="w">  </span><span class="nv">PrpE</span><span class="w"> </span><span class="ss">(</span><span class="nv">EC</span><span class="w"> </span><span class="mi">6</span>.<span class="mi">2</span>.<span class="mi">1</span>.<span class="mi">17</span><span class="ss">)</span><span class="w">  </span>──<span class="w"> </span><span class="nv">ATP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nv">CoA</span><span class="w"> </span>→<span class="w"> </span><span class="nv">AMP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nv">PPi</span>
+<span class="w">      </span>▼
+<span class="w">  </span><span class="nv">propionyl</span><span class="o">-</span><span class="nv">CoA</span>
+<span class="w">      </span>│<span class="w">  </span><span class="nv">PrpC</span><span class="w">  </span><span class="ss">(</span><span class="o">+</span><span class="w"> </span><span class="nv">oxaloacetate</span><span class="ss">)</span>
+<span class="w">      </span>▼
+<span class="w">  </span><span class="mi">2</span><span class="o">-</span><span class="nv">methylcitrate</span><span class="w">   </span>◄──<span class="w"> </span><span class="nv">toxic</span><span class="w"> </span><span class="nv">intermediate</span><span class="w"> </span><span class="ss">(</span><span class="nv">growth</span><span class="w"> </span><span class="nv">inhibitor</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nv">it</span><span class="w"> </span><span class="nv">accumulates</span><span class="ss">)</span>
+<span class="w">      </span>│<span class="w">  </span><span class="nv">PrpD</span><span class="w"> </span><span class="ss">(</span><span class="nv">dehydratase</span><span class="ss">)</span>
+<span class="w">      </span>▼
+<span class="w">  </span><span class="mi">2</span><span class="o">-</span><span class="nv">methyl</span><span class="o">-</span><span class="nv">cis</span><span class="o">-</span><span class="nv">aconitate</span>
+<span class="w">      </span>│<span class="w">  </span><span class="nv">aconitase</span>
+<span class="w">      </span>▼
+<span class="w">  </span><span class="mi">2</span><span class="o">-</span><span class="nv">methylisocitrate</span>
+<span class="w">      </span>│<span class="w">  </span><span class="nv">PrpB</span><span class="w"> </span><span class="ss">(</span><span class="nv">lyase</span><span class="ss">)</span>
+<span class="w">      </span>▼
+<span class="w">   </span><span class="nv">pyruvate</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nv">succinate</span><span class="w">  </span>→<span class="w"> </span><span class="nv">central</span><span class="w"> </span><span class="nv">carbon</span><span class="w"> </span><span class="nv">metabolism</span>
+</code></pre></div>
+
+<p><strong>3. Dual role (the "why").</strong> By channeling propionate into the 2-MCC, PrpE simultaneously enables propionate <strong>assimilation</strong> (carbon/energy, and precursor supply for odd-chain PHAs in <em>Pseudomonas</em>) and <strong>detoxification</strong> (preventing lethal accumulation of propionate and 2-methylcitrate).</p>
+<p><strong>4. Regulation (the "when").</strong> PrpE is controlled at two levels:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Mechanism</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transcriptional</td>
+<td>PrpR activator + 2-methylcitrate coactivator induces prpBCDE</td>
+<td>Enzyme made only when propionate flux is present (feed-forward loop)</td>
+</tr>
+<tr>
+<td>Post-translational</td>
+<td>Acylation of active-site Lys (Lys592 in <em>Salmonella</em>) by GNAT acyltransferase; removal by NAD⁺-dependent sirtuin (CobB)</td>
+<td>Rapid on/off switch gating the adenylation half-reaction</td>
+</tr>
+</tbody>
+</table>
+<p>The post-translational switch is elegant because it ties enzyme activity to cellular energy/redox state (via NAD⁺-dependent deacylation) and to acyl-CoA availability (the acyl donor for the modifying GNAT). The 140° C-terminal domain rotation that lets one active site catalyze both half-reactions is exactly what makes a single lysine a viable regulatory target: the mark disables only the adenylation step.</p>
+<p><strong>Overall interpretation:</strong> PrpE is a soluble cytoplasmic propionate-activating enzyme that opens and gates the only well-described propionate-oxidation route in <em>Pseudomonas</em> (the 2-MCC), and its activity is dynamically tuned by reversible lysine acylation. All statements about the <em>P. putida</em> KT2440 protein specifically are <strong>inferences from close orthologs plus conserved family mechanism</strong> — a strong but not experimentally direct basis for this particular protein.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11841231/">11841231</a></td>
+<td>Characterization of <em>Salmonella</em> PrpE; Lys592 required for propionyl-AMP synthesis</td>
+<td>Direct enzymology of PrpE: propionate preferred (kcat/Km 1644 mM⁻¹s⁻¹); Bi Uni Uni Bi Ping Pong mechanism; Lys592 required for adenylation, not thioesterification</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11097899/">11097899</a></td>
+<td>Propionyl-CoA synthetase for poly(3HP-co-3HB)</td>
+<td>Quantifies PrpE substrate specificity: Km(propionate)=50 µM, specific activity 120 µmol/min/mg; acetate/3HP/butyrate activated much less efficiently</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42271202/">42271202</a></td>
+<td>Functions of the <em>prp</em> operon (<em>Acetobacter pasteurianus</em>)</td>
+<td>Defines prpBCDE operon composition and PrpE as the propionyl-CoA synthetase feeding the 2-MCC</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12700259/">12700259</a></td>
+<td>Propionyl-CoA common intermediate; prpBCDE expression (<em>Salmonella</em>)</td>
+<td>PrpE-generated propionyl-CoA is PrpC's substrate; operon under PrpR/2-methylcitrate control</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29458664/">29458664</a></td>
+<td><em>Loving the poison</em>: methylcitrate cycle and pathogenesis</td>
+<td>Supports the dual assimilation/detoxification role of the 2-MCC</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11376009/">11376009</a></td>
+<td>2-methylcitrate as a potent inhibitor of cell growth</td>
+<td>Identifies 2-methylcitrate as the specific toxic metabolite the pathway must manage</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17684016/">17684016</a></td>
+<td>N-lysine propionylation controls PrpE activity</td>
+<td>Documents reversible propionylation at Lys592 (inactivating) by GNATs, reversed by Sir2 sirtuins</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12493915/">12493915</a></td>
+<td>Sir2-dependent activation of Acs by deacetylation</td>
+<td>Paradigm: acylation blocks adenylate synthesis, not thioester formation; CobB (NAD⁺-dependent) reactivates</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15236963/">15236963</a></td>
+<td>Identification of Pat acetyltransferase (<em>Salmonella</em>)</td>
+<td>Identifies the acetyltransferase modifying Acs-Lys609; establishes the Pat/CobB system</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17497934/">17497934</a></td>
+<td>Conformational changes in acetyl-CoA synthetase</td>
+<td>Establishes the 140° C-terminal domain rotation enabling one active site to catalyze both half-reactions</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12627952/">12627952</a></td>
+<td>1.75 Å structure of Acs with adenosine-5′-propylphosphate + CoA</td>
+<td>Structural basis for the mobile catalytic lysine and acetylation-based control</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19544569/">19544569</a></td>
+<td>Acyl-CoA synthetase structure / acyl-binding pocket</td>
+<td>Structural rationale for short-chain acyl substrate selectivity in this family</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15019790/">15019790</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/29253849/">29253849</a></td>
+<td>CobB structure / kinetics</td>
+<td>Characterize the NAD⁺-dependent sirtuin deacylase that reverses the modification</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28003429/">28003429</a></td>
+<td>Rat ACSS3 propionyl-CoA synthetase</td>
+<td>Distant eukaryotic relative preferring propionate (Km 0.19 mM); mitochondrial in eukaryotes — contrasts with bacterial cytoplasmic PrpE</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37995793/">37995793</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/39729712/">39729712</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/40988068/">40988068</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/40015638/">40015638</a></td>
+<td>2-MCC in <em>Pseudomonas</em>/<em>Halomonas</em>; PHA production; glyoxylate crosstalk</td>
+<td>Physiological/biotech relevance of PrpE-initiated propionate flux and 2-MCC integration into central metabolism</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence:</strong> All primary enzymological data on PrpE derive from the <em>Salmonella enterica</em> ortholog, a very close functional homolog (same EC, same operon, same regulation). The mechanistic details (acyl-AMP intermediate, domain rotation, active-site lysine, sirtuin-reversible acylation) are conserved across the broader adenylate-forming family (Acs, 4-chlorobenzoate:CoA ligase, and others), giving high confidence that they apply to <em>P. putida</em> PrpE. No retrieved study contradicts the annotation of Q88KD9 as a propionyl-CoA synthetase.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical data on the <em>P. putida</em> KT2440 protein itself.</strong> Every quantitative parameter cited (Km, kcat/Km, specific activity, Lys592 modification) comes from orthologs, chiefly <em>Salmonella enterica</em> PrpE. The <em>P. putida</em> enzyme's own kinetic constants and exact substrate profile have not been measured in the retrieved literature.</p>
+</li>
+<li>
+<p><strong>The regulatory lysine position is inferred.</strong> Lys592 is the <em>Salmonella</em> numbering. The corresponding catalytic lysine in Q88KD9 is expected by homology, but its exact residue number, and whether <em>P. putida</em> actually propionylates/acetylates it in vivo, were not directly established here.</p>
+</li>
+<li>
+<p><strong>The <em>P. putida</em> Pat/CobB machinery was not verified.</strong> Whether <em>P. putida</em> KT2440 possesses the specific GNAT acyltransferase and CobB sirtuin that act on PrpE, and under what conditions they operate, remains an inference from the <em>Salmonella</em>/<em>E. coli</em> paradigm.</p>
+</li>
+<li>
+<p><strong>Localization is inferred bioinformatically.</strong> The cytoplasmic assignment rests on the absence of signal/membrane features and analogy to the family, not on experimental fractionation of the <em>P. putida</em> protein.</p>
+</li>
+<li>
+<p><strong>Possible redundancy/promiscuity not resolved.</strong> In <em>P. aeruginosa</em>, 2-MCC and glyoxylate-shunt enzymes show enzymatic redundancy (<a href="https://pubmed.ncbi.nlm.nih.gov/40015638/">PMID: 40015638</a>). Whether other acyl-CoA synthetases in <em>P. putida</em> can partially substitute for PrpE (e.g., under acetate-rich conditions) was not tested.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Purify and kinetically characterize recombinant <em>P. putida</em> KT2440 PrpE (PP_2351).</strong> Measure Km and kcat for propionate, acetate, butyrate, and 3-hydroxypropionate to confirm that the <em>Salmonella</em>-derived substrate preference holds for this ortholog.</p>
+</li>
+<li>
+<p><strong>Map and mutate the catalytic lysine.</strong> Align Q88KD9 to <em>Salmonella</em> PrpE to identify the residue equivalent to Lys592, then generate K→A/R/Q mutants and test for loss of adenylation activity (with retention of thioesterification from propionyl-AMP), replicating the diagnostic result of <a href="https://pubmed.ncbi.nlm.nih.gov/11841231/">PMID: 11841231</a>.</p>
+</li>
+<li>
+<p><strong>Test post-translational acylation in <em>P. putida</em>.</strong> Use mass spectrometry to detect in vivo acylation of PrpE, and test reactivation by an NAD⁺-dependent CobB/Sir2 deacylase, to confirm the regulatory switch operates in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Construct a ΔprpE mutant and phenotype it.</strong> Assess growth on propionate as sole carbon source, sensitivity to propionate toxicity, and accumulation of 2-methylcitrate; complement with <em>prpE</em> to confirm causality.</p>
+</li>
+<li>
+<p><strong>Assess redundancy.</strong> Combine ΔprpE with deletions of other candidate short-chain acyl-CoA synthetases (and probe the 2-MCC/glyoxylate crosstalk noted for <em>P. aeruginosa</em>) to determine whether propionate activation can proceed by alternative routes.</p>
+</li>
+<li>
+<p><strong>Experimentally verify localization</strong> by cell fractionation or fluorescent tagging to confirm the predicted cytoplasmic distribution, and model the structure (AlphaFold + superposition on Acs) to confirm the mobile C-terminal domain and catalytic-lysine geometry.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>prpE</em> (PP_2351 / Q88KD9) encodes <strong>propionyl-CoA synthetase (EC 6.2.1.17)</strong>, a soluble cytoplasmic enzyme of the ATP-dependent AMP-binding family that activates <strong>propionate to propionyl-CoA</strong> via a propionyl-AMP intermediate, with strong specificity for propionate over other short-chain acids. It catalyzes the <strong>committed first step of the prpBCDE 2-methylcitrate cycle</strong>, funneling propionate into central metabolism for both <strong>assimilation and detoxification</strong>, and its activity is gated by <strong>reversible N-lysine acylation of its active-site catalytic lysine</strong>, which blocks the adenylation half-reaction and is reversed by NAD⁺-dependent sirtuin (CobB/Sir2) deacylases. These conclusions rest on rigorous enzymology of close orthologs and the conserved mechanism of the enzyme family; direct characterization of the <em>P. putida</em> KT2440 protein itself is the principal outstanding gap.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="prpE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="prpE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11841231</li>
+<li>PMID:11097899</li>
+<li>PMID:19544569</li>
+<li>PMID:42271202</li>
+<li>PMID:12700259</li>
+<li>PMID:29458664</li>
+<li>PMID:11376009</li>
+<li>PMID:37995793</li>
+<li>PMID:39729712</li>
+<li>PMID:40988068</li>
+<li>PMID:40015638</li>
+<li>PMID:17684016</li>
+<li>PMID:12493915</li>
+<li>PMID:15236963</li>
+<li>PMID:15019790</li>
+<li>PMID:29253849</li>
+<li>PMID:17497934</li>
+<li>PMID:12627952</li>
+<li>PMID:28003429</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(prpE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KD9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="prpe-curation-notes">prpE curation notes</h1>
+<ul>
+<li>UniProt accession Q88KD9 names the target <code>Propionyl-CoA synthetase</code>, EC<br />
+  6.2.1.17<br />
+  [file:PSEPK/prpE/prpE-uniprot.txt,<br />
+  "SubName: Full=Propionyl-CoA synthetase"].</li>
+<li>The pathway report independently maps PP_2351 to KEGG K01908 and the same EC,<br />
+  while noting that target-strain substrate-specific enzymology is absent.</li>
+<li>The specific propionate-CoA ligase annotation is accepted and the generic<br />
+  ligase parent is replaced by it. Propionate catabolic process is added<br />
+  because PrpE supplies the entry substrate for the cycle.</li>
+<li><code>intracellular organelle lumen</code> is removed as an ARBA localization error for<br />
+  this bacterial cytoplasmic metabolic enzyme.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KD9
+gene_symbol: prpE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PrpE is the AMP-forming propionyl-CoA synthetase of the 2-methylcitrate
+  cycle in Pseudomonas putida KT2440. It activates propionate with CoA and ATP
+  to provide the propionyl-CoA substrate used by PrpC at the entry to
+  propionate catabolism.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: Correct expected location for this soluble bacterial metabolic enzyme.
+    action: ACCEPT
+    reason: PrpE is a soluble acyl-CoA synthetase acting on cytoplasmic pathway metabolites.
+- term:
+    id: GO:0016874
+    label: ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Correct parent activity but redundant with the substrate-specific ligase term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt assigns propionyl-CoA synthetase, EC 6.2.1.17.
+    supported_by:
+    - reference_id: file:PSEPK/prpE/prpE-uniprot.txt
+      supporting_text: &#39;SubName: Full=Propionyl-CoA synthetase&#39;
+- term:
+    id: GO:0050218
+    label: propionate-CoA ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core activity, with substrate specificity inferred from family and pathway context.
+    action: ACCEPT
+    reason: &gt;-
+      The exact target is named propionyl-CoA synthetase and KEGG K01908
+      independently supports EC 6.2.1.17 in the prp pathway, although no
+      KT2440-specific enzymology was found.
+    supported_by:
+    - reference_id: file:PSEPK/prpE/prpE-uniprot.txt
+      supporting_text: &#39;SubName: Full=Propionyl-CoA synthetase&#39;
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+      supporting_text: &#39;PP_2351 | prpE | K01908 | **propionyl-CoA synthetase, EC 6.2.1.17**&#39;
+    - reference_id: file:PSEPK/prpE/prpE-deep-research-openscientist.md
+      supporting_text: Q88KD9 as a *bona fide* propionyl-CoA synthetase
+- term:
+    id: GO:0070013
+    label: intracellular organelle lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: Taxonomically invalid localization for a Pseudomonas metabolic enzyme.
+    action: REMOVE
+    reason: &gt;-
+      Pseudomonas putida is a bacterium without the membrane-bounded
+      intracellular organelle lumen described by this term. The coexisting
+      cytoplasm annotation is the biologically appropriate localization.
+- term:
+    id: GO:0019543
+    label: propionate catabolic process
+  evidence_type: IC
+  original_reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+  qualifier: involved_in
+  review:
+    summary: Missing process annotation for the pathway-entry synthetase.
+    action: NEW
+    reason: PrpE supplies propionyl-CoA to the 2-methylcitrate cycle.
+    supported_by:
+    - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+      supporting_text: &#39;Propionate activation to **propionyl-CoA** — PrpE (ATP-dependent, AMP-forming ligase).&#39;
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/prpE/prpE-uniprot.txt
+  title: UniProtKB entry Q88KD9 for Pseudomonas putida KT2440 prpE
+  findings:
+  - statement: UniProt names Q88KD9 as propionyl-CoA synthetase.
+    supporting_text: &#39;SubName: Full=Propionyl-CoA synthetase&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target accession; the submitted EC assignment is homology-derived.
+- id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+  title: OpenScientist PSEPK 2-methylcitrate-cycle pathway report
+  findings:
+  - statement: The pathway analysis maps PrpE to propionate activation and confirms its KEGG EC assignment.
+    supporting_text: &#39;PP_2351 | prpE | K01908 | **propionyl-CoA synthetase, EC 6.2.1.17**&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated pathway report used for first-pass pathway context;
+      the exact accession and product name agree with UniProt.
+- id: file:PSEPK/prpE/prpE-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK prpE
+  findings:
+  - statement: The report identifies Q88KD9 as a propionyl-CoA synthetase.
+    supporting_text: Q88KD9 as a *bona fide* propionyl-CoA synthetase
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The functional synthesis agrees with UniProt and pathway context.
+      Quantitative kinetics and regulatory details in the report are largely
+      transferred from orthologs rather than measured on KT2440 PrpE.
+core_functions:
+- description: &gt;-
+    Activates propionate to propionyl-CoA for entry into the
+    2-methylcitrate cycle.
+  molecular_function:
+    id: GO:0050218
+    label: propionate-CoA ligase activity
+  directly_involved_in:
+  - id: GO:0019543
+    label: propionate catabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/prpE/prpE-uniprot.txt
+    supporting_text: &#39;SubName: Full=Propionyl-CoA synthetase&#39;
+  - reference_id: file:projects/P_PUTIDA/deep-research/PSEPK__methylcitrate_cycle__ppu00640-deep-research-openscientist.md
+    supporting_text: &#39;Propionate activation to **propionyl-CoA** — PrpE (ATP-dependent, AMP-forming ligase).&#39;
+  - reference_id: file:PSEPK/prpE/prpE-deep-research-openscientist.md
+    supporting_text: Q88KD9 as a *bona fide* propionyl-CoA synthetase
+suggested_questions:
+- question: What is the relative catalytic efficiency of KT2440 PrpE for propionate versus acetate?
+suggested_experiments:
+- description: &gt;-
+    Measure purified PrpE kinetics with short-chain carboxylates and test prpE
+    complementation during growth on propionate.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

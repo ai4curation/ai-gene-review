@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rffG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rffG</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LZ1" target="_blank" class="term-link">
+                        Q88LZ1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rffG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LZ1" data-a="DESCRIPTION: rffG (PP_1785) encodes dTDP-glucose 4,6-dehydratas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>rffG (PP_1785) encodes dTDP-glucose 4,6-dehydratase in the Pseudomonas putida KT2440 dTDP-L-rhamnose biosynthetic route. It converts dTDP-alpha-D-glucose to dTDP-4-dehydro-6-deoxy-alpha-D-glucose, producing the deoxy-keto nucleotide-sugar intermediate used by the RmlC/RfbC epimerase step.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008460" target="_blank" class="term-link">
+                                    GO:0008460
+                                </a>
+                            </span>
+                            <span class="term-label">dTDP-glucose 4,6-dehydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LZ1" data-a="GO:0008460" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of RffG in the dTDP-L-rhamnose pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the EC 4.2.1.46/Rhea reaction converting dTDP-alpha-D-glucose to dTDP-4-dehydro-6-deoxy-alpha-D-glucose and water.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rffG/rffG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009225" target="_blank" class="term-link">
+                                    GO:0009225
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide-sugar metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LZ1" data-a="GO:0009225" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleotide-sugar metabolism is correct but broader than the specific dTDP-L-rhamnose pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific process context for this gene cluster is dTDP-rhamnose biosynthesis.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019305" target="_blank" class="term-link">
+                                    dTDP-rhamnose biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>dTDP-glucose 4,6-dehydratase that converts dTDP-alpha-D-glucose to the deoxy-keto nucleotide sugar used by the downstream dTDP-L-rhamnose epimerase step.</h3>
+                <span class="vote-buttons" data-g="Q88LZ1" data-a="FUNCTION: dTDP-glucose 4,6-dehydratase that converts dTDP-al..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008460" target="_blank" class="term-link">
+                            dTDP-glucose 4,6-dehydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019305" target="_blank" class="term-link">
+                                dTDP-rhamnose biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rffG/rffG-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-derived nucleotide-sugar metabolism reviewed as a broad parent for the dTDP-L-rhamnose pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA source for the accepted dTDP-glucose 4,6-dehydratase activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rffG/rffG-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK rffG</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Belongs to the NAD(P)-dependent epimerase/dehydratase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rffG-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LZ1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *rffG* (Q88LZ1, PP_1785): dTDP-Glucose 4,6-Dehydratase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">18 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-16T10:58:07.120731</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rffG-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rffG-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-rffg-q88lz1-pp_1785-dtdp-glucose-46-dehydratase-of-pseudomonas-putida-kt2440">Functional Annotation of <em>rffG</em> (Q88LZ1, PP_1785): dTDP-Glucose 4,6-Dehydratase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) — proteome code PSEPK<br />
+<strong>Gene:</strong> <em>rffG</em> (Ordered locus PP_1785) · <strong>UniProt:</strong> Q88LZ1 · <strong>KEGG:</strong> ppu:PP_1785 · <strong>KO:</strong> K01710 · <strong>COG:</strong> COG1088<br />
+<strong>Enzyme:</strong> dTDP-glucose 4,6-dehydratase · <strong>EC 4.2.1.46</strong></p>
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>rffG</em> (locus PP_1785; UniProt Q88LZ1) of <em>Pseudomonas putida</em> strain KT2440 encodes dTDP-glucose 4,6-dehydratase (EC 4.2.1.46), the enzyme conventionally named RmlB.</strong> It is a cytoplasmic, NAD⁺-dependent enzyme that catalyzes the <strong>second, committed step of the dTDP-L-rhamnose biosynthetic pathway</strong>: the conversion of dTDP-α-D-glucose to dTDP-4-keto-6-deoxy-D-glucose plus water. All UniProt annotations — the EC number, the InterPro domain assignments (IPR005888 dTDP_Gluc_deHydtase; IPR016040/IPR036291 NAD(P)-binding Rossmann domains), the protein family (NAD(P)-dependent epimerase/dehydratase), and the ortholog group (COG1088) — are internally consistent and are fully corroborated by primary biochemical and structural literature on orthologous enzymes. The gene symbol <em>rffG</em>, the organism, and the domain architecture all match; there is no ambiguity in the identification.</p>
+<p>The enzyme's reaction is mechanistically well understood from studies of close orthologs. A tightly (essentially permanently) bound NAD⁺ cofactor first oxidizes the glucosyl C4 hydroxyl to a 4-keto group (generating enzyme-bound NADH); water is then eliminated between C5 and C6 to form a 4-keto-glucose-5,6-ene intermediate; finally a hydride is transferred back from NADH to C6, regenerating NAD⁺ and yielding the product dTDP-4-keto-6-deoxy-D-glucose. The enzyme is highly specific for the nucleotide sugar dTDP-D-glucose. The catalytic machinery — a Rossmann-fold dinucleotide-binding domain plus a conserved Thr/Tyr/Asp/Glu catalytic set and the SDR-family YxxxK motif — is directly identifiable in the Q88LZ1 sequence itself.</p>
+<p>Biologically, RmlB feeds into dTDP-L-rhamnose, the activated sugar donor that pseudomonads use to build cell-surface glycans — the lipopolysaccharide (LPS) core and O-antigen, and, in the broader <em>Pseudomonas</em> genus, rhamnolipid surfactants and rhamnose-containing biofilm exopolysaccharides. In KT2440, <em>rffG</em> sits within a complete chromosomal <em>rmlABCD</em> operon (PP_1782–PP_1785) flanked by glycosyltransferases, exactly the genomic arrangement expected for a dedicated nucleotide-sugar biosynthetic module. Because L-rhamnose and its four-enzyme pathway (RmlA–D) are entirely absent from humans, this pathway is a recognized selective antibacterial target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-rffg-is-a-dtdp-glucose-46-dehydratase-catalyzing-the-second-step-of-dtdp-l-rhamnose-biosynthesis">Finding 1 — <em>rffG</em> is a dTDP-glucose 4,6-dehydratase catalyzing the second step of dTDP-L-rhamnose biosynthesis</h3>
+<p>UniProt Q88LZ1 assigns EC 4.2.1.46 (dTDP-glucose 4,6-dehydratase), with the diagnostic InterPro domain IPR005888 (dTDP_Gluc_deHydtase) and NAD(P)-binding Rossmann domains (IPR016040/IPR036291). The reaction — <strong>dTDP-α-D-glucose → dTDP-4-keto-6-deoxy-D-glucose + H₂O</strong> — is the second of the four sequential steps in the canonical RmlA → RmlB → RmlC → RmlD pathway that converts glucose-1-phosphate and dTTP into dTDP-L-rhamnose.</p>
+<p>The chemical mechanism has been directly resolved. Rapid-mix/quench mass spectrometry on the <em>Escherichia coli</em> enzyme captured the reaction intermediates in real time and established the three-step sequence: "<em>NAD(+) initially oxidizes glucosyl C4 of dTDP-glucose to NADH and dTDP-4-ketoglucose. Next, water is eliminated between C5 and C6 of dTDP-4-ketoglucose to form dTDP-4-ketoglucose-5,6-ene. Hydride transfer from NADH to C6 of dTDP-4-ketoglucose-5,6-ene regenerates NAD(+) and produces the product dTDP-4-keto-6-deoxyglucose</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11076501/">PMID: 11076501</a>). This defines exactly the reaction and catalytic mechanism assigned to <em>rffG</em>/Q88LZ1. Independent characterization of the Group A <em>Streptococcus</em> enzyme confirmed the pathway assignment, noting that "<em>GAS RmlB and RmlC are critical for dTDP-L-rhamnose biosynthesis through their action as dTDP-glucose-4,6-dehydratase and dTDP-4-keto-6-deoxyglucose-3,5-epimerase enzymes respectively</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/30600561/">PMID: 30600561</a>).</p>
+<p>The key insight is that although the enzyme is classified as a dehydratase (a lyase), the reaction proceeds through an internal <strong>oxidation–dehydration–reduction</strong> cycle mediated by a bound NAD⁺ that is regenerated by the end of each turnover, so no net consumption of cofactor occurs. This is why the enzyme carries a Rossmann NAD-binding fold despite catalyzing a net dehydration.</p>
+<h3 id="finding-2-rffg-operates-in-the-cytoplasm-and-supplies-dtdp-l-rhamnose-for-lps-core-o-antigen-rhamnolipid-and-biofilm-exopolysaccharide">Finding 2 — RffG operates in the cytoplasm and supplies dTDP-L-rhamnose for LPS core, O-antigen, rhamnolipid, and biofilm exopolysaccharide</h3>
+<p>The pathway product, dTDP-L-rhamnose, is a cytoplasmic nucleotide sugar consumed downstream by membrane-associated glycosyltransferases. In the close relative <em>P. aeruginosa</em>, the contiguous <em>rmlBDAC</em> operon synthesizes dTDP-L-rhamnose, and the downstream uses are well documented: "<em>L-Rhamnose (L-Rha) is a component of the lipopolysaccharide (LPS) core, several O antigen polysaccharides, and the cell surface surfactant rhamnolipid of Pseudomonas aeruginosa. In this study, four contiguous genes (rmlBDAC) responsible for the synthesis of dTDP-L-Rha in P. aeruginosa have been cloned and characterized</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11065359/">PMID: 11065359</a>). In that study, <em>rmlC</em> mutants produced a truncated LPS core unable to attach A-band or B-band O antigen, demonstrating that L-rhamnose is the LPS-core acceptor site for O-polysaccharide attachment.</p>
+<p>The subcellular logic places RffG firmly in the cytoplasm: nucleotide-sugar precursors are made in the cytosol and then consumed at the cytoplasmic face of the inner membrane during O-unit assembly. As shown for <em>P. aeruginosa</em>, "<em>The O antigen of Pseudomonas aeruginosa B-band lipopolysaccharide is synthesized by assembling O-antigen-repeat units at the cytoplasmic face of the inner membrane</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15838026/">PMID: 15838026</a>). dTDP-L-rhamnose is also required for biofilm exopolysaccharide: the <em>P. aeruginosa</em> Psl polysaccharide analysis "<em>demonstrated the requirement for GDP-d-mannose, UDP-d-glucose and dTDP-l-rhamnose in Psl production</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/19659934/">PMID: 19659934</a>). Notably, several <em>P. putida</em> strains produce rhamnose-containing O-polysaccharides directly (e.g., D-rhamnose homopolymers and mannose/rhamnose repeat units have been structurally characterized in <em>P. putida</em> O-antigens), consistent with an active rhamnose pathway in this species.</p>
+<h3 id="finding-3-rffg-belongs-to-the-sdr-nadp-dependent-epimerase-dehydratase-superfamily-with-a-conserved-thrtyraspglu-catalytic-set">Finding 3 — RffG belongs to the SDR / NAD(P)-dependent epimerase-dehydratase superfamily with a conserved Thr–Tyr–Asp–Glu catalytic set</h3>
+<p>High-resolution X-ray structures of the family member DesIV (a dTDP-glucose 4,6-dehydratase from <em>Streptomyces venezuelae</em>) reveal a classic Rossmann-fold NAD-binding domain and a precisely arranged catalytic quartet. In that structure, Tyr151 and Thr127 hydrogen-bond the substrate 4′-hydroxyl, Asp128 acts as a general acid, and Glu129 as a general base: "<em>the side chain of Asp(128) is in the correct position to function as a general acid for proton donation to the 6'-hydroxyl group while the side chain of Glu(129) is ideally situated to serve as the general base for proton abstraction at C-5</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/14570895/">PMID: 14570895</a>).</p>
+<p>Independent site-directed mutagenesis of the <em>E. coli</em> enzyme identified a homologous catalytic set near the substrate-pyranose binding pocket: "<em>The first group consists of Asp135(DEH), Glu136(DEH), Glu198(DEH), Lys199(DEH), and Tyr301(DEH). These residues are near the substrate-pyranose binding pocket</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11380254/">PMID: 11380254</a>). Mutation of these residues reduced catalytic efficiency by roughly 100-fold, confirming their functional importance. Together these studies establish that the enzyme family combines a permanently bound (recycled) NAD⁺ with an acid/base catalytic set to accomplish the oxidation–dehydration–reduction cycle — an architecture matching the IPR016040/IPR036291 Rossmann domains annotated for Q88LZ1.</p>
+<h3 id="finding-4-in-kt2440-rffg-pp_1785-lies-in-a-complete-chromosomal-rmlabcd-operon-flanked-by-glycosyltransferases">Finding 4 — In KT2440, <em>rffG</em> (PP_1785) lies in a complete chromosomal <em>rmlABCD</em> operon flanked by glycosyltransferases</h3>
+<p>Genomic context strongly reinforces the functional assignment. The KEGG/GenBank annotation of the PP_1782–PP_1786 locus shows the four dTDP-L-rhamnose pathway genes clustered together:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Enzyme</th>
+<th>KO / EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_1782</td>
+<td><em>rfbC</em> (<em>rmlC</em>)</td>
+<td>dTDP-4-dehydrorhamnose 3,5-epimerase</td>
+<td>K01790 / EC 5.1.3.13</td>
+</tr>
+<tr>
+<td>PP_1783</td>
+<td><em>rfbA</em> (<em>rmlA</em>)</td>
+<td>glucose-1-phosphate thymidylyltransferase</td>
+<td>K00973 / EC 2.7.7.24</td>
+</tr>
+<tr>
+<td>PP_1784</td>
+<td><em>rfbD</em> (<em>rmlD</em>)</td>
+<td>dTDP-4-dehydrorhamnose reductase</td>
+<td>K00067 / EC 1.1.1.133</td>
+</tr>
+<tr>
+<td><strong>PP_1785</strong></td>
+<td><strong><em>rffG</em> (<em>rmlB</em>)</strong></td>
+<td><strong>dTDP-glucose 4,6-dehydratase</strong></td>
+<td><strong>K01710 / EC 4.2.1.46</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The cluster is flanked by a putative mannosyltransferase (PP_1780), an O-acyltransferase (PP_1781), and a glycosyltransferase (PP_1786) — the accessory enzymes that would consume the nucleotide-sugar product to build surface glycans. UniProt Q88LZ1 (366 aa) confirms the reaction dTDP-α-D-glucose = dTDP-4-dehydro-6-deoxy-α-D-glucose + H₂O (Rhea:17221), NAD⁺ cofactor, ortholog group COG1088, and KEGG module M00793 (dTDP-L-Rha biosynthesis, Glc-1P ⇒ dTDP-L-Rha). KEGG names the gene "dTDP-glucose 4,6-dehydratase 2," indicating a second paralogous isozyme elsewhere in the genome — a common situation in pseudomonads that maintain separate rhamnose pathways for distinct glycan destinations. This clustered <em>rmlABCD</em> organization is the canonical arrangement seen across bacteria (documented in <em>E. coli</em> O-antigen clusters, <em>Azospirillum</em>, <em>Streptococcus mutans</em>, mycobacteria, and <em>P. aeruginosa</em>), further supporting the identity.</p>
+<h3 id="finding-5-strict-specificity-for-dtdp-d-glucose-acidbase-catalysis-of-the-dehydration-step-the-pathway-is-human-absent">Finding 5 — Strict specificity for dTDP-D-glucose; acid/base catalysis of the dehydration step; the pathway is human-absent</h3>
+<p>The dehydration step proceeds through acid/base catalysis proven by an elegant fluorinated-substrate experiment. In the <em>E. coli</em> enzyme, "<em>The enzyme contains the tightly bound coenzyme NAD(+), which mediates the dehydrogenation and rereduction steps of the reaction mechanism. In this study, we have determined that Asp135 and Glu136 are the acid and base catalysts, respectively, of the dehydration step</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/11601973/">PMID: 11601973</a>). Using dTDP-6-fluoro-6-deoxyglucose — a substrate that eliminates fluoride without needing acid protonation of a leaving hydroxyl — Asp135 variants performed like wild type, whereas on the natural substrate they were ~100× slower, cleanly isolating Asp135's role as the acid catalyst.</p>
+<p>The enzyme acts specifically on the <strong>thymidine-diphospho (dTDP) sugar</strong>, distinguishing it from the UDP- and GDP-hexose-modifying enzymes of the same superfamily. Substrate recognition is anchored on the nucleotide moiety and the D-gluco configuration of the pyranose. Finally, the pathway's therapeutic relevance is well established: "<em>The biosynthesis of L-rhamnose utilizes four successive enzymes RmlA, RmlB, RmlC and RmlD. Neither rhamnose nor the genes responsible for its synthesis are observed in humans</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26323856/">PMID: 26323856</a>). This human-absence, combined with the essentiality of the pathway in many pathogens (e.g., <em>rmlB</em> and <em>rmlC</em> are essential for mycobacterial growth, <a href="https://pubmed.ncbi.nlm.nih.gov/16472764/">PMID: 16472764</a>), makes RmlB a validated antibacterial target.</p>
+<h3 id="finding-6-the-q88lz1-sequence-itself-carries-the-diagnostic-nad-binding-fingerprint-and-sdr-catalytic-motif">Finding 6 — The Q88LZ1 sequence itself carries the diagnostic NAD-binding fingerprint and SDR catalytic motif</h3>
+<p>Direct sequence analysis of the 366-residue Q88LZ1 protein maps the experimentally defined catalytic architecture onto the actual <em>P. putida</em> enzyme. Two features stand out:</p>
+<ol>
+<li>An <strong>N-terminal glycine-rich dinucleotide-binding motif GGAGFIG at residues 6–12</strong> — the canonical GxxGxxG Rossmann fingerprint that binds NAD⁺ within the βαβ fold of this family.</li>
+<li>The <strong>extended-SDR catalytic YxxxK motif at Y158-S-A-S-K162</strong>, whose tyrosine is the conserved catalytic acid/base residue characteristic of the NAD(P)-dependent epimerase/dehydratase superfamily.</li>
+</ol>
+<p>These directly correspond to the residues shown to be catalytic in orthologs — e.g., the DesIV catalytic tyrosine that engages the substrate: "<em>phenolate group of Tyr(151) and O(gamma) of Thr(127) lie at 2.7 and 2.6 A, respectively from the 4'-hydroxyl group of the dTDP-glucose substrate</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/14570895/">PMID: 14570895</a>). The presence of an intact NAD-binding fingerprint and an intact catalytic YxxxK motif in the KT2440 sequence indicates the enzyme is an active, correctly folded RmlB rather than a degenerate pseudo-enzyme.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>RffG performs the second reaction of a linear, four-enzyme nucleotide-sugar assembly line that converts glucose-1-phosphate and dTTP into the activated donor dTDP-L-rhamnose:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nx">Glc</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="nx">P</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">dTTP</span>
+<span class="err">│</span><span class="w">  </span><span class="nx">RmlA</span><span class="w"> </span><span class="p">(</span><span class="nx">RfbA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">PP_1783</span><span class="p">)</span><span class="w">   </span><span class="nx">glucose</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="nx">phosphate</span><span class="w"> </span><span class="nx">thymidylyltransferase</span><span class="w"> </span><span class="p">(</span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">2.7.7.24</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="nx">dTDP</span><span class="o">-</span><span class="nx">α</span><span class="o">-</span><span class="nx">D</span><span class="o">-</span><span class="nx">glucose</span>
+<span class="err">│</span><span class="w">  </span><span class="err">►►</span><span class="w"> </span><span class="nx">RmlB</span><span class="w"> </span><span class="p">(</span><span class="nx">RffG</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">PP_1785</span><span class="p">)</span><span class="w">  </span><span class="nx">dTDP</span><span class="o">-</span><span class="nx">GLUCOSE</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="o">-</span><span class="nx">DEHYDRATASE</span><span class="w">  </span><span class="p">(</span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">4.2.1.46</span><span class="p">)</span><span class="w">  </span><span class="err">◄◄</span>
+<span class="err">│</span><span class="w">      </span><span class="p">[</span><span class="nx">bound</span><span class="w"> </span><span class="nx">NAD</span><span class="err">⁺</span><span class="w"> </span><span class="nx">recycled</span><span class="p">]</span><span class="w">  </span><span class="nx">oxidation</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">dehydration</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">reduction</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">keto</span><span class="o">-</span><span class="mi">6</span><span class="o">-</span><span class="nx">deoxy</span><span class="o">-</span><span class="nx">D</span><span class="o">-</span><span class="nx">glucose</span>
+<span class="err">│</span><span class="w">  </span><span class="nx">RmlC</span><span class="w"> </span><span class="p">(</span><span class="nx">RfbC</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">PP_1782</span><span class="p">)</span><span class="w">   </span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="o">-</span><span class="nx">epimerase</span><span class="w"> </span><span class="p">(</span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">5.1.3.13</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">keto</span><span class="o">-</span><span class="mi">6</span><span class="o">-</span><span class="nx">deoxy</span><span class="o">-</span><span class="nx">L</span><span class="o">-</span><span class="nx">mannose</span><span class="w"> </span><span class="p">(</span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">keto</span><span class="o">-</span><span class="nx">L</span><span class="o">-</span><span class="nx">rhamnose</span><span class="p">)</span>
+<span class="err">│</span><span class="w">  </span><span class="nx">RmlD</span><span class="w"> </span><span class="p">(</span><span class="nx">RfbD</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">PP_1784</span><span class="p">)</span><span class="w">   </span><span class="mi">4</span><span class="o">-</span><span class="nx">reductase</span><span class="w"> </span><span class="p">(</span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">1.1.1.133</span><span class="p">)</span><span class="w">  </span><span class="p">[</span><span class="nx">NAD</span><span class="p">(</span><span class="nx">P</span><span class="p">)</span><span class="nx">H</span><span class="p">]</span>
+<span class="err">▼</span>
+<span class="w">   </span><span class="nx">dTDP</span><span class="o">-</span><span class="nx">β</span><span class="o">-</span><span class="nx">L</span><span class="o">-</span><span class="nx">RHAMNOSE</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="nx">glycosyltransferases</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_1780</span><span class="p">,</span><span class="w"> </span><span class="nx">PP_1781</span><span class="p">,</span><span class="w"> </span><span class="nx">PP_1786</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+<span class="w">              </span><span class="err">│</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="w">     </span><span class="nx">LPS</span><span class="w"> </span><span class="nx">core</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">O</span><span class="o">-</span><span class="nx">antigen</span><span class="w"> </span><span class="err">•</span><span class="w"> </span><span class="nx">rhamnolipid</span><span class="w"> </span><span class="err">•</span><span class="w"> </span><span class="nx">biofilm</span><span class="w"> </span><span class="nx">EPS</span><span class="w"> </span><span class="p">(</span><span class="nx">Psl</span><span class="o">-</span><span class="k">type</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Within the RmlB active site, a single catalytic cycle looks like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">Step</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nx">dehydrogenation</span><span class="p">):</span><span class="w">  </span><span class="nx">NAD</span><span class="err">⁺</span><span class="w"> </span><span class="nx">abstracts</span><span class="w"> </span><span class="nx">hydride</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">glucosyl</span><span class="w"> </span><span class="nx">C4</span><span class="o">-</span><span class="nx">OH</span>
+<span class="w">            </span><span class="err">→</span><span class="w"> </span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">KETO</span><span class="o">-</span><span class="nx">glucose</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">enzyme</span><span class="o">-</span><span class="nx">bound</span><span class="w"> </span><span class="nx">NADH</span>
+<span class="w">            </span><span class="p">(</span><span class="nx">Tyr</span><span class="o">/</span><span class="nx">Thr</span><span class="w"> </span><span class="nx">position</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">polarize</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="mi">4</span><span class="err">&#39;</span><span class="o">-</span><span class="nx">OH</span><span class="p">)</span>
+
+<span class="nx">Step</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nx">dehydration</span><span class="p">):</span><span class="w">       </span><span class="nx">Glu136</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">BASE</span><span class="w"> </span><span class="nx">removes</span><span class="w"> </span><span class="nx">C5</span><span class="w"> </span><span class="nx">proton</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">Asp135</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">ACID</span><span class="w"> </span><span class="nx">protonates</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">C6</span><span class="o">-</span><span class="nx">OH</span><span class="w"> </span><span class="nx">leaving</span><span class="w"> </span><span class="nx">group</span>
+<span class="w">            </span><span class="err">→</span><span class="w"> </span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">keto</span><span class="o">-</span><span class="nx">glucose</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="o">-</span><span class="nx">ENE</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">H₂O</span>
+
+<span class="nx">Step</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">(</span><span class="nx">re</span><span class="o">-</span><span class="nx">reduction</span><span class="p">):</span><span class="w">      </span><span class="nx">NADH</span><span class="w"> </span><span class="nx">returns</span><span class="w"> </span><span class="nx">hydride</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">C6</span>
+<span class="w">            </span><span class="err">→</span><span class="w"> </span><span class="nx">dTDP</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">KETO</span><span class="o">-</span><span class="mi">6</span><span class="o">-</span><span class="nx">DEOXY</span><span class="o">-</span><span class="nx">glucose</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">regenerated</span><span class="w"> </span><span class="nx">NAD</span><span class="err">⁺</span>
+</code></pre></div>
+
+<p>The cofactor is conserved across turnovers, which is why a "dehydratase" nonetheless requires — and permanently retains — an oxidized nicotinamide cofactor and a Rossmann fold. This oxidation/reduction bookkeeping is the unifying feature of the NAD(P)-dependent epimerase/dehydratase (extended SDR) superfamily to which RffG belongs.</p>
+<p><strong>Localization.</strong> All of this chemistry occurs in the <strong>cytoplasm</strong>. The product dTDP-L-rhamnose is a soluble nucleotide sugar handed off to glycosyltransferases that act at the cytoplasmic face of the inner membrane, where O-antigen repeat units are assembled before being flipped and polymerized. RffG itself has no membrane-spanning segments and no secretion signal; it is a soluble cytosolic enzyme.</p>
+<p><strong>Physiological role.</strong> The pathway's output is a building block, not a signaling molecule. Its importance is structural: L-rhamnose is incorporated into the LPS core/O-antigen and, in pseudomonads more broadly, into rhamnolipid surfactants and rhamnose-containing exopolysaccharides that support surface attachment, biofilm formation, and (in plant-associated pseudomonads and rhizobia) host colonization. Because RffG operates upstream of all these outputs, loss of function would be expected to truncate the LPS and diminish rhamnose-dependent surface glycans — a phenotype demonstrated for <em>rml</em> mutants in <em>P. aeruginosa</em> and <em>Azospirillum brasilense</em>.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study focus</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11076501/">11076501</a></td>
+<td>Rapid mix-quench MS of dTDP-glucose 4,6-dehydratase</td>
+<td>Directly resolves the three-step oxidation–dehydration–reduction mechanism and the exact reaction catalyzed by RffG.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30600561/">30600561</a></td>
+<td>Streptococcal dTDP-L-rhamnose enzymes</td>
+<td>Confirms RmlB is the dTDP-glucose-4,6-dehydratase performing the second pathway step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14570895/">14570895</a></td>
+<td>X-ray structure of DesIV dehydratase</td>
+<td>Defines the Rossmann NAD-binding fold and Thr/Tyr/Asp/Glu catalytic set; establishes the catalytic tyrosine matching the Q88LZ1 YxxxK motif.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11380254/">11380254</a></td>
+<td>Probing E. coli dehydratase catalysis</td>
+<td>Experimentally identifies active-site residues (Asp135, Glu136, Glu198, Lys199, Tyr301) whose mutation cripples catalysis ~100-fold.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11601973/">11601973</a></td>
+<td>Dehydration by Glu136/Asp135</td>
+<td>Proves Asp135 (acid) and Glu136 (base) catalyze the dehydration step; confirms tightly bound recycled NAD⁺.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11065359/">11065359</a></td>
+<td><em>rml</em> locus in <em>P. aeruginosa</em> LPS</td>
+<td>Establishes the <em>rmlBDAC</em> pathway in a close <em>Pseudomonas</em> relative and the downstream uses (LPS core, O-antigen, rhamnolipid).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15838026/">15838026</a></td>
+<td>WaaL ligase in <em>P. aeruginosa</em></td>
+<td>Places O-antigen assembly at the cytoplasmic face of the inner membrane, supporting cytoplasmic localization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19659934/">19659934</a></td>
+<td><em>P. aeruginosa</em> Psl exopolysaccharide</td>
+<td>Shows dTDP-L-rhamnose is required for biofilm exopolysaccharide production.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26323856/">26323856</a></td>
+<td>RmlA–D as anti-TB targets</td>
+<td>Confirms the four-enzyme L-rhamnose pathway and its absence in humans (selective-target rationale).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16472764/">16472764</a></td>
+<td><em>rmlB/rmlC</em> essentiality in mycobacteria</td>
+<td>Demonstrates RmlB/RmlC essentiality for growth, underscoring pathway importance.</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting genomic-context evidence comes from numerous O-antigen cluster sequencing studies (<em>E. coli</em> O138/O141/O157, <a href="https://pubmed.ncbi.nlm.nih.gov/16110955/">PMID: 16110955</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15633653/">PMID: 15633653</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/11029441/">PMID: 11029441</a>; <em>Azospirillum</em>, <a href="https://pubmed.ncbi.nlm.nih.gov/14987774/">PMID: 14987774</a>; <em>Streptococcus mutans</em>, <a href="https://pubmed.ncbi.nlm.nih.gov/9209063/">PMID: 9209063</a>), all reporting the conserved <em>rmlBDAC</em>/<em>rmlABCD</em> clustering that we observe in KT2440 at PP_1782–PP_1785. Structural characterizations of <em>P. putida</em> O-polysaccharides (<a href="https://pubmed.ncbi.nlm.nih.gov/12350329/">PMID: 12350329</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/29304442/">PMID: 29304442</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/28554122/">PMID: 28554122</a>) document rhamnose-containing surface glycans in this species, consistent with an active rhamnose pathway.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of Q88LZ1 itself.</strong> Every mechanistic and structural detail cited here derives from <em>orthologous</em> RmlB enzymes (<em>E. coli</em>, <em>S. venezuelae</em> DesIV, Group A <em>Streptococcus</em>), not from the purified <em>P. putida</em> KT2440 protein. The identification is very strong on the basis of sequence identity, domain architecture, intact catalytic motifs, and genomic context — but kinetic constants (kcat, Km for dTDP-glucose), an experimentally determined structure, and confirmation of NAD⁺ occupancy for the KT2440 enzyme are all inferred rather than measured.</p>
+</li>
+<li>
+<p><strong>Paralog ambiguity.</strong> KEGG labels PP_1785 "dTDP-glucose 4,6-dehydratase <strong>2</strong>," implying at least one additional dehydratase-like gene in KT2440. The precise division of labor between the paralogs (e.g., LPS-directed vs. exopolysaccharide- or rhamnolipid-directed rhamnose pools) has not been resolved and could affect which surface glycans depend specifically on <em>rffG</em>/PP_1785.</p>
+</li>
+<li>
+<p><strong>Species-specific downstream fate.</strong> The downstream uses of dTDP-L-rhamnose (rhamnolipid, Psl) are best documented in <em>P. aeruginosa</em>. While <em>P. putida</em> clearly makes rhamnose-containing O-antigens, the exact set of glycoconjugates fed by PP_1785 in KT2440 has not been experimentally traced.</p>
+</li>
+<li>
+<p><strong>Regulation and operon expression.</strong> The transcriptional organization of the PP_1782–PP_1786 region (single operon vs. multiple transcripts, regulatory inputs) was inferred from gene clustering, not measured.</p>
+</li>
+<li>
+<p><strong>The gene name "rffG" is a historical carryover.</strong> In enterobacteria, <em>rffG</em> denotes the dTDP-glucose 4,6-dehydratase of the ECA (enterobacterial common antigen) pathway; in KT2440 the same symbol is applied to the <em>rml</em>-type dehydratase feeding the general rhamnose pathway. The enzymatic activity is identical (EC 4.2.1.46), so the naming does not change the functional conclusion, but readers should not assume an ECA-specific role in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express and purify His-tagged PP_1785 from KT2440; confirm co-purifying NAD⁺ (by A₃₄₀/MS), and determine steady-state kinetics (kcat, Km) on dTDP-D-glucose. Test substrate specificity against UDP-glucose and GDP-mannose to confirm strict dTDP/D-gluco selectivity.</p>
+</li>
+<li>
+<p><strong>Genetic knockout and complementation.</strong> Construct an in-frame PP_1785 deletion (and a double knockout with the paralog) and analyze LPS by SDS-PAGE/silver stain and glycosyl-composition analysis to test loss of rhamnose from surface glycans; complement to confirm specificity.</p>
+</li>
+<li>
+<p><strong>Paralog dissection.</strong> Identify the second "dTDP-glucose 4,6-dehydratase" locus, compare expression across growth conditions (planktonic vs. biofilm, rhizosphere vs. lab medium), and use single vs. double mutants to assign each paralog to specific glycan outputs.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the X-ray or cryo-EM structure of the KT2440 enzyme with bound NAD⁺ and a substrate analog to verify the predicted Rossmann fold and the Y158/K162 catalytic motif positions inferred from sequence.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Mutate the predicted catalytic residues (the Y158 of the YxxxK motif and the Asp/Glu acid–base pair) and measure activity loss to confirm the transferability of the <em>E. coli</em>/DesIV catalytic model to the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Phenotypic assays.</strong> Assess the <em>rffG</em> mutant for biofilm formation, surface motility, and (given KT2440's rhizosphere lifestyle) plant-root colonization, to connect the enzyme's biochemical role to ecologically relevant surface-glycan phenotypes.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The identity of <em>rffG</em> (PP_1785, Q88LZ1) is unambiguous and fully consistent with the UniProt annotation: it is the <strong>RmlB dTDP-glucose 4,6-dehydratase (EC 4.2.1.46)</strong> of <em>Pseudomonas putida</em> KT2440. It is a cytoplasmic, NAD⁺-dependent enzyme of the extended-SDR (NAD(P)-dependent epimerase/dehydratase) superfamily that catalyzes the second, committed step of dTDP-L-rhamnose biosynthesis, converting dTDP-α-D-glucose to dTDP-4-keto-6-deoxy-D-glucose via an internal oxidation–dehydration–reduction cycle. It sits in a complete chromosomal <em>rmlABCD</em> operon and supplies the activated sugar donor used to build cell-surface glycans (LPS core/O-antigen, and in pseudomonads rhamnolipid and rhamnose-containing exopolysaccharide). Its identity, family, domains, and mechanism are all corroborated by concordant biochemical, structural, and genomic evidence.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rffG-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rffG-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11076501</li>
+<li>PMID:30600561</li>
+<li>PMID:11065359</li>
+<li>PMID:15838026</li>
+<li>PMID:19659934</li>
+<li>PMID:14570895</li>
+<li>PMID:11380254</li>
+<li>PMID:11601973</li>
+<li>PMID:26323856</li>
+<li>PMID:16472764</li>
+<li>PMID:16110955</li>
+<li>PMID:15633653</li>
+<li>PMID:11029441</li>
+<li>PMID:14987774</li>
+<li>PMID:9209063</li>
+<li>PMID:12350329</li>
+<li>PMID:29304442</li>
+<li>PMID:28554122</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LZ1
+gene_symbol: rffG
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  rffG (PP_1785) encodes dTDP-glucose 4,6-dehydratase in the Pseudomonas putida
+  KT2440 dTDP-L-rhamnose biosynthetic route. It converts dTDP-alpha-D-glucose
+  to dTDP-4-dehydro-6-deoxy-alpha-D-glucose, producing the deoxy-keto
+  nucleotide-sugar intermediate used by the RmlC/RfbC epimerase step.
+existing_annotations:
+- term:
+    id: GO:0008460
+    label: dTDP-glucose 4,6-dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the core molecular function of RffG in the dTDP-L-rhamnose
+      pathway.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records the EC 4.2.1.46/Rhea reaction converting
+      dTDP-alpha-D-glucose to dTDP-4-dehydro-6-deoxy-alpha-D-glucose and water.
+    supported_by:
+    - reference_id: file:PSEPK/rffG/rffG-uniprot.txt
+      supporting_text: Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose
+- term:
+    id: GO:0009225
+    label: nucleotide-sugar metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Nucleotide-sugar metabolism is correct but broader than the specific
+      dTDP-L-rhamnose pathway role.
+    action: MODIFY
+    reason: &gt;-
+      The specific process context for this gene cluster is dTDP-rhamnose
+      biosynthesis.
+    proposed_replacement_terms:
+    - id: GO:0019305
+      label: dTDP-rhamnose biosynthetic process
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: &gt;-
+      InterPro-derived nucleotide-sugar metabolism reviewed as a broad parent
+      for the dTDP-L-rhamnose pathway.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;-
+      Combined IEA source for the accepted dTDP-glucose 4,6-dehydratase
+      activity.
+- id: file:PSEPK/rffG/rffG-uniprot.txt
+  title: UniProtKB entry for PSEPK rffG
+  findings:
+  - supporting_text: Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose
+  - supporting_text: Belongs to the NAD(P)-dependent epimerase/dehydratase
+core_functions:
+- description: &gt;-
+    dTDP-glucose 4,6-dehydratase that converts dTDP-alpha-D-glucose to the
+    deoxy-keto nucleotide sugar used by the downstream dTDP-L-rhamnose
+    epimerase step.
+  molecular_function:
+    id: GO:0008460
+    label: dTDP-glucose 4,6-dehydratase activity
+  directly_involved_in:
+  - id: GO:0019305
+    label: dTDP-rhamnose biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/rffG/rffG-uniprot.txt
+    supporting_text: Reaction=dTDP-alpha-D-glucose = dTDP-4-dehydro-6-deoxy-alpha-D-glucose
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

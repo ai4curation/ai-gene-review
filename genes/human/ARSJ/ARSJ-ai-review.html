@@ -1,0 +1,2791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARSJ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ARSJ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5FYB0" target="_blank" class="term-link">
+                        Q5FYB0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ARSJ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5FYB0" data-a="DESCRIPTION: ARSJ is a 599-amino-acid class-I sulfatase-family ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ARSJ is a 599-amino-acid class-I sulfatase-family glycoprotein precursor containing an N-terminal signal peptide and the conserved catalytic cysteine that is expected to be converted to formylglycine in the endoplasmic reticulum. Phylogenetic and domain evidence supports sulfuric ester hydrolase activity, and the mature protein is predicted to enter the extracellular secretory route. Its native sulfate-ester substrate, physiological process, and catalytic properties remain unknown: an early recombinant-cell study did not detect activity in a standard arylsulfatase assay. Human Protein Atlas immunofluorescence also reports actin-filament-associated staining in BJ fibroblasts, but how this cell-context observation relates to the signal-peptide-bearing protein is unresolved. Mouse embryonic expression in joints and human lung-enriched transcript abundance provide possible physiological contexts but do not yet establish ARSJ function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0008484" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT infers the broad hydrolysis of sulfuric ester bonds from a well-conserved class-I sulfatase ancestor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARSJ retains the defining sulfatase catalytic core, including the formylglycine-generating cysteine and conserved catalytic residues. This supports the broad activity even though ARSJ&#39;s native substrate and kinetics have not been determined. Failure to cleave a standard artificial aryl substrate does not exclude hydrolysis of a distinct physiological sulfate ester.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                                        PMID:16174644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ARSJ/ARSJ-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">These features support a broad sulfuric ester hydrolase assignment by phylogeny, but they do not identify the substrate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0004065" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ARBA model assigns the narrower ability to hydrolyze aryl sulfate esters from ARSJ family and sequence features.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARSJ-specific cleavage of an aryl sulfate has not been demonstrated, and the available literature reports no detectable activity when recombinant ARSJ was tested in the standard arylsulfatase assay. Family conservation supports only the broader sulfuric ester hydrolase activity until a substrate is identified.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    sulfuric ester hydrolase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19262745" target="_blank" class="term-link">
+                                        PMID:19262745
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping assigns ARSJ to the extracellular region from its reviewed secreted-protein annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ARSJ has a strong N-terminal signal peptide, a predicted cleavage site at residue 49, multiple N-glycosylation sites, and no annotated transmembrane segment or lysosomal targeting signal. These features support the reviewed secretion assignment, although direct recovery of endogenous ARSJ from extracellular fluid is still needed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ARSJ/ARSJ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Secreted</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0008484" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro maps the ARSB-like sulfatase catalytic core to sulfuric ester hydrolase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mapping agrees with the independent IBA and with conservation of the catalytic cysteine and substrate/metal-coordinating residues. The term is appropriately broad because no ARSJ substrate has been identified and direct arylsulfatase activity was not detected.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                                        PMID:16174644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sulfatases catalyze the hydrolysis of sulfate ester bonds from a wide variety of substrates.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015629" target="_blank" class="term-link">
+                                    GO:0015629
+                                </a>
+                            </span>
+                            <span class="term-label">actin cytoskeleton</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0015629" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human Protein Atlas immunofluorescence reports actin-filament staining in BJ fibroblasts with two antibodies and an enhanced reliability score.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The directly curated cell-imaging observation is retained rather than overruled. It is not treated as a core catalytic location because staining was cell-line dependent, ARSJ carries a signal peptide, and no mechanistic evidence links ARSJ to actin. Orthogonal endogenous-protein validation is needed to distinguish an intracellular ARSJ pool from antibody cross-reactivity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ARSJ/ARSJ-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">Human Protein Atlas reports enhanced actin-filament immunofluorescence in BJ fibroblasts with two antibodies and no staining in the other listed cell lines.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1614362
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0005788" data-r="Reactome:R-HSA-1614362" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places ARSJ in the ER lumen during SUMF1-mediated conversion of its catalytic cysteine to formylglycine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Entry into the ER lumen is consistent with the signal peptide and with formylglycine maturation of eukaryotic sulfatases. This is a biosynthetic/transit location, however, not evidence that the mature enzyme acts in the ER; its final functional compartment remains incompletely resolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                                        PMID:16174644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the post-translational modification of a cysteine residue into C(alpha)-formylglycine (FGly) at the active site of all sulfatases</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16174644
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sulfatases and sulfatase modifying factors: an exclusive and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q5FYB0" data-a="GO:0004065" data-r="PMID:16174644" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited comparative-genomics study classified ARSJ as a sulfatase from its conserved active-site sequence but did not demonstrate hydrolysis of an aryl sulfate by ARSJ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:16174644 supports class-I sulfatase membership and a conserved sulfate-ester hydrolysis mechanism, not the narrower arylsulfatase activity. A later full-text source explicitly reports that the available recombinant ARSJ assay detected no arylsulfatase activity. GO:0008484 captures the supported family-level function without overstating substrate specificity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    sulfuric ester hydrolase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                                        PMID:16174644
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four novel ones (ARSH, ARSI, ARSJ and ARSK)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19262745" target="_blank" class="term-link">
+                                        PMID:19262745
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a probable formylglycine-dependent class-I sulfatase that hydrolyzes sulfuric ester bonds in an as-yet-unidentified substrate. The broad molecular activity is supported by phylogenetic and catalytic-core conservation, whereas cleavage of a standard aryl sulfate was not detected. ARSJ enters the secretory pathway and is predicted to act extracellularly, but the mature functional compartment still requires direct confirmation.</h3>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="FUNCTION: Acts as a probable formylglycine-dependent class-I..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                            sulfuric ester hydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                                PMID:16174644
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ARSJ/ARSJ-deep-research-manual.md
+
+                        </span>
+
+                        <div class="finding-text">The defensible core is a probable formylglycine-dependent sulfuric ester hydrolase with an unidentified substrate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16174644" target="_blank" class="term-link">
+                            PMID:16174644
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sulfatases and sulfatase modifying factors: an exclusive and promiscuous relationship.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ARSJ is one of four newly cataloged human sulfatase-family members.</div>
+
+                        <div class="finding-text">"four novel ones (ARSH, ARSI, ARSJ and ARSK)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sulfatase catalytic site and its formylglycine-generating modification are evolutionarily conserved.</div>
+
+                        <div class="finding-text">"the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16500042" target="_blank" class="term-link">
+                            PMID:16500042
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and initial characterization of three novel human sulfatases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study cloned three newly identified human sulfatase-family members, including the chromosome-4 member corresponding to ARSJ.</div>
+
+                        <div class="finding-text">"The three new members were cloned from different DNA sources"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19262745" target="_blank" class="term-link">
+                            PMID:19262745
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the arylsulfatase I (ARSI) gene preferentially expressed in the human retinal pigment epithelium cell line ARPE-19.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Earlier recombinant expression of ARSJ did not yield detectable activity in the standard arylsulfatase assay.</div>
+
+                        <div class="finding-text">"ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Class-I sulfatases require SUMF1-dependent conversion of the catalytic cysteine to formylglycine in the ER.</div>
+
+                        <div class="finding-text">"Signature sequence I contains a cysteine residue that is converted into the catalytically active formylglycine (FGly) residue"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20503373" target="_blank" class="term-link">
+                            PMID:20503373
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression patterns of sulfatase genes in the developing mouse embryo.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Arsj transcript is expressed in developing joints.</div>
+
+                        <div class="finding-text">"novel expression patterns for ArsG in choroid plexus, ArsI in hypertrophic chondrocytes and ArsJ in joints were identified"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30760748" target="_blank" class="term-link">
+                            PMID:30760748
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression, activity and localization of lysosomal sulfatases in Chronic Obstructive Pulmonary Disease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ARSJ transcript was lung-enriched in the human tissue RNA panel.</div>
+
+                        <div class="finding-text">"ARSJ showed the highest expression in the lung compared to all other tissues"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study did not assay ARSJ enzymatic activity.</div>
+
+                        <div class="finding-text">"Thus, we were unable to test the majority of sulfatases for changes in activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1614362
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SUMF1 mediates the oxidation of cysteine to formylglycine, producing active arylsulfatases</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ARSJ/ARSJ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry for human ARSJ (Q5FYB0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record predicts ARSJ secretion.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Secreted"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed sequence contains the conserved sulfatase nucleophile at cysteine 122.</div>
+
+                        <div class="finding-text">"ACT_SITE        122"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ARSJ/ARSJ-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature synthesis for human ARSJ</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What native sulfate ester is hydrolyzed by ARSJ, and does the enzyme act on a glycosaminoglycan, sulfolipid, steroid sulfate, or another metabolite?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: sulfatase biochemists, glycomics and sulfomics specialists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="Q: What native sulfate ester is hydrolyzed by ARSJ, a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the mature endogenous protein secreted, retained in the ER, associated with a membrane, or partitioned among multiple cellular pools?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: secretory-pathway cell biologists, protein-localization specialists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="Q: Is the mature endogenous protein secreted, retaine..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does mouse joint expression or human lung-enriched transcript abundance mark a conserved physiological role?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: skeletal-development biologists, pulmonary extracellular-matrix biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="Q: Does mouse joint expression or human lung-enriched..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify wild-type ARSJ together with SUMF1, verify conversion of Cys122 to formylglycine by mass spectrometry, and screen a chemically diverse panel of sulfate esters and sulfated glycans across pH conditions with a C122A catalytic control.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Properly formylglycine-modified ARSJ hydrolyzes a restricted physiological sulfate ester that is not represented by the original standard aryl substrate assay.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: quantitative enzyme and substrate profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="EXPERIMENT: Express and purify wild-type ARSJ together with SU..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag ARSJ in human fibroblasts and lung-derived cells, then combine pulse-chase analysis, secretion assays, selective permeabilization, and super-resolution imaging with actin and ER markers.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ARSJ traverses the ER and is secreted, while the reported actin-associated immunofluorescence reflects either a transient intracellular pool or antibody cross-reactivity.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous protein trafficking and localization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="EXPERIMENT: Endogenously tag ARSJ in human fibroblasts and lun..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate ARSJ-null human chondrocyte and lung stromal-cell models, quantify sulfate-containing metabolites and extracellular-matrix sulfation, and rescue with wild-type versus C122A ARSJ.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ARSJ catalytic activity controls a tissue-contextual sulfated metabolite or matrix substrate in joint or lung-associated cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: CRISPR metabolomics and catalytic rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5FYB0" data-a="EXPERIMENT: Generate ARSJ-null human chondrocyte and lung stro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ARSJ-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5FYB0" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Manual literature synthesis for human ARSJ</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="manual-literature-synthesis-for-human-arsj">Manual literature synthesis for human ARSJ</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<p>Manual synthesis was required because the Falcon request failed with HTTP 402 and its Perplexity-lite fallback failed with HTTP 401 on 2026-07-18. Sources checked were the reviewed UniProt record, current GOA, cached primary publications, Reactome, PubMed, and the Human Protein Atlas. This file is deliberately manual and is not named for a provider.</p>
+<h2 id="evidence-synthesis">Evidence synthesis</h2>
+<p>ARSJ encodes a 599-aa class-I sulfatase-family precursor. The reviewed sequence contains an N-terminal signal peptide and the conserved catalytic cysteine that class-I sulfatases convert to formylglycine. The comparative-genomics paper that discovered the complete human family includes ARSJ among four newly recognized members and emphasizes conservation of the catalytic site [PMID:16174644, "the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases"]. These features support a broad sulfuric ester hydrolase assignment by phylogeny, but they do not identify the substrate.</p>
+<p>The most important contrary/limiting evidence is the lack of a positive direct enzyme assay. The ARSI characterization paper summarizes the earlier ARSJ experiment as follows: [PMID:19262745, "ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected"]. A negative assay with a standard artificial aryl sulfate does not establish that ARSJ is inactive against its unknown native substrate. It does, however, make the narrow GO arylsulfatase term less defensible than the parent sulfuric ester hydrolase activity. Accordingly, both GO:0004065 records should be modified to GO:0008484, while the IBA and InterPro-derived GO:0008484 records can be accepted with an explicit uncertainty statement.</p>
+<p>Localization is not settled. UniProt predicts cleavage of residues 1-49 as a signal peptide and assigns secretion. Reactome places the protein in the ER lumen during SUMF1-mediated formylglycine generation, which is expected for secretory-pathway sulfatases but does not establish where the mature protein acts. Human Protein Atlas reports enhanced actin-filament immunofluorescence in BJ fibroblasts with two antibodies and no staining in the other listed cell lines. The actin annotation should be retained as non-core rather than overruled, while its relationship to the secretory-pathway topology is tested experimentally.</p>
+<p>Expression studies offer hypotheses rather than functions. Mouse embryonic in situ hybridization found ArsJ expression in joints [PMID:20503373, "novel expression patterns for ArsG in choroid plexus, ArsI in hypertrophic chondrocytes and ArsJ in joints were identified"]. A human RNA panel found lung enrichment [PMID:30760748, "ARSJ showed the highest expression in the lung compared to all other tissues"]. Neither observation supports a biological-process annotation without perturbation or substrate evidence.</p>
+<h2 id="curation-conclusion">Curation conclusion</h2>
+<p>The defensible core is a probable formylglycine-dependent sulfuric ester hydrolase with an unidentified substrate. The extracellular and ER-lumen annotations describe predicted mature routing and biosynthetic processing, respectively; actin-filament staining is an unresolved cell-context localization. No new biological-process or substrate-specific molecular-function annotation is justified.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ARSJ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5FYB0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="arsj-review-notes">ARSJ review notes</h1>
+<h2 id="retrieval-and-scope">Retrieval and scope</h2>
+<ul>
+<li>UniProt/GOA data were fetched on 2026-07-18. The GOA snapshot contains seven grouped annotations.</li>
+<li>Falcon deep research failed with HTTP 402, and the required Perplexity-lite fallback failed with HTTP 401 (quota). Manual research is recorded in <code>ARSJ-deep-research-manual.md</code>; no provider-named file was authored.</li>
+<li>The central curation problem is that ARSJ has convincing class-I sulfatase architecture but no defined native substrate and no positive ARSJ-specific biochemical assay.</li>
+</ul>
+<h2 id="protein-identity-and-catalytic-inference">Protein identity and catalytic inference</h2>
+<ul>
+<li>Human ARSJ is a reviewed 599-aa precursor (UniProt Q5FYB0) with a predicted signal peptide at residues 1-49, a mature chain at residues 50-599, and a conserved sulfatase catalytic cysteine at position 122. UniProt transfers calcium-binding and catalytic residues from ARSB by homology.</li>
+<li>The family catalog identifies ARSJ among the 17 human sulfatases and reports that the sulfatase active site is especially evolutionarily constrained [PMID:16174644, "the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases"]. This supports the broad GO:0008484 sulfuric ester hydrolase activity inference.</li>
+<li>A later primary study states that recombinant ARSI and ARSJ had previously been expressed in HeLa cells without detectable activity against the standard arylsulfatase assay [PMID:19262745, "ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected"]. This does not disprove activity against an unknown physiological sulfate ester, but it means GO:0004065 arylsulfatase activity is too specific at present.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>The N-terminal signal peptide and reviewed UniProt secretion assignment support GO:0005576 extracellular region, although direct secretion of ARSJ itself has not been demonstrated in a primary paper available here.</li>
+<li>Reactome places ARSJ in the ER lumen during SUMF1-mediated conversion of the catalytic cysteine to formylglycine. This is a biosynthetic/maturation location rather than an established site of mature ARSJ action, so it is retained as non-core.</li>
+<li>Human Protein Atlas immunofluorescence maps ARSJ to actin filaments in BJ fibroblasts with an enhanced score and concordant staining from two antibodies; other tested cell lines showed no staining. The GO annotation is retained as a cell-context observation, not treated as a core location. The relationship between a signal-peptide-bearing protein and actin-associated staining remains unresolved.</li>
+</ul>
+<h2 id="expression-and-biological-context">Expression and biological context</h2>
+<ul>
+<li>Mouse embryonic in situ hybridization detected Arsj in developing joints [PMID:20503373, "novel expression patterns for ArsG in choroid plexus, ArsI in hypertrophic chondrocytes and ArsJ in joints were identified"]. This is expression evidence only and does not justify a human developmental-process annotation.</li>
+<li>A human tissue RNA panel found ARSJ transcript highest in lung among the tissues tested [PMID:30760748, "ARSJ showed the highest expression in the lung compared to all other tissues"]. That study explicitly did not assay ARSJ enzymatic activity, so no COPD or lung-process term is proposed.</li>
+</ul>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<table>
+<thead>
+<tr>
+<th>GO term</th>
+<th>Evidence</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0008484 sulfuric ester hydrolase activity</td>
+<td>IBA</td>
+<td>ACCEPT</td>
+<td>Conserved class-I sulfatase catalytic machinery and phylogenetic inference support the broad activity.</td>
+</tr>
+<tr>
+<td>GO:0004065 arylsulfatase activity</td>
+<td>IEA</td>
+<td>MODIFY to GO:0008484</td>
+<td>No ARSJ-specific aryl-sulfate cleavage has been demonstrated; a standard assay was negative.</td>
+</tr>
+<tr>
+<td>GO:0005576 extracellular region</td>
+<td>IEA</td>
+<td>ACCEPT</td>
+<td>Signal peptide plus reviewed secretion assignment support entry into the extracellular secretory route.</td>
+</tr>
+<tr>
+<td>GO:0008484 sulfuric ester hydrolase activity</td>
+<td>IEA</td>
+<td>ACCEPT</td>
+<td>InterPro sulfatase-core mapping agrees with the IBA and conserved catalytic residues.</td>
+</tr>
+<tr>
+<td>GO:0015629 actin cytoskeleton</td>
+<td>IDA</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Enhanced HPA immunofluorescence is retained, but it is cell-context-specific and mechanistically unresolved.</td>
+</tr>
+<tr>
+<td>GO:0005788 ER lumen</td>
+<td>TAS</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Appropriate for SUMF1-dependent maturation/transit, not established as the mature functional site.</td>
+</tr>
+<tr>
+<td>GO:0004065 arylsulfatase activity</td>
+<td>TAS</td>
+<td>MODIFY to GO:0008484</td>
+<td>PMID:16174644 establishes family membership and catalytic conservation, not ARSJ aryl-substrate turnover.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-issues">Open issues</h2>
+<ul>
+<li>Identify the native sulfate-ester substrate and determine whether ARSJ cleaves any small aryl-sulfate surrogate under conditions that ensure SUMF1-dependent formylglycine formation.</li>
+<li>Directly resolve whether mature ARSJ is secreted, retained in the ER, membrane-associated, or present in more than one pool.</li>
+<li>Test whether joint expression in mouse embryos or lung-enriched human transcript abundance reflects a conserved physiological role.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5FYB0
+gene_symbol: ARSJ
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ARSJ is a 599-amino-acid class-I sulfatase-family glycoprotein precursor
+  containing an N-terminal signal peptide and the conserved catalytic cysteine
+  that is expected to be converted to formylglycine in the endoplasmic
+  reticulum. Phylogenetic and domain evidence supports sulfuric ester hydrolase
+  activity, and the mature protein is predicted to enter the extracellular
+  secretory route. Its native sulfate-ester substrate, physiological process,
+  and catalytic properties remain unknown: an early recombinant-cell study did
+  not detect activity in a standard arylsulfatase assay. Human Protein Atlas
+  immunofluorescence also reports actin-filament-associated staining in BJ
+  fibroblasts, but how this cell-context observation relates to the
+  signal-peptide-bearing protein is unresolved. Mouse embryonic expression in
+  joints and human lung-enriched transcript abundance provide possible
+  physiological contexts but do not yet establish ARSJ function.
+existing_annotations:
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PAINT infers the broad hydrolysis of sulfuric ester bonds from a
+      well-conserved class-I sulfatase ancestor.
+    action: ACCEPT
+    reason: &gt;-
+      ARSJ retains the defining sulfatase catalytic core, including the
+      formylglycine-generating cysteine and conserved catalytic residues. This
+      supports the broad activity even though ARSJ&#39;s native substrate and
+      kinetics have not been determined. Failure to cleave a standard
+      artificial aryl substrate does not exclude hydrolysis of a distinct
+      physiological sulfate ester.
+    additional_reference_ids:
+    - PMID:16174644
+    - PMID:19262745
+    - file:human/ARSJ/ARSJ-deep-research-manual.md
+    supported_by:
+    - reference_id: PMID:16174644
+      supporting_text: the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: file:human/ARSJ/ARSJ-deep-research-manual.md
+      supporting_text: These features support a broad sulfuric ester hydrolase assignment by phylogeny, but they do not identify the substrate.
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The ARBA model assigns the narrower ability to hydrolyze aryl sulfate
+      esters from ARSJ family and sequence features.
+    action: MODIFY
+    reason: &gt;-
+      ARSJ-specific cleavage of an aryl sulfate has not been demonstrated, and
+      the available literature reports no detectable activity when recombinant
+      ARSJ was tested in the standard arylsulfatase assay. Family conservation
+      supports only the broader sulfuric ester hydrolase activity until a
+      substrate is identified.
+    proposed_replacement_terms:
+    - id: GO:0008484
+      label: sulfuric ester hydrolase activity
+    additional_reference_ids:
+    - PMID:19262745
+    supported_by:
+    - reference_id: PMID:19262745
+      supporting_text: ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected
+      reference_section_type: INTRODUCTION
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping assigns ARSJ to the extracellular
+      region from its reviewed secreted-protein annotation.
+    action: ACCEPT
+    reason: &gt;-
+      ARSJ has a strong N-terminal signal peptide, a predicted cleavage site at
+      residue 49, multiple N-glycosylation sites, and no annotated
+      transmembrane segment or lysosomal targeting signal. These features
+      support the reviewed secretion assignment, although direct recovery of
+      endogenous ARSJ from extracellular fluid is still needed.
+    additional_reference_ids:
+    - file:human/ARSJ/ARSJ-uniprot.txt
+    supported_by:
+    - reference_id: file:human/ARSJ/ARSJ-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Secreted&#39;
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro maps the ARSB-like sulfatase catalytic core to sulfuric ester
+      hydrolase activity.
+    action: ACCEPT
+    reason: &gt;-
+      The mapping agrees with the independent IBA and with conservation of the
+      catalytic cysteine and substrate/metal-coordinating residues. The term is
+      appropriately broad because no ARSJ substrate has been identified and
+      direct arylsulfatase activity was not detected.
+    additional_reference_ids:
+    - PMID:16174644
+    - PMID:19262745
+    supported_by:
+    - reference_id: PMID:16174644
+      supporting_text: Sulfatases catalyze the hydrolysis of sulfate ester bonds from a wide variety of substrates.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0015629
+    label: actin cytoskeleton
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Human Protein Atlas immunofluorescence reports actin-filament staining in
+      BJ fibroblasts with two antibodies and an enhanced reliability score.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The directly curated cell-imaging observation is retained rather than
+      overruled. It is not treated as a core catalytic location because staining
+      was cell-line dependent, ARSJ carries a signal peptide, and no mechanistic
+      evidence links ARSJ to actin. Orthogonal endogenous-protein validation is
+      needed to distinguish an intracellular ARSJ pool from antibody
+      cross-reactivity.
+    additional_reference_ids:
+    - file:human/ARSJ/ARSJ-deep-research-manual.md
+    supported_by:
+    - reference_id: file:human/ARSJ/ARSJ-deep-research-manual.md
+      supporting_text: Human Protein Atlas reports enhanced actin-filament immunofluorescence in BJ fibroblasts with two antibodies and no staining in the other listed cell lines.
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1614362
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places ARSJ in the ER lumen during SUMF1-mediated conversion of
+      its catalytic cysteine to formylglycine.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Entry into the ER lumen is consistent with the signal peptide and with
+      formylglycine maturation of eukaryotic sulfatases. This is a
+      biosynthetic/transit location, however, not evidence that the mature
+      enzyme acts in the ER; its final functional compartment remains
+      incompletely resolved.
+    additional_reference_ids:
+    - PMID:16174644
+    - file:human/ARSJ/ARSJ-deep-research-manual.md
+    supported_by:
+    - reference_id: PMID:16174644
+      supporting_text: the post-translational modification of a cysteine residue into C(alpha)-formylglycine (FGly) at the active site of all sulfatases
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: TAS
+  original_reference_id: PMID:16174644
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The cited comparative-genomics study classified ARSJ as a sulfatase from
+      its conserved active-site sequence but did not demonstrate hydrolysis of
+      an aryl sulfate by ARSJ.
+    action: MODIFY
+    reason: &gt;-
+      PMID:16174644 supports class-I sulfatase membership and a conserved
+      sulfate-ester hydrolysis mechanism, not the narrower arylsulfatase
+      activity. A later full-text source explicitly reports that the available
+      recombinant ARSJ assay detected no arylsulfatase activity. GO:0008484
+      captures the supported family-level function without overstating
+      substrate specificity.
+    proposed_replacement_terms:
+    - id: GO:0008484
+      label: sulfuric ester hydrolase activity
+    additional_reference_ids:
+    - PMID:19262745
+    supported_by:
+    - reference_id: PMID:16174644
+      supporting_text: four novel ones (ARSH, ARSI, ARSJ and ARSK)
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:19262745
+      supporting_text: ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected
+      reference_section_type: INTRODUCTION
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16174644
+  title: &#39;Sulfatases and sulfatase modifying factors: an exclusive and promiscuous relationship.&#39;
+  findings:
+  - statement: ARSJ is one of four newly cataloged human sulfatase-family members.
+    supporting_text: four novel ones (ARSH, ARSI, ARSJ and ARSK)
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: The sulfatase catalytic site and its formylglycine-generating modification are evolutionarily conserved.
+    supporting_text: the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The paper supports ARSJ
+      sulfatase-family membership and conserved catalytic architecture, but the
+      TAS use for the narrower GO arylsulfatase activity overstates the paper:
+      no ARSJ aryl-substrate assay is reported in the accessible record.
+- id: PMID:16500042
+  title: Molecular cloning and initial characterization of three novel human sulfatases.
+  findings:
+  - statement: The study cloned three newly identified human sulfatase-family members, including the chromosome-4 member corresponding to ARSJ.
+    supporting_text: The three new members were cloned from different DNA sources
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This is the initial cloning and
+      expression-characterization study, but only the abstract was available
+      locally and it does not expose ARSJ-specific biochemical results.
+- id: PMID:19262745
+  title: Characterization of the arylsulfatase I (ARSI) gene preferentially expressed in the human retinal pigment epithelium cell line ARPE-19.
+  findings:
+  - statement: Earlier recombinant expression of ARSJ did not yield detectable activity in the standard arylsulfatase assay.
+    supporting_text: ARSI and ARSJ cDNAs have been cloned and expressed in HeLa cells, but no ARS activity has been detected
+    reference_section_type: INTRODUCTION
+  - statement: Class-I sulfatases require SUMF1-dependent conversion of the catalytic cysteine to formylglycine in the ER.
+    supporting_text: Signature sequence I contains a cysteine residue that is converted into the catalytically active formylglycine (FGly) residue
+    reference_section_type: INTRODUCTION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and cached full text were checked. Although the paper
+      experimentally focuses on ARSI, its introduction explicitly summarizes
+      the prior ARSJ recombinant assay and is the accessible source for the
+      negative activity result.
+- id: PMID:20503373
+  title: Expression patterns of sulfatase genes in the developing mouse embryo.
+  findings:
+  - statement: Mouse Arsj transcript is expressed in developing joints.
+    supporting_text: novel expression patterns for ArsG in choroid plexus, ArsI in hypertrophic chondrocytes and ArsJ in joints were identified
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The mouse in situ data provide
+      developmental expression context only; they do not establish a molecular
+      substrate or causal developmental role.
+- id: PMID:30760748
+  title: Expression, activity and localization of lysosomal sulfatases in Chronic Obstructive Pulmonary Disease.
+  findings:
+  - statement: ARSJ transcript was lung-enriched in the human tissue RNA panel.
+    supporting_text: ARSJ showed the highest expression in the lung compared to all other tissues
+    reference_section_type: RESULTS
+  - statement: The study did not assay ARSJ enzymatic activity.
+    supporting_text: Thus, we were unable to test the majority of sulfatases for changes in activity.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and cached full text were checked. The paper supplies
+      human expression context but explicitly did not measure ARSJ activity, so
+      it does not support a COPD or lung-process annotation.
+- id: Reactome:R-HSA-1614362
+  title: SUMF1 mediates the oxidation of cysteine to formylglycine, producing active arylsulfatases
+  findings: []
+- id: file:human/ARSJ/ARSJ-uniprot.txt
+  title: UniProt entry for human ARSJ (Q5FYB0)
+  findings:
+  - statement: The reviewed record predicts ARSJ secretion.
+    supporting_text: &#39;SUBCELLULAR LOCATION: Secreted&#39;
+  - statement: The reviewed sequence contains the conserved sulfatase nucleophile at cysteine 122.
+    supporting_text: ACT_SITE        122
+- id: file:human/ARSJ/ARSJ-deep-research-manual.md
+  title: Manual literature synthesis for human ARSJ
+  findings: []
+core_functions:
+- description: &gt;-
+    Acts as a probable formylglycine-dependent class-I sulfatase that hydrolyzes
+    sulfuric ester bonds in an as-yet-unidentified substrate. The broad
+    molecular activity is supported by phylogenetic and catalytic-core
+    conservation, whereas cleavage of a standard aryl sulfate was not detected.
+    ARSJ enters the secretory pathway and is predicted to act extracellularly,
+    but the mature functional compartment still requires direct confirmation.
+  molecular_function:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:16174644
+    supporting_text: the active site, which is the target of the post-translational modification, is the most evolutionarily constrained region of sulfatases
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: file:human/ARSJ/ARSJ-deep-research-manual.md
+    supporting_text: The defensible core is a probable formylglycine-dependent sulfuric ester hydrolase with an unidentified substrate.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What native sulfate ester is hydrolyzed by ARSJ, and does the enzyme act on
+    a glycosaminoglycan, sulfolipid, steroid sulfate, or another metabolite?
+  experts:
+  - sulfatase biochemists
+  - glycomics and sulfomics specialists
+- question: &gt;-
+    Is the mature endogenous protein secreted, retained in the ER, associated
+    with a membrane, or partitioned among multiple cellular pools?
+  experts:
+  - secretory-pathway cell biologists
+  - protein-localization specialists
+- question: &gt;-
+    Does mouse joint expression or human lung-enriched transcript abundance
+    mark a conserved physiological role?
+  experts:
+  - skeletal-development biologists
+  - pulmonary extracellular-matrix biologists
+suggested_experiments:
+- description: &gt;-
+    Express and purify wild-type ARSJ together with SUMF1, verify conversion of
+    Cys122 to formylglycine by mass spectrometry, and screen a chemically
+    diverse panel of sulfate esters and sulfated glycans across pH conditions
+    with a C122A catalytic control.
+  experiment_type: quantitative enzyme and substrate profiling
+  hypothesis: &gt;-
+    Properly formylglycine-modified ARSJ hydrolyzes a restricted physiological
+    sulfate ester that is not represented by the original standard aryl
+    substrate assay.
+- description: &gt;-
+    Endogenously tag ARSJ in human fibroblasts and lung-derived cells, then
+    combine pulse-chase analysis, secretion assays, selective
+    permeabilization, and super-resolution imaging with actin and ER markers.
+  experiment_type: endogenous protein trafficking and localization
+  hypothesis: &gt;-
+    ARSJ traverses the ER and is secreted, while the reported actin-associated
+    immunofluorescence reflects either a transient intracellular pool or
+    antibody cross-reactivity.
+- description: &gt;-
+    Generate ARSJ-null human chondrocyte and lung stromal-cell models, quantify
+    sulfate-containing metabolites and extracellular-matrix sulfation, and
+    rescue with wild-type versus C122A ARSJ.
+  experiment_type: CRISPR metabolomics and catalytic rescue
+  hypothesis: &gt;-
+    ARSJ catalytic activity controls a tissue-contextual sulfated metabolite or
+    matrix substrate in joint or lung-associated cells.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

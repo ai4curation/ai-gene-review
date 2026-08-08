@@ -34,6 +34,7 @@ PROVIDERS = (
     "openscientist",
 )
 DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
     "{module_summary}",
@@ -366,6 +367,7 @@ def build_deep_research_command(
     output_path: Path,
     template_path: Path,
     extra_args: list[str] | None = None,
+    provider_timeout: int | None = None,
 ) -> list[str]:
     """Build the deep-research-client command."""
     if provider == "perplexity-lite":
@@ -393,6 +395,8 @@ def build_deep_research_command(
     cmd.extend(["--provider", actual_provider, "--output", str(output_path)])
     if provider == "codex":
         cmd.extend(["--param", "agent_type=codex"])
+    if actual_provider == "openscientist" and provider_timeout is not None:
+        cmd.extend(["--param", f"timeout={provider_timeout}"])
     if extra_args:
         cmd.extend(extra_args)
     return cmd
@@ -483,7 +487,10 @@ def main() -> int:
     parser.add_argument(
         "--timeout",
         type=int,
-        help="Timeout for deep-research-client subprocess in seconds",
+        help=(
+            "Timeout for deep-research-client and the provider in seconds "
+            f"(OpenScientist default: {DEFAULT_OPENSCIENTIST_TIMEOUT})"
+        ),
     )
     parser.add_argument(
         "--extra-args",
@@ -496,6 +503,10 @@ def main() -> int:
     module_path = resolve_module_path(args.module, args.modules_dir)
     data = load_module_yaml(module_path)
     output_path = output_path_for_research(module_path, args.provider, args.output_dir)
+    effective_timeout = args.timeout
+    if effective_timeout is None and args.provider == "openscientist":
+        effective_timeout = DEFAULT_OPENSCIENTIST_TIMEOUT
+
     cmd = build_deep_research_command(
         module_path=module_path,
         data=data,
@@ -503,6 +514,7 @@ def main() -> int:
         output_path=output_path,
         template_path=args.template,
         extra_args=args.extra_args,
+        provider_timeout=effective_timeout,
     )
 
     print(f"Module: {module_path}")
@@ -511,7 +523,7 @@ def main() -> int:
         cmd,
         output_path,
         dry_run=args.dry_run,
-        timeout=args.timeout,
+        timeout=effective_timeout,
     )
 
 

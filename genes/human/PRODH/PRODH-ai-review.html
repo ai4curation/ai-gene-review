@@ -1,0 +1,3616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRODH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PRODH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O43272" target="_blank" class="term-link">
+                        O43272
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PRODH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O43272" data-a="DESCRIPTION: PRODH encodes proline dehydrogenase 1 (proline oxi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PRODH encodes proline dehydrogenase 1 (proline oxidase, POX; EC 1.5.5.2), a FAD-dependent flavoenzyme bound to the matrix face of the mitochondrial inner membrane. It catalyzes the first, committed step of proline catabolism: the oxidation of L-proline to (S)-1-pyrroline-5-carboxylate (P5C), which is then converted by ALDH4A1/P5C dehydrogenase to L-glutamate. Rather than using a soluble acceptor, PRODH donates the electrons abstracted from proline through its FAD cofactor to ubiquinone in the respiratory electron transport chain, coupling proline oxidation to mitochondrial bioenergetics. Beyond its catabolic role, PRODH is a transcriptional target of p53 (originally identified as the p53-induced gene PIG6): its catalytic turnover can generate reactive oxygen species, giving it a secondary role in redox signaling and apoptosis. In humans the gene lies at chromosome 22q11.2 within the velocardiofacial/DiGeorge deletion interval; loss-of-function and hypomorphic variants cause hyperprolinemia type 1, and reduced PRODH activity is a susceptibility factor for schizophrenia.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                                    GO:0004657
+                                </a>
+                            </span>
+                            <span class="term-label">proline dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0004657" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the defining catalytic activity of PRODH: FAD-dependent proline dehydrogenase (EC 1.5.5.2). This is the core molecular function of the gene and is corroborated by direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004657 (L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a quinol + H+) matches exactly the UniProt catalytic activity and EC 1.5.5.2. Correct term at the correct level of specificity; selected as the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Converts proline to delta-1-pyrroline-5-carboxylate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                    GO:0006562
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0006562" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the core biological process: breakdown of L-proline. PRODH catalyzes the first step of this pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the central catabolic process in which PRODH participates; its deficiency causes hyperprolinemia (accumulation of proline). Correct process term; selected as the core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-proline degradation into L-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation localizing PRODH activity to the mitochondrion. Correct but general; the specific location is the mitochondrial inner membrane (matrix face).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PRODH is a mitochondrial enzyme, so this compartment assignment is correct. More precise inner-membrane / matrix terms are also annotated and are preferred as the core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0071949" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to FAD binding. PRODH is a flavoprotein that requires FAD as its redox cofactor; corroborated experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAD is the catalytic prosthetic group of PRODH (UniProt COFACTOR, ECO:0000269 from PubMed:15662599); a mutant with reduced FAD affinity (T466M) loses activity. Core cofactor-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                                    GO:0004657
+                                </a>
+                            </span>
+                            <span class="term-label">proline dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0004657" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (InterPro / RHEA:23784 / EC 1.5.5.2 mapping) to the core proline dehydrogenase activity. Redundant with the IBA, IDA and TAS annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, independently derived from sequence and reaction mappings and consistent with the experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0005739" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) annotation to the mitochondrion. Correct but general relative to the inner-membrane/matrix annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the mitochondrial localization of PRODH. Redundant with the more specific inner-membrane and matrix terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (UniProt Subcellular Location mapping, SL-0170) to the mitochondrial matrix, matching the UniProt SUBCELLULAR LOCATION statement.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records PRODH localization as &#34;Mitochondrion matrix&#34;; the enzyme is an inner-membrane-associated flavoprotein whose catalytic domain faces the matrix. Consistent with the (preferred, functionally informative) inner-membrane term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                    GO:0006562
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0006562" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) annotation to L-proline catabolic process, the core process for PRODH. Redundant with the IBA and TAS annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, derived from the proline oxidase InterPro signature; consistent with experimental and phylogenetic evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-proline degradation into L-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                    GO:0006562
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70688
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0006562" data-r="Reactome:R-HSA-70688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (Reactome &#34;Proline catabolism&#34;) annotation to the core biological process. Reactome models PRODH as catalyzing the first step of proline breakdown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process, curated from the Reactome proline catabolism pathway; concordant with all other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-proline degradation into L-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70670
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0005743" data-r="Reactome:R-HSA-70670" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (Reactome) annotation to the mitochondrial inner membrane. PRODH is tightly bound to the inner mitochondrial membrane, where its FAD passes electrons to ubiquinone in the respiratory chain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the functionally informative core location: PRODH is an inner-membrane-bound flavoenzyme feeding electrons into the ETC. Selected as the core cellular component (matrix reflects the orientation of the catalytic domain).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link">
+                                        PMID:15662599
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mitochondrial inner-membrane enzyme that catalyzes the first step in the proline</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70670
+
+                                </span>
+
+                                <div class="support-text">coupled to the conversion of FAD to FADH2 is the first step in proline breakdown</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016649" target="_blank" class="term-link">
+                                    GO:0016649
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-NH group of donors, quinone or similar compound as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15662599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional consequences of PRODH missense mutations.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0016649" data-r="PMID:15662599" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation to the general oxidoreductase class (CH-NH donor, quinone acceptor). This is the direct parent of proline dehydrogenase activity (GO:0004657) and captures the quinone-linked mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and mechanistically apt (PRODH uses a quinone as electron acceptor), but more general than the specific GO:0004657 term derived from the same paper. Retained; the specific proline dehydrogenase activity is the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) mitochondrial-proteome annotation localizing PRODH to the mitochondrion. Consistent with the curated inner-membrane/matrix location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PRODH was detected in a high-confidence human mitochondrial proteome dataset, corroborating its mitochondrial localization. Correct but general.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903376" target="_blank" class="term-link">
+                                    GO:1903376
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of oxidative stress-induced neuron intrinsic apoptotic signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23743200
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DJ-1 cooperates with PYCR1 in cell protection against oxidat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:1903376" data-r="PMID:23743200" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to regulation of oxidative-stress-induced neuron intrinsic apoptotic signaling. PRODH catalytic turnover generates ROS, linking it to redox and apoptotic signaling; this is a genuine but secondary, non-catabolic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The redox/apoptosis role of PRODH is real and downstream of its enzymatic activity, but it is a secondary regulatory function rather than the gene&#39;s core catabolic role, so it is kept as non-core. Note that the cached abstract of PMID:23743200 foregrounds DJ-1/PARK7 and PYCR1 (proline biosynthesis) and does not mention PRODH; per curation policy an experimental (IDA) annotation is not removed on the basis of an abstract-only view of the paper.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">During p53/TP53-induced apoptosis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019470" target="_blank" class="term-link">
+                                    GO:0019470
+                                </a>
+                            </span>
+                            <span class="term-label">trans-4-hydroxy-L-proline catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21998747" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21998747
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and biochemical studies of human 4-hydroxy-2-oxog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0019470" data-r="PMID:21998747" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author annotation to hydroxyproline catabolism. However, the cited paper (human HOGA structure) attributes the first step of 4-hydroxy-L-proline degradation to hydroxyproline oxidase (HPOX), which is the distinct paralog PRODH2/HYPDH, not PRODH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PRODH oxidizes L-proline (EC 1.5.5.2); trans-4-hydroxy-L-proline is the substrate of the paralogous enzyme PRODH2 (hydroxyproline dehydrogenase / HPOX). PMID:21998747 describes the 4-Hyp pathway using &#34;hydroxyproline oxidase (HPOX)&#34; and does not implicate PRODH, so this appears to be a paralog mis-attribution / over-annotation. Because the annotation is TAS (not experimental) and the substrate is wrong for PRODH, it is marked as over-annotated rather than accepted; it is not removed (conservative handling of a non-IEA annotation).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21998747" target="_blank" class="term-link">
+                                        PMID:21998747
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hydroxyproline oxidase (HPOX)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                                    GO:0004657
+                                </a>
+                            </span>
+                            <span class="term-label">proline dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15662599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional consequences of PRODH missense mutations.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0004657" data-r="PMID:15662599" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation to proline dehydrogenase activity. Bender et al. 2005 assayed POX (PRODH) activity for wild-type and mutant proteins, directly demonstrating this catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongest evidence for the core molecular function: direct enzymatic assay of human PRODH. Anchors the EC 1.5.5.2 / FAD-cofactor assignment. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link">
+                                        PMID:15662599
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mitochondrial inner-membrane enzyme that catalyzes the first step in the proline</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Converts proline to delta-1-pyrroline-5-carboxylate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15662599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional consequences of PRODH missense mutations.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0071949" data-r="PMID:15662599" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation to FAD binding, from Bender et al. 2005, who showed a PRODH mutant (T466M) with strongly reduced affinity for FAD and that a severe allele responds in vitro to high FAD concentrations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct evidence that FAD is the functional cofactor of PRODH; a variant that impairs FAD binding abolishes activity. Core cofactor-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008631" target="_blank" class="term-link">
+                                    GO:0008631
+                                </a>
+                            </span>
+                            <span class="term-label">intrinsic apoptotic signaling pathway in response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9305847" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9305847
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A model for p53-induced apoptosis.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0008631" data-r="PMID:9305847" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable-author-statement (NAS) annotation to oxidative-stress intrinsic apoptotic signaling. PRODH (as the p53-induced gene PIG6) is part of the p53/ROS-mediated apoptotic program described by Polyak et al. 1997.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a genuine secondary role: PRODH is a p53 transcriptional target whose proline-oxidation-derived ROS contribute to apoptosis. It is downstream of and distinct from the enzyme&#39;s core catabolic function, so it is kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PRODH/PRODH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">During p53/TP53-induced apoptosis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                                    GO:0004657
+                                </a>
+                            </span>
+                            <span class="term-label">proline dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10192398" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10192398
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The gene encoding proline dehydrogenase modulates sensorimot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43272" data-a="GO:0004657" data-r="PMID:10192398" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author (TAS) annotation to proline dehydrogenase activity. Gogos et al. 1999 characterized PRODH as the human proline dehydrogenase homologue of Drosophila sluggish-A.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; concordant with the IDA, IBA and IEA annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10192398" target="_blank" class="term-link">
+                                        PMID:10192398
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">proline dehydrogenase responsible for the behavioural phenotype</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent proline dehydrogenase (proline oxidase, EC 1.5.5.2): oxidizes L-proline to (S)-1-pyrroline-5-carboxylate at the matrix face of the mitochondrial inner membrane, passing the abstracted electrons via its FAD cofactor to ubiquinone in the respiratory chain. This is the first, committed step of proline catabolism.</h3>
+                <span class="vote-buttons" data-g="O43272" data-a="FUNCTION: FAD-dependent proline dehydrogenase (proline oxida..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                            proline dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                L-proline catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PRODH/PRODH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Converts proline to delta-1-pyrroline-5-carboxylate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link">
+                                PMID:15662599
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">mitochondrial inner-membrane enzyme that catalyzes the first step in the proline</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD cofactor binding: PRODH is a flavoprotein that binds FAD as its catalytic prosthetic group, required for proline oxidation; variants that impair FAD binding abolish enzymatic activity.</h3>
+                <span class="vote-buttons" data-g="O43272" data-a="FUNCTION: FAD cofactor binding: PRODH is a flavoprotein that..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                L-proline catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PRODH/PRODH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD; Xref=ChEBI:CHEBI:57692;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PRODH/PRODH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB O43272 (PROD_HUMAN) record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10192398" target="_blank" class="term-link">
+                            PMID:10192398
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The gene encoding proline dehydrogenase modulates sensorimotor gating in mice.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" target="_blank" class="term-link">
+                            PMID:15662599
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional consequences of PRODH missense mutations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21998747" target="_blank" class="term-link">
+                            PMID:21998747
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and biochemical studies of human 4-hydroxy-2-oxoglutarate aldolase: implications for hydroxyproline metabolism in primary hyperoxaluria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23743200" target="_blank" class="term-link">
+                            PMID:23743200
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DJ-1 cooperates with PYCR1 in cell protection against oxidative stress.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9305847" target="_blank" class="term-link">
+                            PMID:9305847
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A model for p53-induced apoptosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70670
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PRODH oxidises L-Pro to 1PYR-5COOH</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70688
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proline catabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PRODH-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43272" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="prodh-human-review-notes">PRODH (human) — review notes</h1>
+<p>UniProt: O43272 (PROD_HUMAN), "Proline dehydrogenase 1, mitochondrial"; EC 1.5.5.2.<br />
+Aliases: proline oxidase (POX), proline oxidase 2, p53-induced gene 6 protein (PIG6).<br />
+Gene at 22q11.2; HGNC:9453.</p>
+<h2 id="core-molecular-function-and-reaction">Core molecular function and reaction</h2>
+<p>PRODH catalyzes the first, committed step of proline catabolism: oxidation of<br />
+L-proline to (S)-1-pyrroline-5-carboxylate (P5C), a FAD-dependent dehydrogenase<br />
+that donates electrons to the mitochondrial electron transport chain (ubiquinone).</p>
+<ul>
+<li>Reaction (UniProt CATALYTIC ACTIVITY, EC 1.5.5.2):<br />
+  [file:human/PRODH/PRODH-uniprot.txt "Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a"]</li>
+<li>FUNCTION: [file:human/PRODH/PRODH-uniprot.txt "Converts proline to delta-1-pyrroline-5-carboxylate."]</li>
+<li>Cofactor FAD: [file:human/PRODH/PRODH-uniprot.txt "Name=FAD; Xref=ChEBI:CHEBI:57692;"]</li>
+<li>Pathway: [file:human/PRODH/PRODH-uniprot.txt "L-proline degradation into L-"] glutamate; step 1/2.</li>
+<li>GO:0004657 "proline dehydrogenase activity" definition matches exactly: "L-proline + a<br />
+  quinone = (S)-1-pyrroline-5-carboxylate + a quinol + H+" (OLS/go.db). This is the correct<br />
+  catalytic MF; verified experimentally in <a href="https://pubmed.ncbi.nlm.nih.gov/15662599">PMID:15662599</a>.</li>
+</ul>
+<p>Bender et al. 2005 directly assayed POX activity of WT and mutant PRODH and describe it as a<br />
+"mitochondrial inner-membrane enzyme that catalyzes the first step in the proline"<br />
+degradation pathway <a href="https://pubmed.ncbi.nlm.nih.gov/15662599" title="mitochondrial inner-membrane enzyme that catalyzes the first step in the proline">PMID:15662599</a>.<br />
+The EC=1.5.5.2 and FAD cofactor are ECO:0000269|PubMed:15662599 in UniProt.</p>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION: [file:human/PRODH/PRODH-uniprot.txt "Mitochondrion matrix."]</li>
+<li>Reactome (R-HSA-70670) and Bender 2005: the enzyme is tightly bound to the inner<br />
+  mitochondrial membrane [reactome:R-HSA-70670 "coupled to the conversion of FAD to FADH2 is the first step in proline breakdown"].</li>
+<li>Functionally, PRODH is an inner-membrane-associated flavoprotein whose FAD passes electrons to<br />
+  ubiquinone in the ETC; the enzyme is bound to the matrix face of the inner membrane. Both<br />
+  GO:0005743 (inner membrane, TAS/Reactome) and GO:0005759 (matrix, IEA/SubCell) are consistent.<br />
+  Inner membrane (GO:0005743) is the more functionally informative core location.</li>
+</ul>
+<h2 id="secondary-regulatory-functions-genuine-non-core">Secondary / regulatory functions (genuine, non-core)</h2>
+<ul>
+<li>p53 target ("PIG6"). Induced during p53/TP53-induced apoptosis<br />
+  [file:human/PRODH/PRODH-uniprot.txt "During p53/TP53-induced apoptosis."]. Polyak et al. 1997<br />
+  identified PRODH among p53-induced redox genes as part of a ROS-generating apoptotic program<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9305847">PMID:9305847</a> — this is the basis of the NAS annotation to GO:0008631 (intrinsic apoptotic<br />
+  signaling in response to oxidative stress). PRODH generates ROS/superoxide during proline<br />
+  oxidation, which links it to redox signaling and apoptosis. Genuine but secondary to the<br />
+  catabolic role → KEEP_AS_NON_CORE.</li>
+<li>GO:1903376 (regulation of oxidative-stress-induced neuron intrinsic apoptotic signaling),<br />
+  IDA from <a href="https://pubmed.ncbi.nlm.nih.gov/23743200">PMID:23743200</a> (ParkinsonsUK-UCL). NOTE: the cached abstract of PMID:23743200 is<br />
+  about DJ-1/PARK7 and PYCR1 (P5C reductase, proline <em>biosynthesis</em>), and does not mention PRODH<br />
+  in the abstract. This is an experimental (IDA) annotation made by a curator with full-text<br />
+  access; per policy do not REMOVE an experimental annotation from an incomplete (abstract-only)<br />
+  view. The redox/apoptosis role of PRODH is biologically real, so retain as KEEP_AS_NON_CORE<br />
+  (non-core, and secondary — flagged for the mismatch between abstract and annotated gene).</li>
+</ul>
+<h2 id="hydroxyproline-over-annotation-paralog-confusion">Hydroxyproline over-annotation (paralog confusion)</h2>
+<ul>
+<li>GO:0019470 "trans-4-hydroxy-L-proline catabolic process" is annotated TAS from <a href="https://pubmed.ncbi.nlm.nih.gov/21998747">PMID:21998747</a>.<br />
+  That paper (human HOGA / 4-hydroxy-2-oxoglutarate aldolase structure) describes the 4-Hyp<br />
+  degradation pathway as using <strong>hydroxyproline oxidase (HPOX)</strong> as the first enzyme — this is the<br />
+  distinct paralog PRODH2 (HYPDH), NOT PRODH. PRODH oxidizes L-proline; 4-hydroxy-L-proline is the<br />
+  substrate of PRODH2. The paper does not implicate PRODH in hydroxyproline catabolism<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21998747" title="hydroxyproline oxidase (HPOX)">PMID:21998747</a>. This looks like a paralog mis-attribution /<br />
+  over-annotation. It is TAS (not experimental), so MARK_AS_OVER_ANNOTATED (conservative; not<br />
+  removed).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Hyperprolinemia type 1 (HYRPRO1, MIM 239500): loss-of-function/hypomorphic PRODH variants raise<br />
+  plasma/urine proline [file:human/PRODH/PRODH-uniprot.txt covers HYRPRO1].</li>
+<li>Schizophrenia susceptibility (SCZD4, MIM 600850); PRODH is in the 22q11 (velocardiofacial/DiGeorge)<br />
+  deletion region. Reduced POX function is a schizophrenia risk factor [PMID:15662599 abstract];<br />
+  PRODH modulates sensorimotor gating in mice <a href="https://pubmed.ncbi.nlm.nih.gov/10192398">PMID:10192398</a>.</li>
+</ul>
+<h2 id="annotation-by-annotation-disposition-summary">Annotation-by-annotation disposition (summary)</h2>
+<p>Core MF: GO:0004657 proline dehydrogenase activity (the IDA/PMID:15662599, IBA, IEA copies → ACCEPT;<br />
+the TAS/PMID:10192398 copy → ACCEPT).<br />
+GO:0016649 (oxidoreductase, CH-NH donor, quinone acceptor) EXP → parent of 0004657; ACCEPT<br />
+  (correct but more general; the specific 0004657 is the core term).<br />
+Core cofactor MF: GO:0071949 FAD binding (IDA + IBA) → ACCEPT.<br />
+Core BP: GO:0006562 L-proline catabolic process (IBA, IEA, TAS/Reactome) → ACCEPT.<br />
+Location: GO:0005743 inner membrane (TAS/Reactome) → ACCEPT (core); GO:0005739 mitochondrion<br />
+  (IBA is_active_in, IEA, HTP) → ACCEPT/KEEP_AS_NON_CORE (correct but general); GO:0005759<br />
+  matrix (IEA/SubCell) → ACCEPT (consistent with UniProt).<br />
+GO:0019470 hydroxyproline catabolism (TAS) → MARK_AS_OVER_ANNOTATED (paralog PRODH2/HPOX).<br />
+GO:0008631 apoptotic signaling in response to oxidative stress (NAS) → KEEP_AS_NON_CORE.<br />
+GO:1903376 regulation of oxidative-stress neuron apoptosis (IDA) → KEEP_AS_NON_CORE.</p>
+<p>GO:0010133 "L-proline catabolic process to L-glutamate" (in UniProt DR line as IBA:GO_Central) is<br />
+now OBSOLETE in GO — not present in the seeded GOA TSV, so not reviewed; would map to GO:0006562.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O43272
+gene_symbol: PRODH
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PRODH encodes proline dehydrogenase 1 (proline oxidase, POX; EC 1.5.5.2), a
+  FAD-dependent flavoenzyme bound to the matrix face of the mitochondrial inner
+  membrane. It catalyzes the first, committed step of proline catabolism: the
+  oxidation of L-proline to (S)-1-pyrroline-5-carboxylate (P5C), which is then
+  converted by ALDH4A1/P5C dehydrogenase to L-glutamate. Rather than using a
+  soluble acceptor, PRODH donates the electrons abstracted from proline through
+  its FAD cofactor to ubiquinone in the respiratory electron transport chain,
+  coupling proline oxidation to mitochondrial bioenergetics. Beyond its catabolic
+  role, PRODH is a transcriptional target of p53 (originally identified as the
+  p53-induced gene PIG6): its catalytic turnover can generate reactive oxygen
+  species, giving it a secondary role in redox signaling and apoptosis. In humans
+  the gene lies at chromosome 22q11.2 within the velocardiofacial/DiGeorge
+  deletion interval; loss-of-function and hypomorphic variants cause
+  hyperprolinemia type 1, and reduced PRODH activity is a susceptibility factor
+  for schizophrenia.
+alternative_products:
+- name: &#39;1&#39;
+  id: O43272-4
+- name: &#39;2&#39;
+  id: O43272-2
+  sequence_note: VSP_021848
+- name: &#39;3&#39;
+  id: O43272-1
+  sequence_note: VSP_040848, VSP_040849
+existing_annotations:
+- term:
+    id: GO:0004657
+    label: proline dehydrogenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the defining catalytic activity of PRODH:
+      FAD-dependent proline dehydrogenase (EC 1.5.5.2). This is the core molecular
+      function of the gene and is corroborated by direct experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0004657 (L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a quinol
+      + H+) matches exactly the UniProt catalytic activity and EC 1.5.5.2. Correct
+      term at the correct level of specificity; selected as the core molecular
+      function.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: Converts proline to delta-1-pyrroline-5-carboxylate.
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a
+- term:
+    id: GO:0006562
+    label: L-proline catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the core biological process: breakdown of
+      L-proline. PRODH catalyzes the first step of this pathway.
+    action: ACCEPT
+    reason: &gt;-
+      This is the central catabolic process in which PRODH participates; its
+      deficiency causes hyperprolinemia (accumulation of proline). Correct process
+      term; selected as the core biological process.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: L-proline degradation into L-
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation localizing PRODH activity to the mitochondrion.
+      Correct but general; the specific location is the mitochondrial inner
+      membrane (matrix face).
+    action: ACCEPT
+    reason: &gt;-
+      PRODH is a mitochondrial enzyme, so this compartment assignment is correct.
+      More precise inner-membrane / matrix terms are also annotated and are
+      preferred as the core location.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix.&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to FAD binding. PRODH is a flavoprotein that
+      requires FAD as its redox cofactor; corroborated experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      FAD is the catalytic prosthetic group of PRODH (UniProt COFACTOR, ECO:0000269
+      from PubMed:15662599); a mutant with reduced FAD affinity (T466M) loses
+      activity. Core cofactor-binding function.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692;&#34;
+- term:
+    id: GO:0004657
+    label: proline dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (InterPro / RHEA:23784 / EC 1.5.5.2 mapping) to the core
+      proline dehydrogenase activity. Redundant with the IBA, IDA and TAS annotations
+      to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, independently derived from sequence and
+      reaction mappings and consistent with the experimental evidence.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA) annotation to the mitochondrion. Correct but general
+      relative to the inner-membrane/matrix annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the mitochondrial localization of PRODH. Redundant with the
+      more specific inner-membrane and matrix terms.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix.&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation (UniProt Subcellular Location mapping, SL-0170) to the
+      mitochondrial matrix, matching the UniProt SUBCELLULAR LOCATION statement.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records PRODH localization as &#34;Mitochondrion matrix&#34;; the enzyme is an
+      inner-membrane-associated flavoprotein whose catalytic domain faces the matrix.
+      Consistent with the (preferred, functionally informative) inner-membrane term.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix.&#34;
+- term:
+    id: GO:0006562
+    label: L-proline catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) annotation to L-proline catabolic process, the core
+      process for PRODH. Redundant with the IBA and TAS annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, derived from the proline oxidase InterPro
+      signature; consistent with experimental and phylogenetic evidence.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: L-proline degradation into L-
+- term:
+    id: GO:0006562
+    label: L-proline catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70688
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable-author (Reactome &#34;Proline catabolism&#34;) annotation to the core
+      biological process. Reactome models PRODH as catalyzing the first step of
+      proline breakdown.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core process, curated from the Reactome proline catabolism pathway;
+      concordant with all other lines of evidence.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: L-proline degradation into L-
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70670
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable-author (Reactome) annotation to the mitochondrial inner membrane.
+      PRODH is tightly bound to the inner mitochondrial membrane, where its FAD
+      passes electrons to ubiquinone in the respiratory chain.
+    action: ACCEPT
+    reason: &gt;-
+      This is the functionally informative core location: PRODH is an
+      inner-membrane-bound flavoenzyme feeding electrons into the ETC. Selected as
+      the core cellular component (matrix reflects the orientation of the catalytic
+      domain).
+    supported_by:
+    - reference_id: PMID:15662599
+      supporting_text: mitochondrial inner-membrane enzyme that catalyzes the first step in the proline
+    - reference_id: Reactome:R-HSA-70670
+      supporting_text: coupled to the conversion of FAD to FADH2 is the first step in proline breakdown
+- term:
+    id: GO:0016649
+    label: oxidoreductase activity, acting on the CH-NH group of donors, quinone or
+      similar compound as acceptor
+  evidence_type: EXP
+  original_reference_id: PMID:15662599
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation to the general oxidoreductase class (CH-NH donor,
+      quinone acceptor). This is the direct parent of proline dehydrogenase activity
+      (GO:0004657) and captures the quinone-linked mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and mechanistically apt (PRODH uses a quinone as electron acceptor),
+      but more general than the specific GO:0004657 term derived from the same paper.
+      Retained; the specific proline dehydrogenase activity is the core molecular
+      function.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate + a
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) mitochondrial-proteome annotation localizing PRODH to
+      the mitochondrion. Consistent with the curated inner-membrane/matrix location.
+    action: ACCEPT
+    reason: &gt;-
+      PRODH was detected in a high-confidence human mitochondrial proteome dataset,
+      corroborating its mitochondrial localization. Correct but general.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix.&#34;
+- term:
+    id: GO:1903376
+    label: regulation of oxidative stress-induced neuron intrinsic apoptotic signaling
+      pathway
+  evidence_type: IDA
+  original_reference_id: PMID:23743200
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to regulation of oxidative-stress-induced neuron
+      intrinsic apoptotic signaling. PRODH catalytic turnover generates ROS, linking
+      it to redox and apoptotic signaling; this is a genuine but secondary,
+      non-catabolic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The redox/apoptosis role of PRODH is real and downstream of its enzymatic
+      activity, but it is a secondary regulatory function rather than the gene&#39;s core
+      catabolic role, so it is kept as non-core. Note that the cached abstract of
+      PMID:23743200 foregrounds DJ-1/PARK7 and PYCR1 (proline biosynthesis) and does
+      not mention PRODH; per curation policy an experimental (IDA) annotation is not
+      removed on the basis of an abstract-only view of the paper.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: During p53/TP53-induced apoptosis.
+- term:
+    id: GO:0019470
+    label: trans-4-hydroxy-L-proline catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:21998747
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable-author annotation to hydroxyproline catabolism. However, the cited
+      paper (human HOGA structure) attributes the first step of 4-hydroxy-L-proline
+      degradation to hydroxyproline oxidase (HPOX), which is the distinct paralog
+      PRODH2/HYPDH, not PRODH.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PRODH oxidizes L-proline (EC 1.5.5.2); trans-4-hydroxy-L-proline is the
+      substrate of the paralogous enzyme PRODH2 (hydroxyproline dehydrogenase / HPOX).
+      PMID:21998747 describes the 4-Hyp pathway using &#34;hydroxyproline oxidase (HPOX)&#34;
+      and does not implicate PRODH, so this appears to be a paralog mis-attribution /
+      over-annotation. Because the annotation is TAS (not experimental) and the
+      substrate is wrong for PRODH, it is marked as over-annotated rather than
+      accepted; it is not removed (conservative handling of a non-IEA annotation).
+    supported_by:
+    - reference_id: PMID:21998747
+      supporting_text: hydroxyproline oxidase (HPOX)
+- term:
+    id: GO:0004657
+    label: proline dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15662599
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation to proline dehydrogenase activity. Bender
+      et al. 2005 assayed POX (PRODH) activity for wild-type and mutant proteins,
+      directly demonstrating this catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      Strongest evidence for the core molecular function: direct enzymatic assay of
+      human PRODH. Anchors the EC 1.5.5.2 / FAD-cofactor assignment. Core function.
+    supported_by:
+    - reference_id: PMID:15662599
+      supporting_text: mitochondrial inner-membrane enzyme that catalyzes the first step in the proline
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: Converts proline to delta-1-pyrroline-5-carboxylate.
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IDA
+  original_reference_id: PMID:15662599
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation to FAD binding, from Bender et al. 2005,
+      who showed a PRODH mutant (T466M) with strongly reduced affinity for FAD and
+      that a severe allele responds in vitro to high FAD concentrations.
+    action: ACCEPT
+    reason: &gt;-
+      Direct evidence that FAD is the functional cofactor of PRODH; a variant that
+      impairs FAD binding abolishes activity. Core cofactor-binding function.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692;&#34;
+- term:
+    id: GO:0008631
+    label: intrinsic apoptotic signaling pathway in response to oxidative stress
+  evidence_type: NAS
+  original_reference_id: PMID:9305847
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable-author-statement (NAS) annotation to oxidative-stress intrinsic
+      apoptotic signaling. PRODH (as the p53-induced gene PIG6) is part of the
+      p53/ROS-mediated apoptotic program described by Polyak et al. 1997.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a genuine secondary role: PRODH is a p53 transcriptional target whose
+      proline-oxidation-derived ROS contribute to apoptosis. It is downstream of and
+      distinct from the enzyme&#39;s core catabolic function, so it is kept as non-core.
+    supported_by:
+    - reference_id: file:human/PRODH/PRODH-uniprot.txt
+      supporting_text: During p53/TP53-induced apoptosis.
+- term:
+    id: GO:0004657
+    label: proline dehydrogenase activity
+  evidence_type: TAS
+  original_reference_id: PMID:10192398
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable-author (TAS) annotation to proline dehydrogenase activity. Gogos et
+      al. 1999 characterized PRODH as the human proline dehydrogenase homologue of
+      Drosophila sluggish-A.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; concordant with the IDA, IBA and IEA
+      annotations to the same term.
+    supported_by:
+    - reference_id: PMID:10192398
+      supporting_text: proline dehydrogenase responsible for the behavioural phenotype
+core_functions:
+- description: &gt;-
+    FAD-dependent proline dehydrogenase (proline oxidase, EC 1.5.5.2): oxidizes
+    L-proline to (S)-1-pyrroline-5-carboxylate at the matrix face of the
+    mitochondrial inner membrane, passing the abstracted electrons via its FAD
+    cofactor to ubiquinone in the respiratory chain. This is the first, committed
+    step of proline catabolism.
+  molecular_function:
+    id: GO:0004657
+    label: proline dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0006562
+    label: L-proline catabolic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/PRODH/PRODH-uniprot.txt
+    supporting_text: Converts proline to delta-1-pyrroline-5-carboxylate.
+  - reference_id: PMID:15662599
+    supporting_text: mitochondrial inner-membrane enzyme that catalyzes the first step in the proline
+- description: &gt;-
+    FAD cofactor binding: PRODH is a flavoprotein that binds FAD as its catalytic
+    prosthetic group, required for proline oxidation; variants that impair FAD
+    binding abolish enzymatic activity.
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  directly_involved_in:
+  - id: GO:0006562
+    label: L-proline catabolic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: file:human/PRODH/PRODH-uniprot.txt
+    supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692;&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/PRODH/PRODH-uniprot.txt
+  title: UniProtKB O43272 (PROD_HUMAN) record
+  findings: []
+- id: PMID:10192398
+  title: The gene encoding proline dehydrogenase modulates sensorimotor gating in
+    mice.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Isolates and characterizes human PRODH as the proline dehydrogenase homologue
+      of Drosophila sluggish-A and links it to 22q11-associated sensorimotor-gating
+      and psychiatric phenotypes. Supports the proline dehydrogenase activity (TAS)
+      and the brain/behavioural context; abstract verified.
+- id: PMID:15662599
+  title: Functional consequences of PRODH missense mutations.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct enzymatic characterization of wild-type and mutant human PRODH (POX);
+      establishes the core proline dehydrogenase activity (EC 1.5.5.2), FAD-cofactor
+      dependence (T466M reduces FAD affinity), inner-membrane localization, and the
+      link between reduced POX activity and hyperprolinemia/schizophrenia. Abstract
+      verified; underpins the experimental MF and cofactor annotations.
+- id: PMID:21998747
+  title: &#39;Structural and biochemical studies of human 4-hydroxy-2-oxoglutarate aldolase:
+    implications for hydroxyproline metabolism in primary hyperoxaluria.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      Full-text paper on human HOGA (4-hydroxy-2-oxoglutarate aldolase). It describes
+      the 4-hydroxyproline degradation pathway as beginning with hydroxyproline
+      oxidase (HPOX) — the distinct paralog PRODH2/HYPDH — and does not implicate
+      PRODH. The GO:0019470 (trans-4-hydroxy-L-proline catabolic process) annotation
+      to PRODH from this paper is a paralog mis-attribution; marked over-annotated.
+- id: PMID:23743200
+  title: DJ-1 cooperates with PYCR1 in cell protection against oxidative stress.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Cached abstract concerns DJ-1/PARK7 and PYCR1 (P5C reductase, proline
+      biosynthesis) in oxidative-stress protection and does not mention PRODH. The
+      IDA annotation of GO:1903376 to PRODH was made by a curator with full-text
+      access; the abstract-only cache cannot confirm the PRODH-specific evidence, so
+      correctness is left UNVERIFIED and the annotation retained as non-core.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence human mitochondrial proteome dataset; supports the HTP
+      mitochondrial-localization annotation of PRODH.
+- id: PMID:9305847
+  title: A model for p53-induced apoptosis.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Polyak et al. identify PRODH (PIG6) among p53-induced redox genes driving a
+      ROS-mediated apoptotic program; basis for the NAS oxidative-stress apoptotic
+      signaling annotation. Supports the secondary (non-core) redox/apoptosis role.
+      Abstract verified.
+- id: Reactome:R-HSA-70670
+  title: PRODH oxidises L-Pro to 1PYR-5COOH
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for PRODH-catalyzed oxidation of L-proline to P5C at the
+      mitochondrial inner membrane, with FAD-to-FADH2 coupling. Supports the core MF,
+      process and inner-membrane location.
+- id: Reactome:R-HSA-70688
+  title: Proline catabolism
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome proline catabolism pathway; supports the core L-proline catabolic
+      process annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sgcA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sgcA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q551V8" target="_blank" class="term-link">
+                        Q551V8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sgcA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q551V8" data-a="DESCRIPTION: sgcA (sGC) is one of the two guanylyl cyclases of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sgcA (sGC) is one of the two guanylyl cyclases of Dictyostelium discoideum and provides the great majority of chemoattractant-stimulated cGMP synthesis during cAMP chemotaxis. It is an unusually large (2843 aa, ~315 kDa) cytosolic enzyme whose central pair of class III adenylyl/guanylyl-cyclase catalytic domains is flanked by two large (~1000 aa) N- and C-terminal regions. Despite the &#34;soluble guanylyl cyclase&#34; name it is homologous to mammalian soluble adenylyl cyclase (a class III cyclase) rather than to the metazoan NO-sensitive, heme-containing soluble guanylyl cyclase; its Mg2+/GTP-dependent activity is stimulated by GTPgammaS and inhibited by Ca2+, and there is no evidence for NO or heme regulation. In resting cells the protein is largely cytosolic, and during chemotaxis it translocates to the leading edge, where its N-terminal region binds actin filaments in extending pseudopodia and the enzyme becomes catalytically active upon membrane association. The rapidly diffusing cGMP it produces promotes assembly of myosin II filaments in the cortex and rear of the cell, suppressing lateral pseudopodia and thereby maintaining polarity and directional movement. The sGC protein also has a cGMP-independent activity in which anteriorly localized protein refines and stabilizes pseudopod formation at the leading edge. Loss of the gene reduces chemotactic sensitivity toward cAMP and impairs aggregation, and the protein additionally influences electrotaxis directionality and the timing of intracellular calcium responses.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> sgcA is a class III nucleotide cyclase, and these enzymes use a divalent metal (Mg2+ or Mn2+) for two-metal-ion catalysis. Physiological activity is Mg2+/GTP dependent, so magnesium binding by the catalytic domain is biologically real. This is a cofactor requirement supporting the guanylate cyclase activity rather than a standalone core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Magnesium binding is a genuine catalytic cofactor requirement of the cyclase domain (physiological substrate is Mg2+/GTP) but is ancillary to the core guanylate cyclase molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                        PMID:11500361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">prevailing Mg 2+ concentration</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                        PMID:11500361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">stimulated by GTPγS and inhibited by Ca 2+ ions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006182" target="_blank" class="term-link">
+                                    GO:0006182
+                                </a>
+                            </span>
+                            <span class="term-label">cGMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0006182" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> sgcA is the predominant source of chemoattractant-stimulated cGMP in Dictyostelium; gene disruption reduces guanylyl cyclase activity more than 10-fold. The cGMP biosynthetic process annotation is a direct and accurate consequence of the enzyme&#39;s guanylate cyclase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cGMP biosynthesis is the core biological output of this guanylate cyclase and is directly supported by experimental gene-disruption data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                        PMID:11500361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">&gt;10-fold reduction in guanylyl cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009190" target="_blank" class="term-link">
+                                    GO:0009190
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0009190" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a correct but more general parent of cGMP biosynthetic process. The specific product of sgcA is cGMP, so the more precise cGMP biosynthetic process term better captures the function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but redundant with the more specific cGMP biosynthetic process annotation; retained as a non-core general term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                        PMID:11500361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">&gt;10-fold reduction in guanylyl cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP produced by sgcA acts as an intracellular second messenger during chemotaxis, so participation in intracellular signal transduction is correct. It is a broad term that does not capture the specific chemotactic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct high-level process term; retained as non-core because more specific chemotaxis and cGMP-biosynthesis terms better describe the role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cGMP plays an important role during chemotaxis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019722" target="_blank" class="term-link">
+                                    GO:0019722
+                                </a>
+                            </span>
+                            <span class="term-label">calcium-mediated signaling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40295210
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intracellular Calcium Responses to External Calcium Stimuli ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0019722" data-r="PMID:40295210" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic analysis shows that gca/sgc-null cells have an altered (slightly delayed) intracellular calcium response to external calcium, and the authors conclude that cGMP participates in calcium homeostasis. This is a modulatory, downstream role rather than a core function of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> sgcA/cGMP modulates the timing of calcium responses but this is an accessory role, not the core guanylate-cyclase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                                        PMID:40295210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">gca/sgc-null cells showed a slightly delayed response</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                                        PMID:40295210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">G proteins, cGMP, and IplA are involved in calcium homeostasis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                    GO:0031252
+                                </a>
+                            </span>
+                            <span class="term-label">cell leading edge</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19346484
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Switching direction in electric-signal-induced cell migratio...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0031252" data-r="PMID:19346484" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In migrating cells the sGC protein localizes to the leading-edge pseudopod in an actin-dependent manner, consistent with direct-imaging data in this and other studies. This is a well-supported localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence places sGC at the leading-edge pseudopod during directed migration.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                                        PMID:19346484
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">components of the GCase- and PI3K-dependent signaling pathways localized at the leading edge of migrating cells during electrotaxis in an actin-dependent manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051602" target="_blank" class="term-link">
+                                    GO:0051602
+                                </a>
+                            </span>
+                            <span class="term-label">response to electrical stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19346484
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Switching direction in electric-signal-induced cell migratio...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0051602" data-r="PMID:19346484" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic modulation of the guanylyl cyclases and the cGMP target GbpC reverses the preferred direction of migration in an electric field (electrotaxis), showing that sgcA acts within the response to an electrical stimulus. This is an accessory role rather than the enzyme&#39;s core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> sgcA contributes to directional switching during electrotaxis, a specialized downstream behavior, not the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                                        PMID:19346484
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the preferential direction of migration during electrotaxis in Dictyostelium cells can be reversed by genetically modulating both guanylyl cyclases</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                    GO:0031252
+                                </a>
+                            </span>
+                            <span class="term-label">cell leading edge</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29118357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29118357
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pumilio-dependent localization of mRNAs at the cell front co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0031252" data-r="PMID:29118357" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The four chemotaxis-pathway proteins, including sGC, and their mRNAs are preferentially enriched at the cell front during migration. This supports leading-edge localization of sgcA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct-imaging evidence places sGC among the chemotaxis proteins enriched at the leading edge/cell front.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29118357" target="_blank" class="term-link">
+                                        PMID:29118357
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">proteins of these four chemotaxis pathways and actin are preferentially enriched at the cell front</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15601898
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of soluble guanylyl cyclase at the leading edge d...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0005829" data-r="PMID:15601898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In resting cells the major fraction of sGC-GFP is cytosolic, with a small cortical fraction. Cytosolic localization is directly observed and is the resting distribution of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct fluorescence imaging shows sGC is predominantly cytosolic in resting cells.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link">
+                                        PMID:15601898
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">major fraction of the sGC-GFP fusion protein localizes to the cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904269" target="_blank" class="term-link">
+                                    GO:1904269
+                                </a>
+                            </span>
+                            <span class="term-label">cell leading edge cell cortex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15601898
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of soluble guanylyl cyclase at the leading edge d...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:1904269" data-r="PMID:15601898" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In a cAMP gradient sGC-GFP relocates to the anterior (leading-edge) cell cortex, where the membrane-associated enzyme is catalytically active. This anterior cortical localization is directly observed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows chemoattractant-induced enrichment of sGC at the anterior cell cortex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link">
+                                        PMID:15601898
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sGC-GFP localizes to the anterior cell cortex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11500361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Dictyostelium homologue of mammalian soluble adenylyl cy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0004383" data-r="PMID:11500361" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Gene disruption of sgcA abolishes most guanylyl cyclase activity (&gt;10-fold reduction) without affecting adenylyl cyclase activity, demonstrating that this protein is a guanylate cyclase. This is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mutant-phenotype evidence directly establishes guanylate cyclase activity as the core molecular function of sgcA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                        PMID:11500361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">&gt;10-fold reduction in guanylyl cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050920" target="_blank" class="term-link">
+                                    GO:0050920
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22081140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dictyostelium chemotaxis: essential Ras activation and acces...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0050920" data-r="PMID:22081140" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> sGC is one of several accessory signalling enzymes that are not required for basal Ras-driven chemotaxis but provide a memory of direction and improved orientation, amplifying sensitivity in shallow gradients. This is a regulatory contribution to chemotaxis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but general regulation-of-chemotaxis role; the specific chemotaxis-to-cAMP annotation better captures the biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link">
+                                        PMID:22081140
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they provide a memory of direction and improved orientation of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043327" target="_blank" class="term-link">
+                                    GO:0043327
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis to cAMP</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18299345" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18299345
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Four key signaling pathways mediating chemotaxis in Dictyost...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0043327" data-r="PMID:18299345" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic screens identify sGC as a key mediator of cAMP chemotaxis. The protein localizes to the leading edge and interacts with actin filaments, while its cGMP product induces myosin filaments in the rear. This directly captures the physiological process sgcA acts within.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> sgcA is a central mediator of chemotaxis to cAMP, providing both leading-edge protein and rear cGMP signals.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18299345" target="_blank" class="term-link">
+                                        PMID:18299345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">this activity is mediated by a soluble guanylyl cyclase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18299345" target="_blank" class="term-link">
+                                        PMID:18299345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cyclic guanosine monophosphate product induces myosin filaments in the rear of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18073238
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The role of cGMP and the rear of the cell in Dictyostelium c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0006935" data-r="PMID:18073238" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> sGC/cGMP contributes to chemotaxis by maintaining a quiescent rear and efficient pseudopod retraction, which increases directional movement and stable cell streaming. This is a correct but general parent of the more specific chemotaxis-to-cAMP annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but broad; the specific chemotaxis-to-cAMP term is the more informative core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                                        PMID:18073238
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">quiescent rear of the cell increases the efficiency of directional movement</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120320" target="_blank" class="term-link">
+                                    GO:0120320
+                                </a>
+                            </span>
+                            <span class="term-label">lateral pseudopodium retraction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18073238
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The role of cGMP and the rear of the cell in Dictyostelium c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0120320" data-r="PMID:18073238" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP produced by sGC promotes cortical myosin in the rear, enabling efficient retraction of lateral/rear pseudopodia during the rising flank of the cAMP wave. sgcA acts within this process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A specific downstream consequence of cGMP/myosin signalling; accurate but not the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                                        PMID:18073238
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">efficiently retract pseudopodia in the rear of the cell during the rising flank of the cAMP wave</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0004383" data-r="PMID:16790492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The sGC protein is the predominant guanylyl cyclase producing cGMP during chemotaxis; a point mutation in the catalytic site (sGCDeltacat) abolishes activity, confirming direct guanylate cyclase function. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence, including a catalytically dead point mutant, establishes guanylate cyclase activity as the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cGMP plays an important role during chemotaxis and is produced predominantly by a soluble guanylyl cyclase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0006935" data-r="PMID:16790492" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> gc-null cells have a reduced chemotaxis index (0.43 vs 0.64 for cells expressing wild-type sGC), demonstrating that sgcA is required for full chemotactic efficiency. Correct but general process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mutant-phenotype support for a general chemotaxis role; the specific chemotaxis-to-cAMP term better captures the core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">chemotaxis index of gc -null cells of 0.43</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015629" target="_blank" class="term-link">
+                                    GO:0015629
+                                </a>
+                            </span>
+                            <span class="term-label">actin cytoskeleton</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0015629" data-r="PMID:16790492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The sGC protein associates with actin filaments in pseudopodia via its N-terminal region; this actin association targets the enzyme to the leading edge and underlies its cGMP-independent role in refining pseudopod formation. A directly observed and functionally important localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct evidence that sGC colocalizes with/associates with the actin cytoskeleton in pseudopodia, a key aspect of its leading-edge behavior.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sGC protein associates with actin filaments in pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031033" target="_blank" class="term-link">
+                                    GO:0031033
+                                </a>
+                            </span>
+                            <span class="term-label">myosin filament organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0031033" data-r="PMID:16790492" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP from sGC drives incorporation of myosin into the cell cortex; cGMP-null cells incorporate almost no myosin in the posterior cortex during chemotaxis. sgcA acts upstream of cortical myosin filament organization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine downstream effect of cGMP signalling on cortical myosin, but an accessory process rather than the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">incorporate almost no myosin in the posterior cell cortex during chemotaxis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                    GO:0031252
+                                </a>
+                            </span>
+                            <span class="term-label">cell leading edge</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0031252" data-r="PMID:16790492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The sGC protein is enriched in extending pseudopodia at the leading edge during chemotaxis. This is directly observed and is a core aspect of the enzyme&#39;s spatial behavior.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows sGC enrichment at the leading edge during chemotaxis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The sGC protein is enriched in extending pseudopodia at the leading edge of the cell during chemotaxis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031037" target="_blank" class="term-link">
+                                    GO:0031037
+                                </a>
+                            </span>
+                            <span class="term-label">myosin II filament disassembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14710184
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemotaxis: signalling modules join hands at front and tail.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0031037" data-r="PMID:14710184" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This review describes the cGMP cascade as regulating myosin filament formation in the posterior of the cell to inhibit lateral pseudopodia. Because the cascade primarily promotes cortical myosin II assembly, the disassembly direction is debatable; the annotation nonetheless correctly places sgcA within myosin II filament turnover, a downstream process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TAS from a secondary review; sgcA/cGMP acts within cortical myosin II filament dynamics (the cascade chiefly promotes filament formation), an accessory role rather than the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                                        PMID:14710184
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">regulates myosin filament formation in the posterior of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120320" target="_blank" class="term-link">
+                                    GO:0120320
+                                </a>
+                            </span>
+                            <span class="term-label">lateral pseudopodium retraction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14710184
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemotaxis: signalling modules join hands at front and tail.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q551V8" data-a="GO:0120320" data-r="PMID:14710184" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cGMP-signalling cascade regulates posterior myosin filament formation and thereby inhibits the formation of lateral pseudopodia that would misdirect the cell. sgcA acts within this process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate downstream role in suppressing lateral pseudopodia via cGMP; accessory to the core guanylate cyclase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                                        PMID:14710184
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">inhibiting the formation of lateral pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>sgcA is the principal soluble (class III, sAC-homologous) guanylyl cyclase of Dictyostelium, synthesizing the chemoattractant-induced cGMP burst from Mg2+/GTP. The enzyme is largely cytosolic at rest and becomes active upon membrane/leading-edge association; the diffusible cGMP promotes cortical myosin II assembly that suppresses lateral pseudopodia and maintains polarity during cAMP chemotaxis.</h3>
+                <span class="vote-buttons" data-g="Q551V8" data-a="FUNCTION: sgcA is the principal soluble (class III, sAC-homo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                            guanylate cyclase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043327" target="_blank" class="term-link">
+                                chemotaxis to cAMP
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                cell leading edge
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904269" target="_blank" class="term-link">
+                                cell leading edge cell cortex
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                                PMID:11500361
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">&gt;10-fold reduction in guanylyl cyclase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                PMID:16790492
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">cGMP plays an important role during chemotaxis and is produced predominantly by a soluble guanylyl cyclase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link">
+                                PMID:15601898
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">sGC-GFP localizes to the anterior cell cortex</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Independently of its catalytic product, the sGC protein acts as an actin-associated, leading-edge scaffold; its N-terminal region binds actin filaments in extending pseudopodia, localizing the protein to the cell front where it refines and stabilizes pseudopod formation.</h3>
+                <span class="vote-buttons" data-g="Q551V8" data-a="FUNCTION: Independently of its catalytic product, the sGC pr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                            guanylate cyclase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015629" target="_blank" class="term-link">
+                                actin cytoskeleton
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                cell leading edge
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                PMID:16790492
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">sGC protein associates with actin filaments in pseudopodia</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                PMID:16790492
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The sGC protein is enriched in extending pseudopodia at the leading edge of the cell during chemotaxis</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11500361" target="_blank" class="term-link">
+                            PMID:11500361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Dictyostelium homologue of mammalian soluble adenylyl cyclase encodes a guanylyl cyclase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">sgcA (sGC) is a class III cyclase homologous to mammalian soluble adenylyl cyclase, and its disruption reduces guanylyl cyclase activity more than 10-fold without affecting adenylyl cyclase activity.</div>
+
+                        <div class="finding-text">"&gt;10-fold reduction in guanylyl cyclase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Physiological Mg2+-dependent sGC activity is stimulated by GTPgammaS and inhibited by Ca2+, indicating regulation distinct from the NO/heme metazoan soluble guanylyl cyclase.</div>
+
+                        <div class="finding-text">"stimulated by GTPγS and inhibited by Ca 2+ ions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                            PMID:14710184
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chemotaxis: signalling modules join hands at front and tail.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The cGMP-signalling cascade regulates myosin filament formation in the posterior of the cell, inhibiting lateral pseudopodia that could misdirect the cell.</div>
+
+                        <div class="finding-text">"regulates myosin filament formation in the posterior of the cell"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15601898" target="_blank" class="term-link">
+                            PMID:15601898
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activation of soluble guanylyl cyclase at the leading edge during Dictyostelium chemotaxis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In resting cells sGC-GFP is mainly cytosolic, and in a cAMP gradient it relocates to the anterior cell cortex where the membrane-associated enzyme becomes active.</div>
+
+                        <div class="finding-text">"major fraction of the sGC-GFP fusion protein localizes to the cytosol"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                            PMID:16790492
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Guanylyl cyclase protein and cGMP product independently control front and back of chemotaxing Dictyostelium cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sGC protein is enriched at the leading edge and associates with actin filaments in pseudopodia, while its cGMP product drives cortical myosin in the rear; the two functions are separable.</div>
+
+                        <div class="finding-text">"The sGC protein is enriched in extending pseudopodia at the leading edge of the cell during chemotaxis"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">sGC associates with actin filaments in pseudopodia.</div>
+
+                        <div class="finding-text">"sGC protein associates with actin filaments in pseudopodia"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                            PMID:18073238
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The role of cGMP and the rear of the cell in Dictyostelium chemotaxis and cell streaming.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A quiescent, cGMP-dependent rear with efficient pseudopod retraction increases directional movement and stable cell streaming.</div>
+
+                        <div class="finding-text">"quiescent rear of the cell increases the efficiency of directional movement"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18299345" target="_blank" class="term-link">
+                            PMID:18299345
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Four key signaling pathways mediating chemotaxis in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A soluble guanylyl cyclase mediates chemotaxis by localizing to the leading edge (protein) and inducing rear myosin filaments (cGMP product).</div>
+
+                        <div class="finding-text">"cyclic guanosine monophosphate product induces myosin filaments in the rear of the cell"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                            PMID:19346484
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Switching direction in electric-signal-induced cell migration by cyclic guanosine monophosphate and phosphatidylinositol signaling.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">sGC and its cGMP product control directional switching in electrotaxis, with sGC localizing to the leading-edge pseudopod in an actin-dependent manner.</div>
+
+                        <div class="finding-text">"components of the GCase- and PI3K-dependent signaling pathways localized at the leading edge of migrating cells during electrotaxis in an actin-dependent manner"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link">
+                            PMID:22081140
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dictyostelium chemotaxis: essential Ras activation and accessory signalling pathways for amplification.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">sGC is an accessory signalling enzyme that is dispensable for basal Ras-driven chemotaxis but provides a memory of direction and improved orientation, amplifying sensitivity in shallow gradients.</div>
+
+                        <div class="finding-text">"they provide a memory of direction and improved orientation of the cell"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29118357" target="_blank" class="term-link">
+                            PMID:29118357
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pumilio-dependent localization of mRNAs at the cell front coordinates multiple pathways required for chemotaxis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The four chemotaxis-pathway proteins (including sGC) and their mRNAs are preferentially enriched at the cell front during dynamic migration.</div>
+
+                        <div class="finding-text">"proteins of these four chemotaxis pathways and actin are preferentially enriched at the cell front"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                            PMID:40295210
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intracellular Calcium Responses to External Calcium Stimuli in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">gca/sgc-null cells show an altered (slightly delayed) intracellular calcium response to external calcium, and cGMP is implicated in calcium homeostasis.</div>
+
+                        <div class="finding-text">"gca/sgc-null cells showed a slightly delayed response"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q551V8
+gene_symbol: sgcA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: sgcA (sGC) is one of the two guanylyl cyclases of Dictyostelium
+  discoideum and provides the great majority of chemoattractant-stimulated cGMP
+  synthesis during cAMP chemotaxis. It is an unusually large (2843 aa, ~315 kDa)
+  cytosolic enzyme whose central pair of class III adenylyl/guanylyl-cyclase
+  catalytic domains is flanked by two large (~1000 aa) N- and C-terminal regions.
+  Despite the &#34;soluble guanylyl cyclase&#34; name it is homologous to mammalian
+  soluble adenylyl cyclase (a class III cyclase) rather than to the metazoan
+  NO-sensitive, heme-containing soluble guanylyl cyclase; its Mg2+/GTP-dependent
+  activity is stimulated by GTPgammaS and inhibited by Ca2+, and there is no
+  evidence for NO or heme regulation. In resting cells the protein is largely
+  cytosolic, and during chemotaxis it translocates to the leading edge, where its
+  N-terminal region binds actin filaments in extending pseudopodia and the enzyme
+  becomes catalytically active upon membrane association. The rapidly diffusing
+  cGMP it produces promotes assembly of myosin II filaments in the cortex and rear
+  of the cell, suppressing lateral pseudopodia and thereby maintaining polarity
+  and directional movement. The sGC protein also has a cGMP-independent activity in
+  which anteriorly localized protein refines and stabilizes pseudopod formation at
+  the leading edge. Loss of the gene reduces chemotactic sensitivity toward cAMP and
+  impairs aggregation, and the protein additionally influences electrotaxis
+  directionality and the timing of intracellular calcium responses.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: sgcA is a class III nucleotide cyclase, and these enzymes use a
+      divalent metal (Mg2+ or Mn2+) for two-metal-ion catalysis. Physiological
+      activity is Mg2+/GTP dependent, so magnesium binding by the catalytic
+      domain is biologically real. This is a cofactor requirement supporting the
+      guanylate cyclase activity rather than a standalone core function.
+    action: KEEP_AS_NON_CORE
+    reason: Magnesium binding is a genuine catalytic cofactor requirement of the
+      cyclase domain (physiological substrate is Mg2+/GTP) but is ancillary to
+      the core guanylate cyclase molecular function.
+    supported_by:
+    - reference_id: PMID:11500361
+      supporting_text: prevailing Mg 2+ concentration
+    - reference_id: PMID:11500361
+      supporting_text: stimulated by GTPγS and inhibited by Ca 2+ ions
+- term:
+    id: GO:0006182
+    label: cGMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: sgcA is the predominant source of chemoattractant-stimulated cGMP in
+      Dictyostelium; gene disruption reduces guanylyl cyclase activity more than
+      10-fold. The cGMP biosynthetic process annotation is a direct and accurate
+      consequence of the enzyme&#39;s guanylate cyclase activity.
+    action: ACCEPT
+    reason: cGMP biosynthesis is the core biological output of this guanylate
+      cyclase and is directly supported by experimental gene-disruption data.
+    supported_by:
+    - reference_id: PMID:11500361
+      supporting_text: &#39;&gt;10-fold reduction in guanylyl cyclase activity&#39;
+- term:
+    id: GO:0009190
+    label: cyclic nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: This is a correct but more general parent of cGMP biosynthetic
+      process. The specific product of sgcA is cGMP, so the more precise cGMP
+      biosynthetic process term better captures the function.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but redundant with the more specific cGMP biosynthetic
+      process annotation; retained as a non-core general term.
+    supported_by:
+    - reference_id: PMID:11500361
+      supporting_text: &#39;&gt;10-fold reduction in guanylyl cyclase activity&#39;
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: cGMP produced by sgcA acts as an intracellular second messenger
+      during chemotaxis, so participation in intracellular signal transduction is
+      correct. It is a broad term that does not capture the specific chemotactic
+      role.
+    action: KEEP_AS_NON_CORE
+    reason: Correct high-level process term; retained as non-core because more
+      specific chemotaxis and cGMP-biosynthesis terms better describe the role.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: cGMP plays an important role during chemotaxis
+- term:
+    id: GO:0019722
+    label: calcium-mediated signaling
+  evidence_type: IGI
+  original_reference_id: PMID:40295210
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Genetic analysis shows that gca/sgc-null cells have an altered
+      (slightly delayed) intracellular calcium response to external calcium, and
+      the authors conclude that cGMP participates in calcium homeostasis. This is
+      a modulatory, downstream role rather than a core function of the enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: sgcA/cGMP modulates the timing of calcium responses but this is an
+      accessory role, not the core guanylate-cyclase function.
+    supported_by:
+    - reference_id: PMID:40295210
+      supporting_text: gca/sgc-null cells showed a slightly delayed response
+    - reference_id: PMID:40295210
+      supporting_text: G proteins, cGMP, and IplA are involved in calcium homeostasis
+- term:
+    id: GO:0031252
+    label: cell leading edge
+  evidence_type: IDA
+  original_reference_id: PMID:19346484
+  qualifier: located_in
+  review:
+    summary: In migrating cells the sGC protein localizes to the leading-edge
+      pseudopod in an actin-dependent manner, consistent with direct-imaging data
+      in this and other studies. This is a well-supported localization.
+    action: ACCEPT
+    reason: Direct experimental evidence places sGC at the leading-edge pseudopod
+      during directed migration.
+    supported_by:
+    - reference_id: PMID:19346484
+      supporting_text: components of the GCase- and PI3K-dependent signaling
+        pathways localized at the leading edge of migrating cells during
+        electrotaxis in an actin-dependent manner
+- term:
+    id: GO:0051602
+    label: response to electrical stimulus
+  evidence_type: IGI
+  original_reference_id: PMID:19346484
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Genetic modulation of the guanylyl cyclases and the cGMP target
+      GbpC reverses the preferred direction of migration in an electric field
+      (electrotaxis), showing that sgcA acts within the response to an electrical
+      stimulus. This is an accessory role rather than the enzyme&#39;s core function.
+    action: KEEP_AS_NON_CORE
+    reason: sgcA contributes to directional switching during electrotaxis, a
+      specialized downstream behavior, not the core molecular function.
+    supported_by:
+    - reference_id: PMID:19346484
+      supporting_text: the preferential direction of migration during
+        electrotaxis in Dictyostelium cells can be reversed by genetically
+        modulating both guanylyl cyclases
+- term:
+    id: GO:0031252
+    label: cell leading edge
+  evidence_type: IDA
+  original_reference_id: PMID:29118357
+  qualifier: located_in
+  review:
+    summary: The four chemotaxis-pathway proteins, including sGC, and their mRNAs
+      are preferentially enriched at the cell front during migration. This
+      supports leading-edge localization of sgcA.
+    action: ACCEPT
+    reason: Direct-imaging evidence places sGC among the chemotaxis proteins
+      enriched at the leading edge/cell front.
+    supported_by:
+    - reference_id: PMID:29118357
+      supporting_text: proteins of these four chemotaxis pathways and actin are
+        preferentially enriched at the cell front
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:15601898
+  qualifier: located_in
+  review:
+    summary: In resting cells the major fraction of sGC-GFP is cytosolic, with a
+      small cortical fraction. Cytosolic localization is directly observed and is
+      the resting distribution of the enzyme.
+    action: ACCEPT
+    reason: Direct fluorescence imaging shows sGC is predominantly cytosolic in
+      resting cells.
+    supported_by:
+    - reference_id: PMID:15601898
+      supporting_text: major fraction of the sGC-GFP fusion protein localizes to
+        the cytosol
+- term:
+    id: GO:1904269
+    label: cell leading edge cell cortex
+  evidence_type: IDA
+  original_reference_id: PMID:15601898
+  qualifier: located_in
+  review:
+    summary: In a cAMP gradient sGC-GFP relocates to the anterior (leading-edge)
+      cell cortex, where the membrane-associated enzyme is catalytically active.
+      This anterior cortical localization is directly observed.
+    action: ACCEPT
+    reason: Direct imaging shows chemoattractant-induced enrichment of sGC at the
+      anterior cell cortex.
+    supported_by:
+    - reference_id: PMID:15601898
+      supporting_text: sGC-GFP localizes to the anterior cell cortex
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IMP
+  original_reference_id: PMID:11500361
+  qualifier: enables
+  review:
+    summary: Gene disruption of sgcA abolishes most guanylyl cyclase activity
+      (&gt;10-fold reduction) without affecting adenylyl cyclase activity,
+      demonstrating that this protein is a guanylate cyclase. This is the core
+      molecular function.
+    action: ACCEPT
+    reason: Mutant-phenotype evidence directly establishes guanylate cyclase
+      activity as the core molecular function of sgcA.
+    supported_by:
+    - reference_id: PMID:11500361
+      supporting_text: &#39;&gt;10-fold reduction in guanylyl cyclase activity&#39;
+- term:
+    id: GO:0050920
+    label: regulation of chemotaxis
+  evidence_type: IGI
+  original_reference_id: PMID:22081140
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: sGC is one of several accessory signalling enzymes that are not
+      required for basal Ras-driven chemotaxis but provide a memory of direction
+      and improved orientation, amplifying sensitivity in shallow gradients. This
+      is a regulatory contribution to chemotaxis.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but general regulation-of-chemotaxis role; the specific
+      chemotaxis-to-cAMP annotation better captures the biology.
+    supported_by:
+    - reference_id: PMID:22081140
+      supporting_text: they provide a memory of direction and improved
+        orientation of the cell
+- term:
+    id: GO:0043327
+    label: chemotaxis to cAMP
+  evidence_type: IGI
+  original_reference_id: PMID:18299345
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Genetic screens identify sGC as a key mediator of cAMP chemotaxis.
+      The protein localizes to the leading edge and interacts with actin
+      filaments, while its cGMP product induces myosin filaments in the rear.
+      This directly captures the physiological process sgcA acts within.
+    action: ACCEPT
+    reason: sgcA is a central mediator of chemotaxis to cAMP, providing both
+      leading-edge protein and rear cGMP signals.
+    supported_by:
+    - reference_id: PMID:18299345
+      supporting_text: this activity is mediated by a soluble guanylyl cyclase
+    - reference_id: PMID:18299345
+      supporting_text: cyclic guanosine monophosphate product induces myosin
+        filaments in the rear of the cell
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IGI
+  original_reference_id: PMID:18073238
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: sGC/cGMP contributes to chemotaxis by maintaining a quiescent rear
+      and efficient pseudopod retraction, which increases directional movement
+      and stable cell streaming. This is a correct but general parent of the more
+      specific chemotaxis-to-cAMP annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but broad; the specific chemotaxis-to-cAMP term is the more
+      informative core process annotation.
+    supported_by:
+    - reference_id: PMID:18073238
+      supporting_text: quiescent rear of the cell increases the efficiency of
+        directional movement
+- term:
+    id: GO:0120320
+    label: lateral pseudopodium retraction
+  evidence_type: IGI
+  original_reference_id: PMID:18073238
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP produced by sGC promotes cortical myosin in the rear, enabling
+      efficient retraction of lateral/rear pseudopodia during the rising flank of
+      the cAMP wave. sgcA acts within this process.
+    action: KEEP_AS_NON_CORE
+    reason: A specific downstream consequence of cGMP/myosin signalling; accurate
+      but not the core molecular function.
+    supported_by:
+    - reference_id: PMID:18073238
+      supporting_text: efficiently retract pseudopodia in the rear of the cell
+        during the rising flank of the cAMP wave
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16790492
+  qualifier: enables
+  review:
+    summary: The sGC protein is the predominant guanylyl cyclase producing cGMP
+      during chemotaxis; a point mutation in the catalytic site (sGCDeltacat)
+      abolishes activity, confirming direct guanylate cyclase function. Core
+      molecular function.
+    action: ACCEPT
+    reason: Direct experimental evidence, including a catalytically dead point
+      mutant, establishes guanylate cyclase activity as the core function.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: cGMP plays an important role during chemotaxis and is
+        produced predominantly by a soluble guanylyl cyclase
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:16790492
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: gc-null cells have a reduced chemotaxis index (0.43 vs 0.64 for
+      cells expressing wild-type sGC), demonstrating that sgcA is required for
+      full chemotactic efficiency. Correct but general process term.
+    action: KEEP_AS_NON_CORE
+    reason: Mutant-phenotype support for a general chemotaxis role; the specific
+      chemotaxis-to-cAMP term better captures the core process.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: chemotaxis index of gc -null cells of 0.43
+- term:
+    id: GO:0015629
+    label: actin cytoskeleton
+  evidence_type: IDA
+  original_reference_id: PMID:16790492
+  qualifier: colocalizes_with
+  review:
+    summary: The sGC protein associates with actin filaments in pseudopodia via
+      its N-terminal region; this actin association targets the enzyme to the
+      leading edge and underlies its cGMP-independent role in refining pseudopod
+      formation. A directly observed and functionally important localization.
+    action: ACCEPT
+    reason: Direct evidence that sGC colocalizes with/associates with the actin
+      cytoskeleton in pseudopodia, a key aspect of its leading-edge behavior.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: sGC protein associates with actin filaments in pseudopodia
+- term:
+    id: GO:0031033
+    label: myosin filament organization
+  evidence_type: IGI
+  original_reference_id: PMID:16790492
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP from sGC drives incorporation of myosin into the cell cortex;
+      cGMP-null cells incorporate almost no myosin in the posterior cortex during
+      chemotaxis. sgcA acts upstream of cortical myosin filament organization.
+    action: KEEP_AS_NON_CORE
+    reason: Genuine downstream effect of cGMP signalling on cortical myosin, but
+      an accessory process rather than the core molecular function.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: incorporate almost no myosin in the posterior cell cortex
+        during chemotaxis
+- term:
+    id: GO:0031252
+    label: cell leading edge
+  evidence_type: IDA
+  original_reference_id: PMID:16790492
+  qualifier: located_in
+  review:
+    summary: The sGC protein is enriched in extending pseudopodia at the leading
+      edge during chemotaxis. This is directly observed and is a core aspect of
+      the enzyme&#39;s spatial behavior.
+    action: ACCEPT
+    reason: Direct imaging shows sGC enrichment at the leading edge during
+      chemotaxis.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: The sGC protein is enriched in extending pseudopodia at
+        the leading edge of the cell during chemotaxis
+- term:
+    id: GO:0031037
+    label: myosin II filament disassembly
+  evidence_type: TAS
+  original_reference_id: PMID:14710184
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: This review describes the cGMP cascade as regulating myosin filament
+      formation in the posterior of the cell to inhibit lateral pseudopodia.
+      Because the cascade primarily promotes cortical myosin II assembly, the
+      disassembly direction is debatable; the annotation nonetheless correctly
+      places sgcA within myosin II filament turnover, a downstream process.
+    action: KEEP_AS_NON_CORE
+    reason: TAS from a secondary review; sgcA/cGMP acts within cortical myosin II
+      filament dynamics (the cascade chiefly promotes filament formation), an
+      accessory role rather than the core function.
+    supported_by:
+    - reference_id: PMID:14710184
+      supporting_text: regulates myosin filament formation in the posterior of
+        the cell
+- term:
+    id: GO:0120320
+    label: lateral pseudopodium retraction
+  evidence_type: TAS
+  original_reference_id: PMID:14710184
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: The cGMP-signalling cascade regulates posterior myosin filament
+      formation and thereby inhibits the formation of lateral pseudopodia that
+      would misdirect the cell. sgcA acts within this process.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate downstream role in suppressing lateral pseudopodia via cGMP;
+      accessory to the core guanylate cyclase function.
+    supported_by:
+    - reference_id: PMID:14710184
+      supporting_text: inhibiting the formation of lateral pseudopodia
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:11500361
+  title: The Dictyostelium homologue of mammalian soluble adenylyl cyclase encodes
+    a guanylyl cyclase.
+  findings:
+  - statement: sgcA (sGC) is a class III cyclase homologous to mammalian soluble
+      adenylyl cyclase, and its disruption reduces guanylyl cyclase activity more
+      than 10-fold without affecting adenylyl cyclase activity.
+    supporting_text: &#39;&gt;10-fold reduction in guanylyl cyclase activity&#39;
+  - statement: Physiological Mg2+-dependent sGC activity is stimulated by GTPgammaS
+      and inhibited by Ca2+, indicating regulation distinct from the NO/heme
+      metazoan soluble guanylyl cyclase.
+    supporting_text: stimulated by GTPγS and inhibited by Ca 2+ ions
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary paper identifying and disrupting sgcA; establishes it as
+      the predominant guanylyl cyclase and a class III (sAC-homologous) enzyme, not
+      a NO-sensitive heme cyclase.
+- id: PMID:14710184
+  title: &#39;Chemotaxis: signalling modules join hands at front and tail.&#39;
+  findings:
+  - statement: The cGMP-signalling cascade regulates myosin filament formation in
+      the posterior of the cell, inhibiting lateral pseudopodia that could
+      misdirect the cell.
+    supporting_text: regulates myosin filament formation in the posterior of the cell
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Review that frames the front/back modular model; supports the
+      cGMP-myosin-pseudopod suppression role but is a secondary source.
+- id: PMID:15601898
+  title: Activation of soluble guanylyl cyclase at the leading edge during Dictyostelium
+    chemotaxis.
+  findings:
+  - statement: In resting cells sGC-GFP is mainly cytosolic, and in a cAMP gradient
+      it relocates to the anterior cell cortex where the membrane-associated enzyme
+      becomes active.
+    supporting_text: major fraction of the sGC-GFP fusion protein localizes to the cytosol
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes cytosolic resting distribution and chemoattractant-induced
+      anterior cortical activation; cached record is abstract-only (full_text_available
+      false) but the abstract states these localizations directly.
+- id: PMID:16790492
+  title: Guanylyl cyclase protein and cGMP product independently control front and
+    back of chemotaxing Dictyostelium cells.
+  findings:
+  - statement: The sGC protein is enriched at the leading edge and associates with
+      actin filaments in pseudopodia, while its cGMP product drives cortical myosin
+      in the rear; the two functions are separable.
+    supporting_text: The sGC protein is enriched in extending pseudopodia at the
+      leading edge of the cell during chemotaxis
+  - statement: sGC associates with actin filaments in pseudopodia.
+    supporting_text: sGC protein associates with actin filaments in pseudopodia
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Uncouples catalytic activity (sGCDeltacat) from leading-edge
+      localization (sGCDeltaN); the strongest evidence for the dual, cGMP-dependent
+      and cGMP-independent, roles of sgcA.
+- id: PMID:18073238
+  title: The role of cGMP and the rear of the cell in Dictyostelium chemotaxis and
+    cell streaming.
+  findings:
+  - statement: A quiescent, cGMP-dependent rear with efficient pseudopod retraction
+      increases directional movement and stable cell streaming.
+    supporting_text: quiescent rear of the cell increases the efficiency of directional
+      movement
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Abstract-only cache; supports the rear/cGMP role in chemotaxis and
+      pseudopod retraction.
+- id: PMID:18299345
+  title: Four key signaling pathways mediating chemotaxis in Dictyostelium discoideum.
+  findings:
+  - statement: A soluble guanylyl cyclase mediates chemotaxis by localizing to the
+      leading edge (protein) and inducing rear myosin filaments (cGMP product).
+    supporting_text: cyclic guanosine monophosphate product induces myosin filaments
+      in the rear of the cell
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Genetic identification of sGC as one of four key chemotaxis
+      pathways; supports chemotaxis-to-cAMP core process.
+- id: PMID:19346484
+  title: Switching direction in electric-signal-induced cell migration by cyclic guanosine
+    monophosphate and phosphatidylinositol signaling.
+  findings:
+  - statement: sGC and its cGMP product control directional switching in
+      electrotaxis, with sGC localizing to the leading-edge pseudopod in an
+      actin-dependent manner.
+    supporting_text: components of the GCase- and PI3K-dependent signaling pathways
+      localized at the leading edge of migrating cells during electrotaxis in an
+      actin-dependent manner
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports both leading-edge localization and an accessory role in
+      electrotaxis directional switching.
+- id: PMID:22081140
+  title: &#39;Dictyostelium chemotaxis: essential Ras activation and accessory signalling
+    pathways for amplification.&#39;
+  findings:
+  - statement: sGC is an accessory signalling enzyme that is dispensable for basal
+      Ras-driven chemotaxis but provides a memory of direction and improved
+      orientation, amplifying sensitivity in shallow gradients.
+    supporting_text: they provide a memory of direction and improved orientation of
+      the cell
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Places sGC among accessory amplification pathways rather than the
+      essential Ras module; supports regulation-of-chemotaxis annotation.
+- id: PMID:29118357
+  title: Pumilio-dependent localization of mRNAs at the cell front coordinates multiple
+    pathways required for chemotaxis.
+  findings:
+  - statement: The four chemotaxis-pathway proteins (including sGC) and their mRNAs
+      are preferentially enriched at the cell front during dynamic migration.
+    supporting_text: proteins of these four chemotaxis pathways and actin are
+      preferentially enriched at the cell front
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports leading-edge/cell-front enrichment of sGC among the
+      coordinated chemotaxis pathways.
+- id: PMID:40295210
+  title: Intracellular Calcium Responses to External Calcium Stimuli in Dictyostelium.
+  findings:
+  - statement: gca/sgc-null cells show an altered (slightly delayed) intracellular
+      calcium response to external calcium, and cGMP is implicated in calcium
+      homeostasis.
+    supporting_text: gca/sgc-null cells showed a slightly delayed response
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Supports a modulatory role of cGMP/sgcA in the timing of calcium
+      responses; peripheral to the core function.
+core_functions:
+- description: sgcA is the principal soluble (class III, sAC-homologous) guanylyl
+    cyclase of Dictyostelium, synthesizing the chemoattractant-induced cGMP burst
+    from Mg2+/GTP. The enzyme is largely cytosolic at rest and becomes active upon
+    membrane/leading-edge association; the diffusible cGMP promotes cortical myosin
+    II assembly that suppresses lateral pseudopodia and maintains polarity during
+    cAMP chemotaxis.
+  molecular_function:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  directly_involved_in:
+  - id: GO:0043327
+    label: chemotaxis to cAMP
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  - id: GO:0031252
+    label: cell leading edge
+  - id: GO:1904269
+    label: cell leading edge cell cortex
+  supported_by:
+  - reference_id: PMID:11500361
+    supporting_text: &#39;&gt;10-fold reduction in guanylyl cyclase activity&#39;
+  - reference_id: PMID:16790492
+    supporting_text: cGMP plays an important role during chemotaxis and is produced
+      predominantly by a soluble guanylyl cyclase
+  - reference_id: PMID:15601898
+    supporting_text: sGC-GFP localizes to the anterior cell cortex
+- description: Independently of its catalytic product, the sGC protein acts as an
+    actin-associated, leading-edge scaffold; its N-terminal region binds actin
+    filaments in extending pseudopodia, localizing the protein to the cell front
+    where it refines and stabilizes pseudopod formation.
+  molecular_function:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  locations:
+  - id: GO:0015629
+    label: actin cytoskeleton
+  - id: GO:0031252
+    label: cell leading edge
+  supported_by:
+  - reference_id: PMID:16790492
+    supporting_text: sGC protein associates with actin filaments in pseudopodia
+  - reference_id: PMID:16790492
+    supporting_text: The sGC protein is enriched in extending pseudopodia at the
+      leading edge of the cell during chemotaxis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

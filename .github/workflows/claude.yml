@@ -9,36 +9,83 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
-  workflow_dispatch:
-    inputs:
-      model:
-        description: "Claude model to use"
-        default: claude-sonnet-4-6
-        type: choice
-        options:
-          - claude-sonnet-4-6
-          - claude-haiku-4-5-20251001
-          - claude-opus-4-7
+
+# `edited` is not a trigger here, but a comment can still arrive while a run is
+# in flight; keep one agent per issue/PR.
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
 
 jobs:
   claude:
+    # Only a repo OWNER/MEMBER/COLLABORATOR can dispatch the agent. Without this,
+    # any GitHub user could drive a write-capable agent by writing "@claude" in a
+    # comment on a public repo.
+    #
+    # For `issues: assigned`, this deliberately gates on the *issue author's*
+    # association rather than the assigner's: assigning an externally-authored
+    # issue should not turn untrusted issue text into an agent trigger.
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (
+        github.event_name == 'issue_comment' &&
+        contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      ) ||
+      (
+        github.event_name == 'pull_request_review_comment' &&
+        contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      ) ||
+      (
+        github.event_name == 'pull_request_review' &&
+        contains(github.event.review.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)
+      ) ||
+      (
+        github.event_name == 'issues' &&
+        (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+      )
     runs-on: ubuntu-latest
+    # A GitHub App installation token expires 60 minutes after minting and does
+    # not refresh; stay inside that window.
+    timeout-minutes: 55
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write
+      # Scopes the default GITHUB_TOKEN only; the agent works with the ai4c-agent
+      # App token below.
+      contents: read
       actions: read # Required for Claude to read CI results on PRs
     steps:
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+          token: ${{ steps.ai4c-token.outputs.token }}
+          # This agent has Bash(*); do not leave a token in .git/config for it
+          # to read. git authenticates via the gh credential helper below.
+          persist-credentials: false
+
+      - name: Configure git identity and credential helper
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+        run: |
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
+
+      - name: Resolve agent config
+        uses: ./.github/actions/resolve-agent-config
+        with:
+          workflow: claude
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -49,75 +96,67 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@v1
-        
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.ai4c-token.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          mcp_config: |
-            {
-              "mcpServers": {
-                "ols": {
-                  "command": "uvx",
-                  "args": [
-                    "ols-mcp"
-                  ]
-                },
-                "sequential-thinking": {
-                  "command": "npx",
-                  "args": [
-                    "-y",
-                    "@modelcontextprotocol/server-sequential-thinking"
-                  ]
-                }
-              }
-            }
+          github_token: ${{ steps.ai4c-token.outputs.token }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
+          # Lets Claude read CI results on PRs.
           additional_permissions: |
             actions: read
-          
-          model: ${{ inputs.model || 'claude-sonnet-4-6' }}
-          
-          # Optional: Customize the trigger phrase (default: @claude)
-          # trigger_phrase: "/claude"
-          
-          # Optional: Trigger when specific user is assigned to an issue
-          # assignee_trigger: "claude-bot"
-          
-          # Optional: Allow Claude to run specific commands
-          allowed_tools: "Bash(*),FileEdit,Edit,MultiEdit,WebSearch,WebFetch,mcp__ols_mcp__search_all_ontologies,mcp__ols_mcp__get_terms_from_ontology"
-          
-          # Optional: Add custom instructions for Claude to customize its behavior for your project
-          custom_instructions: |
-            REPO: ${{ github.repository }}
-            ISSUE NUMBER: ${{ github.event.issue.number }}
-            TITLE: ${{ github.event.issue.title }}
-            BODY: ${{ github.event.issue.body }}
-            AUTHOR: ${{ github.event.issue.user.login }}
 
-            First analyzer the user request. If it doesn't involve gene review, 
+          # No `prompt:` on purpose. This is the interactive "@claude" responder,
+          # and v1 switches to non-interactive automation mode as soon as a prompt
+          # is supplied. Repository conventions come from CLAUDE.md, which the
+          # agent reads; they used to be duplicated here in a `custom_instructions:`
+          # block that v1 does not accept and silently discarded.
+          #
+          # `mcp_config:`, `model:` and `allowed_tools:` were dropped the same way
+          # — none of them are v1 inputs. Everything now goes through claude_args,
+          # which is how v1 takes CLI flags. Both flags ACCUMULATE with tag mode's
+          # own values rather than replacing them, so the comment-update and CI
+          # MCP tools survive.
+          #
+          # The old file asked for `Bash(*),Edit,MultiEdit,Write`, but since the
+          # input was being discarded it never took effect — the agent has been
+          # running on tag mode's narrow set. Restoring that literally would grant
+          # blanket write for the first time, in the same commit that calls this
+          # workflow out as the incident shape, so it is scoped to what the
+          # gene-review protocol needs instead. Edit/MultiEdit/Write are
+          # deliberately absent: tag mode runs `--permission-mode acceptEdits`,
+          # which already permits edits inside the workspace, and listing the
+          # tools would extend that to the whole runner.
+          #
+          # BE CLEAR ABOUT WHAT THIS LIST IS AND IS NOT. It is not a confinement
+          # boundary: `Bash(uv:*)` covers `uv run python -c '...'`, `Bash(uvx:*)`
+          # runs an arbitrary PyPI package, and `gh alias set --shell` is a shell
+          # escape. Arbitrary execution is ACCEPTED for this agent, because only
+          # OWNER/MEMBER/COLLABORATOR can trigger it (see the job `if:`) and it
+          # holds a token that expires with the job. What the list actually buys
+          # is workspace-scoped writes and the removal of `Bash(*)`.
+          #
+          # Git is the one exception worth spelling out, because it has a
+          # documented escape rather than an implied one: a `Bash(git:*)` prefix
+          # rule permits `git push --receive-pack='sh -c ...' ext::sh`, which is
+          # exactly the RCE the action's vendored scripts/git-push.sh wrapper
+          # exists to close (HackerOne #3556799). Tag mode already unions in
+          # `git add`/`git commit`/`git rm` and that wrapper, so only read-only
+          # verbs were missing and only those are added. `git fetch` is NOT among
+          # them despite looking read-only: `git fetch 'ext::sh -c <cmd>'` runs
+          # <cmd> locally, since protocol.ext.allow defaults to `user`.
+          claude_args: |
+            --model ${{ env.AGENT_MODEL }}
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}, "sequential-thinking": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]}}}'
+            --allowedTools "Read,Glob,Grep,WebSearch,WebFetch,Bash(just:*),Bash(uv:*),Bash(uvx:*),Bash(gh:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git checkout:*),mcp__ols__search_all_ontologies,mcp__ols__get_terms_from_ontology,mcp__ols__get_ontology_info,mcp__sequential-thinking__sequentialthinking"
 
-            If the user asks for a gene review, you must perform the following steps:
-              
-            When reviewing a gene, first check if the relevant files are in place. To create the uniprot and goa files, and a stub review,
-            run `just fetch-gene SPECIES GENE`. Never initiate these yourself. If a GENE-deep-research.md is NOT already present, you
-            should first do extensive literature search and make one, being sure to include citations for all statements.
-
-            ALWAYS do a `just validate SPECIES GENE` before finishing. You must fix BOTH ERRORs and WARNINGs.
-
-            Make sure you use the correct uniprot code for SPECIES (unless this is a common species: human, worm, fly, rat, mouse)
-            And use the uniprot gene symbol
-
-            Make sure your commit also includes:
-
-            - GENE-goa.tsv and GENE-uniprot.txt (if you created these with `just fetch-gene`)
-            - GENE-deep-research.md (if this was not previously present)
-            - New publications in `publications/`
-            - any bioinformatics analyses
-
-            Make a PR at the end
-          
-          # Optional: Custom environment variables for Claude
-          # claude_env: |
-          #   NODE_ENV: test
-
+      - name: Write step summary
+        # Not `always()`: with cancel-in-progress a superseded run writes no
+        # execution log, and the summary would report that as breakage.
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/agent-run-summary
+        with:
+          execution-file: ${{ steps.claude.outputs.execution_file }}
+          title: "@claude Run"

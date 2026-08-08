@@ -1,0 +1,4686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYNU - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KYNU</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q16719" target="_blank" class="term-link">
+                        Q16719
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "KYNU";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q16719" data-a="DESCRIPTION: KYNU is kynureninase (L-kynurenine hydrolase, EC 3..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>KYNU is kynureninase (L-kynurenine hydrolase, EC 3.7.1.3), a cytosolic, pyridoxal-5&#39;-phosphate (PLP)-dependent enzyme of the kynurenine pathway of L-tryptophan catabolism. It is a homodimer belonging to the aspartate aminotransferase (fold-type I / alpha) superfamily of PLP-dependent enzymes, with PLP bound as an internal Schiff base to an active-site lysine (Lys276). Kynureninase hydrolytically cleaves 3-hydroxy-L-kynurenine to 3-hydroxyanthranilate and L-alanine, and L-kynurenine to anthranilate and L-alanine. The human (mammalian &#34;constitutive&#34;) enzyme strongly prefers the 3-hydroxy substrate over L-kynurenine, in contrast to the &#34;inducible&#34; prokaryotic kynureninases that prefer L-kynurenine. Its reaction commits tryptophan-derived carbon to quinolinate and thence to de novo biosynthesis of NAD(+); kynureninase is one of the cell-type-specific determinants of quinolinate production, and its expression is increased by interferon-gamma and in inflammatory states. Because the enzyme requires PLP, its activity depends on vitamin B6 status. Loss-of-function KYNU variants cause two recessive disorders: hydroxykynureninuria (urinary excretion of kynurenine, 3-hydroxykynurenine and xanthurenic acid) and a congenital NAD-deficiency malformation syndrome with vertebral, cardiac, renal and limb defects.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that kynureninase is active in the cytoplasm. Consistent with the UniProt authoritative subcellular location call (Cytoplasm, cytosol) and with the more specific cytosol annotations. The generic parent &#34;cytoplasm&#34; is acceptable but the more precise cytosol term is preferred; kept as non-core in favour of GO:0005829.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0006569" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of involvement in L-tryptophan catabolism. Kynureninase is a committed enzyme of the tryptophan/kynurenine catabolic pathway, directly supported by experimental biochemistry. Accept as a core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link">
+                                        PMID:8706755
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic and 3-hydroxyanthranilic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of kynureninase activity, the defining molecular function of this gene. Redundant with multiple experimental EXP/IDA annotations to the same term. Accept as the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the cleavage of L-kynurenine (L-Kyn) and L-3-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of mitochondrial localization (from PANTHER subfamily PTN001019478). The UniProt authoritative call is cytosol only, and the enzyme has no mitochondrial targeting sequence. Older fractionation work did detect activity in a mitochondrial fraction of human liver (PMID:6468727), but the current consensus places human kynureninase in the cytosol. This broad phylogenetic mitochondrion call is an over-annotation for the human protein.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001019478</span>
+
+                                    &middot; Kynureninase subfamily node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Mitochondrial localization from the PANTHER subfamily node does not transfer to human KYNU, which lacks a mitochondrial targeting sequence and is placed in the cytosol by UniProt; the primary/core location is cytosol.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/UniRule) annotation of cytoplasmic localization. Consistent with the UniProt cytosol call. The more specific cytosol term is preferred; kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of cytosol from the UniProt Subcellular Location vocabulary mapping (SL-0091). This matches the authoritative UniProt call and the experimental IDA/HPA cytosol annotations. Accept as the core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0006569" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/UniRule) annotation of involvement in L-tryptophan catabolism, redundant with the IBA and IMP annotations to the same term. Accept as a core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link">
+                                        PMID:8706755
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic and 3-hydroxyanthranilic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/UniPathway) annotation of involvement in NAD+ biosynthesis. Kynureninase feeds the de novo (tryptophan) NAD+ biosynthetic route via quinolinate. Redundant with the IMP annotation to the same term. Accept as core process context.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0019805" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (transfer of manual annotation) of involvement in quinolinate biosynthesis. Kynureninase produces 3-hydroxyanthranilate, the immediate precursor of quinolinate; UniProt records the pathway &#34;quinolinate from L-kynurenine: step 2/3&#34;. Redundant with the experimental IDA to the same term. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">NAD(+) biosynthesis; quinolinate from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/UniRule) annotation of pyridoxal 5&#39;-phosphate binding. PLP is the obligate cofactor of kynureninase, established by the PLP-bound crystal structure and by the internal Schiff base to Lys276. Accept as a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link">
+                                        PMID:17300176
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the atomic structure of the PLP-bound holoenzyme was determined</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/Rhea/EC 3.7.1.3) annotation of kynureninase activity, redundant with the multiple experimental annotations to the same term. Accept as the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">L-kynurenine + H2O = anthranilate + L-alanine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                    GO:0034354
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0034354" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of involvement in de novo NAD+ biosynthesis from L-tryptophan. This is the precise process term for kynureninase&#39;s role: its reaction is on the tryptophan-to-quinolinate-to-NAD route, and KYNU loss-of-function causes NAD deficiency in patients. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                                        PMID:28792876
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nicotinamide adenine dinucleotide (NAD) is synthesized de novo from tryptophan through the kynurenine pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA, Human Protein Atlas immunofluorescence) annotation of cytosolic localization. Matches the authoritative UniProt call. Accept as the core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17300176
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of Homo sapiens kynureninase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:17300176" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of kynureninase activity from the crystal structure and kinetic characterization of recombinant human kynureninase. The enzyme catalyses hydrolytic cleavage of 3-hydroxy-L-kynurenine to 3-hydroxyanthranilate and L-alanine. This is the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link">
+                                        PMID:17300176
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine to produce 3-hydroxyanthranilate and l-alanine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8706755
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and expression of a cDNA clone encoding human kynu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:8706755" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of kynureninase activity from the cloning and functional expression of human kynureninase, which catalyses cleavage of L-kynurenine and L-3-hydroxykynurenine to anthranilate and 3-hydroxyanthranilate. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link">
+                                        PMID:8706755
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic and 3-hydroxyanthranilic acids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28792876
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAD Deficiency, Congenital Malformations, and Niacin Supplem...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0009435" data-r="PMID:28792876" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation of involvement in NAD+ biosynthesis. Patients with loss-of-function KYNU variants had reduced circulating NAD, and mutant enzymes had greatly reduced activity; NAD is synthesized de novo from tryptophan through the kynurenine pathway in which KYNU acts. Accept as core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                                        PMID:28792876
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The patients had reduced levels of circulating NAD.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28792876
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAD Deficiency, Congenital Malformations, and Niacin Supplem...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:28792876" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of kynureninase activity, based on in vitro enzyme assays of wild-type and patient-derived mutant KYNU; the mutant enzymes had greatly reduced activity, confirming the kynureninase function of the gene product. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                                        PMID:28792876
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mutant enzymes had greatly reduced activity in vitro.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71217
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005829" data-r="Reactome:R-HSA-71217" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable (TAS) annotation placing the kynureninase reaction (3-hydroxykynurenine to 3-hydroxyanthranilate) in the cytosol. Matches the authoritative UniProt location. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71217
+
+                                </span>
+
+                                <div class="support-text">Cytosolic kynureninase catalyzes the hydrolysis of 3-hydroxy-L-kynurenine to form L-alanine and 3-hydroxyanthranilate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034516" target="_blank" class="term-link">
+                                    GO:0034516
+                                </a>
+                            </span>
+                            <span class="term-label">response to vitamin B6</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1939450" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1939450
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-performance liquid chromatographic assay of human lymph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0034516" data-r="PMID:1939450" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation of &#34;response to vitamin B6&#34; based on the observation that human lymphocyte kynureninase activity is depressed in vitamin-B6-deficient men. This reflects the enzyme&#39;s obligate dependence on the PLP cofactor (the active form of vitamin B6) rather than KYNU mediating a regulated cellular response to vitamin B6. It is a genuine but peripheral, cofactor-dependency observation; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1939450" target="_blank" class="term-link">
+                                        PMID:1939450
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">lymphocyte kynureninase activity is depressed during a vitamin B6 deficiency</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6468727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6468727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intracellular localization and characterization of 3-hydroxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005739" data-r="PMID:6468727" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of mitochondrial localization from early subcellular fractionation of human liver, which found 3-hydroxykynureninase activity in both cytosol and mitochondria with identical properties. This is an experimental observation and is not removed. However, the authoritative UniProt call and later data place human kynureninase in the cytosol (no mitochondrial targeting sequence). The mitochondrial pool is therefore kept as a non-core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6468727" target="_blank" class="term-link">
+                                        PMID:6468727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">3-hydroxykynureninase in human liver was present in cytosol and mitochondria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6468727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6468727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intracellular localization and characterization of 3-hydroxy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0005829" data-r="PMID:6468727" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of cytosolic localization from subcellular fractionation of human liver. Consistent with the authoritative UniProt call and the other cytosol annotations. Accept as the core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6468727" target="_blank" class="term-link">
+                                        PMID:6468727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">3-hydroxykynureninase in human liver was present in cytosol and mitochondria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17334708" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17334708
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Xanthurenic aciduria due to a mutation in KYNU encoding kynu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0006569" data-r="PMID:17334708" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation of involvement in L-tryptophan catabolism, based on a KYNU-deficient patient (homozygous T198A) with hydroxykynureninuria showing accumulation of upstream kynurenine-pathway metabolites (kynurenine, 3-hydroxykynurenine, xanthurenic acid). Accept as core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17334708" target="_blank" class="term-link">
+                                        PMID:17334708
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Massive urinary excretion of xanthurenic acid, 3-hydroxykynurenine and kynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9291104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9291104
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Different kynurenine pathway enzymes limit quinolinic acid f...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0019805" data-r="PMID:9291104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of involvement in quinolinate biosynthesis. Cell-type comparisons showed that kynureninase activity is one of the determinants of whether a human cell can convert kynurenine-pathway intermediates to quinolinate. Accept as a core process (quinolinate is the precursor to de novo NAD+).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9291104" target="_blank" class="term-link">
+                                        PMID:9291104
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Kynurenine 3-hydroxylase and, in some cells, kynureninase and 3-hydroxyanthranilate 3,4-dioxygenase are important determinants of whether a cell can make quinolinate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11985583" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11985583
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and biochemical characterization of some of the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:11985583" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of kynureninase activity from purification and biochemical characterization of recombinant human kynureninase, which was highly specific for 3-hydroxykynurenine. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11985583" target="_blank" class="term-link">
+                                        PMID:11985583
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This cloned enzyme was highly specific for 3-hydroxykynurenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17334708" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17334708
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Xanthurenic aciduria due to a mutation in KYNU encoding kynu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:17334708" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation of kynureninase activity, inferred from the KYNU-deficient patient (homozygous T198A) with reduced 3-hydroxykynureninase activity and hydroxykynureninuria. This is an experimental (patient-based) annotation to the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17334708" target="_blank" class="term-link">
+                                        PMID:17334708
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a mutation in KYNU encoding kynureninase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                                    GO:0030429
+                                </a>
+                            </span>
+                            <span class="term-label">kynureninase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9180257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9180257
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and recombinant expression of rat and human kynureni...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0030429" data-r="PMID:9180257" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of kynureninase activity from cloning and recombinant expression of human (and rat) kynureninase, with measured Km values for L-kynurenine and DL-3-hydroxykynurenine. Core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9180257" target="_blank" class="term-link">
+                                        PMID:9180257
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A cDNA encoding human liver kynureninase was also isolated.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034341" target="_blank" class="term-link">
+                                    GO:0034341
+                                </a>
+                            </span>
+                            <span class="term-label">response to type II interferon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9291104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9291104
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Different kynurenine pathway enzymes limit quinolinic acid f...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0034341" data-r="PMID:9291104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation of &#34;response to type II interferon&#34; from the observation that kynureninase activity (and quinolinate production) is high in interferon-gamma-stimulated cells. This reflects inducibility/context of the kynurenine pathway under immune activation rather than the enzyme&#39;s core catalytic role. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9291104" target="_blank" class="term-link">
+                                        PMID:9291104
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">High activities of kynurenine 3-hydroxylase, kynureninase or 3-hydroxyanthranilate 3,4-dioxygenase were found in interferon-gamma-stimulated macrophages</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11985583" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11985583
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and biochemical characterization of some of the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16719" data-a="GO:0042803" data-r="PMID:11985583" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) annotation of protein homodimerization activity. Human kynureninase is a homodimer (confirmed by the crystal structure). This is a real structural property but describes the enzyme&#39;s quaternary assembly rather than its catalytic function; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/KYNU/KYNU-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Kynureninase activity: PLP-dependent hydrolytic cleavage of 3-hydroxy-L-kynurenine to 3-hydroxyanthranilate and L-alanine (and of L-kynurenine to anthranilate and L-alanine), the committed step directing tryptophan-derived carbon toward quinolinate.</h3>
+                <span class="vote-buttons" data-g="Q16719" data-a="FUNCTION: Kynureninase activity: PLP-dependent hydrolytic cl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030429" target="_blank" class="term-link">
+                            kynureninase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                L-tryptophan catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                quinolinate biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                &#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link">
+                                PMID:17300176
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine to produce 3-hydroxyanthranilate and l-alanine</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link">
+                                PMID:8706755
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic and 3-hydroxyanthranilic acids</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal 5&#39;-phosphate binding: PLP is the obligate cofactor of kynureninase, bound as an internal Schiff base to the active-site lysine (Lys276) in this fold-type I (aspartate aminotransferase superfamily) enzyme.</h3>
+                <span class="vote-buttons" data-g="Q16719" data-a="FUNCTION: Pyridoxal 5&#39;-phosphate binding: PLP is the obligat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link">
+                                PMID:17300176
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the atomic structure of the PLP-bound holoenzyme was determined</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11985583" target="_blank" class="term-link">
+                            PMID:11985583
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and biochemical characterization of some of the properties of recombinant human kynureninase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant human kynureninase was purified to homogeneity; the enzyme is highly specific for 3-hydroxykynurenine and is inhibited by L-kynurenine.</div>
+
+                        <div class="finding-text">"This cloned enzyme was highly specific for 3-hydroxykynurenine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17300176" target="_blank" class="term-link">
+                            PMID:17300176
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of Homo sapiens kynureninase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of human kynureninase as the PLP-bound holoenzyme; the human constitutive enzyme preferentially cleaves 3-hydroxy-L-kynurenine.</div>
+
+                        <div class="finding-text">"preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine to produce 3-hydroxyanthranilate and l-alanine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17334708" target="_blank" class="term-link">
+                            PMID:17334708
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Xanthurenic aciduria due to a mutation in KYNU encoding kynureninase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">First molecular case of hydroxykynureninuria: a homozygous KYNU T198A variant with reduced kynureninase activity and massive urinary kynurenine-pathway metabolites.</div>
+
+                        <div class="finding-text">"Massive urinary excretion of xanthurenic acid, 3-hydroxykynurenine and kynurenine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1939450" target="_blank" class="term-link">
+                            PMID:1939450
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">High-performance liquid chromatographic assay of human lymphocyte kynureninase activity levels.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human lymphocyte kynureninase activity is depressed in vitamin-B6-deficient men relative to B6-replete men, reflecting PLP cofactor dependence.</div>
+
+                        <div class="finding-text">"lymphocyte kynureninase activity is depressed during a vitamin B6 deficiency"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                            PMID:28792876
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAD Deficiency, Congenital Malformations, and Niacin Supplementation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic loss-of-function KYNU (and HAAO) variants disrupt de novo NAD synthesis, causing reduced circulating NAD and a congenital malformation syndrome (VCRL2); niacin supplementation prevents defects in mice.</div>
+
+                        <div class="finding-text">"The patients had reduced levels of circulating NAD."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6468727" target="_blank" class="term-link">
+                            PMID:6468727
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intracellular localization and characterization of 3-hydroxykynureninase in human liver.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">3-hydroxykynureninase in human liver was found in both cytosol and mitochondria with identical properties; active on 3-hydroxykynurenine and kynurenine (~15:1) and PLP-dependent.</div>
+
+                        <div class="finding-text">"3-hydroxykynureninase in human liver was present in cytosol and mitochondria."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8706755" target="_blank" class="term-link">
+                            PMID:8706755
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation and expression of a cDNA clone encoding human kynureninase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning and expression of human kynureninase, a PLP-dependent enzyme that cleaves L-kynurenine and L-3-hydroxykynurenine; Lys276 binds the cofactor.</div>
+
+                        <div class="finding-text">"catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic and 3-hydroxyanthranilic acids"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9180257" target="_blank" class="term-link">
+                            PMID:9180257
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and recombinant expression of rat and human kynureninase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning and recombinant expression of human (and rat) kynureninase with measured Km values; kynureninase acts in NAD cofactor biosynthesis from tryptophan.</div>
+
+                        <div class="finding-text">"A cDNA encoding human liver kynureninase was also isolated."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9291104" target="_blank" class="term-link">
+                            PMID:9291104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Different kynurenine pathway enzymes limit quinolinic acid formation by various human cell types.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kynureninase activity (with kynurenine 3-hydroxylase and 3-HAO) is a cell-type determinant of quinolinate production, and is high in interferon-gamma-stimulated cells.</div>
+
+                        <div class="finding-text">"Kynurenine 3-hydroxylase and, in some cells, kynureninase and 3-hydroxyanthranilate 3,4-dioxygenase are important determinants of whether a cell can make quinolinate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71217
+
+                    </span>
+                </div>
+
+                <div class="reference-title">3-hydroxykynurenine + H2O =&gt; 3-hydroxyanthranilate + alanine + H+</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KYNU-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16719" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="kynu-human-kynureninase-review-notes">KYNU (human) — kynureninase — review notes</h1>
+<p>UniProt: Q16719 (KYNU_HUMAN), 465 aa, EC 3.7.1.3, HGNC:6469, gene MIM 605197.<br />
+All cited publications in <code>publications/</code> are abstract-only (<code>full_text_available: false</code>);<br />
+quotes below are verbatim from those abstracts or from the UniProt flat file.</p>
+<h2 id="identity-and-catalytic-function">Identity and catalytic function</h2>
+<p>KYNU is <strong>kynureninase</strong> (L-kynurenine hydrolase, EC 3.7.1.3), a <strong>pyridoxal-5'-phosphate<br />
+(PLP)-dependent</strong> enzyme of the kynurenine pathway of tryptophan catabolism.</p>
+<ul>
+<li>"Kynureninase (L-kynurenine hydrolase), a pyridoxal-5'-phosphate-(pyridoxal-P)-dependent<br />
+  enzyme, catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into anthranilic<br />
+  and 3-hydroxyanthranilic acids, respectively." [PMID:8706755 abstract]</li>
+<li>UniProt FUNCTION: "Catalyzes the cleavage of L-kynurenine (L-Kyn) and L-3-<br />
+  hydroxykynurenine (L-3OHKyn) into anthranilic acid (AA) and 3-hydroxyanthranilic acid<br />
+  (3-OHAA), respectively. Has a preference for the L-3-hydroxy form. Also has cysteine-<br />
+  conjugate-beta-lyase activity." [file:human/KYNU/KYNU-uniprot.txt]</li>
+</ul>
+<p>The human (mammalian, "constitutive") enzyme <strong>prefers 3-hydroxy-L-kynurenine</strong> over<br />
+L-kynurenine — distinct from the "inducible" prokaryotic kynureninases which prefer<br />
+L-kynurenine:<br />
+- "The Homo sapiens and other eukaryotic constitutive kynureninases preferentially catalyze<br />
+  the hydrolytic cleavage of 3-hydroxy-l-kynurenine to produce 3-hydroxyanthranilate and<br />
+  l-alanine, while l-kynurenine is the substrate of many prokaryotic inducible<br />
+  kynureninases." [PMID:17300176 abstract]<br />
+- Kinetics: much higher affinity for 3-hydroxykynurenine. Recombinant enzyme Km = 28.3 µM<br />
+  for 3-hydroxy-DL-kynurenine <a href="https://pubmed.ncbi.nlm.nih.gov/17300176">PMID:17300176</a>; "highly specific for 3-hydroxykynurenine<br />
+  (Km = 3.0 microm ...) and was inhibited by L-kynurenine (Ki = 20 microm)" <a href="https://pubmed.ncbi.nlm.nih.gov/11985583">PMID:11985583</a>.<br />
+  Native liver enzyme active for both, activity ratio 3-OH-Kyn : Kyn ~15:1 <a href="https://pubmed.ncbi.nlm.nih.gov/6468727">PMID:6468727</a>.</p>
+<p>Reaction directs flux toward <strong>quinolinate → NAD+</strong>:<br />
+- "Kynureninase [E.C.3.7.1.3.] is one of the enzymes involved in the biosynthesis of NAD<br />
+  cofactors from tryptophan through the kynurenine pathway." [PMID:9180257 abstract]</p>
+<h2 id="cofactor-structure">Cofactor / structure</h2>
+<p>PLP is the obligate cofactor; crystal structure solved as PLP-bound holoenzyme:<br />
+- UniProt COFACTOR: pyridoxal 5'-phosphate (ECO:0000269|PubMed:17300176)<br />
+  [file:human/KYNU/KYNU-uniprot.txt]<br />
+- "Kynureninase is a member of a large family of catalytically diverse but structurally<br />
+  homologous pyridoxal 5'-phosphate (PLP) dependent enzymes known as the aspartate<br />
+  aminotransferase superfamily or alpha-family." [PMID:17300176 abstract]<br />
+- "the atomic structure of the PLP-bound holoenzyme was determined" [PMID:17300176 abstract]<br />
+- PLP is bound via Schiff base to Lys276 (UniProt MOD_RES 276 "N6-(pyridoxal<br />
+  phosphate)lysine"; cloning paper assigned Lys276 as cofactor-binding) <a href="https://pubmed.ncbi.nlm.nih.gov/8706755">PMID:8706755</a>.</p>
+<h2 id="quaternary-structure">Quaternary structure</h2>
+<p>Homodimer:<br />
+- UniProt SUBUNIT: "Homodimer." (ECO:0000269|PubMed:17300176) [file:human/KYNU/KYNU-uniprot.txt]<br />
+- Crystal structure in complex with PLP with reported homodimerization <a href="https://pubmed.ncbi.nlm.nih.gov/17300176">PMID:17300176</a>.<br />
+- IDA protein homodimerization activity annotation is from PMID:11985583 (purification<br />
+  showed monomeric mass 52.4 kDa by MALDI; native ~130,000 by gel filtration in<br />
+  PMID:6468727 consistent with a dimer of ~52 kDa subunits).</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>UniProt authoritative call: <strong>Cytoplasm, cytosol</strong> (ECO:0000269|PubMed:8706755;<br />
+HAMAP-Rule). [file:human/KYNU/KYNU-uniprot.txt]<br />
+- HPA IDA cytosol, Reactome cytosol.<br />
+- Older biochemical fractionation reported activity in <strong>both cytosol and mitochondria</strong><br />
+  of human liver, with the same properties: "3-hydroxykynureninase in human liver was<br />
+  present in cytosol and mitochondria. The cytosolic enzyme and mitochondrial enzyme had<br />
+  the same physiological and enzymic properties." [PMID:6468727 abstract]. This is the<br />
+  basis for the IDA mitochondrion annotation; UniProt does not list mitochondrion, so I<br />
+  treat cytosol as the core location and mitochondrion as non-core.<br />
+- An IBA mitochondrion annotation (GO_REF:0000033, PANTHER:PTN001019478) is a phylogenetic<br />
+  inference not specifically supported for the human protein; treated as over-annotation.</p>
+<h2 id="pathway-biological-process">Pathway / biological process</h2>
+<ul>
+<li>Tryptophan/kynurenine catabolism → quinolinate → de novo NAD+ biosynthesis.</li>
+<li>UniProt PATHWAY: "Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from<br />
+  L-kynurenine: step 2/3." [file:human/KYNU/KYNU-uniprot.txt]</li>
+<li>Cell-type kynureninase activity is a determinant of quinolinate production, and is<br />
+  induced by IFN-gamma: "High activities of kynurenine 3-hydroxylase, kynureninase or<br />
+  3-hydroxyanthranilate 3,4-dioxygenase were found in interferon-gamma-stimulated<br />
+  macrophages" ... "Kynurenine 3-hydroxylase and, in some cells, kynureninase and<br />
+  3-hydroxyanthranilate 3,4-dioxygenase are important determinants of whether a cell can<br />
+  make quinolinate." [PMID:9291104 abstract]. This supports both the quinolinate<br />
+  biosynthetic process (IDA) and response to type II interferon (IDA) annotations.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Two Mendelian phenotypes caused by KYNU variants (both in UniProt DISEASE):</p>
+<ol>
+<li><strong>Hydroxykynureninuria (HYXKY, MIM 236800)</strong> — inborn error of amino-acid metabolism;<br />
+   massive urinary excretion of kynurenine, 3-hydroxykynurenine and xanthurenic acid.</li>
+<li>First molecular case: homozygous T198A reduces activity: "Mutation analysis of KYNU<br />
+     encoding kynureninase of the index case revealed homozygosity for a c.593 A &gt; G<br />
+     substitution leading to a threonine-to-alanine (T198A) shift." [PMID:17334708 abstract]</li>
+<li>
+<p>UniProt VARIANT 198 T-&gt;A "(in HYXKY; reduced 3-hydroxykynureninase activity)".</p>
+</li>
+<li>
+<p><strong>Vertebral, cardiac, renal and limb defects syndrome 2 (VCRL2, MIM 617661)</strong> —<br />
+   autosomal-recessive congenital malformation syndrome from loss-of-function KYNU (and<br />
+   HAAO) variants causing NAD deficiency:</p>
+</li>
+<li>"Variants were identified in two genes that encode enzymes of the kynurenine pathway,<br />
+     3-hydroxyanthranilic acid 3,4-dioxygenase (HAAO) and kynureninase (KYNU)." ... "The<br />
+     mutant enzymes had greatly reduced activity in vitro." ... "The patients had reduced<br />
+     levels of circulating NAD." ... "Niacin supplementation during gestation prevented<br />
+     the malformations in mice." [PMID:28792876 abstract]</li>
+<li>This paper supports the IMP NAD+ biosynthetic process annotation and the IDA<br />
+     kynureninase activity annotation (in-vitro activity of mutant enzymes), and the<br />
+     UniProt "quinolinate from L-kynurenine: step 2/3" pathway involvement in NAD.</li>
+</ol>
+<h2 id="vitamin-b6-dependence">Vitamin B6 dependence</h2>
+<p>Kynureninase is PLP-dependent, and its activity falls in vitamin-B6 deficiency:<br />
+- "lymphocyte kynureninase activity in a group (n = 12) of vitamin B6-deficient men was<br />
+  5.04 ... significantly (p = 0.005) lower than the 6.69 ... in men with a normal vitamin<br />
+  B6 status. This indicates that lymphocyte kynureninase activity is depressed during a<br />
+  vitamin B6 deficiency." [PMID:1939450 abstract]. Basis for the IMP "response to vitamin<br />
+  B6" annotation (GO:0034516). This is an indirect, cofactor-dependency observation rather<br />
+  than a demonstration that KYNU mediates a cellular response to vitamin B6; kept as<br />
+  non-core.</p>
+<h2 id="summary-of-curation-decisions">Summary of curation decisions</h2>
+<p>Core molecular functions: <strong>GO:0030429 kynureninase activity</strong> (EXP/IDA, multiple refs) and<br />
+<strong>GO:0030170 pyridoxal phosphate binding</strong> (obligate cofactor). Homodimerization<br />
+(GO:0042803) is a real structural property but structural, kept as non-core MF.</p>
+<p>Core biological process: tryptophan/kynurenine catabolism feeding de novo NAD+ biosynthesis<br />
+(GO:0006569 L-tryptophan catabolic process; GO:0019805 quinolinate biosynthetic process;<br />
+GO:0034354 'de novo' NAD+ biosynthetic process from L-tryptophan; GO:0009435 NAD+<br />
+biosynthetic process). Core location: cytosol (GO:0005829).</p>
+<p>Non-core / over-annotations: mitochondrion (IBA over-annotated; IDA kept non-core),<br />
+response to type II interferon (context/inducibility, non-core), response to vitamin B6<br />
+(cofactor-dependency phenomenon, non-core), NAD+ biosynthetic process is a valid but<br />
+higher-level process that is accepted as core context.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q16719
+gene_symbol: KYNU
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  KYNU is kynureninase (L-kynurenine hydrolase, EC 3.7.1.3), a cytosolic,
+  pyridoxal-5&#39;-phosphate (PLP)-dependent enzyme of the kynurenine pathway of
+  L-tryptophan catabolism. It is a homodimer belonging to the aspartate
+  aminotransferase (fold-type I / alpha) superfamily of PLP-dependent enzymes,
+  with PLP bound as an internal Schiff base to an active-site lysine (Lys276).
+  Kynureninase hydrolytically cleaves 3-hydroxy-L-kynurenine to
+  3-hydroxyanthranilate and L-alanine, and L-kynurenine to anthranilate and
+  L-alanine. The human (mammalian &#34;constitutive&#34;) enzyme strongly prefers the
+  3-hydroxy substrate over L-kynurenine, in contrast to the &#34;inducible&#34;
+  prokaryotic kynureninases that prefer L-kynurenine. Its reaction commits
+  tryptophan-derived carbon to quinolinate and thence to de novo biosynthesis of
+  NAD(+); kynureninase is one of the cell-type-specific determinants of
+  quinolinate production, and its expression is increased by interferon-gamma and
+  in inflammatory states. Because the enzyme requires PLP, its activity depends on
+  vitamin B6 status. Loss-of-function KYNU variants cause two recessive
+  disorders: hydroxykynureninuria (urinary excretion of kynurenine,
+  3-hydroxykynurenine and xanthurenic acid) and a congenital NAD-deficiency
+  malformation syndrome with vertebral, cardiac, renal and limb defects.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q16719-1
+- name: &#39;2&#39;
+  id: Q16719-2
+  sequence_note: VSP_042739, VSP_042740
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that kynureninase is active in the cytoplasm.
+      Consistent with the UniProt authoritative subcellular location call
+      (Cytoplasm, cytosol) and with the more specific cytosol annotations. The
+      generic parent &#34;cytoplasm&#34; is acceptable but the more precise cytosol term
+      is preferred; kept as non-core in favour of GO:0005829.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of involvement in L-tryptophan catabolism.
+      Kynureninase is a committed enzyme of the tryptophan/kynurenine catabolic
+      pathway, directly supported by experimental biochemistry. Accept as a core
+      biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8706755
+      supporting_text: &gt;-
+        catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into
+        anthranilic and 3-hydroxyanthranilic
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of kynureninase activity, the defining
+      molecular function of this gene. Redundant with multiple experimental
+      EXP/IDA annotations to the same term. Accept as the core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes the cleavage of L-kynurenine (L-Kyn) and L-3-
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of mitochondrial localization (from PANTHER
+      subfamily PTN001019478). The UniProt authoritative call is cytosol only, and
+      the enzyme has no mitochondrial targeting sequence. Older fractionation work
+      did detect activity in a mitochondrial fraction of human liver (PMID:6468727),
+      but the current consensus places human kynureninase in the cytosol. This
+      broad phylogenetic mitochondrion call is an over-annotation for the human
+      protein.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+      reference_section_type: DATABASE_ENTRY
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN001019478
+        source_label: Kynureninase subfamily node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Mitochondrial localization from the PANTHER subfamily node does not
+          transfer to human KYNU, which lacks a mitochondrial targeting sequence
+          and is placed in the cytosol by UniProt; the primary/core location is
+          cytosol.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro/UniRule) annotation of cytoplasmic localization.
+      Consistent with the UniProt cytosol call. The more specific cytosol term is
+      preferred; kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation of cytosol from the UniProt Subcellular Location
+      vocabulary mapping (SL-0091). This matches the authoritative UniProt call and
+      the experimental IDA/HPA cytosol annotations. Accept as the core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro/UniRule) annotation of involvement in L-tryptophan
+      catabolism, redundant with the IBA and IMP annotations to the same term.
+      Accept as a core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8706755
+      supporting_text: &gt;-
+        catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into
+        anthranilic and 3-hydroxyanthranilic
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro/UniPathway) annotation of involvement in NAD+
+      biosynthesis. Kynureninase feeds the de novo (tryptophan) NAD+ biosynthetic
+      route via quinolinate. Redundant with the IMP annotation to the same term.
+      Accept as core process context.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation (transfer of manual annotation) of involvement in
+      quinolinate biosynthesis. Kynureninase produces 3-hydroxyanthranilate, the
+      immediate precursor of quinolinate; UniProt records the pathway &#34;quinolinate
+      from L-kynurenine: step 2/3&#34;. Redundant with the experimental IDA to the same
+      term. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;NAD(+) biosynthesis; quinolinate from&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro/UniRule) annotation of pyridoxal 5&#39;-phosphate binding.
+      PLP is the obligate cofactor of kynureninase, established by the PLP-bound
+      crystal structure and by the internal Schiff base to Lys276. Accept as a core
+      molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17300176
+      supporting_text: &gt;-
+        the atomic structure of the PLP-bound holoenzyme was determined
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro/Rhea/EC 3.7.1.3) annotation of kynureninase
+      activity, redundant with the multiple experimental annotations to the same
+      term. Accept as the core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;L-kynurenine + H2O = anthranilate + L-alanine&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation of involvement in de novo NAD+ biosynthesis from
+      L-tryptophan. This is the precise process term for kynureninase&#39;s role: its
+      reaction is on the tryptophan-to-quinolinate-to-NAD route, and KYNU
+      loss-of-function causes NAD deficiency in patients. Accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28792876
+      supporting_text: &gt;-
+        Nicotinamide adenine dinucleotide (NAD) is synthesized de novo from
+        tryptophan through the kynurenine pathway.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA, Human Protein Atlas immunofluorescence) annotation of cytosolic
+      localization. Matches the authoritative UniProt call. Accept as the core
+      location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17300176
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of kynureninase activity from the crystal
+      structure and kinetic characterization of recombinant human kynureninase.
+      The enzyme catalyses hydrolytic cleavage of 3-hydroxy-L-kynurenine to
+      3-hydroxyanthranilate and L-alanine. This is the core molecular function.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17300176
+      supporting_text: &gt;-
+        preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine
+        to produce 3-hydroxyanthranilate and l-alanine
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8706755
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of kynureninase activity from the cloning and
+      functional expression of human kynureninase, which catalyses cleavage of
+      L-kynurenine and L-3-hydroxykynurenine to anthranilate and
+      3-hydroxyanthranilate. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8706755
+      supporting_text: &gt;-
+        catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into
+        anthranilic and 3-hydroxyanthranilic acids
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:28792876
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) annotation of involvement in NAD+ biosynthesis. Patients
+      with loss-of-function KYNU variants had reduced circulating NAD, and mutant
+      enzymes had greatly reduced activity; NAD is synthesized de novo from
+      tryptophan through the kynurenine pathway in which KYNU acts. Accept as core
+      process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28792876
+      supporting_text: &gt;-
+        The patients had reduced levels of circulating NAD.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IDA
+  original_reference_id: PMID:28792876
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of kynureninase activity, based on in vitro enzyme
+      assays of wild-type and patient-derived mutant KYNU; the mutant enzymes had
+      greatly reduced activity, confirming the kynureninase function of the gene
+      product. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28792876
+      supporting_text: &gt;-
+        The mutant enzymes had greatly reduced activity in vitro.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71217
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable (TAS) annotation placing the kynureninase reaction
+      (3-hydroxykynurenine to 3-hydroxyanthranilate) in the cytosol. Matches the
+      authoritative UniProt location. Accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-71217
+      supporting_text: &gt;-
+        Cytosolic kynureninase catalyzes the hydrolysis of 3-hydroxy-L-kynurenine
+        to form L-alanine and 3-hydroxyanthranilate.
+      reference_section_type: OTHER
+- term:
+    id: GO:0034516
+    label: response to vitamin B6
+  evidence_type: IMP
+  original_reference_id: PMID:1939450
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Annotation of &#34;response to vitamin B6&#34; based on the observation that human
+      lymphocyte kynureninase activity is depressed in vitamin-B6-deficient men.
+      This reflects the enzyme&#39;s obligate dependence on the PLP cofactor (the active
+      form of vitamin B6) rather than KYNU mediating a regulated cellular response
+      to vitamin B6. It is a genuine but peripheral, cofactor-dependency
+      observation; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:1939450
+      supporting_text: &gt;-
+        lymphocyte kynureninase activity is depressed during a vitamin B6
+        deficiency
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:6468727
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of mitochondrial localization from early subcellular
+      fractionation of human liver, which found 3-hydroxykynureninase activity in
+      both cytosol and mitochondria with identical properties. This is an
+      experimental observation and is not removed. However, the authoritative
+      UniProt call and later data place human kynureninase in the cytosol (no
+      mitochondrial targeting sequence). The mitochondrial pool is therefore kept
+      as a non-core localization.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:6468727
+      supporting_text: &gt;-
+        3-hydroxykynureninase in human liver was present in cytosol and
+        mitochondria.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:6468727
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of cytosolic localization from subcellular
+      fractionation of human liver. Consistent with the authoritative UniProt call
+      and the other cytosol annotations. Accept as the core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:6468727
+      supporting_text: &gt;-
+        3-hydroxykynureninase in human liver was present in cytosol and
+        mitochondria.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:17334708
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) annotation of involvement in L-tryptophan catabolism,
+      based on a KYNU-deficient patient (homozygous T198A) with hydroxykynureninuria
+      showing accumulation of upstream kynurenine-pathway metabolites (kynurenine,
+      3-hydroxykynurenine, xanthurenic acid). Accept as core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17334708
+      supporting_text: &gt;-
+        Massive urinary excretion of xanthurenic acid, 3-hydroxykynurenine and
+        kynurenine
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9291104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of involvement in quinolinate biosynthesis. Cell-type
+      comparisons showed that kynureninase activity is one of the determinants of
+      whether a human cell can convert kynurenine-pathway intermediates to
+      quinolinate. Accept as a core process (quinolinate is the precursor to de novo
+      NAD+).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9291104
+      supporting_text: &gt;-
+        Kynurenine 3-hydroxylase and, in some cells, kynureninase and
+        3-hydroxyanthranilate 3,4-dioxygenase are important determinants of whether
+        a cell can make quinolinate.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11985583
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of kynureninase activity from purification and
+      biochemical characterization of recombinant human kynureninase, which was
+      highly specific for 3-hydroxykynurenine. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11985583
+      supporting_text: &gt;-
+        This cloned enzyme was highly specific for 3-hydroxykynurenine
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IMP
+  original_reference_id: PMID:17334708
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP annotation of kynureninase activity, inferred from the KYNU-deficient
+      patient (homozygous T198A) with reduced 3-hydroxykynureninase activity and
+      hydroxykynureninuria. This is an experimental (patient-based) annotation to the
+      core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17334708
+      supporting_text: &gt;-
+        a mutation in KYNU encoding kynureninase
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030429
+    label: kynureninase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9180257
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of kynureninase activity from cloning and recombinant
+      expression of human (and rat) kynureninase, with measured Km values for
+      L-kynurenine and DL-3-hydroxykynurenine. Core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9180257
+      supporting_text: &gt;-
+        A cDNA encoding human liver kynureninase was also isolated.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0034341
+    label: response to type II interferon
+  evidence_type: IDA
+  original_reference_id: PMID:9291104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Annotation of &#34;response to type II interferon&#34; from the observation that
+      kynureninase activity (and quinolinate production) is high in
+      interferon-gamma-stimulated cells. This reflects inducibility/context of the
+      kynurenine pathway under immune activation rather than the enzyme&#39;s core
+      catalytic role. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9291104
+      supporting_text: &gt;-
+        High activities of kynurenine 3-hydroxylase, kynureninase or
+        3-hydroxyanthranilate 3,4-dioxygenase were found in
+        interferon-gamma-stimulated macrophages
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:11985583
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct (IDA) annotation of protein homodimerization activity. Human
+      kynureninase is a homodimer (confirmed by the crystal structure). This is a
+      real structural property but describes the enzyme&#39;s quaternary assembly rather
+      than its catalytic function; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/KYNU/KYNU-uniprot.txt
+      supporting_text: &#34;Homodimer.&#34;
+      reference_section_type: DATABASE_ENTRY
+core_functions:
+- description: &gt;-
+    Kynureninase activity: PLP-dependent hydrolytic cleavage of
+    3-hydroxy-L-kynurenine to 3-hydroxyanthranilate and L-alanine (and of
+    L-kynurenine to anthranilate and L-alanine), the committed step directing
+    tryptophan-derived carbon toward quinolinate.
+  molecular_function:
+    id: GO:0030429
+    label: kynureninase activity
+  supported_by:
+  - reference_id: PMID:17300176
+    supporting_text: &gt;-
+      preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine
+      to produce 3-hydroxyanthranilate and l-alanine
+  - reference_id: PMID:8706755
+    supporting_text: &gt;-
+      catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into
+      anthranilic and 3-hydroxyanthranilic acids
+  directly_involved_in:
+  - id: GO:0006569
+    label: L-tryptophan catabolic process
+  - id: GO:0019805
+    label: quinolinate biosynthetic process
+  - id: GO:0034354
+    label: &#34;&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan&#34;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Pyridoxal 5&#39;-phosphate binding: PLP is the obligate cofactor of kynureninase,
+    bound as an internal Schiff base to the active-site lysine (Lys276) in this
+    fold-type I (aspartate aminotransferase superfamily) enzyme.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  supported_by:
+  - reference_id: PMID:17300176
+    supporting_text: &gt;-
+      the atomic structure of the PLP-bound holoenzyme was determined
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11985583
+  title: Purification and biochemical characterization of some of the properties of
+    recombinant human kynureninase.
+  findings:
+  - statement: &gt;-
+      Recombinant human kynureninase was purified to homogeneity; the enzyme is
+      highly specific for 3-hydroxykynurenine and is inhibited by L-kynurenine.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      This cloned enzyme was highly specific for 3-hydroxykynurenine
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; biochemical characterization establishing kynureninase
+      activity and the strong 3-hydroxykynurenine preference. Abstract-only in cache.
+- id: PMID:17300176
+  title: Crystal structure of Homo sapiens kynureninase.
+  findings:
+  - statement: &gt;-
+      Crystal structure of human kynureninase as the PLP-bound holoenzyme; the
+      human constitutive enzyme preferentially cleaves 3-hydroxy-L-kynurenine.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      preferentially catalyze the hydrolytic cleavage of 3-hydroxy-l-kynurenine
+      to produce 3-hydroxyanthranilate and l-alanine
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; structural and kinetic characterization establishing PLP
+      dependence, fold-type I superfamily membership and substrate preference.
+      Abstract-only in cache.
+- id: PMID:17334708
+  title: Xanthurenic aciduria due to a mutation in KYNU encoding kynureninase.
+  findings:
+  - statement: &gt;-
+      First molecular case of hydroxykynureninuria: a homozygous KYNU T198A variant
+      with reduced kynureninase activity and massive urinary kynurenine-pathway
+      metabolites.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Massive urinary excretion of xanthurenic acid, 3-hydroxykynurenine and
+      kynurenine
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; links KYNU deficiency to hydroxykynureninuria (HYXKY).
+      Abstract-only in cache.
+- id: PMID:1939450
+  title: High-performance liquid chromatographic assay of human lymphocyte kynureninase
+    activity levels.
+  findings:
+  - statement: &gt;-
+      Human lymphocyte kynureninase activity is depressed in vitamin-B6-deficient
+      men relative to B6-replete men, reflecting PLP cofactor dependence.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      lymphocyte kynureninase activity is depressed during a vitamin B6
+      deficiency
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; supports the vitamin-B6 (PLP) dependence of kynureninase
+      activity (basis for the response-to-vitamin-B6 annotation). Abstract-only.
+- id: PMID:28792876
+  title: NAD Deficiency, Congenital Malformations, and Niacin Supplementation.
+  findings:
+  - statement: &gt;-
+      Biallelic loss-of-function KYNU (and HAAO) variants disrupt de novo NAD
+      synthesis, causing reduced circulating NAD and a congenital malformation
+      syndrome (VCRL2); niacin supplementation prevents defects in mice.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The patients had reduced levels of circulating NAD.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; establishes the NAD-deficiency/VCRL2 disease mechanism and
+      in-vitro activity of mutant KYNU. Abstract-only in cache.
+- id: PMID:6468727
+  title: Intracellular localization and characterization of 3-hydroxykynureninase
+    in human liver.
+  findings:
+  - statement: &gt;-
+      3-hydroxykynureninase in human liver was found in both cytosol and
+      mitochondria with identical properties; active on 3-hydroxykynurenine and
+      kynurenine (~15:1) and PLP-dependent.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      3-hydroxykynureninase in human liver was present in cytosol and
+      mitochondria.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; early biochemical localization/characterization of the human
+      liver enzyme. Basis for both cytosol and mitochondrion IDA annotations.
+      Abstract-only.
+- id: PMID:8706755
+  title: Isolation and expression of a cDNA clone encoding human kynureninase.
+  findings:
+  - statement: &gt;-
+      Cloning and expression of human kynureninase, a PLP-dependent enzyme that
+      cleaves L-kynurenine and L-3-hydroxykynurenine; Lys276 binds the cofactor.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      catalyses the cleavage of L-kynurenine and L-3-hydroxykynurenine into
+      anthranilic and 3-hydroxyanthranilic acids
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; primary cloning and functional expression of human
+      kynureninase establishing the catalytic activity and PLP dependence.
+      Abstract-only.
+- id: PMID:9180257
+  title: Cloning and recombinant expression of rat and human kynureninase.
+  findings:
+  - statement: &gt;-
+      Cloning and recombinant expression of human (and rat) kynureninase with
+      measured Km values; kynureninase acts in NAD cofactor biosynthesis from
+      tryptophan.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      A cDNA encoding human liver kynureninase was also isolated.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; independent cloning/kinetic characterization of human
+      kynureninase. Abstract-only in cache.
+- id: PMID:9291104
+  title: Different kynurenine pathway enzymes limit quinolinic acid formation by various
+    human cell types.
+  findings:
+  - statement: &gt;-
+      Kynureninase activity (with kynurenine 3-hydroxylase and 3-HAO) is a cell-type
+      determinant of quinolinate production, and is high in interferon-gamma-stimulated
+      cells.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Kynurenine 3-hydroxylase and, in some cells, kynureninase and
+      3-hydroxyanthranilate 3,4-dioxygenase are important determinants of whether a
+      cell can make quinolinate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; supports the quinolinate-biosynthesis and IFN-gamma-response
+      annotations. Abstract-only in cache.
+- id: Reactome:R-HSA-71217
+  title: 3-hydroxykynurenine + H2O =&gt; 3-hydroxyanthranilate + alanine + H+
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AADAT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AADAT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8N5Z0" target="_blank" class="term-link">
+                        Q8N5Z0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AADAT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8N5Z0" data-a="DESCRIPTION: AADAT (kynurenine aminotransferase II, KAT II) is ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AADAT (kynurenine aminotransferase II, KAT II) is a mitochondrial, pyridoxal 5&#39;-phosphate (PLP)-dependent class-I (fold-type I) aminotransferase that is a homodimer with broad substrate specificity. It has two physiologically prominent catalytic activities carried out at the same active site. As 2-aminoadipate aminotransferase (EC 2.6.1.39) it transaminates L-2-aminoadipate with 2-oxoglutarate to give 2-oxoadipate and L-glutamate, an intermediate step of L-lysine degradation via the saccharopine/aminoadipate pathway. As kynurenine aminotransferase II (EC 2.6.1.7) it transaminates L-kynurenine with 2-oxoglutarate to yield kynurenate (kynurenic acid) plus L-glutamate; the intermediate spontaneously cyclizes to kynurenic acid, a neuroactive tryptophan-pathway metabolite that antagonizes NMDA and alpha-7 nicotinic acetylcholine receptors, and AADAT is a principal brain enzyme for kynurenic acid synthesis. The enzyme also transaminates a wide range of other amino acids (methionine, glutamate, tryptophan, aromatic amino acids) and can use several 2-oxo acids and, in vitro, glyoxylate as amino-group acceptors. It is highly expressed in liver and is also present in brain, kidney and other tissues, acting in the mitochondrion (matrix); cytosolic activity has also been reported.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that AADAT is active in the mitochondrion. This is consistent with the UniProt subcellular location call, which is based on the N-terminal mitochondrial transit peptide, and with high-confidence mitochondrial proteome data. Accept as a core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AADAT/AADAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016212" target="_blank" class="term-link">
+                                    GO:0016212
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0016212" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of kynurenine:2-oxoglutarate transaminase (KAT II) activity. This is a core molecular function, directly supported by experimental data (crystal structure with kynurenine and enzyme assays). Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                        PMID:18056995
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of mitochondrial location from UniProt Subcellular Location mapping. Consistent with the transit-peptide-based UniProt call and IBA/HTP evidence. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AADAT/AADAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005759" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to mitochondrial matrix. This more specific compartment is consistent with the Reactome placement of AADAT reactions in the mitochondrial matrix and with the soluble/matrix nature of this transaminase. Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                                    GO:0008483
+                                </a>
+                            </span>
+                            <span class="term-label">transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0008483" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the generic parent term transaminase activity. Correct but uninformative given that specific transaminase activities (aminoadipate and kynurenine transaminase) are experimentally established for this gene. Mark as over-annotation in favor of the specific molecular functions.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016212" target="_blank" class="term-link">
+                                    GO:0016212
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0016212" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Rhea/EC-based) annotation of kynurenine:2-oxoglutarate transaminase activity, redundant with the experimental IDA/EXP annotations to the same term. Accept; this is a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of PLP binding. AADAT is an obligate PLP-dependent (fold-type I) aminotransferase; PLP forms an internal Schiff base with Lys263 and is the essential cofactor established by structural and cofactor studies. Accept as a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                        PMID:18056995
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hKAT-II reveals that it belongs to the fold-type I pyridoxal 5-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047313" target="_blank" class="term-link">
+                                    GO:0047313
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic-amino-acid:glyoxylate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047313" data-r="GO_REF:0000116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-based electronic annotation covering glyoxylate-linked transamination of aromatic amino acids (tyrosine, phenylalanine, tryptophan). These are real in vitro activities arising from the very broad active site, but use glyoxylate as an artificial/low-affinity acceptor and are not the principal physiological function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">very broad substrate specificity, is</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047315" target="_blank" class="term-link">
+                                    GO:0047315
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:glyoxylate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047315" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of kynurenine:glyoxylate transaminase activity, redundant with the experimental IDA to the same term. A genuine broad-specificity activity using glyoxylate as amino-group acceptor, secondary to the physiological kynurenine:2-oxoglutarate reaction. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047536" target="_blank" class="term-link">
+                                    GO:0047536
+                                </a>
+                            </span>
+                            <span class="term-label">L-2-aminoadipate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047536" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Rhea/EC 2.6.1.39) annotation of 2-aminoadipate:2-oxoglutarate transaminase activity, redundant with the experimental EXP/IDA annotations to the same term. This is a core function (lysine degradation). Accept.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047958" target="_blank" class="term-link">
+                                    GO:0047958
+                                </a>
+                            </span>
+                            <span class="term-label">glycine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047958" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of glycine:2-oxoglutarate transaminase activity (EC 2.6.1.4). A genuine in vitro broad-specificity activity (also captured by an experimental IDA), but glyoxylate/glycine transamination is a secondary reaction rather than the principal physiological function. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050094" target="_blank" class="term-link">
+                                    GO:0050094
+                                </a>
+                            </span>
+                            <span class="term-label">L-methionine:glyoxylate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0050094" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of methionine:glyoxylate transaminase activity (EC 2.6.1.73), redundant with the experimental IDA to the same term. Methionine is an efficient amino-group donor, but the glyoxylate-acceptor reaction is a broad-specificity activity secondary to the aminoadipate and kynurenine reactions. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9972889
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005829" data-r="Reactome:R-HSA-9972889" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing an AADAT activity (3-hydroxykynurenine to xanthurenate) in the cytosol; the cytosolic localization of human AADAT is inferred from rat work. A cytosolic pool is reported in the literature (KAT II described as soluble cytoplasmic), but the UniProt-authoritative core call is mitochondrion/matrix. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016212" target="_blank" class="term-link">
+                                    GO:0016212
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18056995
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human kynurenine aminotransferase II.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0016212" data-r="PMID:18056995" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of kynurenine:2-oxoglutarate transaminase (KAT II) activity, supported by the crystal structure of human KAT II in complex with kynurenine and by direct enzyme assays converting kynurenine to kynurenic acid. This is a core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                        PMID:18056995
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047536" target="_blank" class="term-link">
+                                    GO:0047536
+                                </a>
+                            </span>
+                            <span class="term-label">L-2-aminoadipate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12126930" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12126930
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the human gene encoding alpha-aminoadipa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047536" data-r="PMID:12126930" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of 2-aminoadipate aminotransferase activity. Bacterial expression of the human AADAT gene confirmed the enzyme activity, and this reaction is an intermediate step in lysine degradation. This is a core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12126930" target="_blank" class="term-link">
+                                        PMID:12126930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Bacterial expression studies confirm that the gene encodes for AADAT activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) mitochondrial-proteome evidence that AADAT localizes to the mitochondrion. Consistent with the transit-peptide-based UniProt call. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Quantitative high-confidence human mitochondrial proteome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047315" target="_blank" class="term-link">
+                                    GO:0047315
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:glyoxylate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18620547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate specificity and structure of human aminoadipate am...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047315" data-r="PMID:18620547" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of kynurenine:glyoxylate transaminase activity from the broad-specificity substrate screen (glyoxylate used as amino-group acceptor). A genuine in vitro activity, but the physiological kynurenine reaction uses 2-oxoglutarate; glyoxylate is a low-affinity acceptor. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">could utilize all 16 tested alpha-oxo acids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047958" target="_blank" class="term-link">
+                                    GO:0047958
+                                </a>
+                            </span>
+                            <span class="term-label">glycine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18620547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate specificity and structure of human aminoadipate am...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047958" data-r="PMID:18620547" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of glycine:2-oxoglutarate transaminase activity, part of the broad substrate profile of KAT II/AADAT. A real in vitro activity but a secondary, non-physiological reaction relative to the aminoadipate and kynurenine functions. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">very broad substrate specificity, is</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050094" target="_blank" class="term-link">
+                                    GO:0050094
+                                </a>
+                            </span>
+                            <span class="term-label">L-methionine:glyoxylate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18620547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate specificity and structure of human aminoadipate am...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0050094" data-r="PMID:18620547" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of methionine:glyoxylate transaminase activity. Methionine is one of the efficient amino-group donors of KAT II, but the glyoxylate-acceptor reaction is a broad-specificity in vitro activity secondary to the aminoadipate and kynurenine reactions. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">aminoadipate, kynurenine, methionine and glutamate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-508561
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005759" data-r="Reactome:R-HSA-508561" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing the aminoadipate/2-oxoglutarate transaminase reaction of AADAT in the mitochondrial matrix. Consistent with the transit peptide and UniProt location. Accept as core compartment.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70952
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005759" data-r="Reactome:R-HSA-70952" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (reverse aminoadipate reaction) placing AADAT in the mitochondrial matrix. Same compartment call as above; accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-893583
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0005759" data-r="Reactome:R-HSA-893583" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation (kynurenine + 2-oxoglutarate reaction) placing AADAT in the mitochondrial matrix. Consistent with the UniProt location; accept as core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016212" target="_blank" class="term-link">
+                                    GO:0016212
+                                </a>
+                            </span>
+                            <span class="term-label">L-kynurenine:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18620547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate specificity and structure of human aminoadipate am...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0016212" data-r="PMID:18620547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of kynurenine:2-oxoglutarate transaminase (KAT II) activity from the systematic substrate/kinetic study. This is a core molecular function of AADAT (kynurenic acid biosynthesis). Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is a primary enzyme in the brain for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047536" target="_blank" class="term-link">
+                                    GO:0047536
+                                </a>
+                            </span>
+                            <span class="term-label">L-2-aminoadipate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18620547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Substrate specificity and structure of human aminoadipate am...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0047536" data-r="PMID:18620547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of 2-aminoadipate:2-oxoglutarate transaminase activity. Kinetics show aminoadipate is the best amino-acid substrate (Km 0.9 mM) and the reaction favors the degradative direction (lysine catabolism). This is a core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the affinity of hKAT II for aminoadipate (Km = 0.9 mM) is much greater than its</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                    GO:0019477
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0019477" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new biological-process annotation. GOA lacks an explicit lysine-catabolism process term for human AADAT, yet the 2-aminoadipate aminotransferase reaction is a committed intermediate step of L-lysine degradation via the saccharopine/aminoadipate pathway (also captured by the UniProt UniPathway annotation to the obsolete GO:0033512). Proposing the current valid term GO:0019477.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                        PMID:18620547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">one of the reactions involved in lysine degradation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12126930" target="_blank" class="term-link">
+                                        PMID:12126930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an intermediate step in lysine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034276" target="_blank" class="term-link">
+                                    GO:0034276
+                                </a>
+                            </span>
+                            <span class="term-label">kynurenic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N5Z0" data-a="GO:0034276" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new biological-process annotation. AADAT (KAT II) is a principal enzyme for kynurenic acid (KYNA) synthesis via kynurenine transamination; the process context is not captured in GOA. Proposing GO:0034276 (kynurenic acid biosynthetic process), the committed step of the neuroactive KYNA branch of the tryptophan/ kynurenine pathway.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                        PMID:18056995
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transamination of knunrenine to kynurenic acid (KYNA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>2-aminoadipate aminotransferase activity: transaminates L-2-aminoadipate with 2-oxoglutarate to 2-oxoadipate and L-glutamate, an intermediate step in L-lysine degradation via the saccharopine/aminoadipate pathway.</h3>
+                <span class="vote-buttons" data-g="Q8N5Z0" data-a="FUNCTION: 2-aminoadipate aminotransferase activity: transami..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047536" target="_blank" class="term-link">
+                            L-2-aminoadipate:2-oxoglutarate transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                L-lysine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                                PMID:18620547
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the affinity of hKAT II for aminoadipate (Km = 0.9 mM) is much greater than its</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12126930" target="_blank" class="term-link">
+                                PMID:12126930
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Bacterial expression studies confirm that the gene encodes for AADAT activity.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Kynurenine aminotransferase II activity: transaminates L-kynurenine with 2-oxoglutarate to kynurenate (kynurenic acid) and L-glutamate, the committed step of kynurenic acid biosynthesis in the tryptophan/kynurenine pathway.</h3>
+                <span class="vote-buttons" data-g="Q8N5Z0" data-a="FUNCTION: Kynurenine aminotransferase II activity: transamin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016212" target="_blank" class="term-link">
+                            L-kynurenine:2-oxoglutarate transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034276" target="_blank" class="term-link">
+                                kynurenic acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                PMID:18056995
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal 5&#39;-phosphate binding: PLP is the obligate cofactor of this fold-type I aminotransferase, forming an internal Schiff base with the active-site lysine (Lys263).</h3>
+                <span class="vote-buttons" data-g="Q8N5Z0" data-a="FUNCTION: Pyridoxal 5&#39;-phosphate binding: PLP is the obligat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                                PMID:18056995
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">hKAT-II reveals that it belongs to the fold-type I pyridoxal 5-phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12126930" target="_blank" class="term-link">
+                            PMID:12126930
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the human gene encoding alpha-aminoadipate aminotransferase (AADAT).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human AADAT catalyzes the conversion of alpha-aminoadipate to alpha-ketoadipate, an intermediate step in lysine degradation; bacterial expression of the gene confirmed AADAT enzyme activity.</div>
+
+                        <div class="finding-text">"Bacterial expression studies confirm that the gene encodes for AADAT activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18056995" target="_blank" class="term-link">
+                            PMID:18056995
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human kynurenine aminotransferase II.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human kynurenine aminotransferase II (KAT II) efficiently transaminates kynurenine to kynurenic acid and is a fold-type I PLP-dependent enzyme.</div>
+
+                        <div class="finding-text">"Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18620547" target="_blank" class="term-link">
+                            PMID:18620547
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Substrate specificity and structure of human aminoadipate aminotransferase/kynurenine aminotransferase II.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic substrate and kinetic characterization shows AADAT/KAT II is a broad specificity aminotransferase; aminoadipate is the best amino-acid substrate and kynurenine transamination is a major function.</div>
+
+                        <div class="finding-text">"hKAT II should be equally efficient in catalysing the transamination of"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AADAT is detected in a quantitative high-confidence human mitochondrial proteome, supporting mitochondrial localization.</div>
+
+                        <div class="finding-text">"Quantitative high-confidence human mitochondrial proteome"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-508561
+
+                    </span>
+                </div>
+
+                <div class="reference-title">alpha-ketoadipate + glutamate &lt;=&gt; alpha-aminoadipate + alpha-ketoglutarate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70952
+
+                    </span>
+                </div>
+
+                <div class="reference-title">alpha-aminoadipate + alpha-ketoglutarate &lt;=&gt; alpha-ketoadipate + glutamate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-893583
+
+                    </span>
+                </div>
+
+                <div class="reference-title">kynurenine + 2-oxoglutarate =&gt; 4-(2-aminophenyl)-2,4-dioxobutanoic acid + glutamate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9972889
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AADAT transaminates 3HKYN to xanthurenate</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AADAT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N5Z0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aadat-kat-ii-kyat2-review-notes">AADAT (KAT II / KYAT2) — review notes</h1>
+<p>UniProt: Q8N5Z0 (AADAT_HUMAN). HGNC:17929. Gene synonyms KAT2, KYAT2. 425 aa precursor,<br />
+mitochondrial transit peptide 1..29, mature chain 30..425.</p>
+<h2 id="identity-and-core-biology">Identity and core biology</h2>
+<p>AADAT is a <strong>PLP-dependent, class-I (fold-type I) aminotransferase</strong> that is one and the<br />
+same protein as <strong>kynurenine aminotransferase II (KAT II)</strong>. It is a broad-specificity<br />
+transaminase with two physiologically prominent activities:</p>
+<ol>
+<li>
+<p><strong>2-aminoadipate aminotransferase (AADAT; EC 2.6.1.39)</strong> — transaminates<br />
+   L-2-aminoadipate + 2-oxoglutarate → 2-oxoadipate + L-glutamate, an intermediate step in<br />
+<strong>L-lysine degradation</strong> (saccharopine/aminoadipate pathway).<br />
+   [file:human/AADAT/AADAT-uniprot.txt "Reaction=L-2-aminoadipate + 2-oxoglutarate = 2-oxoadipate + L-"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12126930" title="the conversion of alpha-aminoadipate to alpha-ketoadipate by \nalpha-aminoadipate aminotransferase (AADAT) is an intermediate step in lysine \ndegradation">PMID:12126930</a></p>
+</li>
+<li>
+<p><strong>Kynurenine aminotransferase II (KAT II; EC 2.6.1.7)</strong> — transaminates L-kynurenine +<br />
+   2-oxoglutarate → kynurenate (kynurenic acid, KYNA) + L-glutamate, the committed step of<br />
+<strong>kynurenic acid biosynthesis</strong> in the tryptophan/kynurenine pathway.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18056995" title="Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the \ntransamination of knunrenine to kynurenic acid (KYNA)">PMID:18056995</a><br />
+   KYNA is a neuroactive metabolite: "KYNA is the only known \nendogenous antagonist of N-methyl-D-aspartate (NMDA) receptors and is also an \nantagonist of 7-nicotinic acetylcholine receptors" <a href="https://pubmed.ncbi.nlm.nih.gov/18056995">PMID:18056995</a>.</p>
+</li>
+</ol>
+<p>KAT II "is a primary enzyme in the brain for catalysing the transamination of kynurenine<br />
+to KYNA" <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>, and is "the principal enzyme responsible for the synthesis of<br />
+KYNA in the rodent and human brain" (KAT II knockout mice show a substantial decrease in<br />
+brain KYNA) <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>.</p>
+<h2 id="substrate-breadth-broad-specificity-aminotransferase">Substrate breadth (broad-specificity aminotransferase)</h2>
+<p>The definitive biochemical study (Han et al. 2008, PMID:18620547, full text available)<br />
+screened 24 amino acids and 16 α-oxo acids and found "very broad substrate specificity, is<br />
+capable of catalysing the transamination of 16 out of 24 tested amino acids and could<br />
+utilize all 16 tested alpha-oxo acids as amino-group acceptors." On kinetic grounds "hKAT<br />
+II should be equally efficient in catalysing the transamination of aminoadipate,<br />
+kynurenine, methionine and glutamate" <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>. Preferred amino-group acceptors:<br />
+"α-oxoglutarate, α-oxocaproic acid, phenylpyruvate and α-KMB" <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>. Glyoxylate<br />
+is a usable but low-affinity acceptor (used experimentally as the assay acceptor), giving<br />
+rise to the various "…:glyoxylate transaminase" activities (glycine, methionine, aromatic<br />
+amino acids). These glyoxylate-linked activities are real in vitro but secondary/assay<br />
+artifacts of the broad site rather than the principal physiological reactions.</p>
+<p>UniProt FUNCTION: "Transaminase with broad substrate specificity. Has transaminase<br />
+activity towards aminoadipate, kynurenine, methionine and glutamate. Shows activity also<br />
+towards tryptophan, aspartate and hydroxykynurenine." [file:human/AADAT/AADAT-uniprot.txt]</p>
+<h2 id="cofactor">Cofactor</h2>
+<p>PLP-dependent: "belongs to the fold-type I pyridoxal 5-phosphate \n(PLP)-dependent enzymes"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18056995">PMID:18056995</a>; UniProt COFACTOR pyridoxal 5'-phosphate (evidence PubMed:12126930,<br />
+18056995, 18056996). Lys263 forms the internal Schiff base (N6-(pyridoxal phosphate)lysine<br />
+at position 263 in UniProt FT).</p>
+<h2 id="subcellular-location-mito-vs-cytosol-ambiguity">Subcellular location — mito vs cytosol ambiguity</h2>
+<p>UniProt calls <strong>Mitochondrion</strong> (ECO:0000305) based on the N-terminal mitochondrial transit<br />
+peptide (1..29) [file:human/AADAT/AADAT-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion"];<br />
+Reactome places the aminoadipate/kynurenine reactions in the <strong>mitochondrial matrix</strong><br />
+[Reactome:R-HSA-508561, R-HSA-70952, R-HSA-893583]. AADAT is also detected in high-confidence<br />
+mitochondrial proteome studies (HTP) <a href="https://pubmed.ncbi.nlm.nih.gov/34800366">PMID:34800366</a>.<br />
+HOWEVER, PMID:18620547 introduction states KAT II "is localized in the soluble cytoplasm,"<br />
+and Reactome R-HSA-9972889 places a <strong>cytosolic</strong> AADAT activity (3-hydroxykynurenine →<br />
+xanthurenate), noting "The cytosolic localization of human AADAT is inferred from work in<br />
+rats (Rzeski et al., 2005)." So both mitochondrial and cytosolic pools/annotations exist in<br />
+the literature; mitochondrion/mitochondrial matrix is the UniProt-authoritative core call.</p>
+<h2 id="structure-subunit">Structure / subunit</h2>
+<p>Homodimer [PMID:18056995, PMID:18056996, PMID:18620547]; many crystal structures (e.g. 2R2N<br />
+KAT II + PLP + kynurenine; 3DC1 + 2-oxoglutarate). N-terminal fragment (res 15-33) is a<br />
+flexible lid that adapts to substrates of different sizes — the structural basis of broad<br />
+specificity <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>.</p>
+<h2 id="tissue-disease-context">Tissue / disease context</h2>
+<p>Highest expression in liver (also heart, brain, kidney, pancreas, prostate, testis, ovary)<br />
+[file:human/AADAT/AADAT-uniprot.txt "TISSUE SPECIFICITY: Higher expression in the liver"].<br />
+Directionality: hKAT II favours aminoadipate → 2-oxoadipate (Km 0.9 mM for aminoadipate vs<br />
+20.9 mM for oxoadipate), consistent with a lysine-degradation role <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>; the<br />
+kynurenine → KYNA direction is effectively irreversible because the α-oxo intermediate<br />
+cyclizes spontaneously to KYNA <a href="https://pubmed.ncbi.nlm.nih.gov/18620547">PMID:18620547</a>.</p>
+<h2 id="annotation-review-summary">Annotation review summary</h2>
+<ul>
+<li>Two catalytic MFs are the core: <strong>GO:0047536</strong> L-2-aminoadipate:2-oxoglutarate<br />
+  transaminase activity (EXP PMID:12126930, IDA PMID:18620547) and <strong>GO:0016212</strong><br />
+  L-kynurenine:2-oxoglutarate transaminase activity (EXP PMID:18056995, IDA PMID:18620547).<br />
+  Both ACCEPT.</li>
+<li><strong>GO:0030170</strong> pyridoxal phosphate binding — obligate cofactor; ACCEPT (upgrade the IEA<br />
+  from InterPro; well supported experimentally by cofactor studies and Lys263 Schiff base).</li>
+<li>Broad-specificity/glyoxylate-linked MFs (GO:0047315 kynurenine:glyoxylate; GO:0047958<br />
+  glycine:2-oxoglutarate; GO:0050094 methionine:glyoxylate; GO:0047313 aromatic-amino-acid:<br />
+  glyoxylate) are genuine in vitro activities from the broad active site; the IDA ones<br />
+  (PMID:18620547) are experimentally supported — KEEP_AS_NON_CORE (non-physiological/assay<br />
+  acceptor); IEA duplicates likewise non-core.</li>
+<li><strong>GO:0008483</strong> transaminase activity (IEA) — correct but too general given the specific<br />
+  activities; MARK_AS_OVER_ANNOTATED (redundant parent).</li>
+<li>Location: mitochondrion / mitochondrial matrix ACCEPT (core, UniProt-authoritative);<br />
+  cytosol TAS KEEP_AS_NON_CORE (documented but secondary/inferred-from-rat pool).</li>
+<li>IBA GO:0016212 (MF) and GO:0005739 (is_active_in mitochondrion) — ACCEPT, consistent with<br />
+  experimental data.</li>
+</ul>
+<h2 id="core-functions-chosen-author-term-ids">Core functions chosen (author term ids)</h2>
+<ul>
+<li>MF GO:0047536 (2-aminoadipate transaminase) — lysine catabolism</li>
+<li>MF GO:0016212 (kynurenine:2-oxoglutarate transaminase) — KYNA biosynthesis</li>
+<li>MF GO:0030170 (pyridoxal phosphate binding) — cofactor<br />
+BP context: GO:0019477 L-lysine catabolic process; GO:0034276 kynurenic acid biosynthetic<br />
+process; GO:0070189 kynurenine metabolic process. CC: mitochondrion / mitochondrial matrix.<br />
+(Note: old GO:0006554 "lysine catabolic process" is OBSOLETE; current term is GO:0019477.)<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8N5Z0
+gene_symbol: AADAT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AADAT (kynurenine aminotransferase II, KAT II) is a mitochondrial, pyridoxal
+  5&#39;-phosphate (PLP)-dependent class-I (fold-type I) aminotransferase that is a
+  homodimer with broad substrate specificity. It has two physiologically prominent
+  catalytic activities carried out at the same active site. As 2-aminoadipate
+  aminotransferase (EC 2.6.1.39) it transaminates L-2-aminoadipate with 2-oxoglutarate
+  to give 2-oxoadipate and L-glutamate, an intermediate step of L-lysine degradation
+  via the saccharopine/aminoadipate pathway. As kynurenine aminotransferase II
+  (EC 2.6.1.7) it transaminates L-kynurenine with 2-oxoglutarate to yield kynurenate
+  (kynurenic acid) plus L-glutamate; the intermediate spontaneously cyclizes to
+  kynurenic acid, a neuroactive tryptophan-pathway metabolite that antagonizes NMDA
+  and alpha-7 nicotinic acetylcholine receptors, and AADAT is a principal brain enzyme
+  for kynurenic acid synthesis. The enzyme also transaminates a wide range of other
+  amino acids (methionine, glutamate, tryptophan, aromatic amino acids) and can use
+  several 2-oxo acids and, in vitro, glyoxylate as amino-group acceptors. It is highly
+  expressed in liver and is also present in brain, kidney and other tissues, acting in
+  the mitochondrion (matrix); cytosolic activity has also been reported.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8N5Z0-1
+- name: &#39;2&#39;
+  id: Q8N5Z0-2
+  sequence_note: VSP_009874
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that AADAT is active in the mitochondrion. This is
+      consistent with the UniProt subcellular location call, which is based on the
+      N-terminal mitochondrial transit peptide, and with high-confidence mitochondrial
+      proteome data. Accept as a core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AADAT/AADAT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0016212
+    label: L-kynurenine:2-oxoglutarate transaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of kynurenine:2-oxoglutarate transaminase (KAT II)
+      activity. This is a core molecular function, directly supported by experimental
+      data (crystal structure with kynurenine and enzyme assays). Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:18056995
+      supporting_text: &gt;-
+        Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation of mitochondrial location from UniProt Subcellular Location
+      mapping. Consistent with the transit-peptide-based UniProt call and IBA/HTP evidence.
+      Accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AADAT/AADAT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARBA electronic annotation to mitochondrial matrix. This more specific compartment
+      is consistent with the Reactome placement of AADAT reactions in the mitochondrial
+      matrix and with the soluble/matrix nature of this transaminase. Accept.
+    action: ACCEPT
+- term:
+    id: GO:0008483
+    label: transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the generic parent term transaminase activity.
+      Correct but uninformative given that specific transaminase activities (aminoadipate
+      and kynurenine transaminase) are experimentally established for this gene. Mark as
+      over-annotation in favor of the specific molecular functions.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0016212
+    label: L-kynurenine:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (Rhea/EC-based) annotation of kynurenine:2-oxoglutarate transaminase
+      activity, redundant with the experimental IDA/EXP annotations to the same term.
+      Accept; this is a core function.
+    action: ACCEPT
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation of PLP binding. AADAT is an obligate
+      PLP-dependent (fold-type I) aminotransferase; PLP forms an internal Schiff base
+      with Lys263 and is the essential cofactor established by structural and cofactor
+      studies. Accept as a core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:18056995
+      supporting_text: &gt;-
+        hKAT-II reveals that it belongs to the fold-type I pyridoxal 5-phosphate
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0047313
+    label: aromatic-amino-acid:glyoxylate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-based electronic annotation covering glyoxylate-linked transamination of
+      aromatic amino acids (tyrosine, phenylalanine, tryptophan). These are real in vitro
+      activities arising from the very broad active site, but use glyoxylate as an
+      artificial/low-affinity acceptor and are not the principal physiological function.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        very broad substrate specificity, is
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0047315
+    label: L-kynurenine:glyoxylate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation of kynurenine:glyoxylate transaminase activity, redundant
+      with the experimental IDA to the same term. A genuine broad-specificity activity
+      using glyoxylate as amino-group acceptor, secondary to the physiological
+      kynurenine:2-oxoglutarate reaction. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0047536
+    label: L-2-aminoadipate:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (Rhea/EC 2.6.1.39) annotation of 2-aminoadipate:2-oxoglutarate
+      transaminase activity, redundant with the experimental EXP/IDA annotations to the
+      same term. This is a core function (lysine degradation). Accept.
+    action: ACCEPT
+- term:
+    id: GO:0047958
+    label: glycine:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation of glycine:2-oxoglutarate transaminase activity (EC 2.6.1.4).
+      A genuine in vitro broad-specificity activity (also captured by an experimental IDA),
+      but glyoxylate/glycine transamination is a secondary reaction rather than the
+      principal physiological function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0050094
+    label: L-methionine:glyoxylate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation of methionine:glyoxylate transaminase activity (EC 2.6.1.73),
+      redundant with the experimental IDA to the same term. Methionine is an efficient
+      amino-group donor, but the glyoxylate-acceptor reaction is a broad-specificity
+      activity secondary to the aminoadipate and kynurenine reactions. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9972889
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation placing an AADAT activity (3-hydroxykynurenine to
+      xanthurenate) in the cytosol; the cytosolic localization of human AADAT is inferred
+      from rat work. A cytosolic pool is reported in the literature (KAT II described as
+      soluble cytoplasmic), but the UniProt-authoritative core call is mitochondrion/matrix.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0016212
+    label: L-kynurenine:2-oxoglutarate transaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:18056995
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of kynurenine:2-oxoglutarate transaminase (KAT II)
+      activity, supported by the crystal structure of human KAT II in complex with
+      kynurenine and by direct enzyme assays converting kynurenine to kynurenic acid.
+      This is a core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:18056995
+      supporting_text: &gt;-
+        Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0047536
+    label: L-2-aminoadipate:2-oxoglutarate transaminase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12126930
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of 2-aminoadipate aminotransferase activity. Bacterial
+      expression of the human AADAT gene confirmed the enzyme activity, and this reaction
+      is an intermediate step in lysine degradation. This is a core molecular function.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12126930
+      supporting_text: &gt;-
+        Bacterial expression studies confirm that the gene encodes for AADAT activity.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) mitochondrial-proteome evidence that AADAT localizes to the
+      mitochondrion. Consistent with the transit-peptide-based UniProt call. Accept as
+      core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:34800366
+      supporting_text: &gt;-
+        Quantitative high-confidence human mitochondrial proteome
+      reference_section_type: TITLE
+- term:
+    id: GO:0047315
+    label: L-kynurenine:glyoxylate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18620547
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of kynurenine:glyoxylate transaminase activity from the
+      broad-specificity substrate screen (glyoxylate used as amino-group acceptor). A
+      genuine in vitro activity, but the physiological kynurenine reaction uses
+      2-oxoglutarate; glyoxylate is a low-affinity acceptor. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        could utilize all 16 tested alpha-oxo acids
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0047958
+    label: glycine:2-oxoglutarate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18620547
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of glycine:2-oxoglutarate transaminase activity, part of the
+      broad substrate profile of KAT II/AADAT. A real in vitro activity but a secondary,
+      non-physiological reaction relative to the aminoadipate and kynurenine functions.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        very broad substrate specificity, is
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0050094
+    label: L-methionine:glyoxylate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18620547
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of methionine:glyoxylate transaminase activity. Methionine is
+      one of the efficient amino-group donors of KAT II, but the glyoxylate-acceptor
+      reaction is a broad-specificity in vitro activity secondary to the aminoadipate and
+      kynurenine reactions. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        aminoadipate, kynurenine, methionine and glutamate
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-508561
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation placing the aminoadipate/2-oxoglutarate transaminase
+      reaction of AADAT in the mitochondrial matrix. Consistent with the transit peptide
+      and UniProt location. Accept as core compartment.
+    action: ACCEPT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70952
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (reverse aminoadipate reaction) placing AADAT in the
+      mitochondrial matrix. Same compartment call as above; accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-893583
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable annotation (kynurenine + 2-oxoglutarate reaction) placing AADAT
+      in the mitochondrial matrix. Consistent with the UniProt location; accept as core.
+    action: ACCEPT
+- term:
+    id: GO:0016212
+    label: L-kynurenine:2-oxoglutarate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18620547
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of kynurenine:2-oxoglutarate transaminase (KAT II) activity from
+      the systematic substrate/kinetic study. This is a core molecular function of AADAT
+      (kynurenic acid biosynthesis). Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        is a primary enzyme in the brain for
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0047536
+    label: L-2-aminoadipate:2-oxoglutarate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18620547
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of 2-aminoadipate:2-oxoglutarate transaminase activity. Kinetics
+      show aminoadipate is the best amino-acid substrate (Km 0.9 mM) and the reaction
+      favors the degradative direction (lysine catabolism). This is a core molecular
+      function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        the affinity of hKAT II for aminoadipate (Km = 0.9 mM) is much greater than its
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0019477
+    label: L-lysine catabolic process
+  evidence_type: IDA
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new biological-process annotation. GOA lacks an explicit lysine-catabolism
+      process term for human AADAT, yet the 2-aminoadipate aminotransferase reaction is a
+      committed intermediate step of L-lysine degradation via the saccharopine/aminoadipate
+      pathway (also captured by the UniProt UniPathway annotation to the obsolete
+      GO:0033512). Proposing the current valid term GO:0019477.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:18620547
+      supporting_text: &gt;-
+        one of the reactions involved in lysine degradation
+      reference_section_type: DISCUSSION
+    - reference_id: PMID:12126930
+      supporting_text: &gt;-
+        an intermediate step in lysine
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0034276
+    label: kynurenic acid biosynthetic process
+  evidence_type: IDA
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new biological-process annotation. AADAT (KAT II) is a principal enzyme
+      for kynurenic acid (KYNA) synthesis via kynurenine transamination; the process
+      context is not captured in GOA. Proposing GO:0034276 (kynurenic acid biosynthetic
+      process), the committed step of the neuroactive KYNA branch of the tryptophan/
+      kynurenine pathway.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:18056995
+      supporting_text: &gt;-
+        transamination of knunrenine to kynurenic acid (KYNA)
+      reference_section_type: ABSTRACT
+core_functions:
+- description: &gt;-
+    2-aminoadipate aminotransferase activity: transaminates L-2-aminoadipate with
+    2-oxoglutarate to 2-oxoadipate and L-glutamate, an intermediate step in L-lysine
+    degradation via the saccharopine/aminoadipate pathway.
+  molecular_function:
+    id: GO:0047536
+    label: L-2-aminoadipate:2-oxoglutarate transaminase activity
+  supported_by:
+  - reference_id: PMID:18620547
+    supporting_text: &gt;-
+      the affinity of hKAT II for aminoadipate (Km = 0.9 mM) is much greater than its
+  - reference_id: PMID:12126930
+    supporting_text: &gt;-
+      Bacterial expression studies confirm that the gene encodes for AADAT activity.
+  directly_involved_in:
+  - id: GO:0019477
+    label: L-lysine catabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+- description: &gt;-
+    Kynurenine aminotransferase II activity: transaminates L-kynurenine with 2-oxoglutarate
+    to kynurenate (kynurenic acid) and L-glutamate, the committed step of kynurenic acid
+    biosynthesis in the tryptophan/kynurenine pathway.
+  molecular_function:
+    id: GO:0016212
+    label: L-kynurenine:2-oxoglutarate transaminase activity
+  supported_by:
+  - reference_id: PMID:18056995
+    supporting_text: &gt;-
+      Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the
+  directly_involved_in:
+  - id: GO:0034276
+    label: kynurenic acid biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+- description: &gt;-
+    Pyridoxal 5&#39;-phosphate binding: PLP is the obligate cofactor of this fold-type I
+    aminotransferase, forming an internal Schiff base with the active-site lysine (Lys263).
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  supported_by:
+  - reference_id: PMID:18056995
+    supporting_text: &gt;-
+      hKAT-II reveals that it belongs to the fold-type I pyridoxal 5-phosphate
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12126930
+  title: Characterization of the human gene encoding alpha-aminoadipate aminotransferase
+    (AADAT).
+  findings:
+  - statement: &gt;-
+      Human AADAT catalyzes the conversion of alpha-aminoadipate to alpha-ketoadipate,
+      an intermediate step in lysine degradation; bacterial expression of the gene
+      confirmed AADAT enzyme activity.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Bacterial expression studies confirm that the gene encodes for AADAT activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; primary cloning/characterization of human AADAT establishing the
+      2-aminoadipate aminotransferase activity and lysine-degradation role. Abstract-only
+      in cache.
+- id: PMID:18056995
+  title: Crystal structure of human kynurenine aminotransferase II.
+  findings:
+  - statement: &gt;-
+      Human kynurenine aminotransferase II (KAT II) efficiently transaminates kynurenine
+      to kynurenic acid and is a fold-type I PLP-dependent enzyme.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Human kynurenine aminotransferase II (hKAT-II) efficiently catalyzes the
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; establishes KAT II identity, kynurenine to KYNA activity and
+      PLP-dependence. Abstract-only in cache.
+- id: PMID:18620547
+  title: Substrate specificity and structure of human aminoadipate aminotransferase/kynurenine
+    aminotransferase II.
+  findings:
+  - statement: &gt;-
+      Systematic substrate and kinetic characterization shows AADAT/KAT II is a broad
+      specificity aminotransferase; aminoadipate is the best amino-acid substrate and
+      kynurenine transamination is a major function.
+    reference_section_type: DISCUSSION
+    supporting_text: &gt;-
+      hKAT II should be equally efficient in catalysing the transamination of
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available. Definitive biochemical/structural
+      characterization; source of the aminoadipate, kynurenine, methionine and
+      glyoxylate-linked activity annotations.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      AADAT is detected in a quantitative high-confidence human mitochondrial proteome,
+      supporting mitochondrial localization.
+    reference_section_type: TITLE
+    supporting_text: &gt;-
+      Quantitative high-confidence human mitochondrial proteome
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; high-throughput mitochondrial proteome supporting the
+      mitochondrion location annotation.
+- id: Reactome:R-HSA-508561
+  title: alpha-ketoadipate + glutamate &lt;=&gt; alpha-aminoadipate + alpha-ketoglutarate
+  findings: []
+- id: Reactome:R-HSA-70952
+  title: alpha-aminoadipate + alpha-ketoglutarate &lt;=&gt; alpha-ketoadipate + glutamate
+  findings: []
+- id: Reactome:R-HSA-893583
+  title: kynurenine + 2-oxoglutarate =&gt; 4-(2-aminophenyl)-2,4-dioxobutanoic acid +
+    glutamate
+  findings: []
+- id: Reactome:R-HSA-9972889
+  title: AADAT transaminates 3HKYN to xanthurenate
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

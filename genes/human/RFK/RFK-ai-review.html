@@ -1,0 +1,3835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RFK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q969G6" target="_blank" class="term-link">
+                        Q969G6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RFK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q969G6" data-a="DESCRIPTION: RFK (riboflavin kinase, flavokinase; ATP:riboflavi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RFK (riboflavin kinase, flavokinase; ATP:riboflavin 5&#39;-phosphotransferase; EC 2.7.1.26) catalyzes the first committed, rate-limiting step of flavin-cofactor biosynthesis in humans: it transfers the gamma-phosphate of ATP to riboflavin (vitamin B2) to form flavin mononucleotide (FMN), releasing ADP. FMN is subsequently adenylylated to FAD by FAD synthase (FLAD1), so RFK gates the supply of the FMN and FAD prosthetic groups used by more than one hundred flavoenzymes. The reaction requires a divalent metal ion (zinc or magnesium). The 155-residue human protein is a monomer that adopts a six-stranded antiparallel beta-barrel fold characteristic of the riboflavin-kinase family, with an active-site &#34;arch&#34; over which phosphoryl transfer occurs and a catalytic glutamate nucleophile. It functions in the cytoplasm/cytosol. Beyond its metabolic role, RFK has been characterized as a TNF-receptor-1 (TNFRSF1A)-binding protein that couples TNFR1 to the NADPH oxidase subunit p22phox (CYBA); by supplying FAD, an essential prosthetic group of NADPH oxidase, it is required for TNF-induced reactive oxygen species production.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                                    GO:0008531
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0008531" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of riboflavin kinase activity, the core, well-conserved molecular function of this family. Directly confirmed for human RFK by experimental assay (IDA, PMID:19641494) and by the crystal structures and catalytic-activity annotation in UniProt. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.7.1.26</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                    GO:0006771
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0006771" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that RFK participates in riboflavin (vitamin B2) metabolism. This is accurate: RFK converts riboflavin to FMN, the entry point of flavin-cofactor utilization. Accept as a core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">AltName: Full=Flavokinase;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of mitochondrial localization, propagated in part from the yeast ortholog. Human RFK is annotated by UniProt and Reactome as a cytoplasmic/ cytosolic enzyme, and a flavokinase supplies flavin cofactors from the cytosol. The mitochondrion is not the primary site of action for the human protein; keep as a non-core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009398" target="_blank" class="term-link">
+                                    GO:0009398
+                                </a>
+                            </span>
+                            <span class="term-label">FMN biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0009398" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that RFK is involved in FMN biosynthesis. This is the precise product-forming process for riboflavin kinase (riboflavin -&gt; FMN) and matches the UniProt pathway annotation &#34;FMN from riboflavin (ATP route): step 1/1&#34;. Accept as a core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">(ATP route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt subcellular-location keyword. Consistent with the curated UniProt &#34;Cytoplasm&#34; location and with Reactome describing RFK as a cytosolic enzyme. Accept; the more specific cytosol term (GO:0005829) is the preferred core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                                    GO:0008531
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0008531" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of riboflavin kinase activity from InterPro/RHEA/EC pipelines (EC 2.7.1.26, RHEA:14357). Fully concordant with the experimental IDA annotation and UniProt catalytic-activity statement. Accept (duplicate of the core molecular function).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=riboflavin + ATP = FMN + ADP + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009231" target="_blank" class="term-link">
+                                    GO:0009231
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0009231" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic mapping to riboflavin biosynthetic process. This is imprecise for the human enzyme: humans do not synthesize the riboflavin ring de novo (riboflavin is a dietary vitamin), and RFK acts in riboflavin utilization/salvage, converting riboflavin to FMN. The correct process is riboflavin metabolic process (or, more specifically, FMN biosynthetic process). Modify to riboflavin metabolic process.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                    riboflavin metabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">form flavin-mononucleotide (FMN), hence rate-limiting enzyme in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009398" target="_blank" class="term-link">
+                                    GO:0009398
+                                </a>
+                            </span>
+                            <span class="term-label">FMN biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0009398" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (InterPro/UniPathway UPA00276) of FMN biosynthetic process. Correct and precise for riboflavin kinase; duplicate of the IBA annotation to the same term. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">(ATP route): step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19641494
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005515" data-r="PMID:19641494" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from a curated physical interaction with TNFRSF1A (P19438) reported in Yazdanpanah et al. RFK binds the TNFR1 death domain and, via p22phox (CYBA), bridges TNFR1 to NADPH oxidase. The interaction is real and biologically meaningful, but the bare &#34;protein binding&#34; term is uninformative about RFK&#39;s molecular function. Retain as over-annotated; the underlying biology is captured by the NAD(P)H oxidase regulation annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                                        PMID:19641494
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">previously unrecognized TNF-receptor-1 (TNFR1)-binding protein that physically</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from the HuRI human binary interactome (yeast two-hybrid), recording an interaction with CNTLN (Q9NXG0-2), also captured in UniProt. This is an uncharacterized high-throughput interaction with no established functional consequence, and the bare &#34;protein binding&#34; term is uninformative. Retain as over-annotated (do not remove an IPI physical-interaction annotation).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q969G6; Q9NXG0-2: CNTLN; NbExp=3;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                    GO:0006771
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196843
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0006771" data-r="Reactome:R-HSA-196843" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author/curator (TAS) annotation from the Reactome &#34;Vitamin B2 (riboflavin) metabolism&#34; pathway. Accurately places RFK in riboflavin metabolism. Accept as a core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-196964
+
+                                </span>
+
+                                <div class="support-text">This reaction is catalyzed by riboflavin kinase (RFK)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                                    GO:0008531
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196964
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0008531" data-r="Reactome:R-HSA-196964" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author/curator (TAS) annotation from the Reactome reaction &#34;RFK:Mg2+ phosphorylates RIB&#34;, describing RFK phosphorylating riboflavin to FMN using zinc or magnesium. Correct core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-196964
+
+                                </span>
+
+                                <div class="support-text">It utilizes either zinc or magnesium ions in the reaction.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005794" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA from Human Protein Atlas immunofluorescence. This single antibody-based localization is not corroborated by the curated UniProt subcellular location (cytoplasm) or by Reactome (cytosolic enzyme), and there is no biochemical rationale for Golgi localization of a soluble flavokinase. Treat as over-annotation rather than a core location (per policy, do not remove an experimental/IDA annotation).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomics detection in a quantitative human mitochondrial-proteome dataset. Large-scale organellar proteomes routinely include cytosolic proteins, and the curated UniProt/Reactome localization for RFK is cytoplasmic/cytosolic. Keep as a non-core localization; the mitochondrion is not the primary site of RFK action.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                    GO:0006771
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19641494
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0006771" data-r="PMID:19641494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to riboflavin metabolic process from Yazdanpanah et al., which demonstrated RFK&#39;s riboflavin kinase activity and its rate-limiting role in FAD synthesis. Correct core process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                                        PMID:19641494
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rate-limiting in the synthesis of FAD, an essential prosthetic group of NADPH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                                    GO:0008531
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19641494
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0008531" data-r="PMID:19641494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration (IDA) of riboflavin kinase activity for human RFK (catalytic activity established, EC 2.7.1.26; E79Q active-site mutant abolishes the activity). This is the primary evidence for the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">E-&gt;Q: Loss of riboflavin kinase activity. No effect</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19641494
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0006915" data-r="PMID:19641494" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation reflecting RFK&#39;s role in TNFR1 signaling: by coupling TNFR1 to NADPH oxidase and enabling TNF-induced ROS production, RFK acts upstream of/within TNF- driven cell-death responses. This is a context-specific signaling/moonlighting role downstream of the catalytic function, not the core evolved function of the enzyme. Keep as a non-core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                                        PMID:19641494
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">prerequisite for TNF-induced but not for Toll-like-receptor-induced ROS</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033864" target="_blank" class="term-link">
+                                    GO:0033864
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of NAD(P)H oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19641494
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0033864" data-r="PMID:19641494" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation: RFK physically and functionally couples TNFR1 to NADPH oxidase and, by supplying FAD (an essential prosthetic group of the oxidase), positively regulates TNF-induced NADPH oxidase activity/ROS production. Well supported experimentally but a specialized signaling role rather than the core flavokinase function. Keep as a non-core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                                        PMID:19641494
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">binds to both the TNFR1-death domain and to p22(phox), the common subunit of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196964
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005829" data-r="Reactome:R-HSA-196964" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author/curator (TAS) annotation from Reactome placing RFK in the cytosol; Reactome explicitly describes it as &#34;a cytosolic enzyme&#34;. This is the preferred, specific core location, concordant with the UniProt cytoplasm call. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-196964
+
+                                </span>
+
+                                <div class="support-text">a cytosolic enzyme existing as a monomer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12623014
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human riboflavin kinase reveals a beta ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0005737" data-r="PMID:12623014" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (NAS) cytoplasmic localization from the human RFK structure paper. Consistent with the curated UniProt location and Reactome. The more specific cytosol term is preferred, but this is correct. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RFK/RFK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                                    GO:0008531
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12623014
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human riboflavin kinase reveals a beta ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0008531" data-r="PMID:12623014" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (NAS) of riboflavin kinase activity from the human RFK crystal- structure paper, which describes RFK as &#34;an essential enzyme catalyzing the phosphorylation of riboflavin (vitamin B(2)) to form FMN&#34;. Correct core molecular function; corroborated by the IDA experimental annotation. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link">
+                                        PMID:12623014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an essential enzyme catalyzing the phosphorylation of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009231" target="_blank" class="term-link">
+                                    GO:0009231
+                                </a>
+                            </span>
+                            <span class="term-label">riboflavin biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12623014
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human riboflavin kinase reveals a beta ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q969G6" data-a="GO:0009231" data-r="PMID:12623014" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement (NAS) to riboflavin biosynthetic process. As with the InterPro2GO IEA call, this is imprecise for the human enzyme: humans acquire riboflavin from the diet and do not synthesize the ring de novo; RFK carries out riboflavin utilization (FMN/FAD synthesis). The paper frames RFK&#39;s step as &#34;vitamin B(2) utilization and flavin cofactor synthesis&#34;. Modify to riboflavin metabolic process.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                    riboflavin metabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link">
+                                        PMID:12623014
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">obligatory step in vitamin B(2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Riboflavin kinase activity: phosphorylation of riboflavin (vitamin B2) by ATP to form FMN, releasing ADP, using a divalent metal ion (Zn2+ or Mg2+). This is the first, rate-limiting step of FMN/FAD cofactor biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q969G6" data-a="FUNCTION: Riboflavin kinase activity: phosphorylation of rib..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008531" target="_blank" class="term-link">
+                            riboflavin kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009398" target="_blank" class="term-link">
+                                FMN biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006771" target="_blank" class="term-link">
+                                riboflavin metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57986" target="_blank" class="term-link">
+                                riboflavin
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RFK/RFK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=riboflavin + ATP = FMN + ADP + H(+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                                PMID:19641494
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">rate-limiting in the synthesis of FAD, an essential prosthetic group of NADPH</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP binding: RFK binds ATP as the phosphoryl donor for the kinase reaction, coordinated at a conserved nucleotide-binding motif together with a catalytic magnesium/zinc ion.</h3>
+                <span class="vote-buttons" data-g="Q969G6" data-a="FUNCTION: ATP binding: RFK binds ATP as the phosphoryl donor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RFK/RFK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=riboflavin + ATP = FMN + ADP + H(+)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Metal ion binding: RFK requires and binds a divalent metal ion (zinc or magnesium) for catalysis, coordinated in the active site as seen in the MgADP-bound crystal structures.</h3>
+                <span class="vote-buttons" data-g="Q969G6" data-a="FUNCTION: Metal ion binding: RFK requires and binds a divale..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                            metal ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RFK/RFK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Zinc or magnesium.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12623014" target="_blank" class="term-link">
+                            PMID:12623014
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human riboflavin kinase reveals a beta barrel fold and a novel active site arch.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19641494" target="_blank" class="term-link">
+                            PMID:19641494
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196843
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Vitamin B2 (riboflavin) metabolism</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196964
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RFK:Mg2+ phosphorylates RIB</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RFK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q969G6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rfk-human-riboflavin-kinase-review-notes">RFK (human riboflavin kinase) — review notes</h1>
+<p>UniProt: Q969G6 (RIFK_HUMAN), 155 aa, EC 2.7.1.26. HGNC:30324, chromosome 9. Gene ID 55312.</p>
+<h2 id="core-function">Core function</h2>
+<p>RFK is <strong>riboflavin kinase</strong> (flavokinase, ATP:riboflavin 5'-phosphotransferase),<br />
+the first committed and rate-limiting step of flavin-cofactor biosynthesis in<br />
+humans. It phosphorylates riboflavin (vitamin B2) using ATP to produce flavin<br />
+mononucleotide (FMN); FMN is subsequently adenylylated to FAD by FAD synthase<br />
+(FLAD1). The reaction requires a divalent metal (Zn2+ or Mg2+).</p>
+<ul>
+<li>Catalytic activity (UniProt): <code>riboflavin + ATP = FMN + ADP + H(+)</code>, EC 2.7.1.26<br />
+  [file:human/RFK/RFK-uniprot.txt "Reaction=riboflavin + ATP = FMN + ADP + H(+)"].</li>
+<li>Rate-limiting for FAD synthesis<br />
+  [file:human/RFK/RFK-uniprot.txt "form flavin-mononucleotide (FMN), hence rate-limiting enzyme in the"].</li>
+<li>Cofactor: Zn2+ or Mg2+<br />
+  [file:human/RFK/RFK-uniprot.txt "Note=Zinc or magnesium."].</li>
+<li>Pathway: "Cofactor biosynthesis; FMN biosynthesis; FMN from riboflavin (ATP route): step 1/1"<br />
+  [file:human/RFK/RFK-uniprot.txt "(ATP route): step 1/1."].</li>
+<li>Reactome R-HSA-196964: "Phosphorylation of riboflavin (RIB) results in the<br />
+  formation of the first cofactor, flavin mononucleotide (FMN). This reaction is<br />
+  catalyzed by riboflavin kinase (RFK), a cytosolic enzyme existing as a monomer.<br />
+  It utilizes either zinc or magnesium ions in the reaction."</li>
+</ul>
+<h2 id="structure-pmid12623014-pmid14580199">Structure (PMID:12623014, PMID:14580199)</h2>
+<p>Crystal structures of human RFK: six-stranded antiparallel beta barrel core,<br />
+similar to the riboflavin synthase / ferredoxin-reductase FAD-binding fold; an<br />
+intrinsically bound MgADP defines a novel nucleotide-binding motif; catalysis<br />
+proposed through the active-site "arch"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12623014" title="The structure of human RFK revealed a six-stranded antiparallel beta barrel core">PMID:12623014</a>.<br />
+PDB: 1NB0, 1NB9, 1P4M, 1Q9S. ACT_SITE Glu79 (nucleophile). Mutagenesis E79Q<br />
+abolishes riboflavin kinase activity but not TNFRSF1A/CYBA binding<br />
+[file:human/RFK/RFK-uniprot.txt "E-&gt;Q: Loss of riboflavin kinase activity."].</p>
+<p>PMID:12623014 is a structure paper; GOA also uses it as the NAS source for the<br />
+function/localization/pathway statements (author narrative), which is reasonable<br />
+but lower-value than the IDA/experimental support.</p>
+<h2 id="moonlighting-tnfr1-nadph-oxidase-pmid19641494">Moonlighting: TNFR1 → NADPH oxidase (PMID:19641494)</h2>
+<p>Yazdanpanah et al. (Nature 2009) identified RFK as a TNFR1 (TNFRSF1A)-binding<br />
+protein that physically and functionally couples TNFR1 to NADPH oxidase. RFK<br />
+binds the TNFR1 death domain and the NADPH oxidase subunit p22phox (CYBA);<br />
+bridging is required for TNF-induced (not TLR-induced) ROS production. RFK's<br />
+enzymatic role — providing FAD, an essential prosthetic group of NADPH oxidase —<br />
+underlies the ROS phenotype (exogenous FMN/FAD substitutes for TNF stimulation in<br />
+RFK-deficient cells).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19641494" title="riboflavin kinase (RFK, formerly known as flavokinase) as a previously unrecognized TNF-receptor-1 (TNFR1)-binding protein that physically and functionally couples TNFR1 to NADPH oxidase">PMID:19641494</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19641494" title="RFK is rate-limiting in the synthesis of FAD, an essential prosthetic group of NADPH oxidase">PMID:19641494</a></p>
+<p>This is the source of the experimental annotations to <code>apoptotic process</code><br />
+(GO:0006915, IMP), <code>positive regulation of NAD(P)H oxidase activity</code> (GO:0033864,<br />
+IMP), and <code>protein binding</code> (GO:0005515, IPI vs TNFRSF1A/P19438). These describe a<br />
+context-specific signaling role that is downstream of / built on the core flavokinase<br />
+activity — treated as KEEP_AS_NON_CORE (regulatory processes) or<br />
+MARK_AS_OVER_ANNOTATED (bare protein binding), not core evolved functions.</p>
+<h2 id="localization">Localization</h2>
+<p>UniProt SUBCELLULAR LOCATION: <strong>Cytoplasm</strong> (ECO:0000250)<br />
+[file:human/RFK/RFK-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"]. Reactome<br />
+describes RFK as "a cytosolic enzyme." So cytoplasm / cytosol is the core location.</p>
+<p>Other localization annotations are lower-confidence high-throughput / IEA calls:<br />
+- GO:0005739 mitochondrion — IBA (GO_REF:0000033) and HTP (PMID:34800366, a<br />
+  large-scale mitochondrial-proteome dataset). Not the primary site; a flavokinase<br />
+  supplies flavin cofactors cytosolically, and MitoCarta-type datasets frequently<br />
+  include cytosolic contaminants. Kept as non-core (do not remove HTP experimental-<br />
+  type; the IBA can be marked over-annotated).<br />
+- GO:0005794 Golgi apparatus — IDA from HPA immunofluorescence (GO_REF:0000052).<br />
+  Single antibody-based localization; not corroborated by UniProt or biochemistry.<br />
+  Marked as over-annotated (do not REMOVE — IDA experimental type).</p>
+<h2 id="interactions-protein-binding-ipi">Interactions (protein binding IPI)</h2>
+<ul>
+<li>PMID:19641494 IPI vs TNFRSF1A (UniProtKB:P19438 / P19438-1): the TNFR1 death-domain<br />
+  interaction — real but a signaling-context binding, bare GO:0005515 uninformative.</li>
+<li>PMID:32296183 IPI vs CNTLN (UniProtKB:Q9NXG0-2): from the HuRI binary interactome<br />
+  (Y2H) screen; UniProt records this interaction<br />
+  [file:human/RFK/RFK-uniprot.txt "Q969G6; Q9NXG0-2: CNTLN; NbExp=3;"]. High-throughput<br />
+  Y2H, no functional characterization — bare protein binding, over-annotated.</li>
+</ul>
+<p>All bare <code>protein binding</code> (GO:0005515) IPI annotations → MARK_AS_OVER_ANNOTATED<br />
+(never REMOVE per policy; uninformative MF for the pathway/core-function view).</p>
+<h2 id="annotation-action-summary">Annotation action summary</h2>
+<p>Core (ACCEPT): riboflavin kinase activity (IDA, IBA, TAS, and the two IEA/NAS<br />
+duplicates for MF); FMN biosynthetic process; riboflavin metabolic process;<br />
+cytosol. FAD/FMN biosynthesis is the evolved function.</p>
+<p><code>riboflavin biosynthetic process</code> (GO:0009231, IEA InterPro2GO &amp; NAS) is<br />
+technically a mislabel for a human context — humans do not synthesize the<br />
+riboflavin ring de novo; RFK acts in riboflavin <em>utilization</em> (FMN/FAD synthesis),<br />
+i.e. riboflavin metabolic process. MODIFY → GO:0006771 riboflavin metabolic<br />
+process (the IEA one); the NAS one likewise MODIFY.</p>
+<p>Non-core / signaling: apoptotic process, positive regulation of NAD(P)H oxidase<br />
+activity (both IMP, KEEP_AS_NON_CORE — real moonlighting downstream of catalytic<br />
+function).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q969G6
+gene_symbol: RFK
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RFK (riboflavin kinase, flavokinase; ATP:riboflavin 5&#39;-phosphotransferase; EC 2.7.1.26)
+  catalyzes the first committed, rate-limiting step of flavin-cofactor biosynthesis in
+  humans: it transfers the gamma-phosphate of ATP to riboflavin (vitamin B2) to form flavin
+  mononucleotide (FMN), releasing ADP. FMN is subsequently adenylylated to FAD by FAD
+  synthase (FLAD1), so RFK gates the supply of the FMN and FAD prosthetic groups used by
+  more than one hundred flavoenzymes. The reaction requires a divalent metal ion (zinc or
+  magnesium). The 155-residue human protein is a monomer that adopts a six-stranded
+  antiparallel beta-barrel fold characteristic of the riboflavin-kinase family, with an
+  active-site &#34;arch&#34; over which phosphoryl transfer occurs and a catalytic glutamate
+  nucleophile. It functions in the cytoplasm/cytosol. Beyond its metabolic role, RFK has
+  been characterized as a TNF-receptor-1 (TNFRSF1A)-binding protein that couples TNFR1 to
+  the NADPH oxidase subunit p22phox (CYBA); by supplying FAD, an essential prosthetic group
+  of NADPH oxidase, it is required for TNF-induced reactive oxygen species production.
+existing_annotations:
+- term:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of riboflavin kinase activity, the core, well-conserved
+      molecular function of this family. Directly confirmed for human RFK by experimental
+      assay (IDA, PMID:19641494) and by the crystal structures and catalytic-activity
+      annotation in UniProt. Accept as a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;EC=2.7.1.26&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006771
+    label: riboflavin metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference that RFK participates in riboflavin (vitamin B2) metabolism.
+      This is accurate: RFK converts riboflavin to FMN, the entry point of flavin-cofactor
+      utilization. Accept as a core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;AltName: Full=Flavokinase;&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of mitochondrial localization, propagated in part from
+      the yeast ortholog. Human RFK is annotated by UniProt and Reactome as a cytoplasmic/
+      cytosolic enzyme, and a flavokinase supplies flavin cofactors from the cytosol. The
+      mitochondrion is not the primary site of action for the human protein; keep as a
+      non-core localization.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0009398
+    label: FMN biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference that RFK is involved in FMN biosynthesis. This is the precise
+      product-forming process for riboflavin kinase (riboflavin -&gt; FMN) and matches the
+      UniProt pathway annotation &#34;FMN from riboflavin (ATP route): step 1/1&#34;. Accept as a
+      core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;(ATP route): step 1/1.&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt subcellular-location keyword. Consistent with the
+      curated UniProt &#34;Cytoplasm&#34; location and with Reactome describing RFK as a cytosolic
+      enzyme. Accept; the more specific cytosol term (GO:0005829) is the preferred core
+      location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of riboflavin kinase activity from InterPro/RHEA/EC pipelines
+      (EC 2.7.1.26, RHEA:14357). Fully concordant with the experimental IDA annotation and
+      UniProt catalytic-activity statement. Accept (duplicate of the core molecular
+      function).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;Reaction=riboflavin + ATP = FMN + ADP + H(+)&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0009231
+    label: riboflavin biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic mapping to riboflavin biosynthetic process. This is imprecise
+      for the human enzyme: humans do not synthesize the riboflavin ring de novo (riboflavin
+      is a dietary vitamin), and RFK acts in riboflavin utilization/salvage, converting
+      riboflavin to FMN. The correct process is riboflavin metabolic process (or, more
+      specifically, FMN biosynthetic process). Modify to riboflavin metabolic process.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0006771
+      label: riboflavin metabolic process
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;form flavin-mononucleotide (FMN), hence rate-limiting enzyme in the&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0009398
+    label: FMN biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment (InterPro/UniPathway UPA00276) of FMN biosynthetic process.
+      Correct and precise for riboflavin kinase; duplicate of the IBA annotation to the
+      same term. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;(ATP route): step 1/1.&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19641494
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI annotation from a curated physical interaction with TNFRSF1A (P19438) reported in
+      Yazdanpanah et al. RFK binds the TNFR1 death domain and, via p22phox (CYBA), bridges
+      TNFR1 to NADPH oxidase. The interaction is real and biologically meaningful, but the
+      bare &#34;protein binding&#34; term is uninformative about RFK&#39;s molecular function. Retain
+      as over-annotated; the underlying biology is captured by the NAD(P)H oxidase
+      regulation annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:19641494
+      supporting_text: &#34;previously unrecognized TNF-receptor-1 (TNFR1)-binding protein that physically&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI annotation from the HuRI human binary interactome (yeast two-hybrid), recording an
+      interaction with CNTLN (Q9NXG0-2), also captured in UniProt. This is an
+      uncharacterized high-throughput interaction with no established functional
+      consequence, and the bare &#34;protein binding&#34; term is uninformative. Retain as
+      over-annotated (do not remove an IPI physical-interaction annotation).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;Q969G6; Q9NXG0-2: CNTLN; NbExp=3;&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006771
+    label: riboflavin metabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196843
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author/curator (TAS) annotation from the Reactome &#34;Vitamin B2 (riboflavin) metabolism&#34;
+      pathway. Accurately places RFK in riboflavin metabolism. Accept as a core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-196964
+      supporting_text: &#34;This reaction is catalyzed by riboflavin kinase (RFK)&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196964
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author/curator (TAS) annotation from the Reactome reaction &#34;RFK:Mg2+ phosphorylates
+      RIB&#34;, describing RFK phosphorylating riboflavin to FMN using zinc or magnesium.
+      Correct core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-196964
+      supporting_text: &#34;It utilizes either zinc or magnesium ions in the reaction.&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA from Human Protein Atlas immunofluorescence. This single antibody-based
+      localization is not corroborated by the curated UniProt subcellular location
+      (cytoplasm) or by Reactome (cytosolic enzyme), and there is no biochemical rationale
+      for Golgi localization of a soluble flavokinase. Treat as over-annotation rather than
+      a core location (per policy, do not remove an experimental/IDA annotation).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomics detection in a quantitative human mitochondrial-proteome
+      dataset. Large-scale organellar proteomes routinely include cytosolic proteins, and
+      the curated UniProt/Reactome localization for RFK is cytoplasmic/cytosolic. Keep as a
+      non-core localization; the mitochondrion is not the primary site of RFK action.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006771
+    label: riboflavin metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:19641494
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to riboflavin metabolic process from Yazdanpanah et al.,
+      which demonstrated RFK&#39;s riboflavin kinase activity and its rate-limiting role in FAD
+      synthesis. Correct core process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:19641494
+      supporting_text: &#34;rate-limiting in the synthesis of FAD, an essential prosthetic group of NADPH&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:19641494
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration (IDA) of riboflavin kinase activity for human RFK
+      (catalytic activity established, EC 2.7.1.26; E79Q active-site mutant abolishes the
+      activity). This is the primary evidence for the core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;E-&gt;Q: Loss of riboflavin kinase activity. No effect&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:19641494
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IMP annotation reflecting RFK&#39;s role in TNFR1 signaling: by coupling TNFR1 to NADPH
+      oxidase and enabling TNF-induced ROS production, RFK acts upstream of/within TNF-
+      driven cell-death responses. This is a context-specific signaling/moonlighting role
+      downstream of the catalytic function, not the core evolved function of the enzyme.
+      Keep as a non-core process.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19641494
+      supporting_text: &#34;prerequisite for TNF-induced but not for Toll-like-receptor-induced ROS&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0033864
+    label: positive regulation of NAD(P)H oxidase activity
+  evidence_type: IMP
+  original_reference_id: PMID:19641494
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IMP annotation: RFK physically and functionally couples TNFR1 to NADPH oxidase and,
+      by supplying FAD (an essential prosthetic group of the oxidase), positively regulates
+      TNF-induced NADPH oxidase activity/ROS production. Well supported experimentally but a
+      specialized signaling role rather than the core flavokinase function. Keep as a
+      non-core process.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19641494
+      supporting_text: &#34;binds to both the TNFR1-death domain and to p22(phox), the common subunit of&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196964
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author/curator (TAS) annotation from Reactome placing RFK in the cytosol; Reactome
+      explicitly describes it as &#34;a cytosolic enzyme&#34;. This is the preferred, specific core
+      location, concordant with the UniProt cytoplasm call. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-196964
+      supporting_text: &#34;a cytosolic enzyme existing as a monomer&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: NAS
+  original_reference_id: PMID:12623014
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-statement (NAS) cytoplasmic localization from the human RFK structure paper.
+      Consistent with the curated UniProt location and Reactome. The more specific cytosol
+      term is preferred, but this is correct. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/RFK/RFK-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  evidence_type: NAS
+  original_reference_id: PMID:12623014
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author-statement (NAS) of riboflavin kinase activity from the human RFK crystal-
+      structure paper, which describes RFK as &#34;an essential enzyme catalyzing the
+      phosphorylation of riboflavin (vitamin B(2)) to form FMN&#34;. Correct core molecular
+      function; corroborated by the IDA experimental annotation. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12623014
+      supporting_text: &#34;an essential enzyme catalyzing the phosphorylation of&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0009231
+    label: riboflavin biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:12623014
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-statement (NAS) to riboflavin biosynthetic process. As with the InterPro2GO
+      IEA call, this is imprecise for the human enzyme: humans acquire riboflavin from the
+      diet and do not synthesize the ring de novo; RFK carries out riboflavin utilization
+      (FMN/FAD synthesis). The paper frames RFK&#39;s step as &#34;vitamin B(2) utilization and
+      flavin cofactor synthesis&#34;. Modify to riboflavin metabolic process.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0006771
+      label: riboflavin metabolic process
+    supported_by:
+    - reference_id: PMID:12623014
+      supporting_text: &#34;obligatory step in vitamin B(2)&#34;
+      reference_section_type: ABSTRACT
+core_functions:
+- description: &gt;-
+    Riboflavin kinase activity: phosphorylation of riboflavin (vitamin B2) by ATP to form
+    FMN, releasing ADP, using a divalent metal ion (Zn2+ or Mg2+). This is the first,
+    rate-limiting step of FMN/FAD cofactor biosynthesis.
+  molecular_function:
+    id: GO:0008531
+    label: riboflavin kinase activity
+  directly_involved_in:
+  - id: GO:0009398
+    label: FMN biosynthetic process
+  - id: GO:0006771
+    label: riboflavin metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:57986
+    label: riboflavin
+  supported_by:
+  - reference_id: file:human/RFK/RFK-uniprot.txt
+    supporting_text: &#34;Reaction=riboflavin + ATP = FMN + ADP + H(+)&#34;
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: PMID:19641494
+    supporting_text: &#34;rate-limiting in the synthesis of FAD, an essential prosthetic group of NADPH&#34;
+    reference_section_type: ABSTRACT
+- description: &gt;-
+    ATP binding: RFK binds ATP as the phosphoryl donor for the kinase reaction, coordinated
+    at a conserved nucleotide-binding motif together with a catalytic magnesium/zinc ion.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/RFK/RFK-uniprot.txt
+    supporting_text: &#34;Reaction=riboflavin + ATP = FMN + ADP + H(+)&#34;
+    reference_section_type: DATABASE_ENTRY
+- description: &gt;-
+    Metal ion binding: RFK requires and binds a divalent metal ion (zinc or magnesium) for
+    catalysis, coordinated in the active site as seen in the MgADP-bound crystal structures.
+  molecular_function:
+    id: GO:0046872
+    label: metal ion binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/RFK/RFK-uniprot.txt
+    supporting_text: &#34;Note=Zinc or magnesium.&#34;
+    reference_section_type: DATABASE_ENTRY
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12623014
+  title: Crystal structure of human riboflavin kinase reveals a beta barrel fold and
+    a novel active site arch.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified structure paper on human RFK (PDB 1NB0/1NB9/1P4M/1Q9S). Establishes
+      the beta-barrel fold and confirms the riboflavin-kinase catalytic function; abstract
+      supports the function and localization (cytoplasm) claims. GOA reuses it as the NAS
+      source. The riboflavin biosynthetic process NAS is a minor mislabel (should be
+      riboflavin metabolic process for a human salvage/utilization enzyme).
+- id: PMID:19641494
+  title: Riboflavin kinase couples TNF receptor 1 to NADPH oxidase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Primary experimental source for human RFK riboflavin kinase activity
+      (IDA), the TNFRSF1A/CYBA physical interactions, and the NADPH-oxidase/ROS moonlighting
+      role. Abstract-only in the cache (full_text_available: false); quoted claims are
+      verbatim from the abstract.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome (Y2H) reference map; source of the RFK-CNTLN protein-binding
+      IPI (also recorded in UniProt). Large-scale interaction screen with no RFK-specific
+      functional characterization; contextual/background relevance only.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale human mitochondrial-proteome dataset; source of the HTP mitochondrion
+      localization. Such datasets can include cytosolic proteins, and RFK&#39;s curated location
+      is cytoplasm/cytosol, so this is treated as a non-core localization.
+- id: Reactome:R-HSA-196843
+  title: Vitamin B2 (riboflavin) metabolism
+  findings: []
+- id: Reactome:R-HSA-196964
+  title: RFK:Mg2+ phosphorylates RIB
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

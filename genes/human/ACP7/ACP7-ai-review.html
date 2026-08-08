@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACP7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACP7</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6ZNF0" target="_blank" class="term-link">
+                        Q6ZNF0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ACP7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6ZNF0" data-a="DESCRIPTION: ACP7 (acid phosphatase type 7, also called purple ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ACP7 (acid phosphatase type 7, also called purple acid phosphatase long form or PAPL) is a predicted secreted metallophosphoesterase of the purple acid phosphatase family. It is expected to hydrolyse phosphate monoesters to an alcohol and inorganic phosphate under acidic conditions, using a binuclear metal centre that binds one iron and one zinc ion per subunit, and it carries a cleaved N-terminal signal peptide and N-glycosylation sites consistent with secretion. ACP7 was identified as the founding member of a novel subfamily of plant-like purple acid phosphatases present in mammals, insects and nematodes, and is more similar to the approximately 55 kDa purple acid phosphatases of plants than to the shorter animal enzymes such as ACP5; a structural model built on the red kidney bean enzyme shows the canonical catalytic centre is present. The protein is detected in proteomic surveys, so it is expressed, but its catalytic activity, cofactor loading, physiological substrate, tissue distribution and phenotype have never been tested - every functional statement about it is inferred from the plant enzyme.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>zinc ion binding</h3>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="zinc ion binding" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Binding to a zinc ion (Zn).</p>
+
+
+
+            <p><strong>Justification:</strong> Not a new term - GO:0008270 zinc ion binding already exists - but proposed as an addition to this gene, since the evidence is more specific than the GO:0046872 metal ion binding currently annotated. UniProt records four individual Zn(2+) BINDING features at residues 170, 205, 286 and 333, and the Zn site is half of the binuclear centre that defines the purple acid phosphatase family. The iron half is deliberately not proposed at the same specificity: UniProt records that ligand as &#39;Fe cation&#39; (CHEBI:24875) without an oxidation state, so neither a ferric nor a ferrous term is justified, and GO:0005506 iron ion binding would be the most that could be claimed.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                    metal ion binding
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:human/ACP7/ACP7-uniprot.txt
+
+
+                    : FT   BINDING         205
+
+                </li>
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/16793224" target="_blank" class="term-link">
+                        PMID:16793224
+                    </a>
+
+
+                    : A structural model for the human enzyme was constructed based
+on the red kidney bean purple acid phosphatase structure. This model shows that
+the catalytic centre observed in other purple acid phosphatases is also present
+in this new isoform.
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003993" target="_blank" class="term-link">
+                                    GO:0003993
+                                </a>
+                            </span>
+                            <span class="term-label">acid phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZNF0" data-a="GO:0003993" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acid phosphatase activity, by automatic annotation from the EC number, with UniProt recording the reaction as RHEA:15017.
+
+Provenance, stated once and applying to every annotation. ACP7 has no biochemical or functional characterisation: UniProt&#39;s FUNCTION, EC number, catalytic activity and both cofactor statements are all ECO:0000250 by similarity to UniProtKB:P80366, the Fe(3+)-Zn(2+) purple acid phosphatase of the kidney bean Phaseolus vulgaris.
+
+That cross-kingdom template is not arbitrary, which is the key point. PMID:16793224 identified ACP7 as a novel PLANT-LIKE human purple acid phosphatase, built a structural model of the human enzyme on the red kidney bean structure specifically, and showed the catalytic centre is present in it. UniProt&#39;s AltName &#39;Purple acid phosphatase long form&#39; is ECO:0000303 from that paper. So the kidney bean is the deliberate, published choice of template for a protein argued to belong to a plant-like subfamily - a considered inference rather than a distant accident.
+
+What remains absent is functional testing: no activity assay, no substrate, no phenotype. The protein itself is not hypothetical - UniProt records PE 1, evidence at protein level, with proteomics identification - so ACP7 is uncharacterised rather than unstudied.
+
+Accepted as a well-founded inference: the metallophosphoesterase fold is supported by several InterPro signatures, the iron- and zinc-coordinating residues are individually annotated, and a published structural model places the catalytic centre in the human protein. But it is a modelled prediction, not a measured activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE            EC=3.1.3.2 {ECO:0000250|UniProtKB:P80366};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16793224" target="_blank" class="term-link">
+                                        PMID:16793224
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A structural model for the human enzyme was constructed based
+on the red kidney bean purple acid phosphatase structure. This model shows that
+the catalytic centre observed in other purple acid phosphatases is also present
+in this new isoform.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZNF0" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular region, from the UniProt SubCell mapping of a Secreted assertion. That assertion is ECO:0000305, inferred by a curator from the ECO:0000255 predicted signal peptide at residues 1-26, so it is an inference resting on a prediction. Accepted - a cleaved signal peptide with no downstream transmembrane segment is a reliable indicator, the protein is glycosylated as a secreted protein would be, and it is detected in proteomics - but the localisation itself has not been demonstrated experimentally.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Secreted {ECO:0000305}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PE   1: Evidence at protein level;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZNF0" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hydrolase activity, from InterPro. Correct but two levels above the acid phosphatase term derived from the same prediction, and it conveys nothing the specific term does not. Retained as a non-core parent.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6ZNF0" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal ion binding, from InterPro, and the best-supported annotation on this gene: UniProt annotates individual BINDING features for the Fe cation (141, 170, 173, 335) and for Zn(2+) (170, 205, 286, 333), and the binuclear Fe-Zn centre defines the purple acid phosphatase family rather than being a generic fold property. PMID:16793224&#39;s structural model shows that centre is present in the human protein. Still ECO:0000250 in origin, but the residue-level conservation makes it the least speculative call here. Note the more specific GO:0008270 zinc ion binding is proposed under proposed_new_terms; no ferric-specific term is proposed because UniProt records the ligand as &#39;Fe cation&#39; without an oxidation state.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACP7/ACP7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   BINDING         205</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16793224" target="_blank" class="term-link">
+                                        PMID:16793224
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A structural model for the human enzyme was constructed based
+on the red kidney bean purple acid phosphatase structure. This model shows that
+the catalytic centre observed in other purple acid phosphatases is also present
+in this new isoform.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted acid phosphatase activity. ACP7 belongs to a plant-like subfamily of purple acid phosphatases and retains the residues that coordinate the binuclear Fe-Zn centre those enzymes use to hydrolyse phosphate monoesters under acidic conditions; a published structural model built on the red kidney bean enzyme shows the catalytic centre is present. It carries a signal peptide consistent with secretion and is detected in proteomics. This core function is recorded as a prediction rather than a finding: no activity has been measured for the human protein.</h3>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="FUNCTION: Predicted acid phosphatase activity. ACP7 belongs ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003993" target="_blank" class="term-link">
+                            acid phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACP7/ACP7-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16793224" target="_blank" class="term-link">
+                                PMID:16793224
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">A structural model for the human enzyme was constructed based
+on the red kidney bean purple acid phosphatase structure. This model shows that
+the catalytic centre observed in other purple acid phosphatases is also present
+in this new isoform.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16793224" target="_blank" class="term-link">
+                            PMID:16793224
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and molecular modeling of a novel, plant-like, human purple acid phosphatase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACP7 was identified as a novel human purple acid phosphatase closely related to the ~55 kDa plant enzymes, and a structural model built on the red kidney bean enzyme shows the canonical catalytic centre is present.</div>
+
+                        <div class="finding-text">"A structural model for the human enzyme was constructed based
+on the red kidney bean purple acid phosphatase structure. This model shows that
+the catalytic centre observed in other purple acid phosphatases is also present
+in this new isoform."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sequences identified represent a novel subfamily of plant-like purple acid phosphatases in animals and humans.</div>
+
+                        <div class="finding-text">"These observations suggest that the sequences identified in
+this study represent a novel subfamily of plant-like purple acid phosphatases in
+animals and humans."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ACP7/ACP7-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for ACP7 (human)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The affinage provider found no mechanistic literature for ACP7 at all; its discoveries table and citation list are both empty.</div>
+
+                        <div class="finding-text">"No mechanistic discoveries found in literature."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ACP7 have measurable acid phosphatase activity? Nothing has been tested. Its EC number, catalytic activity, Rhea reaction and both cofactors are ECO:0000250 by similarity to the kidney bean enzyme. That template is a considered choice - PMID:16793224 argues ACP7 belongs to a plant-like subfamily and models it on the bean structure - but a model showing the catalytic centre is present is not a demonstration that it works.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="Q: Does ACP7 have measurable acid phosphatase activit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does ACP7 differ from ACP5, the characterised human purple acid phosphatase? ACP5 (TRAP) is a well-studied short-form animal PAP with known substrates and a bone-resorption phenotype. ACP7 is longer and argued to be plant-like, so a side-by-side comparison of substrate preference and pH optimum would be the most direct route to a function, and would test whether the plant-like classification has functional consequences.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="Q: How does ACP7 differ from ACP5, the characterised ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the binuclear metal centre assembled? The Fe and Zn coordinating residues are annotated individually and are the least speculative part of the record, but metal loading has never been measured. A protein retaining the residues without assembling the centre would be a pseudoenzyme, a live possibility for any untested member of a catalytic family.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="Q: Is the binuclear metal centre assembled? The Fe an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where is ACP7 expressed and is it secreted? Proteomic detection establishes that the protein exists (UniProt PE 1), but the Secreted call is ECO:0000305 inferred from a predicted signal peptide, and no tissue distribution is known.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="Q: Where is ACP7 expressed and is it secreted? Proteo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant ACP7, determine metal content by ICP-MS, and assay phosphomonoesterase activity across a pH range against generic substrates such as p-nitrophenyl phosphate, comparing with a characterised purple acid phosphatase as positive control and with a metal-site mutant as negative control.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ACP7 is an active acid phosphatase with an assembled Fe-Zn centre.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="EXPERIMENT: Express and purify recombinant ACP7, determine met..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Survey ACP7 transcript and protein across human tissues, and test secretion directly by expressing tagged protein and assaying conditioned medium versus cell lysate, with and without the predicted signal peptide.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ACP7 is secreted and expressed in a restricted tissue.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: expression and cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="EXPERIMENT: Survey ACP7 transcript and protein across human ti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay purified ACP7 and ACP5 side by side against a phosphometabolite library and a phosphopeptide array across a pH range, testing whether ACP7&#39;s plant-like classification predicts plant-PAP-like substrate preferences rather than ACP5-like ones.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ACP7 has a substrate preference distinguishable from the characterised human paralog ACP5.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6ZNF0" data-a="EXPERIMENT: Assay purified ACP7 and ACP5 side by side against ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ACP7-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6ZNF0" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for ACP7 (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">0 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-acp7-human">Affinage mechanistic annotation for ACP7 (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>No mechanistic discoveries found in literature.</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> <em>(none)</em></li>
+<li><strong>localization:</strong> <em>(none)</em></li>
+<li><strong>pathway (Reactome):</strong> <em>(none)</em></li>
+<li><strong>partners:</strong> <em>(none)</em></li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ACP7-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6ZNF0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acp7-acid-phosphatase-type-7-review-notes">ACP7 (acid phosphatase type 7) — review notes</h1>
+<p>PAINT no-IBA project review, using the <code>affinage</code> deep-research provider plus UniProt Q6ZNF0<br />
+and the GOA TSV.</p>
+<h2 id="uncharacterised-not-unstudied">Uncharacterised, not unstudied</h2>
+<p>Four annotations, <strong>all IEA</strong>, and <strong>no functional or biochemical data</strong> exists for this protein.<br />
+The protein itself is real — UniProt records <code>PE 1: Evidence at protein level</code> with proteomics<br />
+identification — and there <em>is</em> a primary paper.</p>
+<p>The provenance is worth stating precisely, because it applies to every annotation:</p>
+<table>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FUNCTION (metallophosphoesterase, purple acid phosphatase family)</td>
+<td><code>ECO:0000250</code> → <strong>P80366</strong></td>
+</tr>
+<tr>
+<td>EC 3.1.3.2, CATALYTIC ACTIVITY (RHEA:15017)</td>
+<td><code>ECO:0000250</code> → <strong>P80366</strong></td>
+</tr>
+<tr>
+<td>COFACTOR Fe cation; COFACTOR Zn²⁺</td>
+<td><code>ECO:0000250</code> → <strong>P80366</strong></td>
+</tr>
+<tr>
+<td>SUBCELLULAR LOCATION Secreted</td>
+<td><code>ECO:0000305</code> (curator inference)</td>
+</tr>
+<tr>
+<td>SIGNAL 1–26</td>
+<td><code>ECO:0000255</code> (prediction)</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>P80366</code> is <code>PPAF_PHAVU</code> — the Fe(3+)-Zn(2+) purple acid phosphatase of the kidney bean,<br />
+<em>Phaseolus vulgaris</em>.</strong> A plant enzyme is a distant source for a human function assignment, and<br />
+it is the sole source for this gene's catalytic activity, EC number and both cofactors.</p>
+<h2 id="correction-the-kidney-bean-template-is-a-deliberate-published-choice">Correction: the kidney bean template is a <em>deliberate published choice</em></h2>
+<p>An earlier draft of this review asserted three times that no primary literature exists, reasoning<br />
+from an empty affinage record. <strong>That was wrong</strong>, and the refutation was in the UniProt file the<br />
+review was itself citing: reference [4] is <strong>PMID:16793224</strong>, <em>"Identification and molecular<br />
+modeling of a novel, plant-like, human purple acid phosphatase"</em> — the <code>ECO:0000303</code> source for<br />
+UniProt's own "Purple acid phosphatase long form" AltName.</p>
+<p><strong>An empty affinage record is evidence about affinage's coverage, not proof that no literature<br />
+exists.</strong> The correct reading is narrower: affinage found no <em>mechanistic</em> discoveries, which fits<br />
+a gene whose only paper is a bioinformatic identification plus a structural model rather than a<br />
+functional study.</p>
+<p>And the paper strengthens the review rather than merely correcting it. It argues ACP7 is the<br />
+founding member of a <strong>novel plant-like PAP subfamily</strong> in animals, and builds a structural model<br />
+of the human enzyme <strong>on the red kidney bean structure specifically</strong>, showing the catalytic<br />
+centre is present. So P80366 is not an arbitrary cross-kingdom hop — it is the considered template<br />
+for a protein argued to be plant-like. That makes the <code>ECO:0000250</code> chain far better justified<br />
+than the first draft implied.</p>
+<p>UniProt's <code>PAN-GO; Q6ZNF0; 0 GO annotations based on evolutionary models</code> still stands, and is<br />
+the accurate statement of what is missing: evolutionary-model annotation, and functional data.</p>
+<h2 id="actions">Actions</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Action</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0003993</code> acid phosphatase activity</td>
+<td>ACCEPT</td>
+<td>best available inference; fold, family and metal residues all well supported — but a prediction from a plant homolog</td>
+</tr>
+<tr>
+<td><code>GO:0046872</code> metal ion binding</td>
+<td>ACCEPT</td>
+<td><strong>best-supported of the four</strong> — residue-level <code>BINDING</code> features for Fe and Zn; the binuclear centre defines the family</td>
+</tr>
+<tr>
+<td><code>GO:0016787</code> hydrolase activity</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>two levels above the specific term from the same prediction</td>
+</tr>
+<tr>
+<td><code>GO:0005576</code> extracellular region</td>
+<td>ACCEPT</td>
+<td>plausible, but <code>ECO:0000305</code> inferred from an <code>ECO:0000255</code> predicted signal peptide — a prediction resting on a prediction</td>
+</tr>
+</tbody>
+</table>
+<p>Nothing is removed. All four are reasonable inferences from a real, well-supported fold. The<br />
+review's contribution is to record <strong>what kind of knowledge this is</strong>: the gene is annotated<br />
+entirely by prediction, and <code>core_functions</code> says so explicitly rather than presenting the<br />
+activity as established.</p>
+<h2 id="cache-gotcha-hit-again">Cache gotcha, hit again</h2>
+<p><code>just validate</code> rewrote <code>cache/go/terms.csv</code> and dropped <strong>18 rows</strong> added to main by other<br />
+merged PRs. Caught by <code>git diff origin/main -- cache/go/terms.csv | grep '^-GO:'</code> before<br />
+committing; fixed with <code>git checkout origin/main -- cache/go/terms.csv</code>. Second occurrence in<br />
+this campaign (see PR #2227) — worth checking on every gene.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6ZNF0
+gene_symbol: ACP7
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: ACP7 (acid phosphatase type 7, also called purple acid phosphatase long form or PAPL) is
+  a predicted secreted metallophosphoesterase of the purple acid phosphatase family. It is expected to
+  hydrolyse phosphate monoesters to an alcohol and inorganic phosphate under acidic conditions, using
+  a binuclear metal centre that binds one iron and one zinc ion per subunit, and it carries a cleaved
+  N-terminal signal peptide and N-glycosylation sites consistent with secretion. ACP7 was identified as
+  the founding member of a novel subfamily of plant-like purple acid phosphatases present in mammals,
+  insects and nematodes, and is more similar to the approximately 55 kDa purple acid phosphatases of plants
+  than to the shorter animal enzymes such as ACP5; a structural model built on the red kidney bean enzyme
+  shows the canonical catalytic centre is present. The protein is detected in proteomic surveys, so it
+  is expressed, but its catalytic activity, cofactor loading, physiological substrate, tissue distribution
+  and phenotype have never been tested - every functional statement about it is inferred from the plant
+  enzyme.
+existing_annotations:
+- term:
+    id: GO:0003993
+    label: acid phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &#39;Acid phosphatase activity, by automatic annotation from the EC number, with UniProt recording
+      the reaction as RHEA:15017.
+
+
+      Provenance, stated once and applying to every annotation. ACP7 has no biochemical or functional
+      characterisation: UniProt&#39;&#39;s FUNCTION, EC number, catalytic activity and both cofactor statements
+      are all ECO:0000250 by similarity to UniProtKB:P80366, the Fe(3+)-Zn(2+) purple acid phosphatase
+      of the kidney bean Phaseolus vulgaris.
+
+
+      That cross-kingdom template is not arbitrary, which is the key point. PMID:16793224 identified ACP7
+      as a novel PLANT-LIKE human purple acid phosphatase, built a structural model of the human enzyme
+      on the red kidney bean structure specifically, and showed the catalytic centre is present in it.
+      UniProt&#39;&#39;s AltName &#39;&#39;Purple acid phosphatase long form&#39;&#39; is ECO:0000303 from that paper. So the
+      kidney bean is the deliberate, published choice of template for a protein argued to belong to a
+      plant-like subfamily - a considered inference rather than a distant accident.
+
+
+      What remains absent is functional testing: no activity assay, no substrate, no phenotype. The protein
+      itself is not hypothetical - UniProt records PE 1, evidence at protein level, with proteomics identification
+      - so ACP7 is uncharacterised rather than unstudied.
+
+
+      Accepted as a well-founded inference: the metallophosphoesterase fold is supported by several InterPro
+      signatures, the iron- and zinc-coordinating residues are individually annotated, and a published
+      structural model places the catalytic centre in the human protein. But it is a modelled prediction,
+      not a measured activity.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: DE            EC=3.1.3.2 {ECO:0000250|UniProtKB:P80366};
+    - reference_id: PMID:16793224
+      supporting_text: &#34;A structural model for the human enzyme was constructed based \non the red kidney\
+        \ bean purple acid phosphatase structure. This model shows that \nthe catalytic centre observed\
+        \ in other purple acid phosphatases is also present \nin this new isoform.&#34;
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid&#39;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Extracellular region, from the UniProt SubCell mapping of a Secreted assertion. That assertion
+      is ECO:0000305, inferred by a curator from the ECO:0000255 predicted signal peptide at residues
+      1-26, so it is an inference resting on a prediction. Accepted - a cleaved signal peptide with no
+      downstream transmembrane segment is a reliable indicator, the protein is glycosylated as a secreted
+      protein would be, and it is detected in proteomics - but the localisation itself has not been demonstrated
+      experimentally.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Secreted {ECO:0000305}.&#39;
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: &#39;PE   1: Evidence at protein level;&#39;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Hydrolase activity, from InterPro. Correct but two levels above the acid phosphatase term
+      derived from the same prediction, and it conveys nothing the specific term does not. Retained as
+      a non-core parent.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: &#39;CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid&#39;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &#39;Metal ion binding, from InterPro, and the best-supported annotation on this gene: UniProt
+      annotates individual BINDING features for the Fe cation (141, 170, 173, 335) and for Zn(2+) (170,
+      205, 286, 333), and the binuclear Fe-Zn centre defines the purple acid phosphatase family rather
+      than being a generic fold property. PMID:16793224&#39;&#39;s structural model shows that centre is present
+      in the human protein. Still ECO:0000250 in origin, but the residue-level conservation makes it the
+      least speculative call here. Note the more specific GO:0008270 zinc ion binding is proposed under
+      proposed_new_terms; no ferric-specific term is proposed because UniProt records the ligand as &#39;&#39;Fe
+      cation&#39;&#39; without an oxidation state.&#39;
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACP7/ACP7-uniprot.txt
+      supporting_text: FT   BINDING         205
+    - reference_id: PMID:16793224
+      supporting_text: &#34;A structural model for the human enzyme was constructed based \non the red kidney\
+        \ bean purple acid phosphatase structure. This model shows that \nthe catalytic centre observed\
+        \ in other purple acid phosphatases is also present \nin this new isoform.&#34;
+references:
+- id: PMID:16793224
+  title: Identification and molecular modeling of a novel, plant-like, human purple acid phosphatase.
+  findings:
+  - statement: ACP7 was identified as a novel human purple acid phosphatase closely related to the ~55
+      kDa plant enzymes, and a structural model built on the red kidney bean enzyme shows the canonical
+      catalytic centre is present.
+    supporting_text: &#34;A structural model for the human enzyme was constructed based \non the red kidney\
+      \ bean purple acid phosphatase structure. This model shows that \nthe catalytic centre observed\
+      \ in other purple acid phosphatases is also present \nin this new isoform.&#34;
+  - statement: The sequences identified represent a novel subfamily of plant-like purple acid phosphatases
+      in animals and humans.
+    supporting_text: &#34;These observations suggest that the sequences identified in \nthis study represent\
+      \ a novel subfamily of plant-like purple acid phosphatases in \nanimals and humans.&#34;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Cached record title matches the citation. Added after PR review pointed out that an
+      earlier draft asserted three times that no primary literature exists for this gene - a claim contradicted
+      by the UniProt file the review was itself citing, which lists this paper as the ECO:0000303 source
+      for the &#39;&#39;Purple acid phosphatase long form&#39;&#39; AltName. The error was over-reading an empty affinage
+      record: an empty provider result is evidence about the provider&#39;&#39;s coverage, not proof that no literature
+      exists. The paper also improves the review&#39;&#39;s argument, since it shows the kidney bean template
+      is a deliberate published choice for a protein argued to be plant-like, rather than an arbitrary
+      cross-kingdom transfer.&#39;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/ACP7/ACP7-deep-research-affinage.md
+  title: Affinage mechanistic annotation for ACP7 (human)
+  findings:
+  - statement: The affinage provider found no mechanistic literature for ACP7 at all; its discoveries
+      table and citation list are both empty.
+    supporting_text: No mechanistic discoveries found in literature.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &#39;Gates passed, but the record is empty - &#39;&#39;No mechanistic discoveries found in literature&#39;&#39;
+      with no citations. An earlier draft of this review treated that as positive evidence that no literature
+      exists; PMID:16793224 shows it is not. The correct reading is narrower: affinage found no MECHANISTIC
+      discoveries, which is consistent with a gene whose only paper is a bioinformatic identification
+      and structural model rather than a functional study. Useful as a signal about the kind of literature
+      present, not as proof of its absence.&#39;
+core_functions:
+- description: &#39;Predicted acid phosphatase activity. ACP7 belongs to a plant-like subfamily of purple
+    acid phosphatases and retains the residues that coordinate the binuclear Fe-Zn centre those enzymes
+    use to hydrolyse phosphate monoesters under acidic conditions; a published structural model built
+    on the red kidney bean enzyme shows the catalytic centre is present. It carries a signal peptide consistent
+    with secretion and is detected in proteomics. This core function is recorded as a prediction rather
+    than a finding: no activity has been measured for the human protein.&#39;
+  molecular_function:
+    id: GO:0003993
+    label: acid phosphatase activity
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: file:human/ACP7/ACP7-uniprot.txt
+    supporting_text: &#39;CC   -!- FUNCTION: Putative metallophosphoesterase belonging to the purple acid&#39;
+  - reference_id: PMID:16793224
+    supporting_text: &#34;A structural model for the human enzyme was constructed based \non the red kidney\
+      \ bean purple acid phosphatase structure. This model shows that \nthe catalytic centre observed\
+      \ in other purple acid phosphatases is also present \nin this new isoform.&#34;
+suggested_questions:
+- question: Does ACP7 have measurable acid phosphatase activity? Nothing has been tested. Its EC number,
+    catalytic activity, Rhea reaction and both cofactors are ECO:0000250 by similarity to the kidney bean
+    enzyme. That template is a considered choice - PMID:16793224 argues ACP7 belongs to a plant-like subfamily
+    and models it on the bean structure - but a model showing the catalytic centre is present is not a
+    demonstration that it works.
+- question: How does ACP7 differ from ACP5, the characterised human purple acid phosphatase? ACP5 (TRAP)
+    is a well-studied short-form animal PAP with known substrates and a bone-resorption phenotype. ACP7
+    is longer and argued to be plant-like, so a side-by-side comparison of substrate preference and pH
+    optimum would be the most direct route to a function, and would test whether the plant-like classification
+    has functional consequences.
+- question: Is the binuclear metal centre assembled? The Fe and Zn coordinating residues are annotated
+    individually and are the least speculative part of the record, but metal loading has never been measured.
+    A protein retaining the residues without assembling the centre would be a pseudoenzyme, a live possibility
+    for any untested member of a catalytic family.
+- question: Where is ACP7 expressed and is it secreted? Proteomic detection establishes that the protein
+    exists (UniProt PE 1), but the Secreted call is ECO:0000305 inferred from a predicted signal peptide,
+    and no tissue distribution is known.
+suggested_experiments:
+- hypothesis: ACP7 is an active acid phosphatase with an assembled Fe-Zn centre.
+  description: Express and purify recombinant ACP7, determine metal content by ICP-MS, and assay phosphomonoesterase
+    activity across a pH range against generic substrates such as p-nitrophenyl phosphate, comparing with
+    a characterised purple acid phosphatase as positive control and with a metal-site mutant as negative
+    control.
+  experiment_type: enzymology
+- hypothesis: ACP7 is secreted and expressed in a restricted tissue.
+  description: Survey ACP7 transcript and protein across human tissues, and test secretion directly by
+    expressing tagged protein and assaying conditioned medium versus cell lysate, with and without the
+    predicted signal peptide.
+  experiment_type: expression and cell biology
+- hypothesis: ACP7 has a substrate preference distinguishable from the characterised human paralog ACP5.
+  description: Assay purified ACP7 and ACP5 side by side against a phosphometabolite library and a phosphopeptide
+    array across a pH range, testing whether ACP7&#39;s plant-like classification predicts plant-PAP-like
+    substrate preferences rather than ACP5-like ones.
+  experiment_type: comparative enzymology
+proposed_new_terms:
+- proposed_name: zinc ion binding
+  proposed_definition: Binding to a zinc ion (Zn).
+  justification: &#39;Not a new term - GO:0008270 zinc ion binding already exists - but proposed as an addition
+    to this gene, since the evidence is more specific than the GO:0046872 metal ion binding currently
+    annotated. UniProt records four individual Zn(2+) BINDING features at residues 170, 205, 286 and 333,
+    and the Zn site is half of the binuclear centre that defines the purple acid phosphatase family. The
+    iron half is deliberately not proposed at the same specificity: UniProt records that ligand as &#39;&#39;Fe
+    cation&#39;&#39; (CHEBI:24875) without an oxidation state, so neither a ferric nor a ferrous term is justified,
+    and GO:0005506 iron ion binding would be the most that could be claimed.&#39;
+  proposed_parent:
+    id: GO:0046872
+    label: metal ion binding
+  supported_by:
+  - reference_id: file:human/ACP7/ACP7-uniprot.txt
+    supporting_text: FT   BINDING         205
+  - reference_id: PMID:16793224
+    supporting_text: &#34;A structural model for the human enzyme was constructed based \non the red kidney\
+      \ bean purple acid phosphatase structure. This model shows that \nthe catalytic centre observed\
+      \ in other purple acid phosphatases is also present \nin this new isoform.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAMDC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AAMDC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H7C9" target="_blank" class="term-link">
+                        Q9H7C9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AAMDC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H7C9" data-a="DESCRIPTION: AAMDC is a small cytoplasmic Mth938-domain protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AAMDC is a small cytoplasmic Mth938-domain protein whose biochemical activity is still unknown; it is the founding member of the AAMDC family and, despite having a solved structure, has no assigned catalytic or binding activity. Its name comes from work on the mouse ortholog, where the protein is highly expressed in white adipose tissue and is both sufficient and required for preadipocyte differentiation: overexpression drives 3T3-L1 differentiation without insulin, by raising CREB phosphorylation and transcriptional activity, while knockdown causes caspase-3-dependent preadipocyte apoptosis. In human cells AAMDC is best known as an oncogene within the 11q13.5-14.1 amplicon that defines the IntClust2 subgroup of estrogen receptor-positive breast cancer. There it drives PI3K-AKT-mTOR signalling - ectopic expression alone is enough to activate AKT and to support estrogen-independent tumour growth - and through that axis controls the translation of ATF4 and MYC and the expression of enzymes of the one-carbon folate, methionine and lipid metabolic pathways. AAMDC has also been reported to interact with the Rab GTPase-activating protein RABGAP1L and to colocalise with RABGAP1L and RAB7A at endolysosomes. All of the described effects are downstream cellular consequences; what AAMDC does biochemically to produce them remains the central open question about this protein.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference from MGI:MGI:1913523, which is mouse Aamdc - the true ortholog, not a paralog. The mouse gene carries its own IDA cytoplasm annotation (PMID:21622130), so this is a well-founded transfer rather than an over-propagation, and it agrees with the UniProt subcellular location for the human protein. Correct core compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045600" target="_blank" class="term-link">
+                                    GO:0045600
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of fat cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0045600" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A well-founded IBA, and the only annotation on this gene with substantial evidence behind it. The WITH/FROM field cites MGI:MGI:1913523, which is mouse Aamdc itself, and that gene carries both IDA and IMP annotations to this same term from PMID:22279136. Reading the source shows the evidence is bidirectional: overexpression of the mouse protein was sufficient to drive 3T3-L1 preadipocyte differentiation in the absence of insulin, acting through CREB phosphorylation and transcriptional activity, while siRNA knockdown caused preadipocyte apoptosis during adipogenesis. This is precisely the situation IBA exists for - a solid ortholog phenotype transferred to a human gene that has no experimental data of its own - and it is why UniProt&#39;s human FUNCTION line is an ECO:0000250 by-similarity statement about adipogenesis. Accept as the core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22279136" target="_blank" class="term-link">
+                                        PMID:22279136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results indicated that LI2 was sufficient to drive preadipocyte differentiation via modulating the phosphorylation level and transcriptional activity of CREB, coincident with expression of several adipogenic regulators and mature adipocyte markers, without insulin treatment.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22279136" target="_blank" class="term-link">
+                                        PMID:22279136
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">knockdown of the LI2 protein resulted in preadipocyte apoptosis via caspase-3 activation during adipogenesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">May play a role in preadipocyte differentiation and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automatic annotation combining UniProt SubCell mapping with orthology to mouse Aamdc (UniProtKB:Q8R0P4). Consistent with the IBA and ISS cytoplasm annotations and with the UniProt subcellular location. Correct core compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with ACY3 (UniProtKB:Q96HD9) from a proteome-scale yeast two-hybrid map. Reported by a single publication with no functional follow-up - the NbExp=3 in the UniProt line below counts assay replicates within that one study, not independent studies - and bare &#34;protein binding&#34; conveys nothing about AAMDC&#39;s activity in any case. Notably, none of the eight protein-binding annotations on this gene recovered RABGAP1L or RAB7A, the only AAMDC interaction that has been followed up functionally, so the GOA binding record is orthogonal to what is known about the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Isolated high-throughput two-hybrid hit; uninformative term with no supporting biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; Q96HD9: ACY3; NbExp=3; IntAct=EBI-10308705, EBI-3916242;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with GORASP2/GRASP55 (UniProtKB:Q9H8Y8) from the same proteome-scale two-hybrid map. Reported by that one publication only (the NbExp=3 below counts assay replicates within it), no functional follow-up, and no described connection between AAMDC and Golgi stacking or unconventional secretion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Isolated high-throughput two-hybrid hit; uninformative term with no supporting biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; Q9H8Y8: GORASP2; NbExp=3; IntAct=EBI-10308705, EBI-739467;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with VPS9D1 (UniProtKB:Q9Y2B5) from the human binary interactome reference map. Reported by that one publication only (the NbExp=3 below counts assay replicates within it), with no functional follow-up. A VPS9-domain protein is at least topically compatible with the reported endolysosomal colocalisation of AAMDC, but nothing connects the two observations and no study has pursued this pair.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Isolated high-throughput hit; uninformative term. Recorded rather than removed because the partner is not implausible, but it carries no annotation value as it stands.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; Q9Y2B5: VPS9D1; NbExp=3; IntAct=EBI-10308705, EBI-9031083;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with APP isoform 2 (UniProtKB:P05067-2), one of five partners this single screen contributed for AAMDC. The screen was one systematic yeast two-hybrid pass over ~500 neurodegeneration-related baits, and a small uncharacterised protein scoring against APP, huntingtin, ataxin-3, dynamin-2 and GDAP1 all within that one pass is more consistent with a promiscuous hit than with five distinct biological interactions. None of the five has been independently replicated or followed up, and AAMDC has no described role in neurodegeneration. (The paper&#39;s title phrase &#34;Widespread Protein Aggregation in Affected Brains&#34; refers to aggregation observed in postmortem patient tissue, not to the interaction dataset; that phrase is not evidence about these Y2H hits and is no longer relied on here.)
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One of a five-partner block contributed by a single systematic Y2H pass over ~500 neurodegeneration baits; no independent replication, no follow-up, and an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; P05067-2: APP; NbExp=3; IntAct=EBI-10308705, EBI-17264467;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with huntingtin (UniProtKB:P42858) from the same neurodegeneration interactome screen. Same assessment as the APP entry: part of a five-partner block from one systematic Y2H pass, not independently replicated and never followed up.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One of a five-partner block contributed by a single systematic Y2H pass over ~500 neurodegeneration baits; no independent replication, no follow-up, and an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; P42858: HTT; NbExp=3; IntAct=EBI-10308705, EBI-466029;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with dynamin-2 isoform 2 (UniProtKB:P50570-2) from the same neurodegeneration interactome screen. Same assessment as the other members of that five-partner block from a single Y2H pass.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One of a five-partner block contributed by a single systematic Y2H pass over ~500 neurodegeneration baits; no independent replication, no follow-up, and an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; P50570-2: DNM2; NbExp=3; IntAct=EBI-10308705, EBI-10968534;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with ataxin-3 (UniProtKB:P54252) from the same neurodegeneration interactome screen. Same assessment as the other members of that five-partner block from a single Y2H pass.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One of a five-partner block contributed by a single systematic Y2H pass over ~500 neurodegeneration baits; no independent replication, no follow-up, and an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; P54252: ATXN3; NbExp=3; IntAct=EBI-10308705, EBI-946046;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with GDAP1 (UniProtKB:Q8TB36) from the same neurodegeneration interactome screen, completing the five-partner block. Same assessment as the others: one Y2H pass, no independent replication, no follow-up.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> One of a five-partner block contributed by a single systematic Y2H pass over ~500 neurodegeneration baits; no independent replication, no follow-up, and an uninformative term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9H7C9; Q8TB36: GDAP1; NbExp=3; IntAct=EBI-10308705, EBI-11110431;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of the cytoplasmic location from mouse Aamdc (UniProtKB:Q8R0P4), which has this location by IDA. Redundant with the IBA and IEA entries but correct, and it rests on the same well-supported ortholog relationship.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051897" target="_blank" class="term-link">
+                                    GO:0051897
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33772001
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oncogene AAMDC links PI3K-AKT-mTOR signaling with metabo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0051897" data-r="PMID:33772001" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation, and the only biological process for which there is direct human experimental evidence. AAMDC is an oncogene within the 11q13.5-14.1 amplicon of IntClust2 estrogen receptor-positive breast cancer, and ectopic expression of AAMDC alone is sufficient to activate AKT signalling and to support estrogen-independent tumour growth. The same study shows AAMDC controls PI3K-AKT-mTOR signalling more broadly, regulating the translation of ATF4 and MYC. The evidence is bidirectional: the converse shRNA knockdowns inhibit AKT activation (reduced p-S473 and p-T308) and downregulate the PI3K-AKT-mTOR axis, so the direction of effect is established by both gain and loss of function rather than by a correlative association. GOA currently records no human-derived biological process for this gene at all.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Adds the only human experimentally supported process; complements the mouse-derived adipogenesis IBA, which describes a different cellular context. Evidence code is IMP: the experiments are ectopic overexpression and shRNA knockdown, both of which are mutant/altered-gene-product phenotypes under GO evidence-code guidance, not direct assay of the gene product (IDA).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                        PMID:33772001
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in estrogen-independent tumor growth.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                        PMID:33772001
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The AAMDC KDs inhibited activation of AKT relative to controls, as indicated by a reduction in p-S473 and p-T308 levels</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                        PMID:33772001
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AAMDC knockdowns downregulate the PI3K-AKT-mTOR axis through translational suppression of MYC and ATF4</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                        PMID:33772001
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the translation of ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent promoters.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AAMDC/AAMDC-deep-research-affinage.md
+
+                                </span>
+
+                                <div class="support-text">AAMDC is an oncogenic signaling regulator amplified in estrogen receptor-positive breast cancer that drives estrogen-independent tumor growth by activating the PI3K-AKT-mTOR axis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036019" target="_blank" class="term-link">
+                                    GO:0036019
+                                </a>
+                            </span>
+                            <span class="term-label">endolysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33772001
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The oncogene AAMDC links PI3K-AKT-mTOR signaling with metabo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H7C9" data-a="GO:0036019" data-r="PMID:33772001" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation, offered with an explicit caveat. AAMDC was reported to interact with the Rab GTPase-activating protein RABGAP1L, and AAMDC, RABGAP1L and RAB7A were shown to colocalise in endolysosomes. RAB7A is a canonical late endosome/lysosome marker, so the compartment assignment is coherent. However the evidence is imaging colocalisation from a single study, and the authors themselves hedge (&#34;we provide evidence that AAMDC can interact&#34;). Colocalisation is weaker than co-residence in a complex, so this is proposed as a secondary, non-core location that does not displace the well-supported cytoplasmic annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Records a specific, mechanistically interesting compartment that GOA lacks entirely, while flagging that it rests on single-study colocalisation rather than fractionation or a defined complex. &#34;Non-core&#34; here means secondary to the cytoplasmic annotation, not excluded: the term is retained in core_functions.locations for the PI3K-AKT-mTOR function alongside GO:0005737, because it is the only compartment reported for the RABGAP1L/RAB7A association that function describes. Note also that GO:0036019 endolysosome is a specific hybrid intermediate compartment; light-microscopy colocalisation with RAB7A cannot by itself distinguish it from late endosome (GO:0005770) or lysosome (GO:0005764), so the exact compartment term should be treated as provisional pending fractionation or marker-resolved imaging.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                        PMID:33772001
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we provide evidence that AAMDC can interact with the RabGTPase-activating protein RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Promotion of adipocyte differentiation. This is the best-evidenced role of the protein, established for the mouse ortholog by bidirectional perturbation: overexpression is sufficient to drive preadipocyte differentiation without insulin, raising CREB phosphorylation and transcriptional activity and inducing adipogenic regulators and mature adipocyte markers, while knockdown causes caspase-3-dependent preadipocyte apoptosis. The human protein is inferred to share this role by orthology (IBA) and has no experimental adipogenesis data of its own. No molecular function is assigned, because none is known - the biochemical activity of this Mth938-domain protein remains undetermined.</h3>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="FUNCTION: Promotion of adipocyte differentiation. This is th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045600" target="_blank" class="term-link">
+                                positive regulation of fat cell differentiation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22279136" target="_blank" class="term-link">
+                                PMID:22279136
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our results indicated that LI2 was sufficient to drive preadipocyte differentiation via modulating the phosphorylation level and transcriptional activity of CREB, coincident with expression of several adipogenic regulators and mature adipocyte markers, without insulin treatment.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AAMDC/AAMDC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">May play a role in preadipocyte differentiation and</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activation of PI3K-AKT-mTOR signalling in human cells. AAMDC is an oncogene in the 11q13.5-14.1 amplicon that defines the IntClust2 subgroup of estrogen receptor-positive breast cancer, where ectopic expression alone is sufficient to activate AKT and to support estrogen-independent tumour growth. Downstream it controls translation of ATF4 and MYC and the expression of one-carbon folate, methionine and lipid metabolic enzymes, and it has been reported to assemble with RABGAP1L and RAB7A at endolysosomes. As with adipogenesis, the mechanism by which AAMDC produces these effects is unknown, so no molecular function is asserted.</h3>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="FUNCTION: Activation of PI3K-AKT-mTOR signalling in human ce..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051897" target="_blank" class="term-link">
+                                positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036019" target="_blank" class="term-link">
+                                endolysosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                PMID:33772001
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in estrogen-independent tumor growth.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                                PMID:33772001
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we provide evidence that AAMDC can interact with the RabGTPase-activating protein RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22279136" target="_blank" class="term-link">
+                            PMID:22279136
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LOC66273 isoform 2, a novel protein highly expressed in white adipose tissue, induces adipogenesis in 3T3-L1 cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression of the mouse AAMDC ortholog (LOC66273 isoform 2, &#34;LI2&#34;) was sufficient to drive 3T3-L1 preadipocyte differentiation without insulin, acting through CREB phosphorylation and transcriptional activity.</div>
+
+                        <div class="finding-text">"Our results indicated that LI2 was sufficient to drive preadipocyte differentiation via modulating the phosphorylation level and transcriptional activity of CREB, coincident with expression of several adipogenic regulators and mature adipocyte markers, without insulin treatment."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Knockdown of the protein caused preadipocyte apoptosis via caspase-3 activation during adipogenesis, giving loss-of-function support alongside the gain-of-function result.</div>
+
+                        <div class="finding-text">"knockdown of the LI2 protein resulted in preadipocyte apoptosis via caspase-3 activation during adipogenesis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33772001" target="_blank" class="term-link">
+                            PMID:33772001
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The oncogene AAMDC links PI3K-AKT-mTOR signaling with metabolic reprograming in estrogen receptor-positive breast cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ectopic AAMDC expression alone is sufficient to activate AKT signalling and to support estrogen-independent tumour growth, establishing a causal rather than correlative role in PI3K-AKT-mTOR activation.</div>
+
+                        <div class="finding-text">"Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in estrogen-independent tumor growth."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AAMDC controls PI3K-AKT-mTOR signalling, the translation of ATF4 and MYC, and the transcriptional activity of AAMDC-dependent promoters.</div>
+
+                        <div class="finding-text">"We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the translation of ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent promoters."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AAMDC regulates expression of metabolic enzymes of the one-carbon folate and methionine cycles and of lipid metabolism.</div>
+
+                        <div class="finding-text">"We uncover that AAMDC regulates the expression of several metabolic enzymes involved in the one-carbon folate and methionine cycles, and lipid metabolism."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AAMDC interacts with the Rab GTPase-activating protein RABGAP1L, and AAMDC, RABGAP1L and RAB7A colocalise in endolysosomes.</div>
+
+                        <div class="finding-text">"we provide evidence that AAMDC can interact with the RabGTPase-activating protein RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36789094" target="_blank" class="term-link">
+                            PMID:36789094
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Solanine Represses Gastric Cancer Growth by Mediating Autophagy Through AAMDC/MYC/ATF4/Sesn2 Signaling Pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/AAMDC/AAMDC-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Is a molecular function assignable to AAMDC from its family?</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Family-wide analysis of Pfam PF04430 (DUF498) run for this review: of 13 reviewed Swiss-Prot members, none carries an experimentally supported molecular function term or a UniProt CATALYTIC ACTIVITY block, and four carry an explicit GO:0003674 ND. The absence of a molecular function for AAMDC is a property of the whole family rather than an oversight on this gene.</div>
+
+                        <div class="finding-text">"No member of this family carries any experimentally supported molecular function term."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The one characterised branch of the family is NDUFAF3, an assembly factor for mitochondrial complex I in every organism studied - a non-catalytic protein that binds subunits and helps build a complex. The family signal therefore points away from a hidden enzymatic activity and toward an assembly or chaperone-like role.</div>
+
+                        <div class="finding-text">"NDUFAF3 is an **assembly factor, not an enzyme**: it has no catalytic activity, it binds subunits and helps build a complex, and it is not part of the finished complex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/AAMDC/AAMDC-deep-research-affinage.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Affinage mechanistic annotation for AAMDC (human)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Machine-fetched Affinage record (trust gates passed) describing AAMDC as an oncogenic PI3K-AKT-mTOR regulator amplified in ER-positive breast cancer that interacts with RABGAP1L and colocalises with RAB7A at endolysosomes, and explicitly noting that the biochemical activity of AAMDC itself has not been characterised.</div>
+
+                        <div class="finding-text">"Beyond these findings, the biochemical activity of AAMDC itself and the structural basis of its signaling and RabGAP1L interaction have not been characterized in the available corpus."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What does AAMDC actually do biochemically? This is the central gap, and a family-wide analysis run for this review (see file:human/AAMDC/AAMDC-bioinformatics/RESULTS.md) shows it is not specific to this gene: of the 13 reviewed Swiss-Prot members of Pfam PF04430 (aptly named DUF498, &#34;domain of unknown function&#34;), zero carry any experimentally supported molecular function term and zero have a UniProt CATALYTIC ACTIVITY block, while four carry an explicit GO:0003674 ND. The protein has a solved structure and a defined Mth938 domain, yet every described effect - adipogenesis, AKT activation, ATF4/MYC translation - is a downstream cellular consequence rather than an activity.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: What does AAMDC actually do biochemically? This is..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does AAMDC help assemble a protein complex? The family analysis gives a concrete direction. The other branch of PF04430 is NDUFAF3, whose function is consistent across every organism studied: an assembly factor for mitochondrial complex I, a protein that binds subunits and helps build a complex without being part of the finished product and without any catalytic activity. If the MTH938 fold is an assembly-factor fold, the right question for AAMDC is not what it catalyses but what it helps assemble - which would also explain why no molecular function has ever been found for any member of this family.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: Does AAMDC help assemble a protein complex? The fa..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the Mth938 domain and its bacterial and archaeal homologues suggest a conserved activity that could be tested directly? A structure-guided comparison with characterised Mth938-fold proteins might propose a candidate biochemical function where cell-biological approaches have not.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: Do the Mth938 domain and its bacterial and archaea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the AAMDC-RABGAP1L interaction direct and stoichiometric, and does AAMDC regulate RABGAP1L&#39;s GAP activity toward RAB7A? If so, AAMDC would acquire a genuine molecular function and a mechanistic link between its endolysosomal localisation and its effect on mTOR signalling, which is itself regulated at the lysosome.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: Is the AAMDC-RABGAP1L interaction direct and stoic..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the adipogenesis role in mouse and the PI3K-AKT-mTOR role in human cancer cells the same underlying activity in two contexts, or genuinely different functions? AKT signalling is central to adipogenesis, so a single mechanism is plausible and would consolidate two currently disconnected literatures.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: Are the adipogenesis role in mouse and the PI3K-AK..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human AAMDC promote adipocyte differentiation? The GO:0045600 annotation is entirely IBA from mouse. Direct testing in human preadipocytes would convert this gene&#39;s best-supported annotation into experimental evidence, or reveal a species difference.</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="Q: Does human AAMDC promote adipocyte differentiation..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute purified AAMDC, RABGAP1L and RAB7A in vitro and measure RAB7A GTP hydrolysis with and without AAMDC, then test in cells whether AAMDC depletion changes the RAB7A-GTP load and mTORC1 recruitment to lysosomes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AAMDC modulates RABGAP1L GAP activity toward RAB7A, coupling it to lysosomal mTORC1 signalling.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro reconstitution and cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="EXPERIMENT: Reconstitute purified AAMDC, RABGAP1L and RAB7A in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Screen purified recombinant AAMDC against broad metabolite, nucleotide and metal panels by thermal shift and native mass spectrometry to identify any bound ligand or cofactor, combined with structure-based comparison to characterised Mth938-fold proteins. Aimed squarely at the missing molecular function.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The Mth938 domain has a conserved biochemical activity detectable by unbiased screening.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biophysics and structural bioinformatics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="EXPERIMENT: Screen purified recombinant AAMDC against broad me..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare the transcriptional and phosphoproteomic response to AAMDC gain and loss of function in 3T3-L1 preadipocytes and in IntClust2 breast cancer lines, testing in particular whether the adipogenic effect requires AKT and whether the oncogenic effect requires CREB.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AAMDC&#39;s adipogenic and oncogenic roles are the same activity in different contexts.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative functional genomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="EXPERIMENT: Compare the transcriptional and phosphoproteomic r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Re-test the AAMDC interactions with APP, HTT, ATXN3, DNM2 and GDAP1 by co-immunoprecipitation at endogenous expression levels, and check whether AAMDC scores as a promiscuous partner across unrelated aggregation-prone baits. A negative result would justify removing these annotations outright rather than only flagging them.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The five neurodegeneration-panel interactions are aggregation artefacts, not biology.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction validation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H7C9" data-a="EXPERIMENT: Re-test the AAMDC interactions with APP, HTT, ATXN..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Affinage</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AAMDC-deep-research-affinage.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H7C9" data-a="DEEP_RESEARCH: Affinage" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Affinage mechanistic annotation for AAMDC (human)</span>
+
+
+                    <span class="report-badge">Affinage</span>
+
+
+                    <span class="report-badge">Affinage (Claude Sonnet reading pass + Opus synthesis pass)</span>
+
+
+                    <span class="report-badge">2 citations</span>
+
+
+
+
+
+                </div>
+
+
+                <h1 id="affinage-mechanistic-annotation-for-aamdc-human">Affinage mechanistic annotation for AAMDC (human)</h1>
+<h2 id="current-model-mechanistic-narrative">Current model (mechanistic narrative)</h2>
+<p>AAMDC is an oncogenic signaling regulator amplified in estrogen receptor-positive breast cancer that drives estrogen-independent tumor growth by activating the PI3K-AKT-mTOR axis <a href="https://pubmed.ncbi.nlm.nih.gov/33772001">PMID:33772001</a>. Downstream of this signaling, AAMDC controls the translational upregulation of ATF4 and MYC and the transcriptional output of AAMDC-dependent promoters, and ectopic AAMDC expression is sufficient to activate AKT <a href="https://pubmed.ncbi.nlm.nih.gov/33772001">PMID:33772001</a>. Through these effectors AAMDC reprograms cellular metabolism, governing the expression of enzymes in the one-carbon folate, methionine, and lipid metabolism pathways <a href="https://pubmed.ncbi.nlm.nih.gov/33772001">PMID:33772001</a>. AAMDC physically interacts with the Rab GTPase-activating protein RabGAP1L and colocalizes with RabGAP1L and Rab7a at endolysosomes, forming an assembly platform that links it to the endolysosomal compartment <a href="https://pubmed.ncbi.nlm.nih.gov/33772001">PMID:33772001</a>. Beyond these findings, the biochemical activity of AAMDC itself and the structural basis of its signaling and RabGAP1L interaction have not been characterized in the available corpus.</p>
+<h2 id="affinage-mechanism-profile-affinages-own-goreactome-grounding">Affinage mechanism profile (Affinage's own GO/Reactome grounding)</h2>
+<ul>
+<li><strong>molecular_activity:</strong> <em>(none)</em></li>
+<li><strong>localization:</strong> GO:0005764 lysosome, GO:0005768 endosome</li>
+<li><strong>pathway (Reactome):</strong> R-HSA-162582 Signal Transduction</li>
+<li><strong>partners:</strong> RABGAP1L, RAB7A</li>
+<li><strong>complexes:</strong> <em>(none)</em></li>
+</ul>
+<h2 id="dated-findings-citation-anchored">Dated findings (citation-anchored)</h2>
+<table>
+<thead>
+<tr>
+<th>Year</th>
+<th>Confidence</th>
+<th>Finding</th>
+<th>PMIDs</th>
+<th>Journal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2021</td>
+<td>Medium</td>
+<td>AAMDC regulates PI3K-AKT-mTOR signaling, controlling the translational regulation of ATF4 and MYC, and modulating the transcriptional activity of AAMDC-dependent promoters; ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in estrogen-independent tumor growth in estrogen receptor-positive breast cancer models.</td>
+<td>PMID:33772001</td>
+<td>Nature communications</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>Medium</td>
+<td>AAMDC regulates the expression of metabolic enzymes involved in the one-carbon folate and methionine cycles and lipid metabolism in estrogen receptor-positive breast cancer cells.</td>
+<td>PMID:33772001</td>
+<td>Nature communications</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>Medium</td>
+<td>AAMDC physically interacts with the RabGTPase-activating protein RabGAP1L, and AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes, forming an assembly platform.</td>
+<td>PMID:33772001</td>
+<td>Nature communications</td>
+</tr>
+<tr>
+<td>2023</td>
+<td>Low</td>
+<td>AAMDC promotes autophagy in gastric cancer cells through the AAMDC/MYC/ATF4/Sesn2 signaling pathway; overexpression of AAMDC reversed the inhibitory effect of solanine on autophagy, placing AAMDC upstream of MYC, ATF4, and Sesn2 in this pathway.</td>
+<td>PMID:36789094</td>
+<td>Drug design, development and therapy</td>
+</tr>
+</tbody>
+</table>
+<h2 id="citations">Citations</h2>
+<ul>
+<li>PMID:33772001</li>
+<li>PMID:36789094</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AAMDC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H7C9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aamdc-mth938-domain-containing-protein-review-notes">AAMDC (Mth938 domain-containing protein) — review notes</h1>
+<p>PAINT no-IBA project review, using the <code>affinage</code> deep-research provider<br />
+(<code>AAMDC-deep-research-affinage.md</code>, gates passed) plus UniProt Q9H7C9, the GOA TSV and the<br />
+primary literature.</p>
+<h2 id="headline-the-ibas-here-are-good-and-the-protein-binding-set-is-worthless">Headline: the IBAs here are <em>good</em>, and the <code>protein binding</code> set is worthless</h2>
+<p>This gene is the near-mirror-image of A1BG (reviewed earlier in this campaign), which makes<br />
+it a useful calibration point. There, the IBAs were wrong and needed removal. Here they are<br />
+the <strong>only</strong> annotations with real evidence behind them, and the experimental-looking <code>IPI</code><br />
+annotations are the ones that should be discounted.</p>
+<h2 id="the-two-ibas-both-trace-to-a-genuine-mouse-ortholog-with-primary-data">The two IBAs both trace to a genuine mouse ortholog with primary data</h2>
+<p>Both IBAs cite <code>MGI:MGI:1913523</code>, which is <strong>mouse <em>Aamdc</em></strong> — the true ortholog, not a<br />
+paralog. Its own GO record carries, from PMID:22279136:</p>
+<ul>
+<li><code>GO:0045600 positive regulation of fat cell differentiation</code> — <strong>IDA <em>and</em> IMP</strong></li>
+<li><code>GO:0045944 positive regulation of transcription by RNA polymerase II</code> — IDA</li>
+<li><code>GO:0043066 negative regulation of apoptotic process</code> — IMP</li>
+</ul>
+<p>and <code>GO:0005737 cytoplasm</code> by IDA from PMID:21622130.</p>
+<p>Reading the source paper confirms the adipogenesis annotation is well-founded and<br />
+bidirectional — gain of function <em>and</em> loss of function<br />
+[PMID:22279136, "Our results indicated that LI2 was sufficient to drive preadipocyte<br />
+differentiation via modulating the phosphorylation level and transcriptional activity of<br />
+CREB"] and [PMID:22279136, "knockdown of the LI2 protein resulted in preadipocyte apoptosis<br />
+via caspase-3 activation during adipogenesis"]. (The mouse gene was called <em>LOC66273</em><br />
+isoform 2 / "LI2" in that paper; hence the "adipogenesis associated" in the human gene name.)</p>
+<p>So <code>GO:0045600</code> is exactly what IBA is for: a solid ortholog phenotype transferred to a human<br />
+gene with no experimental data of its own. <strong>ACCEPT.</strong> UniProt's own FUNCTION line for human<br />
+AAMDC is <code>ECO:0000250</code> (by similarity) for the same reason<br />
+[file:human/AAMDC/AAMDC-uniprot.txt, "May play a role in preadipocyte differentiation and"].</p>
+<h2 id="the-eight-protein-binding-ipis-are-all-high-throughput-and-five-are-a-classic-artefact">The eight <code>protein binding</code> IPIs are all high-throughput, and five are a classic artefact</h2>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Screen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACY3 (Q96HD9), GORASP2 (Q9H8Y8)</td>
+<td>PMID:25416956 (Rolland HI-II-14) Y2H</td>
+</tr>
+<tr>
+<td>VPS9D1 (Q9Y2B5)</td>
+<td>PMID:32296183 HuRI</td>
+</tr>
+<tr>
+<td><strong>APP-2, HTT, ATXN3, DNM2-2, GDAP1</strong></td>
+<td><strong>PMID:32814053</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The five-partner block from PMID:32814053 is the giveaway. That paper is <em>"Interactome<br />
+Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread<br />
+Protein Aggregation in Affected Brains"</em> — but note that title phrase refers to<br />
+aggregation seen in postmortem patient brain tissue, not to the interaction dataset. The<br />
+argument against these five rests on the screen design instead: one systematic Y2H pass over<br />
+~500 neurodegeneration-related baits, with a single small uncharacterised protein scoring<br />
+against five of them and no independent replication or follow-up for any pair. AAMDC has no<br />
+described role in neurodegeneration.</p>
+<p>The remaining three are single-publication Y2H hits (UniProt's <code>NbExp=3</code> counts assay<br />
+replicates within one study, not independent studies).</p>
+<p><strong>The most telling observation: not one of the eight recovered RABGAP1L or RAB7A</strong> — the only<br />
+AAMDC interaction with functional follow-up in the literature. The GOA binding record for this<br />
+gene is entirely orthogonal to its known biology. All eight are marked over-annotated.</p>
+<h2 id="what-the-human-literature-actually-shows">What the human literature actually shows</h2>
+<p>One substantial human paper, PMID:33772001 (Nat Commun 2021), studying AAMDC as an oncogene in<br />
+the 11q13.5–14.1 (IntClust2) amplicon of ER+ breast cancer:</p>
+<ul>
+<li><strong>AKT activation is causal, not correlative</strong> —<br />
+  [PMID:33772001, "Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting<br />
+  in estrogen-independent tumor growth."] This supports a <code>NEW</code> <code>GO:0051897</code> annotation, and is<br />
+  the only human functional annotation this gene can currently carry.</li>
+<li><strong>PI3K-AKT-mTOR control and metabolic reprogramming</strong> —<br />
+  [PMID:33772001, "We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the<br />
+  translation of ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent<br />
+  promoters."]</li>
+<li><strong>RABGAP1L/RAB7A endolysosomal platform</strong> —<br />
+  [PMID:33772001, "we provide evidence that AAMDC can interact with the RabGTPase-activating<br />
+  protein RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes."] Note<br />
+  the authors' own hedge ("can interact", "provide evidence"). Colocalisation is not<br />
+  co-residence in a complex, so <code>GO:0036019 endolysosome</code> is proposed but flagged as resting<br />
+  on colocalisation from a single study.</li>
+</ul>
+<h2 id="the-molecular-function-is-genuinely-unknown">The molecular function is genuinely unknown</h2>
+<p>Worth stating plainly, because it is the main knowledge gap: <strong>AAMDC has no molecular function<br />
+annotation of any kind, and none is currently justifiable.</strong> Mouse <em>Aamdc</em> even carries an<br />
+explicit <code>GO:0003674 molecular_function</code> <strong>ND</strong> (no data). The protein is a small Mth938-domain<br />
+protein with a solved structure but no assigned activity, and affinage's <code>mechanism_profile</code><br />
+reports <code>molecular_activity: (none)</code> — the provider agreeing there is nothing to ground. Every<br />
+described effect (adipogenesis, AKT activation, ATF4/MYC translation) is a downstream cellular<br />
+consequence, not a biochemical activity. I have deliberately <strong>not</strong> invented an MF term.</p>
+<h3 id="tested-not-just-asserted">Tested, not just asserted</h3>
+<p>A negative claim deserves evidence, so I ran a family-wide analysis<br />
+(<code>AAMDC-bioinformatics/analyze_mth938.py</code> → <code>RESULTS.md</code>; every figure fetched at run time<br />
+from the InterPro, UniProt and QuickGO REST APIs, re-runnable). Enumerating every reviewed<br />
+Swiss-Prot member of AAMDC's Pfam family <strong>PF04430 — aptly named DUF498, "domain of unknown<br />
+function"</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Reviewed family members</th>
+<th>13</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>With any experimental MF term (excluding bare protein binding)</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>With an explicit <code>GO:0003674</code> <strong>ND</strong></td>
+<td>4</td>
+</tr>
+<tr>
+<td>With a UniProt CATALYTIC ACTIVITY block</td>
+<td><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The missing molecular function is a property of the <strong>entire family</strong>, not an oversight on<br />
+this gene.</p>
+<h3 id="and-the-family-points-somewhere-specific">And the family points somewhere specific</h3>
+<p>The family is not wholly uncharacterised. Its other branch is <strong>NDUFAF3</strong>, with a consistent<br />
+function in every organism studied — human, mouse, rat, bovine, zebrafish, Xenopus,<br />
+Drosophila — an <strong>assembly factor for mitochondrial complex I</strong>, the Drosophila entry<br />
+experimentally supported (PubMed:34386730).</p>
+<p>That is informative in a particular way. NDUFAF3 is an assembly factor, <em>not an enzyme</em>: it<br />
+binds subunits, helps build a complex, has no catalytic activity, and is not part of the<br />
+finished product. Consistent with that, no member of this family — NDUFAF3 included — has a<br />
+catalytic activity block or an experimental MF term.</p>
+<p>So the family signal does <strong>not</strong> suggest a hidden enzymatic activity awaiting discovery. It<br />
+suggests a protein-assembly or chaperone-like role — precisely the class of function GO<br />
+cannot currently express as a molecular function (see the AAGAB review in this campaign,<br />
+where the same gap was filed under <code>proposed_new_terms</code>). Two genes in, that is twice the<br />
+same structural limitation in GO.</p>
+<p>The right experimental question is therefore probably not "what does AAMDC catalyse?" but<br />
+"what does it help assemble?"</p>
+<h2 id="where-the-localisation-bar-sits-and-why">Where the localisation bar sits, and why</h2>
+<p>PMID:33772001 reports three localisation observations; only one is annotated, so the<br />
+asymmetry is worth stating.</p>
+<ul>
+<li><strong>Endolysosome (annotated, non-core).</strong> AAMDC, RABGAP1L and RAB7A colocalise there. Taken,<br />
+  because it is tied to a specific named interaction the paper pursues mechanistically —<br />
+  with the caveat now in the annotation that <code>GO:0036019</code> denotes the <em>transient hybrid<br />
+  organelle</em> from late-endosome/lysosome fusion, which IF colocalisation with RAB7A (a broad<br />
+  late-endosome/lysosome marker) cannot resolve.</li>
+<li><strong>Nuclear and plasma-membrane staining (not annotated).</strong> The same paper reports AAMDC "in<br />
+  both cytoplasmic and nuclear compartments, accompanied by plasma membrane staining<br />
+  depending on the cell line analyzed". Cell-line-dependent IHC with no functional experiment<br />
+  attached, and not pursued by the paper.</li>
+<li><strong>Endosomal trafficking (not annotated).</strong> A knockdown lysosomal phenotype is said to<br />
+  substantiate "a role of AAMDC in the regulation of endosomal trafficking". Left out: a<br />
+  single-sentence interpretation of a phenotype, and a trafficking-regulation annotation on a<br />
+  protein with no known molecular function would be exactly the over-reach this review<br />
+  otherwise avoids.</li>
+</ul>
+<p>The bar: a compartment is annotated when a named, mechanistically pursued interaction puts it<br />
+there — not on staining pattern, and not on a phenotype's interpretation alone.</p>
+<h2 id="actions">Actions</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Evidence</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0045600</code> positive regulation of fat cell differentiation</td>
+<td>IBA</td>
+<td>ACCEPT</td>
+</tr>
+<tr>
+<td><code>GO:0005737</code> cytoplasm</td>
+<td>IBA, IEA, ISS</td>
+<td>ACCEPT</td>
+</tr>
+<tr>
+<td><code>GO:0005515</code> protein binding ×8</td>
+<td>IPI</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+</tr>
+<tr>
+<td><code>GO:0051897</code> positive regulation of PI3K/AKT signal transduction</td>
+<td>IDA (proposed)</td>
+<td>NEW</td>
+</tr>
+<tr>
+<td><code>GO:0036019</code> endolysosome</td>
+<td>IDA (proposed)</td>
+<td>NEW</td>
+</tr>
+</tbody>
+</table>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H7C9" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="is-a-molecular-function-assignable-to-aamdc-from-its-family">Is a molecular function assignable to AAMDC from its family?</h1>
+<p>Generated by <code>analyze_mth938.py</code>. Every number below is fetched at run time from<br />
+the InterPro, UniProt and QuickGO REST APIs; re-run to refresh.</p>
+<h2 id="question">Question</h2>
+<p>The AAMDC review concludes that no molecular function is currently justifiable for<br />
+this protein. That is a negative claim. This analysis tests it the only way a<br />
+negative claim can be tested: enumerate the whole protein family and ask whether<br />
+<em>any</em> member has an experimentally supported molecular function that could transfer.</p>
+<h2 id="family-definition">Family definition</h2>
+<p>Fetched from the InterPro API at run time:</p>
+<ul>
+<li><strong>IPR007523</strong> — NDUFAF3/Mth938 domain-containing protein (type: family)</li>
+<li>8621 proteins in UniProtKB carry this signature</li>
+<li>panther: PTHR21192 — NUCLEAR PROTEIN E3-3</li>
+<li>pfam: PF04430 — Protein of unknown function (DUF498/DUF598)</li>
+</ul>
+<p>Members enumerated below are the <strong>reviewed (Swiss-Prot)</strong> entries carrying Pfam<br />
+<strong>PF04430</strong> — a small, manually curated subset of all proteins with the signature,<br />
+chosen because only reviewed entries carry curated function statements and GO<br />
+annotations worth counting.</p>
+<h2 id="result">Result</h2>
+<table>
+<thead>
+<tr>
+<th>Reviewed family members</th>
+<th>13</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO annotations successfully retrieved for</td>
+<td>13 of 13</td>
+</tr>
+<tr>
+<td>With <strong>any</strong> experimental MF term (excluding bare protein binding)</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>With an explicit <code>GO:0003674</code> <strong>ND</strong> (curator: no function known)</td>
+<td>4</td>
+</tr>
+<tr>
+<td>With a UniProt CATALYTIC ACTIVITY block</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>No member of this family carries any experimentally supported molecular<br />
+function term.</strong> The absence of an MF annotation on AAMDC is therefore not an<br />
+oversight specific to this gene: it is a property of the entire family.</p>
+<h2 id="what-the-one-characterised-relative-does">What the one characterised relative does</h2>
+<p>The family is not entirely uncharacterised. 7 of its 13<br />
+reviewed members carry a UniProt FUNCTION statement about mitochondrial<br />
+complex I assembly, and all of them are <strong>NDUFAF3</strong> entries. That branch is an<br />
+<strong>assembly factor for mitochondrial complex I</strong>, consistently across every<br />
+organism in which it has been studied; the Drosophila entry cites experimental<br />
+evidence (PubMed:34386730).</p>
+<p>This is informative in a specific way. NDUFAF3 is an <strong>assembly factor, not an<br />
+enzyme</strong>: it has no catalytic activity, it binds subunits and helps build a complex,<br />
+and it is not part of the finished complex. Consistent with that, no member of this<br />
+family - including NDUFAF3 itself - carries a CATALYTIC ACTIVITY block or an<br />
+experimental molecular function term.</p>
+<p>So the family signal does <em>not</em> point toward a hidden enzymatic activity waiting to<br />
+be found for AAMDC. It points toward a protein-assembly / chaperone-like role, which<br />
+is a class of function GO struggles to express as a molecular function in any case<br />
+(there is no assembly-chaperone MF term; see the AAGAB review in this campaign).<br />
+That makes the AAMDC review's refusal to assign an MF the right call, and it also<br />
+suggests where to look experimentally: what complex, if any, does AAMDC help<br />
+assemble?</p>
+<h2 id="members">Members</h2>
+<table>
+<thead>
+<tr>
+<th>Accession</th>
+<th>Entry</th>
+<th>Organism</th>
+<th>Len</th>
+<th>Catalytic block</th>
+<th>GO retrieved</th>
+<th>Experimental MF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q32PA8</td>
+<td>AAMDC_BOVIN</td>
+<td>Bos taurus</td>
+<td>122</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q2HJI2</td>
+<td>NDUF3_BOVIN</td>
+<td>Bos taurus</td>
+<td>184</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q502H1</td>
+<td>AAMDC_DANRE</td>
+<td>Danio rerio</td>
+<td>122</td>
+<td>no</td>
+<td>yes</td>
+<td>— <em>(MF=ND)</em></td>
+</tr>
+<tr>
+<td>A1L1F1</td>
+<td>NDUF3_DANRE</td>
+<td>Danio rerio</td>
+<td>174</td>
+<td>no</td>
+<td>yes</td>
+<td>— <em>(MF=ND)</em></td>
+</tr>
+<tr>
+<td>Q9W1H9</td>
+<td>NDUF3_DROME</td>
+<td>Drosophila melanogaster</td>
+<td>196</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>P18152</td>
+<td>MP13_FRATH</td>
+<td>Francisella tularensis subsp. holarctica (strain LVS)</td>
+<td>123</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q9BU61</td>
+<td>NDUF3_HUMAN</td>
+<td>Homo sapiens</td>
+<td>184</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q9H7C9</td>
+<td>AAMDC_HUMAN</td>
+<td>Homo sapiens</td>
+<td>122</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q8R0P4</td>
+<td>AAMDC_MOUSE</td>
+<td>Mus musculus</td>
+<td>122</td>
+<td>no</td>
+<td>yes</td>
+<td>— <em>(MF=ND)</em></td>
+</tr>
+<tr>
+<td>Q9JKL4</td>
+<td>NDUF3_MOUSE</td>
+<td>Mus musculus</td>
+<td>185</td>
+<td>no</td>
+<td>yes</td>
+<td>— <em>(MF=ND)</em></td>
+</tr>
+<tr>
+<td>O08776</td>
+<td>NDUF3_RAT</td>
+<td>Rattus norvegicus</td>
+<td>185</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>P29962</td>
+<td>Y1784_RHOCB</td>
+<td>Rhodobacter capsulatus (strain ATCC BAA-309 / NBRC 16581 / SB1003)</td>
+<td>124</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Q6DFN1</td>
+<td>NDUF3_XENTR</td>
+<td>Xenopus tropicalis</td>
+<td>183</td>
+<td>no</td>
+<td>yes</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="uniprot-function-statements-across-the-family">UniProt FUNCTION statements across the family</h2>
+<ul>
+<li><strong>AAMDC_BOVIN</strong> (Bos taurus): May play a role in preadipocyte differentiation and adipogenesis</li>
+<li><strong>NDUF3_BOVIN</strong> (Bos taurus): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+<li><strong>NDUF3_DANRE</strong> (Danio rerio): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+<li><strong>NDUF3_DROME</strong> (Drosophila melanogaster): Involved in the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I) (PubMed:34386730). Together with NdufAF4, involved in biogenesis of complex 1 modules N, Q and P-peripheral, but not the P-distal module (PubMed:34386730). Required for recruitment of the complex I assembly factor Timmdc1 to complex 1 assembly intermediates (PubMed:34386730)</li>
+<li><strong>NDUF3_HUMAN</strong> (Homo sapiens): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+<li><strong>AAMDC_HUMAN</strong> (Homo sapiens): May play a role in preadipocyte differentiation and adipogenesis</li>
+<li><strong>AAMDC_MOUSE</strong> (Mus musculus): May play a role in preadipocyte differentiation and adipogenesis</li>
+<li><strong>NDUF3_MOUSE</strong> (Mus musculus): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+<li><strong>NDUF3_RAT</strong> (Rattus norvegicus): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+<li><strong>Y1784_RHOCB</strong> (Rhodobacter capsulatus (strain ATCC BAA-309 / NBRC 16581 / SB1003)): Not required for the biogenesis of c-type cytochromes</li>
+<li><strong>NDUF3_XENTR</strong> (Xenopus tropicalis): Essential factor for the assembly of mitochondrial NADH:ubiquinone oxidoreductase complex (complex I)</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H7C9
+gene_symbol: AAMDC
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AAMDC is a small cytoplasmic Mth938-domain protein whose biochemical activity is
+  still unknown; it is the founding member of the AAMDC family and, despite having
+  a solved structure, has no assigned catalytic or binding activity. Its name comes
+  from work on the mouse ortholog, where the protein is highly expressed in white
+  adipose tissue and is both sufficient and required for preadipocyte
+  differentiation: overexpression drives 3T3-L1 differentiation without insulin, by
+  raising CREB phosphorylation and transcriptional activity, while knockdown causes
+  caspase-3-dependent preadipocyte apoptosis. In human cells AAMDC is best known as
+  an oncogene within the 11q13.5-14.1 amplicon that defines the IntClust2 subgroup
+  of estrogen receptor-positive breast cancer. There it drives PI3K-AKT-mTOR
+  signalling - ectopic expression alone is enough to activate AKT and to support
+  estrogen-independent tumour growth - and through that axis controls the
+  translation of ATF4 and MYC and the expression of enzymes of the one-carbon
+  folate, methionine and lipid metabolic pathways. AAMDC has also been reported to
+  interact with the Rab GTPase-activating protein RABGAP1L and to colocalise with
+  RABGAP1L and RAB7A at endolysosomes. All of the described effects are downstream
+  cellular consequences; what AAMDC does biochemically to produce them remains the
+  central open question about this protein.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9H7C9-1
+- name: &#39;2&#39;
+  id: Q9H7C9-2
+  sequence_note: VSP_019267, VSP_019269
+- name: &#39;3&#39;
+  id: Q9H7C9-3
+  sequence_note: VSP_019266, VSP_019268
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference from MGI:MGI:1913523, which is mouse Aamdc - the true ortholog,
+      not a paralog. The mouse gene carries its own IDA cytoplasm annotation (PMID:21622130),
+      so this is a well-founded transfer rather than an over-propagation, and it agrees with
+      the UniProt subcellular location for the human protein. Correct core compartment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse&#34;
+- term:
+    id: GO:0045600
+    label: positive regulation of fat cell differentiation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A well-founded IBA, and the only annotation on this gene with substantial evidence
+      behind it. The WITH/FROM field cites MGI:MGI:1913523, which is mouse Aamdc itself, and
+      that gene carries both IDA and IMP annotations to this same term from PMID:22279136.
+      Reading the source shows the evidence is bidirectional: overexpression of the mouse
+      protein was sufficient to drive 3T3-L1 preadipocyte differentiation in the absence of
+      insulin, acting through CREB phosphorylation and transcriptional activity, while siRNA
+      knockdown caused preadipocyte apoptosis during adipogenesis. This is precisely the
+      situation IBA exists for - a solid ortholog phenotype transferred to a human gene that
+      has no experimental data of its own - and it is why UniProt&#39;s human FUNCTION line is
+      an ECO:0000250 by-similarity statement about adipogenesis. Accept as the core
+      biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22279136
+      supporting_text: &gt;-
+        Our results indicated that LI2 was sufficient to drive preadipocyte differentiation
+        via modulating the phosphorylation level and transcriptional activity of CREB,
+        coincident with expression of several adipogenic regulators and mature adipocyte
+        markers, without insulin treatment.
+    - reference_id: PMID:22279136
+      supporting_text: &gt;-
+        knockdown of the LI2 protein resulted in preadipocyte apoptosis via caspase-3
+        activation during adipogenesis
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;May play a role in preadipocyte differentiation and&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automatic annotation combining UniProt SubCell mapping with orthology to mouse Aamdc
+      (UniProtKB:Q8R0P4). Consistent with the IBA and ISS cytoplasm annotations and with the
+      UniProt subcellular location. Correct core compartment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with ACY3 (UniProtKB:Q96HD9) from a proteome-scale yeast two-hybrid map.
+      Reported by a single publication with no functional follow-up - the NbExp=3 in the
+      UniProt line below counts assay replicates within that one study, not independent
+      studies - and bare &#34;protein binding&#34;
+      conveys nothing about AAMDC&#39;s activity in any case. Notably, none of the eight
+      protein-binding annotations on this gene recovered RABGAP1L or RAB7A, the only AAMDC
+      interaction that has been followed up functionally, so the GOA binding record is
+      orthogonal to what is known about the protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Isolated high-throughput two-hybrid hit; uninformative term with no supporting
+      biology.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; Q96HD9: ACY3; NbExp=3; IntAct=EBI-10308705, EBI-3916242;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with GORASP2/GRASP55 (UniProtKB:Q9H8Y8) from the same proteome-scale
+      two-hybrid map. Reported by that one publication only (the NbExp=3 below counts assay
+      replicates within it), no functional follow-up, and no described connection between
+      AAMDC and Golgi stacking or unconventional secretion.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Isolated high-throughput two-hybrid hit; uninformative term with no supporting
+      biology.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; Q9H8Y8: GORASP2; NbExp=3; IntAct=EBI-10308705, EBI-739467;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with VPS9D1 (UniProtKB:Q9Y2B5) from the human binary interactome reference
+      map. Reported by that one publication only (the NbExp=3 below counts assay replicates
+      within it), with no functional follow-up. A VPS9-domain protein is at
+      least topically compatible with the reported endolysosomal colocalisation of AAMDC, but
+      nothing connects the two observations and no study has pursued this pair.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Isolated high-throughput hit; uninformative term. Recorded rather than removed because
+      the partner is not implausible, but it carries no annotation value as it stands.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; Q9Y2B5: VPS9D1; NbExp=3; IntAct=EBI-10308705, EBI-9031083;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with APP isoform 2 (UniProtKB:P05067-2), one of five partners this single
+      screen contributed for AAMDC. The screen was one systematic yeast two-hybrid pass over
+      ~500 neurodegeneration-related baits, and a small uncharacterised protein scoring
+      against APP, huntingtin, ataxin-3, dynamin-2 and GDAP1 all within that one pass is
+      more consistent with a promiscuous hit than with five distinct biological
+      interactions. None of the five has been independently replicated or followed up, and
+      AAMDC has no described role in neurodegeneration. (The paper&#39;s title phrase &#34;Widespread
+      Protein Aggregation in Affected Brains&#34; refers to aggregation observed in postmortem
+      patient tissue, not to the interaction dataset; that phrase is not evidence about these
+      Y2H hits and is no longer relied on here.)
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One of a five-partner block contributed by a single systematic Y2H pass over ~500
+      neurodegeneration baits; no independent replication, no follow-up, and an uninformative
+      term.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; P05067-2: APP; NbExp=3; IntAct=EBI-10308705, EBI-17264467;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with huntingtin (UniProtKB:P42858) from the same neurodegeneration
+      interactome screen. Same assessment as the APP entry: part of a five-partner block from
+      one systematic Y2H pass, not independently replicated and never followed up.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One of a five-partner block contributed by a single systematic Y2H pass over ~500
+      neurodegeneration baits; no independent replication, no follow-up, and an uninformative
+      term.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; P42858: HTT; NbExp=3; IntAct=EBI-10308705, EBI-466029;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with dynamin-2 isoform 2 (UniProtKB:P50570-2) from the same
+      neurodegeneration interactome screen. Same assessment as the other members of that
+      five-partner block from a single Y2H pass.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One of a five-partner block contributed by a single systematic Y2H pass over ~500
+      neurodegeneration baits; no independent replication, no follow-up, and an uninformative
+      term.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; P50570-2: DNM2; NbExp=3; IntAct=EBI-10308705, EBI-10968534;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with ataxin-3 (UniProtKB:P54252) from the same neurodegeneration
+      interactome screen. Same assessment as the other members of that five-partner block
+      from a single Y2H pass.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One of a five-partner block contributed by a single systematic Y2H pass over ~500
+      neurodegeneration baits; no independent replication, no follow-up, and an uninformative
+      term.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; P54252: ATXN3; NbExp=3; IntAct=EBI-10308705, EBI-946046;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Interaction with GDAP1 (UniProtKB:Q8TB36) from the same neurodegeneration interactome
+      screen, completing the five-partner block. Same assessment as the others: one Y2H pass,
+      no independent replication, no follow-up.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      One of a five-partner block contributed by a single systematic Y2H pass over ~500
+      neurodegeneration baits; no independent replication, no follow-up, and an uninformative
+      term.
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;Q9H7C9; Q8TB36: GDAP1; NbExp=3; IntAct=EBI-10308705, EBI-11110431;&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of the cytoplasmic location from mouse Aamdc
+      (UniProtKB:Q8R0P4), which has this location by IDA. Redundant with the IBA and IEA
+      entries but correct, and it rests on the same well-supported ortholog relationship.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250}. Note=Diffuse&#34;
+- term:
+    id: GO:0051897
+    label: positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal
+      transduction
+  evidence_type: IMP
+  original_reference_id: PMID:33772001
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new annotation, and the only biological process for which there is direct
+      human experimental evidence. AAMDC is an oncogene within the 11q13.5-14.1 amplicon of
+      IntClust2 estrogen receptor-positive breast cancer, and ectopic expression of AAMDC
+      alone is sufficient to activate AKT signalling and to support estrogen-independent
+      tumour growth. The same study shows AAMDC controls PI3K-AKT-mTOR signalling more
+      broadly, regulating the translation of ATF4 and MYC. The evidence is bidirectional: the
+      converse shRNA knockdowns inhibit AKT activation (reduced p-S473 and p-T308) and
+      downregulate the PI3K-AKT-mTOR axis, so the direction of effect is established by both
+      gain and loss of function rather than by a correlative association. GOA currently
+      records no human-derived biological process for this gene at all.
+    action: NEW
+    reason: &gt;-
+      Adds the only human experimentally supported process; complements the mouse-derived
+      adipogenesis IBA, which describes a different cellular context. Evidence code is IMP:
+      the experiments are ectopic overexpression and shRNA knockdown, both of which are
+      mutant/altered-gene-product phenotypes under GO evidence-code guidance, not direct
+      assay of the gene product (IDA).
+    supported_by:
+    - reference_id: PMID:33772001
+      supporting_text: &gt;-
+        Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in
+        estrogen-independent tumor growth.
+    - reference_id: PMID:33772001
+      supporting_text: &gt;-
+        The AAMDC KDs inhibited activation of AKT relative to controls, as indicated by a
+        reduction in p-S473 and p-T308 levels
+    - reference_id: PMID:33772001
+      supporting_text: &gt;-
+        AAMDC knockdowns downregulate the PI3K-AKT-mTOR axis through translational
+        suppression of MYC and ATF4
+    - reference_id: PMID:33772001
+      supporting_text: &gt;-
+        We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the translation of
+        ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent
+        promoters.
+    - reference_id: file:human/AAMDC/AAMDC-deep-research-affinage.md
+      supporting_text: &gt;-
+        AAMDC is an oncogenic signaling regulator amplified in estrogen receptor-positive
+        breast cancer that drives estrogen-independent tumor growth by activating the
+        PI3K-AKT-mTOR axis
+- term:
+    id: GO:0036019
+    label: endolysosome
+  evidence_type: IDA
+  original_reference_id: PMID:33772001
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed new annotation, offered with an explicit caveat. AAMDC was reported to
+      interact with the Rab GTPase-activating protein RABGAP1L, and AAMDC, RABGAP1L and
+      RAB7A were shown to colocalise in endolysosomes. RAB7A is a canonical late
+      endosome/lysosome marker, so the compartment assignment is coherent. However the
+      evidence is imaging colocalisation from a single study, and the authors themselves
+      hedge (&#34;we provide evidence that AAMDC can interact&#34;). Colocalisation is weaker than
+      co-residence in a complex, so this is proposed as a secondary, non-core location that
+      does not displace the well-supported cytoplasmic annotation.
+    action: NEW
+    reason: &gt;-
+      Records a specific, mechanistically interesting compartment that GOA lacks entirely,
+      while flagging that it rests on single-study colocalisation rather than fractionation
+      or a defined complex. &#34;Non-core&#34; here means secondary to the cytoplasmic annotation,
+      not excluded: the term is retained in core_functions.locations for the PI3K-AKT-mTOR
+      function alongside GO:0005737, because it is the only compartment reported for the
+      RABGAP1L/RAB7A association that function describes. Note also that GO:0036019
+      endolysosome is a specific hybrid intermediate compartment; light-microscopy
+      colocalisation with RAB7A cannot by itself distinguish it from late endosome
+      (GO:0005770) or lysosome (GO:0005764), so the exact compartment term should be treated
+      as provisional pending fractionation or marker-resolved imaging.
+    supported_by:
+    - reference_id: PMID:33772001
+      supporting_text: &gt;-
+        we provide evidence that AAMDC can interact with the RabGTPase-activating protein
+        RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes.
+core_functions:
+- description: &gt;-
+    Promotion of adipocyte differentiation. This is the best-evidenced role of the protein,
+    established for the mouse ortholog by bidirectional perturbation: overexpression is
+    sufficient to drive preadipocyte differentiation without insulin, raising CREB
+    phosphorylation and transcriptional activity and inducing adipogenic regulators and
+    mature adipocyte markers, while knockdown causes caspase-3-dependent preadipocyte
+    apoptosis. The human protein is inferred to share this role by orthology (IBA) and has
+    no experimental adipogenesis data of its own. No molecular function is assigned, because
+    none is known - the biochemical activity of this Mth938-domain protein remains
+    undetermined.
+  directly_involved_in:
+  - id: GO:0045600
+    label: positive regulation of fat cell differentiation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:22279136
+    supporting_text: &gt;-
+      Our results indicated that LI2 was sufficient to drive preadipocyte differentiation
+      via modulating the phosphorylation level and transcriptional activity of CREB,
+      coincident with expression of several adipogenic regulators and mature adipocyte
+      markers, without insulin treatment.
+  - reference_id: file:human/AAMDC/AAMDC-uniprot.txt
+    supporting_text: &#34;May play a role in preadipocyte differentiation and&#34;
+- description: &gt;-
+    Activation of PI3K-AKT-mTOR signalling in human cells. AAMDC is an oncogene in the
+    11q13.5-14.1 amplicon that defines the IntClust2 subgroup of estrogen receptor-positive
+    breast cancer, where ectopic expression alone is sufficient to activate AKT and to
+    support estrogen-independent tumour growth. Downstream it controls translation of ATF4
+    and MYC and the expression of one-carbon folate, methionine and lipid metabolic enzymes,
+    and it has been reported to assemble with RABGAP1L and RAB7A at endolysosomes. As with
+    adipogenesis, the mechanism by which AAMDC produces these effects is unknown, so no
+    molecular function is asserted.
+  directly_involved_in:
+  - id: GO:0051897
+    label: positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal
+      transduction
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0036019
+    label: endolysosome
+  supported_by:
+  - reference_id: PMID:33772001
+    supporting_text: &gt;-
+      Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in
+      estrogen-independent tumor growth.
+  - reference_id: PMID:33772001
+    supporting_text: &gt;-
+      we provide evidence that AAMDC can interact with the RabGTPase-activating protein
+      RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes.
+suggested_questions:
+- question: &gt;-
+    What does AAMDC actually do biochemically? This is the central gap, and a family-wide
+    analysis run for this review (see file:human/AAMDC/AAMDC-bioinformatics/RESULTS.md) shows
+    it is not specific to this gene: of the 13 reviewed Swiss-Prot members of Pfam PF04430
+    (aptly named DUF498, &#34;domain of unknown function&#34;), zero carry any experimentally
+    supported molecular function term and zero have a UniProt CATALYTIC ACTIVITY block, while
+    four carry an explicit GO:0003674 ND. The protein has a solved structure and a defined
+    Mth938 domain, yet every described effect - adipogenesis, AKT activation, ATF4/MYC
+    translation - is a downstream cellular consequence rather than an activity.
+- question: &gt;-
+    Does AAMDC help assemble a protein complex? The family analysis gives a concrete
+    direction. The other branch of PF04430 is NDUFAF3, whose function is consistent across
+    every organism studied: an assembly factor for mitochondrial complex I, a protein that
+    binds subunits and helps build a complex without being part of the finished product and
+    without any catalytic activity. If the MTH938 fold is an assembly-factor fold, the right
+    question for AAMDC is not what it catalyses but what it helps assemble - which would also
+    explain why no molecular function has ever been found for any member of this family.
+- question: &gt;-
+    Do the Mth938 domain and its bacterial and archaeal homologues suggest a conserved
+    activity that could be tested directly? A structure-guided comparison with characterised
+    Mth938-fold proteins might propose a candidate biochemical function where cell-biological
+    approaches have not.
+- question: &gt;-
+    Is the AAMDC-RABGAP1L interaction direct and stoichiometric, and does AAMDC regulate
+    RABGAP1L&#39;s GAP activity toward RAB7A? If so, AAMDC would acquire a genuine molecular
+    function and a mechanistic link between its endolysosomal localisation and its effect on
+    mTOR signalling, which is itself regulated at the lysosome.
+- question: &gt;-
+    Are the adipogenesis role in mouse and the PI3K-AKT-mTOR role in human cancer cells the
+    same underlying activity in two contexts, or genuinely different functions? AKT
+    signalling is central to adipogenesis, so a single mechanism is plausible and would
+    consolidate two currently disconnected literatures.
+- question: &gt;-
+    Does human AAMDC promote adipocyte differentiation? The GO:0045600 annotation is entirely
+    IBA from mouse. Direct testing in human preadipocytes would convert this gene&#39;s
+    best-supported annotation into experimental evidence, or reveal a species difference.
+suggested_experiments:
+- hypothesis: &gt;-
+    AAMDC modulates RABGAP1L GAP activity toward RAB7A, coupling it to lysosomal mTORC1
+    signalling.
+  description: &gt;-
+    Reconstitute purified AAMDC, RABGAP1L and RAB7A in vitro and measure RAB7A GTP hydrolysis
+    with and without AAMDC, then test in cells whether AAMDC depletion changes the RAB7A-GTP
+    load and mTORC1 recruitment to lysosomes.
+  experiment_type: in vitro reconstitution and cell biology
+- hypothesis: &gt;-
+    The Mth938 domain has a conserved biochemical activity detectable by unbiased screening.
+  description: &gt;-
+    Screen purified recombinant AAMDC against broad metabolite, nucleotide and metal panels by
+    thermal shift and native mass spectrometry to identify any bound ligand or cofactor,
+    combined with structure-based comparison to characterised Mth938-fold proteins. Aimed
+    squarely at the missing molecular function.
+  experiment_type: biophysics and structural bioinformatics
+- hypothesis: &gt;-
+    AAMDC&#39;s adipogenic and oncogenic roles are the same activity in different contexts.
+  description: &gt;-
+    Compare the transcriptional and phosphoproteomic response to AAMDC gain and loss of
+    function in 3T3-L1 preadipocytes and in IntClust2 breast cancer lines, testing in
+    particular whether the adipogenic effect requires AKT and whether the oncogenic effect
+    requires CREB.
+  experiment_type: comparative functional genomics
+- hypothesis: &gt;-
+    The five neurodegeneration-panel interactions are aggregation artefacts, not biology.
+  description: &gt;-
+    Re-test the AAMDC interactions with APP, HTT, ATXN3, DNM2 and GDAP1 by
+    co-immunoprecipitation at endogenous expression levels, and check whether AAMDC scores as
+    a promiscuous partner across unrelated aggregation-prone baits. A negative result would
+    justify removing these annotations outright rather than only flagging them.
+  experiment_type: interaction validation
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. Proteome-scale two-hybrid map; the source of two
+      single-publication protein-binding annotations (ACY3, GORASP2) with no functional
+      follow-up.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches. HuRI binary interactome; source of the VPS9D1
+      protein-binding annotation.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches and the study itself is sound - correctness is VERIFIED,
+      not LOW_QUALITY; the issue is the weight of its data for THIS gene, which is a
+      relevance question. It contributed five of AAMDC&#39;s eight protein-binding annotations
+      (APP, HTT, ATXN3, DNM2, GDAP1) from one systematic yeast two-hybrid pass over ~500
+      neurodegeneration-related baits. A single small uncharacterised protein scoring against
+      all five within that one pass is more consistent with a promiscuous hit than with five
+      distinct biological interactions, and none has been independently replicated or
+      pursued. Note that the title phrase &#34;Widespread Protein Aggregation in Affected Brains&#34;
+      describes aggregation found in postmortem patient brain tissue, not contamination of
+      the interaction dataset; an earlier draft of this review misread it as the latter.
+- id: PMID:22279136
+  title: LOC66273 isoform 2, a novel protein highly expressed in white adipose tissue,
+    induces adipogenesis in 3T3-L1 cells.
+  findings:
+  - statement: &gt;-
+      Overexpression of the mouse AAMDC ortholog (LOC66273 isoform 2, &#34;LI2&#34;) was sufficient
+      to drive 3T3-L1 preadipocyte differentiation without insulin, acting through CREB
+      phosphorylation and transcriptional activity.
+    supporting_text: &gt;-
+      Our results indicated that LI2 was sufficient to drive preadipocyte differentiation
+      via modulating the phosphorylation level and transcriptional activity of CREB,
+      coincident with expression of several adipogenic regulators and mature adipocyte
+      markers, without insulin treatment.
+  - statement: &gt;-
+      Knockdown of the protein caused preadipocyte apoptosis via caspase-3 activation during
+      adipogenesis, giving loss-of-function support alongside the gain-of-function result.
+    supporting_text: &gt;-
+      knockdown of the LI2 protein resulted in preadipocyte apoptosis via caspase-3
+      activation during adipogenesis
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation. Not cited by GOA for the human gene, but it is
+      the source of the mouse Aamdc IDA and IMP annotations to GO:0045600 from which the human
+      IBA derives, so it was read directly to check whether that IBA is well founded. It is:
+      the evidence is bidirectional (overexpression sufficient, knockdown deleterious).
+      Abstract-only cache, but both claims used are explicit in the abstract.
+- id: PMID:33772001
+  title: The oncogene AAMDC links PI3K-AKT-mTOR signaling with metabolic reprograming
+    in estrogen receptor-positive breast cancer.
+  findings:
+  - statement: &gt;-
+      Ectopic AAMDC expression alone is sufficient to activate AKT signalling and to support
+      estrogen-independent tumour growth, establishing a causal rather than correlative role
+      in PI3K-AKT-mTOR activation.
+    supporting_text: &gt;-
+      Ectopic AAMDC expression is sufficient to activate AKT signaling, resulting in
+      estrogen-independent tumor growth.
+  - statement: &gt;-
+      AAMDC controls PI3K-AKT-mTOR signalling, the translation of ATF4 and MYC, and the
+      transcriptional activity of AAMDC-dependent promoters.
+    supporting_text: &gt;-
+      We show that AAMDC controls PI3K-AKT-mTOR signaling, regulating the translation of
+      ATF4 and MYC and modulating the transcriptional activity of AAMDC-dependent promoters.
+  - statement: &gt;-
+      AAMDC regulates expression of metabolic enzymes of the one-carbon folate and methionine
+      cycles and of lipid metabolism.
+    supporting_text: &gt;-
+      We uncover that AAMDC regulates the expression of several metabolic enzymes involved
+      in the one-carbon folate and methionine cycles, and lipid metabolism.
+  - statement: &gt;-
+      AAMDC interacts with the Rab GTPase-activating protein RABGAP1L, and AAMDC, RABGAP1L
+      and RAB7A colocalise in endolysosomes.
+    supporting_text: &gt;-
+      we provide evidence that AAMDC can interact with the RabGTPase-activating protein
+      RabGAP1L, and that AAMDC, RabGAP1L, and Rab7a colocalize in endolysosomes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached full text matches the cited title. The only substantial human functional study of
+      AAMDC and the source of both proposed new annotations. Note the authors&#39; own hedging on
+      the RABGAP1L interaction (&#34;can interact&#34;, &#34;we provide evidence&#34;), which is why the
+      endolysosome annotation is proposed as non-core with the colocalisation caveat stated.
+- id: PMID:36789094
+  title: Solanine Represses Gastric Cancer Growth by Mediating Autophagy Through
+    AAMDC/MYC/ATF4/Sesn2 Signaling Pathway.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached record title matches the citation. Recorded deliberately without deriving an
+      annotation from it. It is the second human functional study of AAMDC and does corroborate
+      the MYC/ATF4 axis outside breast cancer, placing AAMDC upstream of MYC, ATF4 and Sesn2 in
+      gastric cancer cells. It is set aside because the experimental frame is the pharmacology
+      of solanine rather than AAMDC itself - AAMDC enters as a rescue arm, where its
+      overexpression reverses solanine&#39;s effect on autophagy - and the affinage report that
+      surfaced it grades the finding Low confidence. An autophagy-related process annotation
+      would need a study designed around AAMDC.
+- id: file:human/AAMDC/AAMDC-bioinformatics/RESULTS.md
+  title: Is a molecular function assignable to AAMDC from its family?
+  findings:
+  - statement: &gt;-
+      Family-wide analysis of Pfam PF04430 (DUF498) run for this review: of 13 reviewed
+      Swiss-Prot members, none carries an experimentally supported molecular function term or a
+      UniProt CATALYTIC ACTIVITY block, and four carry an explicit GO:0003674 ND. The absence of
+      a molecular function for AAMDC is a property of the whole family rather than an oversight
+      on this gene.
+    supporting_text: &gt;-
+      No member of this family carries any experimentally supported molecular
+      function term.
+  - statement: &gt;-
+      The one characterised branch of the family is NDUFAF3, an assembly factor for
+      mitochondrial complex I in every organism studied - a non-catalytic protein that binds
+      subunits and helps build a complex. The family signal therefore points away from a hidden
+      enzymatic activity and toward an assembly or chaperone-like role.
+    supporting_text: &gt;-
+      NDUFAF3 is an **assembly factor, not an
+      enzyme**: it has no catalytic activity, it binds subunits and helps build a complex,
+      and it is not part of the finished complex.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reproducible analysis written for this review (analyze_mth938.py), re-runnable, with every
+      figure fetched at run time from the InterPro, UniProt and QuickGO REST APIs. Added in
+      response to PR review feedback asking that the central negative finding - that no
+      molecular function is justifiable - be tested rather than merely asserted. The result
+      substantiates it and goes further, indicating where to look instead. A first version of
+      the script claimed to query InterPro but only interpolated a hardcoded accession; that was
+      corrected after review, and the report now records InterPro&#39;s own entry name and protein
+      count. Failed API calls are distinguished from genuinely empty results in both the script
+      and the report, since a silent fetch failure would otherwise manufacture the negative
+      finding this analysis exists to test.
+- id: file:human/AAMDC/AAMDC-deep-research-affinage.md
+  title: Affinage mechanistic annotation for AAMDC (human)
+  findings:
+  - statement: &gt;-
+      Machine-fetched Affinage record (trust gates passed) describing AAMDC as an oncogenic
+      PI3K-AKT-mTOR regulator amplified in ER-positive breast cancer that interacts with
+      RABGAP1L and colocalises with RAB7A at endolysosomes, and explicitly noting that the
+      biochemical activity of AAMDC itself has not been characterised.
+    supporting_text: &gt;-
+      Beyond these findings, the biochemical activity of AAMDC itself and the structural
+      basis of its signaling and RabGAP1L interaction have not been characterized in the
+      available corpus.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      External precomputed LLM research, treated as a preliminary source; every claim used was
+      re-verified against PMID:33772001. Two things are worth recording. First, its
+      mechanism_profile reports molecular_activity as none, which is the correct answer for
+      this protein and a useful negative signal - the provider did not invent a function.
+      Second, it covers only the human cancer literature and does not mention the mouse
+      adipogenesis work that underpins the gene&#39;s name and its single best-supported GO
+      annotation, so the IBA assessment had to be done outside the report.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

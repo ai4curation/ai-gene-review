@@ -1,0 +1,2193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_4230 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_4230</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F68" target="_blank" class="term-link">
+                        Q88F68
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_4230";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F68" data-a="DESCRIPTION: PP_4230 encodes a predicted MocA-type molybdenum-c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_4230 encodes a predicted MocA-type molybdenum-cofactor cytidylyltransferase. Orthology and PANTHER subfamily assignments support transfer of CMP from CTP to Mo-molybdopterin to form the MCD cofactor variant; this target-specific activity has not been assayed directly in KT2440.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016779" target="_blank" class="term-link">
+                                    GO:0016779
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotidyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F68" data-a="GO:0016779" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic nucleotidyltransferase term should be replaced by predicted Mo-cofactor cytidylyltransferase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> KEGG assigns Q88F68 to the exact MocA orthology K07141; PANTHER subfamily and neighborhood evidence independently support a predicted MocA assignment.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061602" target="_blank" class="term-link">
+                                    molybdenum cofactor cytidylyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+
+                                </span>
+
+                                <div class="support-text">PP_4230	Q88F68	ppu:PP_4230	ko:K07141</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">1. **No PP_4230-specific experimental study exists.** The entire annotation is inferential. There is no published enzyme assay, knockout, structure, or complementation experiment for PP_4230 itself.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+
+                                </span>
+
+                                <div class="support-text">Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted transfer of CMP from CTP to Mo-MPT to form the MCD cofactor variant.</h3>
+                <span class="vote-buttons" data-g="Q88F68" data-a="FUNCTION: Predicted transfer of CMP from CTP to Mo-MPT to fo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061602" target="_blank" class="term-link">
+                            molybdenum cofactor cytidylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+
+                        </span>
+
+                        <div class="finding-text">PP_4230	Q88F68	ppu:PP_4230	ko:K07141</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">1. **No PP_4230-specific experimental study exists.** The entire annotation is inferential. There is no published enzyme assay, knockout, structure, or complementation experiment for PP_4230 itself.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+
+                        </span>
+
+                        <div class="finding-text">Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4230/PP_4230-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_4230</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records Q88F68 in PTHR43777:SF1 with the imported molybdenum-cofactor cytidylyltransferase label.</div>
+
+                        <div class="finding-text">"DR   PANTHER; PTHR43777; MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE; 1.
+DR   PANTHER; PTHR43777:SF1; MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4230/PP_4230-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for PP_4230</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the one broad annotation reviewed here.</div>
+
+                        <div class="finding-text">"UniProtKB	Q88F68	PP_4230	enables	GO:0016779	nucleotidyltransferase activity	molecular_function	ECO:0000256	IEA	GO_REF:0000117	ARBA:ARBA00026258	160488	Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)	UniProt	MobA-like NTP transferase domain-containing protein	20260706"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PP_4230</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report explicitly acknowledges that PP_4230 has no target-specific experimental support.</div>
+
+                        <div class="finding-text">"1. **No PP_4230-specific experimental study exists.** The entire annotation is inferential. There is no published enzyme assay, knockout, structure, or complementation experiment for PP_4230 itself."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report incorrectly treats a heterologous XodC experiment as native PP_4230-locus evidence.</div>
+
+                        <div class="finding-text">"Crucially, the relevance of an XdhC-type factor to *P. putida* KT2440 xanthine oxidase has now been shown experimentally in this very organism."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report&#39;s comparison table incorrectly puts PP_2482, rather than PP_2483, in the second predicted MocA cluster.</div>
+
+                        <div class="finding-text">"| **PP_2483** | isoquinoline-1-oxidoreductase-like | PP_2478 (Mo/β-subunit), PP_2479 (cyt *c*), PP_2480 (XdhC), PP_2482 (MobA-like) |"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report presents an AlphaFold result that was not saved as a reproducible local artifact.</div>
+
+                        <div class="finding-text">"The AlphaFold model of Q88F68 is high-confidence (**mean pLDDT 91.9**) and shows a folded N-terminal Rossmann-like nucleotidyltransferase domain (res ~5–162) plus a short C-terminal acceptor-binding extension (res ~163–188) — the domain that, per Neumann et al., confers dedication to a specific acceptor molybdoenzyme."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER representative entries for the MocA-containing family</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The local PANTHER representatives include reviewed E. coli MocA Q46810 in PTHR43777:SF1.</div>
+
+                        <div class="finding-text">"Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible sequence comparison of KT2440 MoaA-family and MobA-like proteins</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pairwise identity alone does not resolve nucleotide specificity, so the specific assignment relies on concordant orthology and subfamily evidence.</div>
+
+                        <div class="finding-text">"- These modest identities are not sufficient by themselves to assign nucleotide
+  specificity. PTHR43777:SF1 also contains reviewed proteins with non-MocA names,
+  so family membership alone is not decisive. Independently of this sequence
+  analysis, however, KEGG assigns both PP_2483 and PP_4230 to K07141
+  (molybdenum-cofactor cytidylyltransferase), and both occur in
+  molybdoenzyme-associated neighborhoods. The concordant orthology, subfamily,
+  and neighborhood evidence supports a predicted MocA assignment while leaving
+  CTP specificity and client delivery to direct experimental testing."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">KEGG gene-to-orthology links for KT2440 MobA-like candidates and reviewed controls</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reproducible KEGG lookup maps PP_4230 to MocA orthology K07141.</div>
+
+                        <div class="finding-text">"PP_4230	Q88F68	ppu:PP_4230	ko:K07141"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_4230 CTP-specific in vitro, and is its MCD product preferentially delivered to the neighboring molybdoenzyme system?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F68" data-a="Q: Is PP_4230 CTP-specific in vitro, and is its MCD p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare CTP- and GTP-dependent nucleotide transfer from purified Q88F68 to Mo-MPT and test the effect of PP_4230 deletion on MCD-containing enzyme activity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: substrate-specificity assay and targeted genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F68" data-a="EXPERIMENT: Compare CTP- and GTP-dependent nucleotide transfer..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4230-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F68" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_4230 (Q88F68) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T13:20:52.652758</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4230-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_4230-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_4230-q88f68-in-pseudomonas-putida-kt2440">Functional Annotation of PP_4230 (Q88F68) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="a-dedicated-moca-type-ctpmolybdopterin-cytidylyltransferase-for-molybdenum-cofactor-maturation">A dedicated MocA-type CTP:molybdopterin cytidylyltransferase for molybdenum cofactor maturation</h2>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>PP_4230 (UniProt Q88F68) of <em>Pseudomonas putida</em> KT2440 encodes a MocA-type CTP:molybdopterin cytidylyltransferase</strong> (molybdenum cofactor cytidylyltransferase; EC 2.7.7.76; KEGG orthology K07141). Its predicted enzymatic function is to transfer a cytidylyl (CMP) group from CTP onto the terminal C4′ phosphate of molybdenum-molybdopterin (Mo-MPT), in a Mg²⁺-dependent and strictly CTP-specific reaction, thereby producing the <strong>molybdopterin cytosine dinucleotide (MCD)</strong> form of the molybdenum cofactor (Moco). This is the final nucleotide-modification step of Moco biosynthesis for the subset of molybdoenzymes that require the MCD cofactor variant. The enzyme carries out this reaction in the <strong>cytoplasm</strong>, where Moco biosynthesis takes place before mature cofactor is delivered to acceptor apo-enzymes.</p>
+<p>The most informative single line of evidence for PP_4230's specific biological role is its <strong>genomic context</strong>. The gene sits within an operon encoding a complete xanthine-oxidase (XO)-family molybdoenzyme: a large molybdenum-binding subunit (PP_4234), a [2Fe-2S] ferredoxin electron-transfer subunit (PP_4233), a multiheme cytochrome <em>c</em> subunit (PP_4232), and an XdhC/PaoD-type maturation chaperone (PP_4231). This arrangement, combined with STRING functional-association networks dominated by these same genes, indicates that PP_4230 is a <strong>client-dedicated MocA paralog</strong> whose MCD product is channeled — via the XdhC-type chaperone PP_4231 — into the maturation of this specific neighboring aldehyde oxidase / xanthine dehydrogenase. <em>P. putida</em> KT2440 encodes a second, independent MocA paralog (PP_2483) embedded in its own XO-family island, and a separate housekeeping GTP:MPT guanylyltransferase MobA (PP_3457), reinforcing the interpretation that MocA paralogs are locally dedicated to individual molybdoenzyme clients.</p>
+<p><strong>Important caveat:</strong> No experimental study has been published on PP_4230 specifically. This annotation is <em>inferential</em> — but it is convergently supported by multiple independent lines of evidence (KEGG orthology, Pfam/InterPro domain architecture, an N-terminal sequence motif diagnostic of CTP over GTP specificity, a high-confidence AlphaFold model, genomic operon structure, and STRING networks) and is firmly anchored to the well-characterized biochemistry of the <em>E. coli</em> MocA prototype and the XdhC family of Moco-insertion chaperones. Confidence in the <strong>molecular function</strong> (CTP:MPT cytidylyltransferase making MCD) is high; confidence in the <strong>specific client</strong> (PP_4234) is strong but rests on genomic-context and network inference rather than direct assay. The older GenBank label of a "conserved exported protein of unknown function" is outdated and incorrect for this cytidylyltransferase.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandated identity checks were completed:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UniProt accession</strong></td>
+<td>Q88F68</td>
+</tr>
+<tr>
+<td><strong>Locus tag</strong></td>
+<td>PP_4230 (OrderedLocusNames), EMBL AAN69811.1</td>
+</tr>
+<tr>
+<td><strong>Organism</strong></td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td><strong>Length</strong></td>
+<td>188 aa</td>
+</tr>
+<tr>
+<td><strong>Genomic location</strong></td>
+<td>complement 4,801,779–4,802,345</td>
+</tr>
+<tr>
+<td><strong>Pfam</strong></td>
+<td>PF12804 (NTP_transf_3), spanning residues ~5–162</td>
+</tr>
+<tr>
+<td><strong>InterPro</strong></td>
+<td>IPR025877 (MobA-like NTP transferase), IPR029044 (nucleotide-diphospho-sugar transferase fold, SSF53448)</td>
+</tr>
+<tr>
+<td><strong>KEGG orthology</strong></td>
+<td>K07141 (molybdenum cofactor cytidylyltransferase)</td>
+</tr>
+<tr>
+<td><strong>eggNOG / COG</strong></td>
+<td>COG2068</td>
+</tr>
+<tr>
+<td><strong>PANTHER</strong></td>
+<td>PTHR43777 (Molybdenum Cofactor Biosynthesis and Quinone Reduction family)</td>
+</tr>
+<tr>
+<td><strong>Cofactor ligand</strong></td>
+<td>Mg²⁺ (UniProt)</td>
+</tr>
+</tbody>
+</table>
+<p>The UniProt description ("MobA-like NTP transferase domain-containing protein") and the domain complement are fully consistent with a member of the MobA/MocA molybdopterin-dinucleotide-transferase family. The gene symbol PP_4230 is an unambiguous ordered-locus name specific to <em>P. putida</em> KT2440 — there is no competing gene with a confusable symbol. The one caution is that PP_4230 is one of <strong>two</strong> MocA paralogs in this genome (the other being PP_2483); care was taken throughout to distinguish them. <strong>No misidentification risk was found; research proceeded on the correct target.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_4230-is-a-moca-ortholog-a-ctp-specific-molybdopterin-cytidylyltransferase-ec-27776">Finding 1 — PP_4230 is a MocA ortholog: a CTP-specific molybdopterin cytidylyltransferase (EC 2.7.7.76)</h3>
+<p>Multiple orthology and domain lines converge on a single molecular-function assignment. PP_4230 maps to <strong>KEGG orthology K07141</strong>, "molybdenum cofactor cytidylyltransferase [EC 2.7.7.76]," and to <strong>eggNOG COG2068</strong> / <strong>PANTHER PTHR43777</strong> ("Molybdenum Cofactor Biosynthesis and Quinone Reduction family"). Its domain architecture — <strong>Pfam PF12804 (NTP_transf_3)</strong> spanning residues 5–162 of the 188-residue protein, within <strong>InterPro IPR025877 (MobA-like NTP transferase)</strong> and the <strong>IPR029044 nucleotide-diphospho-sugar transferase (SSF53448) fold</strong> — places it squarely in the MobA/MocA superfamily of nucleotidyltransferases. UniProt lists a <strong>Mg²⁺ ligand</strong> and the GO term <strong>nucleotidyltransferase activity (GO:0016779)</strong>. The sequence carries the canonical N-terminal nucleotidyltransferase phosphate-binding motif (…VALVLAAGSSVRFG…).</p>
+<p>The reaction and its cofactor requirements are defined by the biochemically characterized <em>E. coli</em> prototype MocA. In vitro reconstitution showed that <strong>MocA, Mo-MPT, CTP, and MgCl₂ are required and sufficient for MCD biosynthesis, and that the activity of MocA is specific for CTP</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/19542235/">PMID: 19542235</a>). The <em>E. coli</em> enzyme has a high affinity for its substrates (Km for CTP ≈ 0.23 µM; Km for Mo-MPT ≈ 1.17 µM). A companion study established that MocA is the <strong>CTP-specific paralog of MobA</strong>: "the GTP:molybdopterin guanylyltransferase MobA and the CTP:molybdopterin cytidylyltransferase MocA … both enzymes show 22% amino acid sequence identity and are specific for their respective nucleotides" (<a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">PMID: 21081498</a>).</p>
+<p>By orthology, PP_4230 is therefore inferred to catalyze:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Mo</span><span class="o">-</span><span class="n">MPT</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">CTP</span><span class="w">  </span><span class="o">--</span><span class="p">(</span><span class="n">Mg²</span><span class="err">⁺</span><span class="p">)</span><span class="o">--&gt;</span><span class="w">  </span><span class="n">MCD</span><span class="w"> </span><span class="p">(</span><span class="n">Mo</span><span class="o">-</span><span class="n">molybdopterin</span><span class="w"> </span><span class="n">cytosine</span><span class="w"> </span><span class="n">dinucleotide</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">PPi</span>
+</code></pre></div>
+
+<p>STRING further lists the housekeeping MoCo paralog <strong>MobA (PP_3457) as a functional partner (combined score 0.91; database subscore 0.90)</strong> and <strong>MoeA (0.907)</strong>, consistent with participation in the shared Moco biosynthetic network.</p>
+<h3 id="finding-2-pp_4230-supplies-mcd-to-a-neighboring-xanthine-oxidase-family-aldehyde-oxidoreductase">Finding 2 — PP_4230 supplies MCD to a neighboring xanthine-oxidase-family aldehyde oxidoreductase</h3>
+<p>The decisive clue to PP_4230's <em>specific</em> biological role is its genomic neighborhood. In <em>P. putida</em> KT2440, PP_4230 sits within a molybdoenzyme gene cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Annotation</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4230</td>
+<td>MobA-like NTP transferase (this protein)</td>
+<td>MocA — makes MCD</td>
+</tr>
+<tr>
+<td>PP_4231</td>
+<td>putative xanthine dehydrogenase accessory factor</td>
+<td>XdhC/PaoD maturation chaperone</td>
+</tr>
+<tr>
+<td>PP_4232</td>
+<td>cytochrome <em>c</em> family (Q88F66, 403 aa)</td>
+<td>multiheme electron-transfer subunit</td>
+</tr>
+<tr>
+<td>PP_4233</td>
+<td>oxidoreductase small subunit (Q88F65, 178 aa)</td>
+<td>[2Fe-2S] ferredoxin subunit</td>
+</tr>
+<tr>
+<td>PP_4234</td>
+<td>aldehyde oxidase / xanthine dehydrogenase (943 aa)</td>
+<td>Mo-cofactor large (catalytic) subunit</td>
+</tr>
+</tbody>
+</table>
+<p>STRING functional partners of PP_4230 are dominated by exactly this cluster — <strong>PP_4231 (0.967), PP_4233 (0.947), PP_4234 (0.865), PP_4232 (0.787)</strong> — plus the periplasmic aldehyde oxidoreductase subunits <strong>paoA (0.788) and paoB (0.621)</strong>. In <em>E. coli</em>, MocA-made MCD is essential for the activity of the MCD-containing XO-family enzymes: <strong>"MocA is essential for the activity of the MCD-containing enzymes aldehyde oxidoreductase YagTSR and the xanthine dehydrogenases XdhABC and XdhD"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/19542235/">PMID: 19542235</a>). The structurally characterized <em>E. coli</em> periplasmic aldehyde oxidoreductase <strong>PaoABC</strong> — a STRING partner of PP_4230 — is "the first example of an <em>E. coli</em> protein containing a molybdopterin-cytosine-dinucleotide cofactor and is the only heterotrimer of the XO family so far structurally characterized" (<a href="https://pubmed.ncbi.nlm.nih.gov/27622978/">PMID: 27622978</a>). The PP_4231–PP_4234 cluster is a close structural analogue of PaoABC (Mo large subunit + FeS subunit + cytochrome <em>c</em>), identifying it as the MCD-dependent acceptor enzyme fed by PP_4230.</p>
+<h3 id="finding-3-the-adjacent-operon-is-a-complete-xo-family-molybdoenzyme-with-an-xdhcpaod-type-insertion-chaperone">Finding 3 — The adjacent operon is a complete XO-family molybdoenzyme with an XdhC/PaoD-type insertion chaperone</h3>
+<p>The cluster around PP_4230 encodes all the parts of a functional XO-family molybdoenzyme plus its maturation machinery. UniProt subunit data confirm: <strong>PP_4234</strong> (943 aa) is the aldehyde oxidase/xanthine dehydrogenase Mo-cofactor large subunit; <strong>PP_4233</strong> (Q88F65, 178 aa) is a [2Fe-2S] ferredoxin electron-transfer subunit; <strong>PP_4232</strong> (Q88F66, 403 aa) is a multiheme cytochrome <em>c</em> with an N-terminal signal peptide (res 1–22) and three CXXCH covalent heme-attachment sites; and <strong>PP_4231</strong> (Q88F67, 323 aa) is <strong>KEGG K07402, "xanthine dehydrogenase accessory factor," of the XdhC/PaoD family</strong>.</p>
+<p>The XdhC family is the critical link between MocA's product and the mature enzyme. XdhC-type proteins are not subunits of the mature molybdoenzyme; rather, they <strong>bind Moco in stoichiometric amounts and subsequently insert it into Moco-free apo-XDH</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16597619/">PMID: 16597619</a>). Earlier work in <em>Rhodobacter capsulatus</em> showed that in an <em>xdhC</em> mutant, <strong>no molybdopterin cofactor is present in the XDHAB tetramer</strong>, while FAD and iron-sulfur clusters remain — establishing XdhC as a specific MPT insertase/chaperone (<a href="https://pubmed.ncbi.nlm.nih.gov/10217763/">PMID: 10217763</a>). XdhC also stabilizes the <em>sulfurated</em> form of Moco and partners with an L-cysteine desulfurase (NifS4) that sulfurates Moco while it is bound to XdhC, before insertion into XDH (<a href="https://pubmed.ncbi.nlm.nih.gov/17649978/">PMID: 17649978</a>).</p>
+<p>Crucially, the relevance of an XdhC-type factor to <em>P. putida</em> KT2440 xanthine oxidase has now been shown experimentally in this very organism. A constitutive, inducer-free xanthine-oxidase production study reported that <strong>"purified CsXodCBA was found to contain approximately 2.6 times more molybdenum than CsXodBA and exhibited a substantially higher specific activity"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/41933999/">PMID: 41933999</a>) — i.e., the XdhC-type accessory factor is required for efficient molybdenum-cofactor loading and enzyme maturation, exactly the downstream step that consumes MocA's MCD product. This defines the <strong>destination</strong> of PP_4230's product: mature MCD flows from PP_4230 → PP_4231 (XdhC/PaoD chaperone, with cofactor sulfuration) → apo-PP_4234 (catalytic Mo-subunit).</p>
+<h3 id="finding-4-pp_4230-is-a-client-dedicated-moca-paralog-distinct-from-housekeeping-moba-pp_3457">Finding 4 — PP_4230 is a client-dedicated MocA paralog, distinct from housekeeping MobA (PP_3457)</h3>
+<p><em>P. putida</em> KT2440 separates its molybdopterin-dinucleotide chemistry across several dedicated genes. KEGG KO mapping identifies the <strong>housekeeping GTP:MPT guanylyltransferase MobA as PP_3457 (K03752)</strong> at an unlinked genomic locus — this is the general-purpose enzyme that guanylylates MPT to make MGD for the DMSO-reductase/formate-dehydrogenase families. In contrast, the <strong>CTP-specific MocA function (K07141) is present as TWO paralogs, PP_4230 and PP_2483</strong>, each embedded in its own XO-family island with its own XdhC/PaoD accessory factor (K07402):</p>
+<table>
+<thead>
+<tr>
+<th>MocA paralog</th>
+<th>Cluster type</th>
+<th>Co-encoded components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_4230</strong></td>
+<td>aldehyde oxidase / xanthine dehydrogenase</td>
+<td>PP_4231 (XdhC), PP_4232 (cyt <em>c</em>), PP_4233 (2Fe-2S), PP_4234 (Mo-subunit)</td>
+</tr>
+<tr>
+<td><strong>PP_2483</strong></td>
+<td>isoquinoline-1-oxidoreductase-like</td>
+<td>PP_2478 (Mo/β-subunit), PP_2479 (cyt <em>c</em>), PP_2480 (XdhC), PP_2482 (MobA-like)</td>
+</tr>
+</tbody>
+</table>
+<p>The molecular rationale for this "one MocA per client" architecture comes directly from the <em>E. coli</em> biochemistry: <strong>"the C-terminal domain of either MocA or MobA determines the specific binding to the respective acceptor protein"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">PMID: 21081498</a>). The AlphaFold model of Q88F68 is high-confidence (<strong>mean pLDDT 91.9</strong>) and shows a folded N-terminal Rossmann-like nucleotidyltransferase domain (res ~5–162) plus a short C-terminal acceptor-binding extension (res ~163–188) — the domain that, per Neumann et al., confers dedication to a specific acceptor molybdoenzyme. PP_4230's short C-terminal domain is thus predicted to encode its client specificity for the co-operonic PP_4234.</p>
+<h3 id="finding-5-the-n-terminal-nucleotide-binding-loop-matches-the-moca-ctp-signature-not-moba">Finding 5 — The N-terminal nucleotide-binding loop matches the MocA (CTP) signature, not MobA</h3>
+<p>Sequence-level analysis discriminates CTP from GTP specificity, corroborating the orthology assignment at the level of the specificity-determining residues. Aligning the N-terminal glycine-rich phosphate/nucleotide-binding loop:</p>
+<table>
+<thead>
+<tr>
+<th>Protein</th>
+<th>N-terminal loop motif</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_4230</strong> (Q88F68)</td>
+<td>…VALVL-<strong>AAGSSVR</strong>-FG…</td>
+</tr>
+<tr>
+<td><em>E. coli</em> MocA (Q46810)</td>
+<td>…IDCII-<strong>TAAGLSSR</strong>-MG…</td>
+</tr>
+<tr>
+<td><em>E. coli</em> MobA (P32173)</td>
+<td>…MTTIT-<strong>GVVLAGGKARR</strong>-MG…</td>
+</tr>
+</tbody>
+</table>
+<p>PP_4230 and MocA share the "<strong>AAG-x-S-S-x-R</strong>" motif (small residues + Ser/Ser + Arg), whereas MobA carries the divergent "AGG-K-ARR" motif. This is diagnostic because overall pairwise identities to the two paralogs are nearly equal (~24% to MocA, ~23% to MobA), so global identity cannot distinguish them — but this <em>local</em> motif lies exactly in the specificity-determining region. Neumann et al. demonstrated that <strong>"exchange of the complete N-terminal domain of each protein resulted in the total inversion of nucleotide specificity activity, showing that the N-terminal domain determines nucleotide recognition and binding"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">PMID: 21081498</a>), and that as few as five residues within it govern guanine-vs-cytosine recognition. PP_4230's MocA-like loop therefore provides independent, residue-level support for <strong>CTP specificity</strong>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Molybdenum cofactor biosynthesis in bacteria proceeds through four conserved stages: (1) conversion of 5′-GTP to cyclic pyranopterin monophosphate (cPMP); (2) sulfur insertion to form molybdopterin (MPT); (3) molybdenum insertion to form Moco (Mo-MPT); and (4) optional nucleotide modification, in which either GMP or CMP is attached to the MPT terminal phosphate to make the dinucleotide cofactor variants MGD or MCD (<a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">PMID: 32239579</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/23201473/">PMID: 23201473</a>). <strong>PP_4230 acts at step 4, on the CTP/MCD branch</strong>, dedicated to a xanthine-oxidase-family client.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nx">Moco</span><span class="w"> </span><span class="nx">biosynthesis</span><span class="w"> </span><span class="p">(</span><span class="nx">cytoplasm</span><span class="p">)</span>
+<span class="w">   </span><span class="err">─────────────────────────────────────────────────────────────</span>
+<span class="w">   </span><span class="mi">5</span><span class="err">&#39;</span><span class="o">-</span><span class="nx">GTP</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">cPMP</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">MPT</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">Mo</span><span class="o">-</span><span class="nx">MPT</span><span class="w"> </span><span class="p">(</span><span class="nx">Moco</span><span class="p">)</span>
+<span class="w">                 </span><span class="err">│</span>
+<span class="w">                 </span><span class="err">│</span><span class="w">  </span><span class="err">┌───</span><span class="w"> </span><span class="nx">MobA</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_3457</span><span class="p">,</span><span class="w"> </span><span class="nx">K03752</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">GTP</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">MGD</span><span class="w">  </span><span class="p">(</span><span class="nx">housekeeping</span><span class="p">;</span>
+<span class="w">                 </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">                                        </span><span class="nx">DMSO</span><span class="w"> </span><span class="nx">reductase</span><span class="w"> </span><span class="nx">family</span><span class="p">)</span>
+<span class="w">                 </span><span class="err">└──┤</span>
+<span class="w">                    </span><span class="err">└───</span><span class="w"> </span><span class="nx">MocA</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_4230</span><span class="p">,</span><span class="w"> </span><span class="nx">K07141</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">CTP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">Mg²</span><span class="err">⁺</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">MCD</span>
+<span class="w">                                                          </span><span class="err">│</span>
+<span class="w">                                                          </span><span class="err">▼</span>
+<span class="w">                          </span><span class="nx">Cofactor</span><span class="w"> </span><span class="nx">sulfuration</span><span class="w"> </span><span class="p">(</span><span class="nx">L</span><span class="o">-</span><span class="nx">Cys</span><span class="w"> </span><span class="nx">desulfurase</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">IscS</span><span class="o">-</span><span class="k">type</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="err">│</span>
+<span class="w">                                                          </span><span class="err">▼</span>
+<span class="w">                          </span><span class="nx">XdhC</span><span class="o">/</span><span class="nx">PaoD</span><span class="w"> </span><span class="nx">chaperone</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_4231</span><span class="p">,</span><span class="w"> </span><span class="nx">K07402</span><span class="p">)</span>
+<span class="w">                          </span><span class="nx">binds</span><span class="w"> </span><span class="nx">sulfurated</span><span class="w"> </span><span class="nx">MCD</span><span class="p">,</span><span class="w"> </span><span class="nx">protects</span><span class="w"> </span><span class="nx">it</span>
+<span class="w">                                                          </span><span class="err">│</span>
+<span class="w">                                                          </span><span class="err">▼</span>
+<span class="w">                          </span><span class="nx">Insertion</span><span class="w"> </span><span class="nx">into</span><span class="w"> </span><span class="nx">apo</span><span class="o">-</span><span class="nx">Mo</span><span class="o">-</span><span class="nx">subunit</span><span class="w"> </span><span class="nx">PP_4234</span>
+<span class="w">                                                          </span><span class="err">│</span>
+<span class="w">                                                          </span><span class="err">▼</span>
+<span class="w">            </span><span class="nx">Mature</span><span class="w"> </span><span class="nx">XO</span><span class="o">-</span><span class="nx">family</span><span class="w"> </span><span class="nx">aldehyde</span><span class="w"> </span><span class="nx">oxidase</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">xanthine</span><span class="w"> </span><span class="nx">dehydrogenase</span>
+<span class="w">            </span><span class="p">(</span><span class="nx">PP_4234</span><span class="w"> </span><span class="nx">Mo</span><span class="o">-</span><span class="nx">subunit</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">PP_4233</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="nx">Fe</span><span class="o">-</span><span class="mi">2</span><span class="nx">S</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">PP_4232</span><span class="w"> </span><span class="nx">multiheme</span><span class="w"> </span><span class="nx">cyt</span><span class="w"> </span><span class="nx">c</span><span class="p">)</span>
+<span class="w">                     </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">▼</span><span class="w">   </span><span class="nx">electrons</span>
+<span class="w">            </span><span class="nx">substrate</span><span class="w"> </span><span class="p">(</span><span class="nx">aldehyde</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">purine</span><span class="p">)</span><span class="w"> </span><span class="nx">oxidation</span>
+</code></pre></div>
+
+<p><strong>Where in the cell:</strong> PP_4230, like the rest of the cytoplasmic Moco machinery, operates in the <strong>cytoplasm</strong>, producing MCD that is handed to the cytoplasmic XdhC-type chaperone. The <em>client</em> enzyme it serves, however, has a divergent fate. PP_4232 carries an N-terminal signal peptide, and the closest structural analogue PaoABC is a <em>periplasmic</em> aldehyde oxidoreductase (<a href="https://pubmed.ncbi.nlm.nih.gov/27622978/">PMID: 27622978</a>). This suggests the mature PP_4232–PP_4234 enzyme, once loaded with cofactor in the cytoplasm, is exported (likely Tat-dependently, as is typical for cofactor-loaded periplasmic molybdoenzymes) to perform aldehyde/purine oxidation in the periplasm. PP_4230 itself, though, is strictly a cytoplasmic cofactor-maturation enzyme.</p>
+<p><strong>Pathway logic:</strong> The existence of dedicated, per-client MocA paralogs (PP_4230, PP_2483) alongside a single housekeeping MobA (PP_3457) reflects the acceptor-specificity determinant encoded in the C-terminal domain (<a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">PMID: 21081498</a>). Encoding a bespoke cytidylyltransferase within each molybdoenzyme operon ensures that the correct MCD cofactor is delivered to the correct apo-enzyme, and co-regulates cofactor supply with client-enzyme expression. This is a recurring theme in molybdoenzyme maturation: dedicated chaperones and cofactor-modifying enzymes are frequently co-encoded and co-regulated with their client (e.g., tungsten-specific maturation pathways with dedicated MoeA/MobB platforms, <a href="https://pubmed.ncbi.nlm.nih.gov/42031172/">PMID: 42031172</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19542235/">19542235</a></td>
+<td><em>MocA is a specific cytidylyltransferase in MCD biosynthesis in E. coli</em></td>
+<td>Defines the reaction: MocA + Mo-MPT + CTP + MgCl₂ → MCD; establishes <strong>CTP specificity</strong> and that MocA is <strong>essential for MCD-containing XO enzymes</strong> (YagTSR, XdhABC, XdhD). Primary biochemical anchor for Findings 1–2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21081498/">21081498</a></td>
+<td><em>Amino acid residues determining guanine vs. cytosine specificity</em></td>
+<td>Establishes MocA vs. MobA as CTP- vs. GTP-specific paralogs (22% identity); shows <strong>N-terminal domain determines nucleotide specificity</strong> and <strong>C-terminal domain determines acceptor binding</strong>. Anchors Findings 1, 4, 5.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27622978/">27622978</a></td>
+<td><em>E. coli periplasmic aldehyde oxidoreductase PaoABC</em></td>
+<td>Structurally characterizes PaoABC as an <strong>MCD-containing, periplasmic, heterotrimeric XO-family</strong> enzyme — the acceptor-enzyme archetype for PP_4231–PP_4234. Supports Findings 2–3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16597619/">16597619</a></td>
+<td><em>R. capsulatus XdhC Moco binding/insertion</em></td>
+<td>XdhC <strong>binds Moco stoichiometrically and inserts it into apo-XDH</strong> — defines the function of PP_4231. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10217763/">10217763</a></td>
+<td><em>Role of XdhC in Moco insertion</em></td>
+<td><em>xdhC</em> mutant XDH lacks MPT (but retains FAD/FeS) — XdhC is a specific MPT insertase/chaperone. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17649978/">17649978</a></td>
+<td><em>Cysteine desulfurase sulfurates Moco on XdhC</em></td>
+<td>Moco is <strong>sulfurated while bound to XdhC before insertion into XDH</strong>; defines the cofactor-sulfuration step downstream of MocA. Supports Finding 3 / mechanistic model.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41933999/">41933999</a></td>
+<td><em>Constitutive xanthine oxidase in a P. putida cell factory</em></td>
+<td>In <em>P. putida</em> KT2440, the XdhC-type factor yields <strong>~2.6× more molybdenum and higher activity</strong> — experimental validation, in the target organism, that XdhC-type maturation governs XO cofactor loading. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32239579/">32239579</a></td>
+<td><em>Moco biosynthesis in E. coli (review)</em></td>
+<td>Defines the 4-step Moco pathway and the CMP/GMP dinucleotide-modification step. Frames the mechanistic model.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23201473/">23201473</a></td>
+<td><em>Molybdenum enzymes and Moco biosynthesis (review)</em></td>
+<td>Comprehensive review of Moco biosynthesis and dinucleotide-variant formation; &gt;50 bacterial molybdoenzymes. Frames the mechanistic model.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42031172/">42031172</a></td>
+<td><em>Tungsten-specific maturation pathway</em></td>
+<td>Illustrates the general principle of dedicated, metal/client-specific cofactor-maturation platforms co-encoded with their client enzyme. Contextual support for Finding 4.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence:</strong> All ten primary/review sources are mutually consistent and point to the same annotation. The strongest experimental anchors (PMIDs 19542235, 21081498) directly characterize the MocA prototype; the XdhC papers (16597619, 10217763, 17649978) define the downstream chaperone step; and PMID 41933999 supplies organism-matched (<em>P. putida</em> KT2440) experimental validation of the maturation logic. No source contradicts the assignment.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No PP_4230-specific experimental study exists.</strong> The entire annotation is inferential. There is no published enzyme assay, knockout, structure, or complementation experiment for PP_4230 itself. The molecular-function call rests on orthology (KEGG K07141), domain architecture, an N-terminal specificity motif, and homology to the <em>E. coli</em> MocA prototype.</p>
+</li>
+<li>
+<p><strong>CTP specificity is inferred, not measured.</strong> While the N-terminal "AAGSSVR" motif matches MocA and not MobA, and while KEGG assigns K07141, the actual nucleotide preference (CTP vs. GTP) and kinetic parameters (Km, kcat) of PP_4230 have not been determined experimentally. It remains formally possible — though unlikely given the motif — that the <em>P. putida</em> enzyme has shifted specificity.</p>
+</li>
+<li>
+<p><strong>The specific client (PP_4234) is assigned by genomic context and STRING, not by direct interaction data.</strong> The dedicated-partner model is well-supported by the operon structure and the C-terminal specificity principle, but a direct PP_4230–PP_4234 (or PP_4230–PP_4231) protein-protein interaction or cofactor-transfer assay has not been reported.</p>
+</li>
+<li>
+<p><strong>The physiological substrate of the client enzyme PP_4234 is unknown.</strong> It is annotated broadly as "aldehyde oxidase / xanthine dehydrogenase." Whether it oxidizes purines (xanthine/hypoxanthine), aromatic aldehydes, or another substrate — and hence the metabolic pathway PP_4230 ultimately serves — is undetermined for KT2440.</p>
+</li>
+<li>
+<p><strong>Redundancy and essentiality are untested.</strong> With two MocA paralogs (PP_4230, PP_2483) plus MobA (PP_3457), the degree of functional overlap and whether PP_4230 is conditionally essential (e.g., only when the neighboring molybdoenzyme is required) is unknown.</p>
+</li>
+<li>
+<p><strong>Localization of the mature client is inferred.</strong> The signal peptide on PP_4232 and homology to periplasmic PaoABC suggest periplasmic function of the mature enzyme, but the export mechanism (Tat vs. Sec) and final localization have not been experimentally confirmed in KT2440.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic characterization.</strong> Heterologously express and purify PP_4230; assay nucleotidyltransferase activity with Mo-MPT and CTP vs. GTP in the presence of Mg²⁺; determine Km/kcat and confirm CTP specificity. Compare directly against PP_2483 and PP_3457 (MobA).</p>
+</li>
+<li>
+<p><strong>Genetic dissection.</strong> Construct in-frame deletions of PP_4230 (and separately PP_2483) in <em>P. putida</em> KT2440; assay xanthine dehydrogenase / aldehyde oxidase activity of the PP_4232–PP_4234 enzyme and its molybdenum/MCD content. Test cross-complementation to probe redundancy between the two MocA paralogs.</p>
+</li>
+<li>
+<p><strong>Cofactor analysis.</strong> Purify the mature PP_4232–PP_4234 enzyme and confirm by LC-MS that it carries the <strong>MCD</strong> (cytosine dinucleotide) form of Moco, as predicted, rather than MGD or Mo-MPT.</p>
+</li>
+<li>
+<p><strong>Protein-protein interaction mapping.</strong> Use pull-downs, bacterial two-hybrid, or crosslinking to test the predicted PP_4230 ↔ PP_4231 (XdhC) ↔ PP_4234 hand-off, and to verify that the C-terminal domain of PP_4230 confers client specificity (domain-swap with PP_2483).</p>
+</li>
+<li>
+<p><strong>Substrate identification for PP_4234.</strong> Screen candidate substrates (xanthine, hypoxanthine, aromatic and aliphatic aldehydes) to define the physiological reaction and the metabolic pathway PP_4230 supports.</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Solve or refine the PP_4230 structure (experimentally, or via the pLDDT-91.9 AlphaFold model) and dock CTP into the N-terminal Rossmann-like domain to confirm the cytosine-recognition residues within the "AAGSSVR" loop.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_4230 (Q88F68) is best annotated as a <strong>dedicated MocA-type CTP:molybdopterin cytidylyltransferase</strong> (EC 2.7.7.76, K07141) that catalyzes the Mg²⁺-dependent, CTP-specific attachment of CMP to Mo-molybdopterin to form the <strong>MCD</strong> variant of the molybdenum cofactor. It functions in the <strong>cytoplasm</strong> as the terminal nucleotide-modification step of Moco biosynthesis, acting as a <strong>client-dedicated paralog</strong> (distinct from housekeeping MobA/PP_3457) that supplies MCD — through the co-encoded XdhC/PaoD chaperone PP_4231 — for the maturation of the neighboring <strong>xanthine-oxidase-family aldehyde oxidase / xanthine dehydrogenase</strong> built around the Mo-subunit PP_4234. The molecular-function assignment is high-confidence; the specific-client assignment is strong but inferential, and both would benefit from the direct experiments proposed above.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_4230-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_4230-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:19542235</li>
+<li>PMID:21081498</li>
+<li>PMID:27622978</li>
+<li>PMID:16597619</li>
+<li>PMID:10217763</li>
+<li>PMID:17649978</li>
+<li>PMID:41933999</li>
+<li>PMID:32239579</li>
+<li>PMID:23201473</li>
+<li>PMID:42031172</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_4230-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F68" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_4230-curation-notes">PP_4230 curation notes</h1>
+<h2 id="2026-07-20-openscientist-report-assessment">2026-07-20 OpenScientist report assessment</h2>
+<p>The generated OpenScientist report is retained unchanged as provider output but is<br />
+assessed as <code>MISCITED</code> for target-level curation. It describes an experiment with<br />
+heterologous <em>Cellulosimicrobium</em> <code>CsXodCBA</code> expressed in KT2440 as though it tested<br />
+the native PP_4230/PP_4231 locus<br />
+[file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md, "shown experimentally in<br />
+this very organism"]. That experiment does not directly establish PP_4230 activity,<br />
+client specificity, or cofactor delivery.</p>
+<p>The report also places PP_2482 rather than PP_2483 in its second MocA-cluster table<br />
+and presents residue-level nucleotide-specificity and AlphaFold analyses that were<br />
+not saved as reproducible local artifacts. Those claims are not used in the review.</p>
+<p>PP_4230 remains a predicted MocA-type molybdenum-cofactor cytidylyltransferase. This<br />
+assignment is grounded in the saved Q88F68-to-K07141 mapping, the local PANTHER<br />
+representative file, the target UniProt record, and the reproducible local comparison<br />
+[file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md, "supports a predicted MocA<br />
+assignment while leaving CTP specificity and client delivery to direct experimental<br />
+testing"]. Direct CTP specificity and dedication to the neighboring molybdoenzyme<br />
+remain untested.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F68
+gene_symbol: PP_4230
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_4230 encodes a predicted MocA-type molybdenum-cofactor
+  cytidylyltransferase. Orthology and PANTHER subfamily assignments support
+  transfer of CMP from CTP to Mo-molybdopterin to form the MCD cofactor variant;
+  this target-specific activity has not been assayed directly in KT2440.
+existing_annotations:
+- term:
+    id: GO:0016779
+    label: nucleotidyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: The generic nucleotidyltransferase term should be replaced by predicted Mo-cofactor cytidylyltransferase activity.
+    action: MODIFY
+    reason: KEGG assigns Q88F68 to the exact MocA orthology K07141; PANTHER subfamily and neighborhood evidence independently support a predicted MocA assignment.
+    proposed_replacement_terms:
+    - id: GO:0061602
+      label: molybdenum cofactor cytidylyltransferase activity
+    supported_by:
+    - reference_id: file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+      supporting_text: &#34;PP_4230\tQ88F68\tppu:PP_4230\tko:K07141&#34;
+    - reference_id: file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+      supporting_text: &gt;-
+        1. **No PP_4230-specific experimental study exists.** The entire
+        annotation is inferential. There is no published enzyme assay, knockout,
+        structure, or complementation experiment for PP_4230 itself.
+    - reference_id: file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+      supporting_text: Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:PSEPK/PP_4230/PP_4230-uniprot.txt
+  title: UniProtKB entry for PP_4230
+  findings:
+  - statement: UniProt records Q88F68 in PTHR43777:SF1 with the imported molybdenum-cofactor cytidylyltransferase label.
+    supporting_text: |-
+      DR   PANTHER; PTHR43777; MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE; 1.
+      DR   PANTHER; PTHR43777:SF1; MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE; 1.
+- id: file:PSEPK/PP_4230/PP_4230-goa.tsv
+  title: QuickGO GOA annotations for PP_4230
+  findings:
+  - statement: The fetched table contains the one broad annotation reviewed here.
+    supporting_text: &#34;UniProtKB\tQ88F68\tPP_4230\tenables\tGO:0016779\tnucleotidyltransferase activity\tmolecular_function\tECO:0000256\tIEA\tGO_REF:0000117\tARBA:ARBA00026258\t160488\tPseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)\tUniProt\tMobA-like NTP transferase domain-containing protein\t20260706&#34;
+- id: file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+  title: OpenScientist gene research for PP_4230
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      The report is miscited for target-level curation. It treats a heterologous
+      Cellulosimicrobium CsXodCBA production experiment in KT2440 as experimental
+      evidence for the native PP_4230/PP_4231 locus, misidentifies PP_2482 as the
+      MobA-like member of the PP_2483 cluster, and presents unsaved motif and
+      AlphaFold analyses as target-specific support. None of those client,
+      residue, structure, or locus claims are propagated. The predicted MocA
+      assignment instead rests on the saved KEGG K07141, PANTHER, target UniProt,
+      and local reproducible-analysis evidence; only the report&#39;s explicit
+      no-target-assay statement is retained as a limitation.
+  findings:
+  - statement: The report explicitly acknowledges that PP_4230 has no target-specific experimental support.
+    supporting_text: &gt;-
+      1. **No PP_4230-specific experimental study exists.** The entire
+      annotation is inferential. There is no published enzyme assay, knockout,
+      structure, or complementation experiment for PP_4230 itself.
+  - statement: The report incorrectly treats a heterologous XodC experiment as native PP_4230-locus evidence.
+    supporting_text: &gt;-
+      Crucially, the relevance of an XdhC-type factor to *P. putida* KT2440
+      xanthine oxidase has now been shown experimentally in this very organism.
+  - statement: The report&#39;s comparison table incorrectly puts PP_2482, rather than PP_2483, in the second predicted MocA cluster.
+    supporting_text: &gt;-
+      | **PP_2483** | isoquinoline-1-oxidoreductase-like | PP_2478
+      (Mo/β-subunit), PP_2479 (cyt *c*), PP_2480 (XdhC), PP_2482 (MobA-like) |
+  - statement: The report presents an AlphaFold result that was not saved as a reproducible local artifact.
+    supporting_text: &gt;-
+      The AlphaFold model of Q88F68 is high-confidence (**mean pLDDT 91.9**) and
+      shows a folded N-terminal Rossmann-like nucleotidyltransferase domain (res
+      ~5–162) plus a short C-terminal acceptor-binding extension (res ~163–188)
+      — the domain that, per Neumann et al., confers dedication to a specific
+      acceptor molybdoenzyme.
+- id: file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+  title: PANTHER representative entries for the MocA-containing family
+  findings:
+  - statement: The local PANTHER representatives include reviewed E. coli MocA Q46810 in PTHR43777:SF1.
+    supporting_text: Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True
+- id: file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md
+  title: Reproducible sequence comparison of KT2440 MoaA-family and MobA-like proteins
+  findings:
+  - statement: Pairwise identity alone does not resolve nucleotide specificity, so the specific assignment relies on concordant orthology and subfamily evidence.
+    supporting_text: |-
+      - These modest identities are not sufficient by themselves to assign nucleotide
+        specificity. PTHR43777:SF1 also contains reviewed proteins with non-MocA names,
+        so family membership alone is not decisive. Independently of this sequence
+        analysis, however, KEGG assigns both PP_2483 and PP_4230 to K07141
+        (molybdenum-cofactor cytidylyltransferase), and both occur in
+        molybdoenzyme-associated neighborhoods. The concordant orthology, subfamily,
+        and neighborhood evidence supports a predicted MocA assignment while leaving
+        CTP specificity and client delivery to direct experimental testing.
+- id: file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+  title: KEGG gene-to-orthology links for KT2440 MobA-like candidates and reviewed controls
+  findings:
+  - statement: The reproducible KEGG lookup maps PP_4230 to MocA orthology K07141.
+    supporting_text: &#34;PP_4230\tQ88F68\tppu:PP_4230\tko:K07141&#34;
+core_functions:
+- description: Predicted transfer of CMP from CTP to Mo-MPT to form the MCD cofactor variant.
+  molecular_function:
+    id: GO:0061602
+    label: molybdenum cofactor cytidylyltransferase activity
+  supported_by:
+  - reference_id: file:PSEPK/moaA/moaA-bioinformatics/mob_like_kegg_orthology.tsv
+    supporting_text: &#34;PP_4230\tQ88F68\tppu:PP_4230\tko:K07141&#34;
+  - reference_id: file:PSEPK/PP_4230/PP_4230-deep-research-openscientist.md
+    supporting_text: &gt;-
+      1. **No PP_4230-specific experimental study exists.** The entire
+      annotation is inferential. There is no published enzyme assay, knockout,
+      structure, or complementation experiment for PP_4230 itself.
+  - reference_id: file:interpro/panther/PTHR43777/PTHR43777-entries.csv
+    supporting_text: Q46810,Molybdenum cofactor cytidylyltransferase,protein,83333,Escherichia coli (strain K12),Escherichia coli (strain K12),mocA,192,PTHR43777:SF1,MOLYBDENUM COFACTOR CYTIDYLYLTRANSFERASE,True
+proposed_new_terms: []
+suggested_questions:
+- question: Is PP_4230 CTP-specific in vitro, and is its MCD product preferentially delivered to the neighboring molybdoenzyme system?
+suggested_experiments:
+- description: Compare CTP- and GTP-dependent nucleotide transfer from purified Q88F68 to Mo-MPT and test the effect of PP_4230 deletion on MCD-containing enzyme activity.
+  experiment_type: substrate-specificity assay and targeted genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -82,6 +82,10 @@ just stats-open           # Generate and open in browser
 - **Evaluation Form**: [https://go.lbl.gov/gene-eval](https://go.lbl.gov/gene-eval) - Detailed expert feedback form
 - **Project Slides**: [Overview Presentation](https://docs.google.com/presentation/d/1xBFIQE0jt7K6kFg4zFzUwLDHtnDWat2ZVDarhcpA3_4/edit?slide=id.p#slide=id.p)
 
+### Presentations
+
+- **ISMB 2026 (Function COSI)**: Caufield JH, Joachimiak MP, Mungall CJ. *Agentic evaluation of AI function prediction pipelines.* Washington, DC, 14 July 2026. Slides: [doi:10.5281/zenodo.21810552](https://doi.org/10.5281/zenodo.21810552)
+
 ### Documentation Pages
 
 - **Voting System Guide**: Learn how to provide feedback on AI curation decisions

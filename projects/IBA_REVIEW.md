@@ -1,9 +1,11 @@
 ---
 title: "IBA Annotation Quality Project"
-maturity: COMPLETE
+maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
 genes:
+  - cao-1
+  - NQO2
   - Epe1
   - cds1
   - LPL1
@@ -67,6 +69,15 @@ genes:
   - lys-7
   - UBP3
   - CASP12
+  - carD
+  - rasC
+  - pten
+  - regA
+  - pdsA
+  - acgA
+  - yakA
+  - statA
+  - statC
 ---
 
 # IBA Annotation Quality Project
@@ -327,7 +338,19 @@ as a secondary function.
 
 **Example - CPT1C (human)** — `GO:0006631` (fatty acid metabolic process), `GO:0009437` (carnitine metabolic process):
 - A **neofunctionalization** case: UniProt's RecName is literally *"Palmitoyl thioesterase CPT1C."* Although it sits in the carnitine O-acyltransferase family (PTHR22589) with CPT1A/B, experimental work shows CPT1C **lacks the canonical carnitine palmitoyltransferase activity** (it binds malonyl-CoA but does not catalyze carnitine-dependent acyl transfer). The IBA propagates the ancestral CPT1A/B fatty-acid/carnitine metabolism that CPT1C no longer performs.
-- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases) leaks substrate terms across specificity boundaries.
+**Example - cao-1 / CAO-1 (*Neurospora crassa*)** — `GO:0010436` (carotenoid dioxygenase activity), `GO:0016121` (carotene catabolic process):
+- CAO-1 sits in PANTHER **PTHR10543** subfamily **SF89** (labelled *"carotenoid 9,10(9',10')-cleavage dioxygenase 1"*), a node that is functionally heterogeneous: it lumps genuine carotenoid cleavers (*Arabidopsis* CCD1, *Synechocystis* apocarotenoid oxygenase, *M. tuberculosis* Rv0654), **stilbenoid/resveratrol cleavers** (*U. maydis* RCO1, *Botrytis* rco1, and CAO-1 itself), and **phenylpropanoid cleavers** (*Pseudomonas* isoeugenol monooxygenase). The carotenoid-dioxygenase IBA propagates from node **`PTN001631894`**, whose `WITH/FROM` includes the *M. tuberculosis* carotenoid cleaver `UniProtKB:P9WPR5`.
+- Direct experimental evidence **refutes carotenoid activity**: heterologously expressed CAO-1 did not convert β-carotene or any carotenoid/apocarotenoid tested, while it cleaves the interphenyl Cα–Cβ double bond of **resveratrol and piceatannol** (PMID:23893079). GOA already carries the corrective experimental **`NOT` carotenoid metabolic process** (GO:0016116, IDA, PMID:23893079). Crystal structures show the conserved four-His non-heme Fe(II) center but a **stilbenoid-adapted substrate cleft** (PMID:28493664).
+- A **blinded OpenScientist** function-assignment run — given only the neutral hypothesis *"cao-1 has carotenoid dioxygenase activity"* — independently returned **"REFUTED (over-annotated)"** and likewise attributed the error to CCO/RPE65 (PTHR10543) family IBA, an independent confirmation of the manual call.
+- **Positive-control paralog (the decisive contrast):** the *N. crassa* paralog **CAO-2 (A7UXI1, NCU11424)** carries the **identical** family IBAs — `GO:0010436` and `GO:0016121`, both from `GO_REF:0000033` — but for CAO-2 they are **correct**: CAO-2 is a genuine torulene dioxygenase (EC 1.13.11.59, KEGG KO K17842) and an integral step of the **carotenoid biosynthesis pathway** (KEGG `ncr00906`), whereas cao-1 (KO K28521) is mapped to **no pathway**. Same family term, same GO_REF, one genome — **right for one paralog, wrong for the other**, distinguishable only by target-specific experimental evidence (the direct assay + curated `NOT` on cao-1). The two sit in different PTHR10543 subfamilies (cao-1 SF89, cao-2 SF24) yet inherited the same ancestral carotenoid annotation.
+- Action: **REMOVE** the carotenoid MF IBA; **MODIFY** the carotene-catabolic BP IBA to `GO:0046272` (stilbene catabolic process). The accurate MF (`GO:0016702` dioxygenase) is already present by IDA, and a class-level *stilbenoid α,β-dioxygenase activity* grouping term is proposed. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+**Example - NQO2 (human)** — `GO:0003955` (NAD(P)H dehydrogenase (quinone) activity):
+- NQO2 sits with NQO1 in the NAD(P)H:quinone oxidoreductase family (PANTHER **PTHR10204**). The family IBA transfers `GO:0003955`, which maps to **EC 1.6.5.2** and specifies **NAD(P)H** as the electron donor — but NQO2 characteristically **does not use NAD(P)H**; it uses **dihydronicotinamide riboside (NRH)** (PMID:10945627). The divergence here is in the **cofactor / co-substrate**, not the cleaved-substrate class or the fold.
+- A **blinded OpenScientist** run (neutral hypothesis *"NQO2 has NAD(P)H dehydrogenase (quinone) activity"*) independently returned **over-annotated → the NAD(P)H term is substrate-incorrect**, citing Wu et al. 1997 (PMID:9367528) that NQO2 uses NRH "rather than NAD(P)H," and noting the correct term GO:0001512 is already annotated by IDA.
+- Action: **MODIFY** to the NRH-specific `GO:0001512` (dihydronicotinamide riboside quinone reductase activity; **EC 1.10.5.1**, **RHEA:12364**), already supported by IDA. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase; CAO-1 cleaves stilbenes not carotenoids; NQO2 uses NRH not NAD(P)H), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases; carotenoid+stilbenoid+phenylpropanoid cleavage oxygenases) leaks substrate terms across specificity boundaries — and the leak can be in the **cleaved substrate** (CAO-1) or the **cofactor/co-substrate** (NQO2). Where a subfamily label itself names one specificity (`PTHR10543:SF89` = "carotenoid … cleavage dioxygenase") while spanning several, that label is the mechanical origin of the leak.
 
 ### 12. Mis-Grouping Revealed by the WITH/FROM Column
 
@@ -560,6 +583,75 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 
 See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 
+### DICDI cAMP / STAT developmental families — Stage-Specific Paralog & Lineage Over-Propagation
+
+*Dictyostelium discoideum* development is driven by several **paralog families whose
+members do the same molecular job at different developmental stages** (the cAMP
+receptors cAR1–4, the adenylate cyclases ACA/ACG/ACR, the Ras GTPases RasC/RasG,
+the STATs Dd-STATa/c). Reviewing one representative per family alongside its
+sisters exposed IBA transferring a **family-node consensus onto the wrong member,
+stage, compartment, or lineage** — the same failure classes catalogued above, now
+in a social amoeba:
+
+- **Stage/paralog leakage (`PROPAGATION_BAD` · `WRONG_ORTHOLOG_OR_PARALOG`).**
+  The aggregation-stage "adenylate cyclase-activating cAMP receptor signaling"
+  role (`GO:0007189`) is propagated by the cAR family node onto the *later*,
+  lower-affinity receptor **cAR4/carD**, whose characterised output is the
+  PTP/GSK3 axis, not adenylate-cyclase activation. Likewise **rasC** carries
+  `GO:0000281` mitotic cytokinesis, but rasC-null cells divide normally — cytokinesis
+  is **RasG's** job in this family.
+- **Lineage-inappropriate process transfer (`LINEAGE_OR_TAXON_MISMATCH`).** The STAT
+  family node **PTN000927860** transfers metazoan STAT roles — `GO:0006952` defense
+  response and `GO:0042127` regulation of cell population proliferation — onto both
+  **Dd-STATa** and **Dd-STATc** from all-metazoan seeds (human/mouse/rat/fly/worm
+  STAT1/2/5…). This mirrors the existing worm `sta-2`/`fshr-1` cross-kingdom row.
+- **Term-scoping across a lineage gap (`TERM_SCOPING_PROBLEM`).** Both Dictyostelium
+  STATs are annotated `GO:0007259` "signaling via **JAK**-STAT", yet *Dictyostelium*
+  has **no JAK** (they are activated by the TKL kinases Pyk2/Pyk3); the term is
+  rescoped to `GO:0097696` STAT signaling.
+- **Functional divergence with fold retained (`FUNCTIONAL_DIVERGENCE`).** **regA**
+  inherits `GO:0047555` cGMP-phosphodiesterase activity from the cyclic-nucleotide
+  PDE family node, but RegA is **cAMP-specific** (>200-fold selectivity). **yakA**
+  (a dual-specificity DYRK) carries the family's generic `GO:0004713` protein
+  **tyrosine** kinase activity.
+- **Compartment mismatch (`COMPARTMENT_OR_COMPLEX_MISMATCH`).** **pten** inherits
+  `GO:0005634` nucleus (a mammalian-PTEN behaviour) although all Dictyostelium
+  evidence places it at the membrane/cortex/cytosol; **spiA** (a demonstrated
+  spore-coat protein) inherits the canonical SCAMP `trans-Golgi`/`recycling
+  endosome` localisations.
+
+Each of these rows carries a structured `review.propagation_review`
+(`root_cause` + `failure_modes` + the real GOA `WITH/FROM` PANTHER `PTN…` node
+and a representative seed) in the corresponding
+`genes/DICDI/<gene>/<gene>-ai-review.yaml`. Full module and paralog context:
+[Dictyostelium Development Project](DICTYOSTELIUM_DEVELOPMENT.md).
+
+> **Connection to pathway satisfiability.** The JAK-STAT case is the clearest
+> instance of a broader, *automatable* rule. `GO:0007259` "signaling via
+> **JAK**-STAT" names an obligate component — a Janus kinase — that the
+> *Dictyostelium* genome does not encode (the Dd-STATs are activated by the TKL
+> kinases Pyk2/Pyk3). Read as a boolean formula over required components under a
+> **genome-content oracle**, the annotation is *unsatisfiable* and the IBA
+> transfer is unsupportable — so it is rescoped to the JAK-independent parent
+> `GO:0097696` STAT signaling. This is the signaling-domain analogue of the
+> genome-content check in the
+> [Pathway satisfiability project](PATHWAY_SATISFIABILITY.md): a process/pathway
+> term whose definition entails a component **absent from the target's genome**
+> is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation. A runnable
+> prototype of exactly this check —
+> [taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
+> — confirms JAK is genome-absent in *Dictyostelium* (`GO:0007259` unsatisfiable
+> → `GO:0097696`). It uses **two oracles**: an InterPro domain signature and,
+> primarily, **PANTHER family (`PTHR…`) membership** — the divergence-robust one,
+> since IBA propagates along the PANTHER tree. That distinction matters: an
+> InterPro-only screen falsely calls STAT and P2X *absent* in *Dictyostelium*
+> (both diverged past their metazoan domain signature), whereas PANTHER correctly
+> recovers the 4 Dd-STATs and the ~5 divergent P2X receptors — so the organism
+> **does** have (ionotropic) P2X, and only the metabotropic **P2Y (GPCR)**
+> component that `GO:0035589` specifically requires is genuinely absent. Even at
+> HIGH confidence an `ABSENT` verdict is a strong lead for review, not an
+> automatic `REMOVE`.
+
 ## Genes with IBA Issues
 
 | Gene | Species | IBA Issue Type | Severity | Status |
@@ -581,6 +673,8 @@ See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 | HMGCS2 | rat | Paralog-pathway over-annotation (ketogenic; FPP synthesis is HMGCS1) | MEDIUM | COMPLETE |
 | PEX2 | human | Complex over-transfer (peroxisomal E3, not Cdc73/Paf1 complex) | MEDIUM | COMPLETE |
 | AGK | human | Substrate over-propagation (no ceramide/sphingosine kinase activity; 2 papers) | MEDIUM | COMPLETE |
+| cao-1 | NEUCR | Substrate over-propagation (cleaves stilbenes not carotenoids; PTHR10543:SF89 mixes specificities; blinded-confirmed) | MEDIUM | COMPLETE |
+| NQO2 | human | Cofactor over-propagation (uses NRH not NAD(P)H; MODIFY to NRH:quinone reductase; blinded-confirmed) | MEDIUM | COMPLETE |
 | AKTIP | human | Pseudo-enzyme (UniProt CAUTION: lacks catalytic Cys for E2 activity) | HIGH | COMPLETE |
 | DPYSL4 | human | Pseudo-enzyme (CRMP-family metallo-hydrolase, non-catalytic) | HIGH | COMPLETE |
 | SAMD8 | human | Substrate neofunctionalization (CPE synthase, not sphingomyelin synthase) | MEDIUM | COMPLETE |
@@ -608,6 +702,13 @@ See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
 | Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
 | sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
 | CIRBP / RBM3 | human | Functional divergence within RRM family (splicing terms on cold-shock mRNA-stability subfamily; PTHR48034 node PTN000391532) | MEDIUM | COMPLETE |
+| statA / statC | DICDI | Cross-kingdom: metazoan STAT defense/proliferation + JAK-STAT (no JAK in amoebae); node PTN000927860 | MEDIUM | COMPLETE |
+| carD (cAR4) | DICDI | Stage-specific paralog: aggregation adenylate-cyclase-activating role leaked onto a late low-affinity cAMP receptor | MEDIUM | COMPLETE |
+| rasC | DICDI | Wrong-paralog: mitotic cytokinesis (RasG's role; rasC-null divides normally) | MEDIUM | COMPLETE |
+| regA | DICDI | Functional divergence: cGMP-PDE activity on a cAMP-specific phosphodiesterase | MEDIUM | COMPLETE |
+| pten | DICDI | Compartment mismatch: nucleus on a membrane/cortex PtdIns(3,4,5)P3 phosphatase | LOW | COMPLETE |
+| spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
+| acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
 
 ## IBA Incompleteness: core function that IBA fails to propagate
 

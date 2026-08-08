@@ -1,0 +1,4177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GSR</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P00390" target="_blank" class="term-link">
+                        P00390
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GSR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P00390" data-a="DESCRIPTION: GSR encodes glutathione-disulfide reductase (gluta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GSR encodes glutathione-disulfide reductase (glutathione reductase, GR; EC 1.8.1.7), an FAD-dependent, NADPH-using homodimeric flavoenzyme of the class-I pyridine nucleotide-disulfide oxidoreductase family. It catalyzes the reduction of oxidized glutathione (glutathione disulfide, GSSG) to two molecules of reduced glutathione (GSH) using NADPH, and constitutes the major mechanism maintaining the high cellular GSH:GSSG ratio that underpins antioxidant defense and thiol redox homeostasis. Each subunit binds one FAD; catalysis proceeds via a redox-active active-site disulfide and electron flow from NADPH through FAD. The enzyme is dually targeted to the cytosol and mitochondria through alternative initiation/splicing, with distinct mitochondrial and cytoplasmic isoforms. In humans, biallelic loss-of-function causes congenital non-spherocytic hemolytic anemia, with hemolytic crises triggered by oxidative stress or ingestion of fava beans (favism).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004362" target="_blank" class="term-link">
+                                    GO:0004362
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione-disulfide reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0004362" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of GSR. The phylogenetic (IBA) inference is fully concordant with the UniProt catalytic activity and with direct experimental and structural evidence for the human enzyme.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0045454" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> By regenerating GSH from GSSG, GSR maintains the cellular thiol redox environment. Appropriate core biological process, consistent with UniProt.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Constitutes the major mechanism to maintain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The mitochondrial isoform (P00390-1) carries an N-terminal transit peptide and is targeted to mitochondria, where GR regenerates GSH in the matrix. Consistent with UniProt subcellular location and Reactome mitochondrial matrix localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Mitochondrial]: Mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cytoplasmic isoform (P00390-2, produced by alternative initiation) localizes to the cytosol, where GR maintains the cytosolic GSH:GSSG ratio. Also supported by HPA IDA and Reactome. A core site of action.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Cytoplasmic]: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006749" target="_blank" class="term-link">
+                                    GO:0006749
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0006749" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GSR is central to glutathione metabolism, specifically the regeneration (recycling) arm that reduces GSSG back to GSH. Note this is glutathione recycling, not de-novo biosynthesis. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reduction of glutathione disulfide (GSSG) to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034599" target="_blank" class="term-link">
+                                    GO:0034599
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0034599" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GSR sustains GSH-based antioxidant defense and its deficiency manifests as oxidative-stress-triggered hemolysis, so a role in the oxidative-stress response is reasonable. However this is a downstream/consequence process rather than the enzyme&#39;s core catalytic role, so it is retained as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">experience hemolytic anemia in response to oxidative stress or</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0050660" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GSR binds one FAD per subunit as an essential redox cofactor, extensively documented in high-resolution crystal structures. A core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FAD per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004362" target="_blank" class="term-link">
+                                    GO:0004362
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione-disulfide reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0004362" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/RHEA/EC pipeline) assignment of the core catalytic activity, fully consistent with experimental evidence. Redundant with the EXP, TAS and IBA assertions of the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General parent of cytosol, mapped electronically from the UniProt Cytoplasm subcellular-location keyword. Correct but less informative than the cytosol (GO:0005829) annotations; retained as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Cytoplasmic]: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt Mitochondrion subcellular-location keyword; consistent with the mitochondrial isoform and its transit peptide.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Mitochondrial]: Mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006749" target="_blank" class="term-link">
+                                    GO:0006749
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0006749" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment of the core biological process, redundant with the IBA annotation of the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reduction of glutathione disulfide (GSSG) to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but high-level grouping term. The specific activity GO:0004362 (glutathione-disulfide reductase) is the informative descendant, making this an over-annotation for capturing the molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016668" target="_blank" class="term-link">
+                                    GO:0016668
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0016668" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct intermediate grouping term describing the EC 1.8.1.- class, but subsumed by the specific GO:0004362. Over-annotation relative to the precise term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0045454" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment redundant with the IBA annotation of this core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Constitutes the major mechanism to maintain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment of FAD binding, redundant with the IBA annotation and directly supported by crystallographic evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FAD per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0050661" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GSR binds NADP(H) as the electron-donating substrate; the UniProt feature table lists multiple NADP(+)-binding residues determined by crystallography. A core molecular function, here supported electronically by InterPro.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;NADP(+)&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    GO:0098869
+                                </a>
+                            </span>
+                            <span class="term-label">cellular oxidant detoxification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0098869" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logically inferred from the catalytic activity (GO:0004362). GSR contributes indirectly to oxidant detoxification by regenerating GSH used by peroxidases, but it does not itself detoxify oxidants; retained as a non-core downstream process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Constitutes the major mechanism to maintain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent with the cytoplasmic isoform and Reactome. Supports a core site of action.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Cytoplasmic]: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004362" target="_blank" class="term-link">
+                                    GO:0004362
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione-disulfide reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17185460" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17185460
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular basis of glutathione reductase deficiency in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0004362" data-r="PMID:17185460" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation from Kamerbeek et al. (2007), which characterized GR catalytic activity in patient blood cells and recombinant variants and established the molecular basis of GR deficiency. Directly supports the core catalytic function and is the basis for the EC 1.8.1.7 assignment. Cached publication is abstract-only.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17185460" target="_blank" class="term-link">
+                                        PMID:17185460
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Red blood cells and leukocytes of the patients in family 1 did not</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome detection, consistent with the mitochondrial isoform and UniProt subcellular location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Mitochondrial]: Mitochondrion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71682
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005829" data-r="Reactome:R-HSA-71682" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing the cytosolic GR-catalyzed reaction in the cytosol. Consistent with the cytoplasmic isoform and HPA IDA. Core site.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Cytoplasmic]: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9761843
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005829" data-r="Reactome:R-HSA-9761843" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation associated with the NFE2L2-dependent GSR expression pathway, again localizing GR to the cytosol. Redundant with the other cytosol annotations but correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GSR/GSR-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">[Isoform Cytoplasmic]: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of GSR in prostatic-secretion (urinary) exosomes. Reflects incidental presence in secreted vesicles rather than a catalytic site of action; retained as non-core (not removed, per experimental-lineage HDA policy).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In pooled EPS-urine exosome samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of GSR in urinary exosomes. As above, an incidental vesicle-proteome localization, not a functional site; retained as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3323079
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0005759" data-r="Reactome:R-HSA-3323079" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation localizing the GR-catalyzed GSSG reduction to the mitochondrial matrix, consistent with the mitochondrial isoform. A specific, correct site of action.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3323079
+
+                                </span>
+
+                                <div class="support-text">Glutathione reductase (GSR) in the mitochondrial matrix regenerates reduced</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/947404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:947404
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Familial deficiency of glutathione reductase in human blood ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0009055" data-r="PMID:947404" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Although GR performs intramolecular electron transfer (NADPH to FAD to the active-site disulfide to GSSG), the GO term &#34;electron transfer activity&#34; denotes an electron-carrier role (e.g. in electron transport chains) and is a poor fit for this dedicated disulfide reductase. The specific catalytic function is captured by GO:0004362; this broad TAS is an over-annotation. Not removed (experimental-lineage TAS).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/947404" target="_blank" class="term-link">
+                                        PMID:947404
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A virtually complete absence of glutathione reductase activity was found in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004362" target="_blank" class="term-link">
+                                    GO:0004362
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione-disulfide reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/947404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:947404
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Familial deficiency of glutathione reductase in human blood ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P00390" data-a="GO:0004362" data-r="PMID:947404" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (Loos et al. 1976) of GR activity in human blood cells, the classic description of familial GR deficiency. Supports the core catalytic function. Cached publication is abstract-only.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/947404" target="_blank" class="term-link">
+                                        PMID:947404
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A virtually complete absence of glutathione reductase activity was found in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glutathione-disulfide reductase — reduces oxidized glutathione (GSSG) to two reduced glutathione (GSH) using NADPH and an FAD-dependent redox cycle, maintaining the high cellular GSH:GSSG ratio.</h3>
+                <span class="vote-buttons" data-g="P00390" data-a="FUNCTION: Glutathione-disulfide reductase — reduces oxidized..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004362" target="_blank" class="term-link">
+                            glutathione-disulfide reductase (NADPH) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GSR/GSR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17185460" target="_blank" class="term-link">
+                                PMID:17185460
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Red blood cells and leukocytes of the patients in family 1 did not</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds one FAD per subunit as the essential redox cofactor mediating electron transfer from NADPH to the active-site disulfide.</h3>
+                <span class="vote-buttons" data-g="P00390" data-a="FUNCTION: Binds one FAD per subunit as the essential redox c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GSR/GSR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Binds 1 FAD per subunit.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds NADP(H), the electron-donating substrate/product of the reductase reaction, at a dedicated NADPH-binding domain.</h3>
+                <span class="vote-buttons" data-g="P00390" data-a="FUNCTION: Binds NADP(H), the electron-donating substrate/pro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                            NADP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GSR/GSR-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">/ligand=&#34;NADP(+)&#34;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17185460" target="_blank" class="term-link">
+                            PMID:17185460
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular basis of glutathione reductase deficiency in human blood cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GR deficiency in patient blood cells abolishes glutathione reductase activity; a 2246-bp deletion removes the dimerization domain and a G330A substitution impairs thermostability, establishing the molecular basis of GR deficiency and supporting the enzyme&#39;s catalytic function.</div>
+
+                        <div class="finding-text">"Red blood cells and leukocytes of the patients in family 1 did not"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale LC-MS/MS proteomics of human urinary exosomes identified GSR among 1132 proteins, supporting an incidental exosome-proteome localization.</div>
+
+                        <div class="finding-text">"the analysis identified 1132 proteins unambiguously"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Shotgun proteomics of prostatic-secretion (urinary) exosomes detected GSR among ~900 proteins, an incidental secreted-vesicle localization.</div>
+
+                        <div class="finding-text">"In pooled EPS-urine exosome samples, ~900 proteins were detected."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/947404" target="_blank" class="term-link">
+                            PMID:947404
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Familial deficiency of glutathione reductase in human blood cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Classic description of familial glutathione reductase deficiency in human erythrocytes and leukocytes, with hemolytic crises after eating fava beans; establishes the enzyme&#39;s activity and clinical relevance.</div>
+
+                        <div class="finding-text">"A virtually complete absence of glutathione reductase activity was found in the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3323079
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GSR catalyzes glutathione (oxidized) + NADPH + H+ =&gt; 2 glutathione (reduced) + NADP+</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GSR in the mitochondrial matrix regenerates reduced glutathione from oxidized glutathione and NADPH.</div>
+
+                        <div class="finding-text">"Glutathione reductase (GSR) in the mitochondrial matrix regenerates reduced"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71682
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glutathione (oxidized) + NADPH + H+ =&gt; 2 glutathione (reduced) + NADP+</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytosolic glutathione reductase catalyzes reduction of GSSG by NADPH to form two GSH; deficiency can cause hemolytic anemia.</div>
+
+                        <div class="finding-text">"Cytosolic glutathione reductase catalyzes the reaction of glutathione (oxidized)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9761843
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NFE2L2-dependent GSR gene expression</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GSR contributes to cellular redox balance by reducing GSSG to GSH; its expression is regulated in part by the KEAP1:NFE2L2 (NRF2) antioxidant-response pathway.</div>
+
+                        <div class="finding-text">"Glutathione reductase (GSR) contributes to the redox balance in a cell by"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GSR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P00390" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gsr-glutathione-reductase-review-notes">GSR (Glutathione reductase) — review notes</h1>
+<p>UniProt: P00390 (GSHR_HUMAN); HGNC:4623; Gene 2936; chromosome 8. EC 1.8.1.7.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>GSR is glutathione-disulfide reductase (glutathione reductase, GR/GRase), an<br />
+FAD-dependent, NADPH-using homodimeric flavoenzyme of the class-I pyridine<br />
+nucleotide-disulfide oxidoreductase family. It reduces oxidized glutathione<br />
+(glutathione disulfide, GSSG) back to two molecules of reduced glutathione (GSH)<br />
+using NADPH, thereby maintaining the high cellular GSH:GSSG ratio that underpins<br />
+antioxidant defense and thiol redox homeostasis.</p>
+<ul>
+<li>Function / catalytic activity:<br />
+  [file:human/GSR/GSR-uniprot.txt "Catalyzes the reduction of glutathione disulfide (GSSG) to"]<br />
+  ... "reduced glutathione (GSH). Constitutes the major mechanism to maintain"<br />
+  ... "a high GSH:GSSG ratio in the cytosol." {ECO:0000269|PubMed:17185460}</li>
+<li>Reaction (Rhea RHEA:11740): 2 glutathione + NADP(+) = glutathione disulfide + NADPH + H(+); EC=1.8.1.7<br />
+  [file:human/GSR/GSR-uniprot.txt "Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +"]</li>
+<li>Cofactor FAD, 1 per subunit:<br />
+  [file:human/GSR/GSR-uniprot.txt "Note=Binds 1 FAD per subunit."]</li>
+<li>Quaternary structure — homodimer, disulfide-linked:<br />
+  [file:human/GSR/GSR-uniprot.txt "SUBUNIT: Homodimer; disulfide-linked."]</li>
+<li>Active site is a redox-active disulfide:<br />
+  [file:human/GSR/GSR-uniprot.txt "MISCELLANEOUS: The active site is a redox-active disulfide bond."]</li>
+<li>Domain organization (FAD-binding domain 1, NADPH-binding domain 2, interface domain 4):<br />
+  [file:human/GSR/GSR-uniprot.txt "respectively. Domain 4 forms the interface."]</li>
+<li>Family:<br />
+  [file:human/GSR/GSR-uniprot.txt "Belongs to the class-I pyridine nucleotide-disulfide"]</li>
+</ul>
+<h2 id="localization-isoforms">Localization / isoforms</h2>
+<p>Alternative products (alternative splicing + alternative initiation), 5 named isoforms.<br />
+Isoform Mitochondrial (P00390-1, displayed) and Isoform Cytoplasmic (P00390-2, produced by<br />
+alternative initiation of the mitochondrial isoform) target the enzyme to mitochondrion<br />
+and cytoplasm respectively:<br />
+- [file:human/GSR/GSR-uniprot.txt "SUBCELLULAR LOCATION: [Isoform Mitochondrial]: Mitochondrion."]<br />
+- [file:human/GSR/GSR-uniprot.txt "SUBCELLULAR LOCATION: [Isoform Cytoplasmic]: Cytoplasm."]<br />
+- [file:human/GSR/GSR-uniprot.txt "initiation of isoform Mitochondrial."]<br />
+- N-terminal mitochondrial transit peptide (residues 1..43):<br />
+  [file:human/GSR/GSR-uniprot.txt "TRANSIT         1..43"]</p>
+<p>Reactome places the catalytic activity in both cytosol (R-HSA-71682) and mitochondrial<br />
+matrix (R-HSA-3323079). HPA IDA (GO_REF:0000052) supports cytosol localization.<br />
+Both localizations are consistent with the dual targeting described in UniProt.</p>
+<h2 id="disease">Disease</h2>
+<p>Congenital non-spherocytic hemolytic anemia 10 (CNSHA10; MIM:618660), autosomal recessive.<br />
+Patients experience hemolytic anemia in response to oxidative stress or ingestion of fava beans (favism).<br />
+- [file:human/GSR/GSR-uniprot.txt "experience hemolytic anemia in response to oxidative stress or"]<br />
+- Molecular basis: <a href="https://pubmed.ncbi.nlm.nih.gov/17185460" title="Owing to a 2246-bp deletion in the patients' DNA, translated GR is   expected to lack almost the complete dimerization domain, which results in   unstable and inactive enzyme.">PMID:17185460</a> and a G330A substitution (a highly conserved residue in the<br />
+  superfamily of NAD(P)H-dependent disulfide reductases) causing impaired thermostability.<br />
+  This paper (Kamerbeek et al. 2007, Blood) is the source of the EXP catalytic-activity<br />
+  annotation (GO:0004362) and the disease/EC assignment. Cached entry is abstract-only<br />
+  (full_text_available: false); the abstract confirms GR catalytic activity assays and the disease link.</p>
+<h2 id="historical-classic-references">Historical / classic references</h2>
+<ul>
+<li>PMID:947404 (Loos et al. 1976, Blood) — familial GR deficiency in human blood cells;<br />
+  abstract-only. Basis for the two TAS annotations (GO:0004362 and GO:0009055 electron<br />
+  transfer activity). The paper establishes GR deficiency and its clinical manifestation<br />
+  (favism, cataracts). Reactome R-HSA-71682 also cites Loos et al. 1976.</li>
+<li>Extensive high-resolution crystal structures with FAD, NADPH and glutathione bound<br />
+  (e.g. PDB 3DK9 at 0.95 Å; PMID:18638483 Berkholz et al. 2008), establishing the<br />
+  FAD/NADP(P)H/glutathione binding sites listed in the UniProt FT lines.</li>
+</ul>
+<h2 id="annotation-assessment-summary">Annotation assessment summary</h2>
+<p>Core molecular functions well supported by structure + biochemistry:<br />
+- GO:0004362 glutathione-disulfide reductase (NADPH) activity (EXP PMID:17185460; also TAS/IBA/IEA) — CORE<br />
+- GO:0050660 flavin adenine dinucleotide binding (FAD cofactor, 1/subunit; IBA/IEA) — CORE<br />
+- GO:0050661 NADP binding (NADPH substrate; IEA InterPro) — CORE (supported by FT NADP(+) binding residues)</p>
+<p>Core biological processes:<br />
+- GO:0006749 glutathione metabolic process — CORE (regeneration of GSH; note this is<br />
+  glutathione RECYCLING, not de-novo glutathione biosynthesis)<br />
+- GO:0045454 cell redox homeostasis — CORE</p>
+<p>Locations: cytosol (GO:0005829) and mitochondrion (GO:0005739) / mitochondrial matrix<br />
+(GO:0005759) are all consistent with the dual (alternative-initiation) targeting.</p>
+<p>Over-annotations / non-core (kept, not removed):<br />
+- GO:0016491 oxidoreductase activity, GO:0016668 oxidoreductase activity acting on sulfur<br />
+  group of donors NAD(P) as acceptor — parent/grouping MF terms subsumed by GO:0004362; MARK_AS_OVER_ANNOTATED.<br />
+- GO:0009055 electron transfer activity (TAS PMID:947404) — GR does internal electron<br />
+  transfer (NADPH-&gt;FAD-&gt;disulfide-&gt;GSSG) but "electron transfer activity" is the ETC-style<br />
+  MF; the specific term GO:0004362 captures the function. MARK_AS_OVER_ANNOTATED (experimental-lineage TAS; not removed).<br />
+- GO:0034599 cellular response to oxidative stress — downstream/consequence process; KEEP_AS_NON_CORE.<br />
+- GO:0098869 cellular oxidant detoxification — IEA logical inference from GO:0004362; KEEP_AS_NON_CORE.<br />
+- GO:0005737 cytoplasm (IEA SubCell) — general parent of cytosol; KEEP_AS_NON_CORE.<br />
+- GO:0070062 extracellular exosome (HDA, urinary/prostatic exosome proteomics<br />
+  PMID:23533145, PMID:19056867) — high-throughput mass-spec detection in secreted vesicles;<br />
+  not a site of GR catalytic function. KEEP_AS_NON_CORE (do not remove HDA).</p>
+<p>No annotations were REMOVED (no clearly-wrong IEA present; the two exosome HDA and the<br />
+electron-transfer TAS are experimental-lineage and handled with KEEP_AS_NON_CORE /<br />
+MARK_AS_OVER_ANNOTATED per policy).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P00390
+gene_symbol: GSR
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: GSR encodes glutathione-disulfide reductase (glutathione reductase, GR;
+  EC 1.8.1.7), an FAD-dependent, NADPH-using homodimeric flavoenzyme of the class-I
+  pyridine nucleotide-disulfide oxidoreductase family. It catalyzes the reduction of
+  oxidized glutathione (glutathione disulfide, GSSG) to two molecules of reduced glutathione
+  (GSH) using NADPH, and constitutes the major mechanism maintaining the high cellular
+  GSH:GSSG ratio that underpins antioxidant defense and thiol redox homeostasis. Each
+  subunit binds one FAD; catalysis proceeds via a redox-active active-site disulfide
+  and electron flow from NADPH through FAD. The enzyme is dually targeted to the cytosol
+  and mitochondria through alternative initiation/splicing, with distinct mitochondrial
+  and cytoplasmic isoforms. In humans, biallelic loss-of-function causes congenital
+  non-spherocytic hemolytic anemia, with hemolytic crises triggered by oxidative stress
+  or ingestion of fava beans (favism).
+alternative_products:
+- name: Mitochondrial
+  id: P00390-1
+- name: Cytoplasmic
+  id: P00390-2
+  sequence_note: VSP_018972
+- name: 2 (delta8)
+  id: P00390-3
+  sequence_note: VSP_042908
+- name: 3 (delta9)
+  id: P00390-4
+  sequence_note: VSP_042909
+- name: 4 (delta8+9)
+  id: P00390-5
+  sequence_note: VSP_042908, VSP_042909
+existing_annotations:
+- term:
+    id: GO:0004362
+    label: glutathione-disulfide reductase (NADPH) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Core molecular function of GSR. The phylogenetic (IBA) inference is fully
+      concordant with the UniProt catalytic activity and with direct experimental and
+      structural evidence for the human enzyme.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: By regenerating GSH from GSSG, GSR maintains the cellular thiol redox
+      environment. Appropriate core biological process, consistent with UniProt.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Constitutes the major mechanism to maintain
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: The mitochondrial isoform (P00390-1) carries an N-terminal transit peptide
+      and is targeted to mitochondria, where GR regenerates GSH in the matrix. Consistent
+      with UniProt subcellular location and Reactome mitochondrial matrix localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Mitochondrial]: Mitochondrion.&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: The cytoplasmic isoform (P00390-2, produced by alternative initiation)
+      localizes to the cytosol, where GR maintains the cytosolic GSH:GSSG ratio. Also
+      supported by HPA IDA and Reactome. A core site of action.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Cytoplasmic]: Cytoplasm.&#39;
+- term:
+    id: GO:0006749
+    label: glutathione metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: GSR is central to glutathione metabolism, specifically the regeneration
+      (recycling) arm that reduces GSSG back to GSH. Note this is glutathione recycling,
+      not de-novo biosynthesis. Core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Catalyzes the reduction of glutathione disulfide (GSSG) to
+- term:
+    id: GO:0034599
+    label: cellular response to oxidative stress
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: GSR sustains GSH-based antioxidant defense and its deficiency manifests
+      as oxidative-stress-triggered hemolysis, so a role in the oxidative-stress response
+      is reasonable. However this is a downstream/consequence process rather than the
+      enzyme&#39;s core catalytic role, so it is retained as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: experience hemolytic anemia in response to oxidative stress or
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: GSR binds one FAD per subunit as an essential redox cofactor, extensively
+      documented in high-resolution crystal structures. A core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Note=Binds 1 FAD per subunit.
+- term:
+    id: GO:0004362
+    label: glutathione-disulfide reductase (NADPH) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic (InterPro/RHEA/EC pipeline) assignment of the core catalytic
+      activity, fully consistent with experimental evidence. Redundant with the EXP,
+      TAS and IBA assertions of the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: General parent of cytosol, mapped electronically from the UniProt Cytoplasm
+      subcellular-location keyword. Correct but less informative than the cytosol (GO:0005829)
+      annotations; retained as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Cytoplasmic]: Cytoplasm.&#39;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic mapping from the UniProt Mitochondrion subcellular-location
+      keyword; consistent with the mitochondrial isoform and its transit peptide.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Mitochondrial]: Mitochondrion.&#39;
+- term:
+    id: GO:0006749
+    label: glutathione metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO electronic assignment of the core biological process, redundant
+      with the IBA annotation of the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Catalyzes the reduction of glutathione disulfide (GSSG) to
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but high-level grouping term. The specific activity GO:0004362
+      (glutathione-disulfide reductase) is the informative descendant, making this an
+      over-annotation for capturing the molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +
+- term:
+    id: GO:0016668
+    label: oxidoreductase activity, acting on a sulfur group of donors, NAD(P) as
+      acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct intermediate grouping term describing the EC 1.8.1.- class, but
+      subsumed by the specific GO:0004362. Over-annotation relative to the precise term.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO electronic assignment redundant with the IBA annotation of
+      this core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Constitutes the major mechanism to maintain
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO electronic assignment of FAD binding, redundant with the IBA
+      annotation and directly supported by crystallographic evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Note=Binds 1 FAD per subunit.
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: GSR binds NADP(H) as the electron-donating substrate; the UniProt feature
+      table lists multiple NADP(+)-binding residues determined by crystallography. A
+      core molecular function, here supported electronically by InterPro.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: /ligand=&#34;NADP(+)&#34;
+- term:
+    id: GO:0098869
+    label: cellular oxidant detoxification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: Logically inferred from the catalytic activity (GO:0004362). GSR contributes
+      indirectly to oxidant detoxification by regenerating GSH used by peroxidases, but
+      it does not itself detoxify oxidants; retained as a non-core downstream process.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: Constitutes the major mechanism to maintain
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent
+      with the cytoplasmic isoform and Reactome. Supports a core site of action.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Cytoplasmic]: Cytoplasm.&#39;
+- term:
+    id: GO:0004362
+    label: glutathione-disulfide reductase (NADPH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:17185460
+  qualifier: enables
+  review:
+    summary: Experimental annotation from Kamerbeek et al. (2007), which characterized
+      GR catalytic activity in patient blood cells and recombinant variants and established
+      the molecular basis of GR deficiency. Directly supports the core catalytic function
+      and is the basis for the EC 1.8.1.7 assignment. Cached publication is abstract-only.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:17185460
+      supporting_text: Red blood cells and leukocytes of the patients in family 1 did not
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: High-throughput mitochondrial proteome detection, consistent with the mitochondrial
+      isoform and UniProt subcellular location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Mitochondrial]: Mitochondrion.&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71682
+  qualifier: located_in
+  review:
+    summary: Reactome traceable annotation placing the cytosolic GR-catalyzed reaction
+      in the cytosol. Consistent with the cytoplasmic isoform and HPA IDA. Core site.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Cytoplasmic]: Cytoplasm.&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9761843
+  qualifier: located_in
+  review:
+    summary: Reactome traceable annotation associated with the NFE2L2-dependent GSR
+      expression pathway, again localizing GR to the cytosol. Redundant with the other
+      cytosol annotations but correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GSR/GSR-uniprot.txt
+      supporting_text: &#39;[Isoform Cytoplasmic]: Cytoplasm.&#39;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry detection of GSR in prostatic-secretion
+      (urinary) exosomes. Reflects incidental presence in secreted vesicles rather than
+      a catalytic site of action; retained as non-core (not removed, per experimental-lineage
+      HDA policy).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: In pooled EPS-urine exosome samples, ~900 proteins were detected.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of GSR in urinary exosomes. As above,
+      an incidental vesicle-proteome localization, not a functional site; retained as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: the analysis identified 1132 proteins unambiguously
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3323079
+  qualifier: located_in
+  review:
+    summary: Reactome traceable annotation localizing the GR-catalyzed GSSG reduction
+      to the mitochondrial matrix, consistent with the mitochondrial isoform. A specific,
+      correct site of action.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-3323079
+      supporting_text: Glutathione reductase (GSR) in the mitochondrial matrix regenerates reduced
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: TAS
+  original_reference_id: PMID:947404
+  qualifier: enables
+  review:
+    summary: Although GR performs intramolecular electron transfer (NADPH to FAD to the
+      active-site disulfide to GSSG), the GO term &#34;electron transfer activity&#34; denotes
+      an electron-carrier role (e.g. in electron transport chains) and is a poor fit for
+      this dedicated disulfide reductase. The specific catalytic function is captured by
+      GO:0004362; this broad TAS is an over-annotation. Not removed (experimental-lineage TAS).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:947404
+      supporting_text: A virtually complete absence of glutathione reductase activity was found in the
+- term:
+    id: GO:0004362
+    label: glutathione-disulfide reductase (NADPH) activity
+  evidence_type: TAS
+  original_reference_id: PMID:947404
+  qualifier: enables
+  review:
+    summary: Traceable author statement (Loos et al. 1976) of GR activity in human blood
+      cells, the classic description of familial GR deficiency. Supports the core catalytic
+      function. Cached publication is abstract-only.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:947404
+      supporting_text: A virtually complete absence of glutathione reductase activity was found in the
+core_functions:
+- description: Glutathione-disulfide reductase — reduces oxidized glutathione (GSSG)
+    to two reduced glutathione (GSH) using NADPH and an FAD-dependent redox cycle, maintaining
+    the high cellular GSH:GSSG ratio.
+  molecular_function:
+    id: GO:0004362
+    label: glutathione-disulfide reductase (NADPH) activity
+  supported_by:
+  - reference_id: file:human/GSR/GSR-uniprot.txt
+    supporting_text: Reaction=2 glutathione + NADP(+) = glutathione disulfide + NADPH +
+  - reference_id: PMID:17185460
+    supporting_text: Red blood cells and leukocytes of the patients in family 1 did not
+- description: Binds one FAD per subunit as the essential redox cofactor mediating electron
+    transfer from NADPH to the active-site disulfide.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  supported_by:
+  - reference_id: file:human/GSR/GSR-uniprot.txt
+    supporting_text: Note=Binds 1 FAD per subunit.
+- description: Binds NADP(H), the electron-donating substrate/product of the reductase
+    reaction, at a dedicated NADPH-binding domain.
+  molecular_function:
+    id: GO:0050661
+    label: NADP binding
+  supported_by:
+  - reference_id: file:human/GSR/GSR-uniprot.txt
+    supporting_text: /ligand=&#34;NADP(+)&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17185460
+  title: Molecular basis of glutathione reductase deficiency in human blood cells.
+  findings:
+  - statement: GR deficiency in patient blood cells abolishes glutathione reductase
+      activity; a 2246-bp deletion removes the dimerization domain and a G330A substitution
+      impairs thermostability, establishing the molecular basis of GR deficiency and
+      supporting the enzyme&#39;s catalytic function.
+    reference_section_type: ABSTRACT
+    supporting_text: Red blood cells and leukocytes of the patients in family 1 did not
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified case-report source (Kamerbeek et al., Blood 2007);
+      basis for the EXP GO:0004362 annotation and the EC 1.8.1.7 assignment. Cached entry
+      is abstract-only (full_text_available false).
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings:
+  - statement: Large-scale LC-MS/MS proteomics of human urinary exosomes identified GSR
+      among 1132 proteins, supporting an incidental exosome-proteome localization.
+    reference_section_type: ABSTRACT
+    supporting_text: the analysis identified 1132 proteins unambiguously
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput exosome proteomics; supports the HDA extracellular-exosome
+      annotation but not a catalytic site of action.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: Shotgun proteomics of prostatic-secretion (urinary) exosomes detected
+      GSR among ~900 proteins, an incidental secreted-vesicle localization.
+    reference_section_type: ABSTRACT
+    supporting_text: In pooled EPS-urine exosome samples, ~900 proteins were detected.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput exosome proteomics; basis for one of the HDA extracellular-exosome
+      annotations.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: HTP source for the mitochondrion localization; consistent with UniProt
+      mitochondrial isoform. Cached full text exceeds size limit; annotation cross-checked
+      against UniProt subcellular location.
+- id: PMID:947404
+  title: Familial deficiency of glutathione reductase in human blood cells.
+  findings:
+  - statement: Classic description of familial glutathione reductase deficiency in human
+      erythrocytes and leukocytes, with hemolytic crises after eating fava beans; establishes
+      the enzyme&#39;s activity and clinical relevance.
+    reference_section_type: ABSTRACT
+    supporting_text: A virtually complete absence of glutathione reductase activity was found in the
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Loos et al., Blood 1976; basis for the TAS GO:0004362 and GO:0009055
+      annotations and cited by Reactome R-HSA-71682. Cached entry is abstract-only.
+- id: Reactome:R-HSA-3323079
+  title: GSR catalyzes glutathione (oxidized) + NADPH + H+ =&gt; 2 glutathione (reduced)
+    + NADP+
+  findings:
+  - statement: GSR in the mitochondrial matrix regenerates reduced glutathione from oxidized
+      glutathione and NADPH.
+    reference_section_type: OTHER
+    supporting_text: Glutathione reductase (GSR) in the mitochondrial matrix regenerates reduced
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction placing GR catalysis in the mitochondrial matrix.
+- id: Reactome:R-HSA-71682
+  title: glutathione (oxidized) + NADPH + H+ =&gt; 2 glutathione (reduced) + NADP+
+  findings:
+  - statement: Cytosolic glutathione reductase catalyzes reduction of GSSG by NADPH to
+      form two GSH; deficiency can cause hemolytic anemia.
+    reference_section_type: OTHER
+    supporting_text: Cytosolic glutathione reductase catalyzes the reaction of glutathione (oxidized)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction placing GR catalysis in the cytosol; cites Loos et al. 1976.
+- id: Reactome:R-HSA-9761843
+  title: NFE2L2-dependent GSR gene expression
+  findings:
+  - statement: GSR contributes to cellular redox balance by reducing GSSG to GSH; its
+      expression is regulated in part by the KEAP1:NFE2L2 (NRF2) antioxidant-response pathway.
+    reference_section_type: OTHER
+    supporting_text: Glutathione reductase (GSR) contributes to the redox balance in a cell by
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome entry on NFE2L2-dependent GSR transcriptional regulation; basis
+      for one cytosol TAS annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

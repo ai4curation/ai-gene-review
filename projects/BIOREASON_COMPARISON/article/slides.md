@@ -217,7 +217,7 @@ GO-GPT run directly on 299 canonical genes; overlap measured against three progr
 
 ![h:380](figures/three_level_overlap.png)
 
-The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (3.8%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
+The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (3.9%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
 
 ---
 

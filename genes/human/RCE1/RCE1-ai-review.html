@@ -1,0 +1,4342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCE1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RCE1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y256" target="_blank" class="term-link">
+                        Q9Y256
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RCE1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y256" data-a="DESCRIPTION: RCE1 (Ras-converting CAAX endopeptidase 1; CAAX pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RCE1 (Ras-converting CAAX endopeptidase 1; CAAX prenyl protease 2 / FACE-2; prenyl protein-specific endoprotease) is a polytopic endoplasmic-reticulum membrane protease that catalyzes the second of the three sequential CAAX post-translational processing steps. After a CAAX-motif protein is prenylated on its C-terminal cysteine (farnesylation or geranylgeranylation by FTase/GGTase-I), RCE1 proteolytically removes the C-terminal -AAX tripeptide, leaving the prenylated cysteine as the new C-terminus, which is then carboxymethylated by ICMT. It processes a broad range of prenylated CAAX substrates, including the Ras GTPases (K-Ras, N-Ras, H-Ras), RAP1B and the heterotrimeric G-protein gamma-1 subunit, and its activity is specific for prenylated substrates. Mechanistically RCE1 is a glutamate-type intramembrane protease (EC 3.4.26.1, MEROPS peptidase family U48), using general acid/base catalysis rather than a metal or a nucleophilic cysteine. Because CAAX proteolysis is required for correct membrane targeting and activity of Ras and related GTPases, RCE1 is important for proper subcellular localization and signaling of these proteins.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane is the authoritative core location of RCE1, a polytopic ER membrane protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phylogenetic (IBA) ER-membrane call agrees with the experimentally established human localization; RCE1 is a multi-pass ER membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 and RCE1 co-localize at the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0004222" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 is a glutamate-type intramembrane protease, not a metalloprotease; this is the wrong catalytic class.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The metalloendopeptidase call is a long-standing mechanistic misclassification. RCE1 belongs to MEROPS peptidase family U48 and uses glutamate/histidine general acid-base catalysis (proton donor/acceptor active-site residues), not a metal-coordinating HEXXH motif; EC 3.4.26.1 places it among glutamic-type endopeptidases. Replace with the mechanistically correct glutamic-type peptidase activity term.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004887</span>
+
+                                    &middot; RCE1 (S. cerevisiae Rce1p)
+
+
+
+                                    <div class="propagation-comment">The phylogenetic tree assigns a metalloendopeptidase MF that predates structural determination of Rce1 as a glutamate-type intramembrane protease (MEROPS family U48).</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the peptidase U48 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proton donor/acceptor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071586" target="_blank" class="term-link">
+                                    GO:0071586
+                                </a>
+                            </span>
+                            <span class="term-label">CAAX-box protein processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0071586" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAAX-box protein processing is the core biological process of RCE1 (the proteolytic -AAX-removal step).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phylogenetic inference matches the direct experimental function; RCE1 removes the C-terminal three residues of prenylated CAAX proteins.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proteolytically removes the C-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">play a major role in the processing of CAAX-type prenylated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004175" target="_blank" class="term-link">
+                                    GO:0004175
+                                </a>
+                            </span>
+                            <span class="term-label">endopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0004175" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endopeptidase activity is correct but general; a more specific mechanistic term is available.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RCE1 is indeed an endopeptidase (cleaves the internal peptide bond releasing the -AAX tripeptide), so this ARBA electronic term is not wrong, but the specific catalytic class is known (glutamic-type). Refine to glutamic-type peptidase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the peptidase U48 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0004222" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived metalloendopeptidase call is a less-appropriate catalytic class for a glutamate-type intramembrane protease; generalize to the glutamic-type peptidase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA (InterPro2GO, IPR039731) assigns a metallo- catalytic class. RCE1 belongs to MEROPS peptidase family U48 and is classified EC 3.4.26.1 (glutamic-type endopeptidases), using general acid-base (proton donor/acceptor) rather than metal-coordinating catalysis; the historic metalloprotease call predates the structural/mechanistic work. Rather than remove the annotation, replace it with the mechanistically correct glutamic-type peptidase activity term (consistent with the IBA and Reactome-TAS peptidase annotations, which are handled the same way). Note the catalytic mechanism has been debated (MEROPS U48 is nominally &#39;unknown&#39; catalytic type), so this is presented as the best-supported classification rather than a settled fact.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the peptidase U48 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane location, consistent with the experimental and phylogenetic evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This automated multi-method IEA (including UniProtKB-SubCell SL-0097) agrees with the authoritative ER membrane localization of RCE1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 and RCE1 co-localize at the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071586" target="_blank" class="term-link">
+                                    GO:0071586
+                                </a>
+                            </span>
+                            <span class="term-label">CAAX-box protein processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0071586" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAAX-box protein processing electronic call matches the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro2GO (IPR039731) assignment agrees with the direct experimental function of RCE1 as the CAAX-processing (-AAX-removal) protease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proteolytically removes the C-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">play a major role in the processing of CAAX-type prenylated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080120" target="_blank" class="term-link">
+                                    GO:0080120
+                                </a>
+                            </span>
+                            <span class="term-label">CAAX-box protein maturation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0080120" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CAAX-box protein maturation is the broader parent process; RCE1 performs only the proteolysis substep.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0071586 (CAAX-box protein processing) is part_of GO:0080120 (CAAX-box protein maturation). Full maturation additionally requires prenylation (FTase/GGTase-I) and carboxymethylation (ICMT). RCE1 contributes only the proteolytic step, so the maturation-level term is retained as a correct but non-core (broader) process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">modification of the cysteine with either a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proteolytically removes the C-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000165" target="_blank" class="term-link">
+                                    GO:0000165
+                                </a>
+                            </span>
+                            <span class="term-label">MAPK cascade</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5673001
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0000165" data-r="Reactome:R-HSA-5673001" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MAPK-cascade involvement is indirect/downstream; RCE1 processes Ras upstream of the cascade but is not itself a cascade component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RCE1 does not act within the RAF-MEK-ERK kinase cascade. Its connection is through processing Ras GTPases, which is required for their membrane localization and activation, so loss of RCE1 activity indirectly blocks downstream MEK/ERK phosphorylation. Retained as a non-core downstream-pathway context rather than a direct RCE1 activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 expression blocks Ras membrane localization and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004197" target="_blank" class="term-link">
+                                    GO:0004197
+                                </a>
+                            </span>
+                            <span class="term-label">cysteine-type endopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9647999
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0004197" data-r="Reactome:R-HSA-9647999" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 is a glutamate-type protease, not a cysteine-type endopeptidase; wrong catalytic class.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Reactome cysteine-type assignment reflects an outdated view. Structural and mutational work establishes RCE1 as a glutamate-type intramembrane protease (MEROPS family U48) using a glutamate-activated water nucleophile and catalytic histidines, not a cysteine nucleophile; EC 3.4.26.1 is the glutamic-endopeptidase class. Replace with glutamic-type peptidase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the peptidase U48 family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proton donor/acceptor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008238" target="_blank" class="term-link">
+                                    GO:0008238
+                                </a>
+                            </span>
+                            <span class="term-label">exopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of a mammalian prenyl protein-s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0008238" data-r="PMID:10085068" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 is an endopeptidase (removes an internal -AAX tripeptide), so exopeptidase is the wrong mechanistic class.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental data (PMID:10085068) demonstrate prenyl-protein-specific proteolytic activity, but the enzyme cleaves the internal peptide bond releasing the C-terminal -AAX tripeptide, which is endoproteolysis (EC 3.4.26.1, glutamic-type endopeptidase), not exopeptidase activity. This is an experimental annotation, so it is not removed but modified to the correct catalytic-class term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The protease activity of hRCE1 activity was specific for</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018342" target="_blank" class="term-link">
+                                    GO:0018342
+                                </a>
+                            </span>
+                            <span class="term-label">protein prenylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of a mammalian prenyl protein-s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0018342" data-r="PMID:10085068" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 acts AFTER prenylation and does not itself prenylate substrates; this over-annotates its role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prenylation (attachment of the farnesyl/geranylgeranyl lipid to the CAAX cysteine) is carried out by farnesyltransferase/geranylgeranyltransferase-I, and is the first CAAX step. RCE1 performs the subsequent proteolytic -AAX removal. PMID:10085068 shows RCE1 recognizes already-prenylated substrates, not that it catalyzes prenylation. The term conflates substrate-dependence-on-prenylation with performing prenylation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">modification of the cysteine with either a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The protease activity of hRCE1 activity was specific for</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Proteolytically removes the C-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071586" target="_blank" class="term-link">
+                                    GO:0071586
+                                </a>
+                            </span>
+                            <span class="term-label">CAAX-box protein processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of a mammalian prenyl protein-s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0071586" data-r="PMID:10085068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental support for CAAX-box protein processing; core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:10085068 directly demonstrates that recombinant hRCE1 is a bona fide prenyl-protein protease that processes CAAX-type prenylated proteins, defining the core RCE1 process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">bona fide prenyl protein proteases</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">play a major role in the processing of CAAX-type prenylated</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                        PMID:10085068
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">farnesyl-Ki-Ras, farnesyl-N-Ras, farnesyl-Ha-Ras, and the farnesylated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9653514
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005789" data-r="Reactome:R-HSA-9653514" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane location (Reactome), consistent with the core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome (USP17L2 deubiquitinates RCE1) places RCE1 at the ER membrane, agreeing with the authoritative UniProt/experimental localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 and RCE1 co-localize at the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9647999
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005789" data-r="Reactome:R-HSA-9647999" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane location (Reactome RAS processing), consistent with the core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome (RCE1 cleaves S-Farn proRAS proteins) places the RCE1 cleavage reaction at the ER membrane, agreeing with the authoritative localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 and RCE1 co-localize at the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5696600
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005829" data-r="Reactome:R-HSA-5696600" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 is a polytopic ER membrane protein; a cytosol location is an over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RCE1 is a multi-pass ER membrane protease. The Reactome cytosol placement (USP17 deubiquitination reaction context) reflects the compartment abstraction of the deubiquitination event rather than a soluble cytosolic pool of RCE1. The authoritative location is the ER membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004175" target="_blank" class="term-link">
+                                    GO:0004175
+                                </a>
+                            </span>
+                            <span class="term-label">endopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19188362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USP17 regulates Ras activation and cell proliferation by blo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0004175" data-r="PMID:19188362" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental endopeptidase activity; correct, though a more specific mechanistic term exists.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:19188362 assays RCE1 catalytic (endoproteolytic) activity toward Ras and shows it is lost upon USP17-mediated deubiquitination. Endopeptidase activity is correct, but the specific catalytic class is known (glutamic-type); refine to glutamic-type peptidase activity for consistency with the other MF annotations.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                                    glutamic-type peptidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">this effect is caused by the loss of RCE1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cannot block proliferation or Ras membrane localization in RCE1 null cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0016020" data-r="PMID:19946888" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization from a high-throughput NK-cell membrane proteome; correct but uninformative relative to ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RCE1 was identified in a large-scale NK-cell (YTS) membrane-proteome mass-spectrometry dataset. This is consistent with RCE1 being an integral membrane protein but is far less informative than the specific ER membrane term, and does not localize it to a specific compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified 1843 proteins with high confidence scores</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">predicted as plausible membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19188362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USP17 regulates Ras activation and cell proliferation by blo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005789" data-r="PMID:19188362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental ER membrane localization; core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:19188362 shows RCE1 co-localizes with USP17 at the ER, providing direct experimental support for the authoritative ER membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">USP17 and RCE1 co-localize at the endoplasmic reticulum</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071586" target="_blank" class="term-link">
+                                    GO:0071586
+                                </a>
+                            </span>
+                            <span class="term-label">CAAX-box protein processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19188362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    USP17 regulates Ras activation and cell proliferation by blo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0071586" data-r="PMID:19188362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant/perturbation evidence supports RCE1&#39;s role in CAAX (Ras) processing; core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:19188362 uses RCE1-null cells and USP17-mediated inactivation to show RCE1 activity is required for Ras membrane localization/processing, supporting involvement in CAAX-box protein processing.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cannot block proliferation or Ras membrane localization in RCE1 null cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                                        PMID:19188362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One step in this process is the cleavage of the CAAX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085068
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and characterization of a mammalian prenyl protein-s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y256" data-a="GO:0005886" data-r="PMID:10085068" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RCE1 resides in the ER membrane; a plasma-membrane location is not supported by the current record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an old (2003) ProtInc author-statement (TAS) plasma-membrane call. The current UniProt record localizes RCE1 exclusively to the ER membrane, and PMID:19188362 places it at the ER. The PM call likely reflects the eventual destination of RCE1&#39;s Ras substrates rather than RCE1 itself; it is over-annotated relative to the ER membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RCE1/RCE1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RCE1 is a glutamate-type intramembrane endopeptidase that catalyzes the second CAAX processing step - proteolytic removal of the C-terminal -AAX tripeptide from prenylated CAAX proteins (Ras and related GTPases), leaving the prenylcysteine as the new C-terminus.</h3>
+                <span class="vote-buttons" data-g="Q9Y256" data-a="FUNCTION: RCE1 is a glutamate-type intramembrane endopeptida..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070002" target="_blank" class="term-link">
+                            glutamic-type peptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071586" target="_blank" class="term-link">
+                                CAAX-box protein processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RCE1/RCE1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Proteolytically removes the C-</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RCE1/RCE1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the peptidase U48 family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RCE1/RCE1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=3.4.26.1 {ECO:0000269|PubMed:10085068}</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                PMID:10085068
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">play a major role in the processing of CAAX-type prenylated</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                                PMID:10085068
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">bona fide prenyl protein proteases</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" target="_blank" class="term-link">
+                            PMID:10085068
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and characterization of a mammalian prenyl protein-specific protease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned human RCE1 (hRCE1); recombinant enzyme is a prenyl-protein-specific protease that removes the C-terminal -AAX tripeptide from farnesylated and geranylgeranylated CAAX proteins (K-Ras, N-Ras, H-Ras, Ggamma1, geranylgeranyl-Rap1b) and is expressed in all tissues examined.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" target="_blank" class="term-link">
+                            PMID:19188362
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">USP17 regulates Ras activation and cell proliferation by blocking RCE1 activity.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RCE1 cleaves the Ras CAAX motif; its catalytic activity is required for Ras membrane localization/activation and downstream MEK/ERK signaling. RCE1 and USP17 co-localize at the ER, and USP17-mediated deubiquitination abolishes RCE1 catalytic activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale mass-spectrometry membrane-proteome survey of the NK-like YTS cell line; RCE1 was among the 1843 identified proteins, supporting a generic membrane localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5673001
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RAF/MAP kinase cascade</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5696600
+
+                    </span>
+                </div>
+
+                <div class="reference-title">USP17 deubiquitinates RCE1, CDC25A, DDX58, IFIH1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9647999
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RCE1 cleaves S-Farn proRAS proteins</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction placing RCE1-mediated C-terminal endoproteolysis of prenylated RAS at the ER membrane, downstream of prenylation and required for RAS plasma-membrane localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9653514
+
+                    </span>
+                </div>
+
+                <div class="reference-title">USP17L2 deubiquitinates RCE1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO provide a specific, non-obsolete molecular-function term for prenyl-dependent CAAX endopeptidase / glutamate-type intramembrane protease activity? The historically used specific terms (GO:0008319 prenyl protein specific endopeptidase activity; GO:0008487 prenyl-dependent CAAX protease activity; GO:0070007 glutamic-type endopeptidase activity) are all obsolete, leaving only the family-level GO:0070002 glutamic-type peptidase activity.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO molecular-function / protease ontology editors, MEROPS curators</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y256" data-a="Q: Should GO provide a specific, non-obsolete molecul..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the metalloendopeptidase (GO:0004222) and cysteine-type endopeptidase (GO:0004197) annotations on RCE1 be corrected across GOA/InterPro/Reactome to reflect its glutamate-type mechanism?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GOA/InterPro curators, Reactome curators</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y256" data-a="Q: Should the metalloendopeptidase (GO:0004222) and c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute purified recombinant human RCE1 in defined membranes/liposomes and measure -AAX-tripeptide cleavage of a panel of farnesylated vs geranylgeranylated CAAX peptides to quantify substrate preference and confirm endoproteolytic (not exopeptidase) cleavage by mapping the exact scissile bond via mass spectrometry.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y256" data-a="EXPERIMENT: Reconstitute purified recombinant human RCE1 in de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform structure-guided alanine mutagenesis of the predicted catalytic glutamate and histidine residues (human equivalents of the U48 active-site residues) to confirm the glutamate-type mechanism and rule out metal or cysteine catalysis (e.g. metal-chelation and cysteine-alkylation sensitivity assays).</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9Y256" data-a="EXPERIMENT: Perform structure-guided alanine mutagenesis of th..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RCE1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y256" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rce1-human-gene-review-notes">RCE1 (human) — gene review notes</h1>
+<p>UniProt: Q9Y256 (FACE2_HUMAN). Gene symbol RCE1 (synonyms FACE2, RCE1A, RCE1B).<br />
+HGNC:13721. Chromosome 11. 329 aa.</p>
+<h2 id="identity-and-enzyme-classification">Identity and enzyme classification</h2>
+<ul>
+<li>RecName in UniProt is "CAAX prenyl protease 2"; also "Farnesylated<br />
+  proteins-converting enzyme 2 (FACE-2)", "Prenyl protein-specific endoprotease 2",<br />
+  "RCE1 homolog / hRCE1" [file:human/RCE1/RCE1-uniprot.txt "RecName: Full=CAAX prenyl protease 2"].</li>
+<li>EC=3.4.26.1 [file:human/RCE1/RCE1-uniprot.txt "EC=3.4.26.1 {ECO:0000269|PubMed:10085068}"].<br />
+  EC subclass 3.4.26 in the IUBMB peptidase nomenclature = <strong>glutamic-type<br />
+  endopeptidases</strong>. So EC alone already tells us this is an ENDOpeptidase of the<br />
+  glutamic mechanistic class, not a metallo- or cysteine-type protease.</li>
+<li>MEROPS: G05.002; peptidase family/clan <strong>U48</strong> [file:human/RCE1/RCE1-uniprot.txt<br />
+  "MEROPS; G05.002"] / [file:human/RCE1/RCE1-uniprot.txt "Belongs to the peptidase U48 family."].</li>
+<li>Pfam PF02517 (Rce1-like); InterPro IPR039731 (Rce1), IPR003675 (Rce1/LyrA-like_dom);<br />
+  PANTHER PTHR13046 "PROTEASE U48 CAAX PRENYL PROTEASE RCE1" / SF0 "CAAX PRENYL PROTEASE 2".</li>
+</ul>
+<h2 id="mechanism-glutamate-intramembrane-protease-not-metallo-not-cysteine">Mechanism — glutamate intramembrane protease (NOT metallo, NOT cysteine)</h2>
+<ul>
+<li>RCE1 is a <strong>glutamate-type intramembrane protease</strong>; the yeast/vertebrate structural<br />
+  work established a novel IMP class ("glutamate IMPs") with a conserved EExxxR motif;<br />
+  a glutamate activates a nucleophilic water and adjacent histidines are catalytically<br />
+  required (S. cerevisiae Rce1 E156, H194, H248) [Manolaridis et al. 2013 Nature<br />
+  "Mechanism of farnesylated CAAX protein processing by the intramembrane protease<br />
+  Rce1", https://www.nature.com/articles/nature12754; Hampton/Dohlman review "Rce1:<br />
+  mechanism and inhibition" PMID:29424242; mutational study PMC2937830 requiring<br />
+  glutamate and histidine residues].</li>
+<li>Consistent with this, the UniProt feature table lists two catalytic residues as<br />
+  "Proton donor/acceptor" (ACT_SITE 175 and 208, by similarity to Q6LZY8) plus two<br />
+  transition-state-stabilizer SITE residues (261, 265)<br />
+  [file:human/RCE1/RCE1-uniprot.txt "Proton donor/acceptor"] — i.e. general acid/base<br />
+  chemistry, not a metal-coordinating HEXXH-type motif.</li>
+<li>Implication for GO MF: the specific mechanistic MF is <strong>glutamic-type peptidase<br />
+  activity (GO:0070002)</strong>. (The historically used specific terms — GO:0008319 "prenyl<br />
+  protein specific endopeptidase activity", GO:0008487 "prenyl-dependent CAAX protease<br />
+  activity", and GO:0070007 "glutamic-type endopeptidase activity" — are all now<br />
+  OBSOLETE in the current ontology; verified against local go.db.) Existing GOA MF terms<br />
+  that describe the WRONG mechanistic class are: GO:0004222 metalloendopeptidase (IBA,<br />
+  IEA) and GO:0004197 cysteine-type endopeptidase (TAS/Reactome). RCE1 is an<br />
+  endopeptidase, so GO:0004175 endopeptidase activity is correct-but-general;<br />
+  GO:0008238 exopeptidase activity contradicts the endopeptidase EC class.</li>
+</ul>
+<h2 id="function-what-it-does">Function (what it does)</h2>
+<ul>
+<li>Second of the three sequential CAAX post-translational processing steps:<br />
+  (1) prenylation of the cysteine (FTase/GGTase-I), (2) <strong>RCE1 proteolysis of the<br />
+  C-terminal -AAX tripeptide</strong>, (3) carboxymethylation of the new C-terminal<br />
+  prenylcysteine (ICMT) <a href="https://pubmed.ncbi.nlm.nih.gov/10085068" title="modification of the cysteine with either a   15-carbon farnesyl or 20-carbon geranylgeranyl isoprenyl lipid, proteolysis of the   C-terminal -AAX tripeptide, and methylation of the carboxyl group of the now   C-terminal prenylcysteine">PMID:10085068</a>.</li>
+<li>UniProt FUNCTION: "Proteolytically removes the C-terminal three residues of<br />
+  farnesylated and geranylated proteins, leaving the prenylated cysteine as the new<br />
+  C-terminus. Is able to process K-Ras, N-Ras, H-Ras, RAP1B and G-gamma-1"<br />
+  [file:human/RCE1/RCE1-uniprot.txt "leaving the prenylated cysteine as the new C-"] /<br />
+  [file:human/RCE1/RCE1-uniprot.txt "process K-Ras, N-Ras, H-Ras, RAP1B and G-gamma-1"].</li>
+<li>Substrate specificity is for PRENYLATED substrates only: "The protease activity of<br />
+  hRCE1 activity was specific for prenylated proteins, because unprenylated peptides<br />
+  did not compete for enzyme activity" <a href="https://pubmed.ncbi.nlm.nih.gov/10085068">PMID:10085068</a>.</li>
+<li>Recombinant hRCE1 processes both farnesylated and geranylgeranylated substrates:<br />
+  "farnesyl-Ki-Ras, farnesyl-N-Ras, farnesyl-Ha-Ras, and the farnesylated<br />
+  heterotrimeric G protein Ggamma1 subunit, as well as geranylgeranyl-Ki-Ras and<br />
+  geranylgeranyl-Rap1b" <a href="https://pubmed.ncbi.nlm.nih.gov/10085068">PMID:10085068</a>.</li>
+<li>Kinetics: KM = 0.5 uM for farnesyl-Ki-Ras and 0.5 uM for geranylgeranyl-Ki-Ras<br />
+  [file:human/RCE1/RCE1-uniprot.txt "KM=0.5 uM for farnesyl-Ki-Ras"].</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Endoplasmic reticulum membrane; multi-pass (polytopic) membrane protein<br />
+  [file:human/RCE1/RCE1-uniprot.txt "Endoplasmic reticulum membrane"] /<br />
+  [file:human/RCE1/RCE1-uniprot.txt "Multi-pass membrane protein"]. UniProt lists 7<br />
+  TRANSMEM helices (structural work indicates 8 TMs).</li>
+<li>USP17 and RCE1 co-localize at the ER: "USP17 and RCE1 co-localize at the endoplasmic<br />
+  reticulum" <a href="https://pubmed.ncbi.nlm.nih.gov/19188362">PMID:19188362</a>.</li>
+<li>GOA also carries a plasma-membrane location (TAS/ProtInc PMID:10085068, 2003) and a<br />
+  generic "membrane" (HDA, NK-cell membrane proteome PMID:19946888) and a "cytosol"<br />
+  (TAS/Reactome R-HSA-5696600). The authoritative subcellular location per UniProt is<br />
+  ER membrane; the plasma-membrane call is inconsistent with the current UniProt record<br />
+  and the ER localization established by PMID:19188362. Generic "membrane" from a<br />
+  large-scale membrane-proteome study is uninformative relative to the specific ER<br />
+  membrane term.</li>
+</ul>
+<h2 id="regulation-and-physiology-context-non-core">Regulation and physiology (context / non-core)</h2>
+<ul>
+<li>Ubiquitinated (K48 and K63 linkages); K48 ubiquitination drives degradation.<br />
+  Deubiquitination by USP17L2/USP17 (which removes K63 chains) ABROGATES RCE1<br />
+  proteolytic activity toward Ras GTPases [file:human/RCE1/RCE1-uniprot.txt<br />
+  "Deubiquitination by USP17L2/USP17 negatively"] and <a href="https://pubmed.ncbi.nlm.nih.gov/19188362" title="this effect is   caused by the loss of RCE1 catalytic activity as a result of its deubiquitination by   USP17">PMID:19188362</a>.</li>
+<li>Because RCE1 processing is required for correct Ras membrane localization and<br />
+  activation, loss of RCE1 activity blocks Ras-driven MEK/ERK (RAF/MAP kinase) signaling:<br />
+  "USP17 expression blocks Ras membrane localization and activation, thereby inhibiting<br />
+  phosphorylation of the downstream kinases MEK and ERK" and "USP17 cannot block<br />
+  proliferation or Ras membrane localization in RCE1 null cells" <a href="https://pubmed.ncbi.nlm.nih.gov/19188362">PMID:19188362</a>.</li>
+<li>Reactome places RCE1 in "RAS processing" and connects it (indirectly, via its Ras<br />
+  substrates) to the RAF/MAP kinase cascade [Reactome:R-HSA-9647999; R-HSA-5673001].<br />
+  The MAPK-cascade (GO:0000165) annotation is downstream/indirect — RCE1 does not itself<br />
+  act in the kinase cascade; it processes the GTPase upstream of it.</li>
+</ul>
+<h2 id="annotation-review-summary-decisions">Annotation-review summary (decisions)</h2>
+<p>MF:<br />
+- GO:0008238 exopeptidase activity (IDA, PMID:10085068): MODIFY — the enzyme is an<br />
+  ENDOpeptidase (removes an internal -AAX tripeptide; EC 3.4.26.1). "Exopeptidase" is a<br />
+  mechanistic mis-class. Experimental, so no REMOVE; propose GO:0070002 (glutamic-type<br />
+  peptidase activity) as replacement.<br />
+- GO:0004175 endopeptidase activity (IDA, PMID:19188362): ACCEPT (correct, if general);<br />
+  the IEA copy (GO_REF:0000117 ARBA) MODIFY to the more specific GO:0070002.<br />
+- GO:0004222 metalloendopeptidase activity (IBA GO_REF:0000033; IEA GO_REF:0000002<br />
+  InterPro): MODIFY — wrong catalytic class (glutamic, not metallo). Propose GO:0070002.<br />
+- GO:0004197 cysteine-type endopeptidase activity (TAS Reactome:R-HSA-9647999): MODIFY —<br />
+  wrong catalytic class (glutamic, not cysteine). Propose GO:0070002.</p>
+<p>BP:<br />
+- GO:0071586 CAAX-box protein processing (IDA PMID:10085068; IMP PMID:19188362; IBA; IEA):<br />
+  ACCEPT — this is the core biological process (proteolytic step of CAAX maturation).<br />
+- GO:0080120 CAAX-box protein maturation (IEA GO_REF:0000117): KEEP_AS_NON_CORE — broader<br />
+  parent process (GO:0071586 is part_of GO:0080120); RCE1 performs only the proteolysis<br />
+  substep, not the full maturation.<br />
+- GO:0018342 protein prenylation (IDA PMID:10085068): MARK_AS_OVER_ANNOTATED — RCE1 does<br />
+  NOT prenylate; it acts AFTER prenylation. Prenylation is done by FTase/GGTase-I. The<br />
+  IDA here appears to conflate "CAAX processing" with "prenylation".<br />
+- GO:0000165 MAPK cascade (TAS Reactome:R-HSA-5673001): KEEP_AS_NON_CORE — indirect/<br />
+  downstream; RCE1 processes Ras upstream of the cascade but is not itself a cascade<br />
+  component.</p>
+<p>CC:<br />
+- GO:0005789 endoplasmic reticulum membrane (IDA PMID:19188362; IBA; IEA; TAS Reactome x2):<br />
+  ACCEPT — authoritative core location.<br />
+- GO:0016020 membrane (HDA PMID:19946888): KEEP_AS_NON_CORE — correct but uninformative;<br />
+  subsumed by ER membrane.<br />
+- GO:0005829 cytosol (TAS Reactome:R-HSA-5696600): MARK_AS_OVER_ANNOTATED — RCE1 is a<br />
+  polytopic ER membrane protein; the Reactome cytosol placement reflects the reaction<br />
+  compartment abstraction, not RCE1 residence.<br />
+- GO:0005886 plasma membrane (TAS ProtInc PMID:10085068): MARK_AS_OVER_ANNOTATED — the<br />
+  current UniProt record localizes RCE1 to ER membrane; a 2003 ProtInc PM call is not<br />
+  supported and likely reflects its Ras substrates' destination rather than RCE1 itself.<br />
+  (Experimental? No — this is TAS, author statement; not IDA/IMP.)<br />
+</content></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y256
+gene_symbol: RCE1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RCE1 (Ras-converting CAAX endopeptidase 1; CAAX prenyl protease 2 / FACE-2; prenyl
+  protein-specific endoprotease) is a polytopic endoplasmic-reticulum membrane protease that
+  catalyzes the second of the three sequential CAAX post-translational processing steps. After a
+  CAAX-motif protein is prenylated on its C-terminal cysteine (farnesylation or geranylgeranylation
+  by FTase/GGTase-I), RCE1 proteolytically removes the C-terminal -AAX tripeptide, leaving the
+  prenylated cysteine as the new C-terminus, which is then carboxymethylated by ICMT. It processes a
+  broad range of prenylated CAAX substrates, including the Ras GTPases (K-Ras, N-Ras, H-Ras), RAP1B
+  and the heterotrimeric G-protein gamma-1 subunit, and its activity is specific for prenylated
+  substrates. Mechanistically RCE1 is a glutamate-type intramembrane protease (EC 3.4.26.1, MEROPS
+  peptidase family U48), using general acid/base catalysis rather than a metal or a nucleophilic
+  cysteine. Because CAAX proteolysis is required for correct membrane targeting and activity of Ras
+  and related GTPases, RCE1 is important for proper subcellular localization and signaling of these
+  proteins.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: ER membrane is the authoritative core location of RCE1, a polytopic ER membrane protease.
+    action: ACCEPT
+    reason: The phylogenetic (IBA) ER-membrane call agrees with the experimentally established human
+      localization; RCE1 is a multi-pass ER membrane protein.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+    - reference_id: PMID:19188362
+      supporting_text: USP17 and RCE1 co-localize at the endoplasmic reticulum
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: RCE1 is a glutamate-type intramembrane protease, not a metalloprotease; this is the
+      wrong catalytic class.
+    action: MODIFY
+    reason: The metalloendopeptidase call is a long-standing mechanistic misclassification. RCE1
+      belongs to MEROPS peptidase family U48 and uses glutamate/histidine general acid-base catalysis
+      (proton donor/acceptor active-site residues), not a metal-coordinating HEXXH motif; EC 3.4.26.1
+      places it among glutamic-type endopeptidases. Replace with the mechanistically correct
+      glutamic-type peptidase activity term.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: SGD:S000004887
+        source_label: RCE1 (S. cerevisiae Rce1p)
+        comment: The phylogenetic tree assigns a metalloendopeptidase MF that predates structural
+          determination of Rce1 as a glutamate-type intramembrane protease (MEROPS family U48).
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Belongs to the peptidase U48 family.
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proton donor/acceptor
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0071586
+    label: CAAX-box protein processing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: CAAX-box protein processing is the core biological process of RCE1 (the proteolytic
+      -AAX-removal step).
+    action: ACCEPT
+    reason: The phylogenetic inference matches the direct experimental function; RCE1 removes the
+      C-terminal three residues of prenylated CAAX proteins.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proteolytically removes the C-
+    - reference_id: PMID:10085068
+      supporting_text: play a major role in the processing of CAAX-type prenylated
+- term:
+    id: GO:0004175
+    label: endopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Endopeptidase activity is correct but general; a more specific mechanistic term is
+      available.
+    action: MODIFY
+    reason: RCE1 is indeed an endopeptidase (cleaves the internal peptide bond releasing the -AAX
+      tripeptide), so this ARBA electronic term is not wrong, but the specific catalytic class is
+      known (glutamic-type). Refine to glutamic-type peptidase activity.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Belongs to the peptidase U48 family.
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-derived metalloendopeptidase call is a less-appropriate catalytic class for a
+      glutamate-type intramembrane protease; generalize to the glutamic-type peptidase term.
+    action: MODIFY
+    reason: This IEA (InterPro2GO, IPR039731) assigns a metallo- catalytic class. RCE1 belongs to
+      MEROPS peptidase family U48 and is classified EC 3.4.26.1 (glutamic-type endopeptidases), using
+      general acid-base (proton donor/acceptor) rather than metal-coordinating catalysis; the historic
+      metalloprotease call predates the structural/mechanistic work. Rather than remove the annotation,
+      replace it with the mechanistically correct glutamic-type peptidase activity term (consistent
+      with the IBA and Reactome-TAS peptidase annotations, which are handled the same way). Note the
+      catalytic mechanism has been debated (MEROPS U48 is nominally &#39;unknown&#39; catalytic type), so this
+      is presented as the best-supported classification rather than a settled fact.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Belongs to the peptidase U48 family.
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ER membrane location, consistent with the experimental and phylogenetic evidence.
+    action: ACCEPT
+    reason: This automated multi-method IEA (including UniProtKB-SubCell SL-0097) agrees with the
+      authoritative ER membrane localization of RCE1.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:19188362
+      supporting_text: USP17 and RCE1 co-localize at the endoplasmic reticulum
+- term:
+    id: GO:0071586
+    label: CAAX-box protein processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: CAAX-box protein processing electronic call matches the core function.
+    action: ACCEPT
+    reason: InterPro2GO (IPR039731) assignment agrees with the direct experimental function of RCE1
+      as the CAAX-processing (-AAX-removal) protease.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proteolytically removes the C-
+    - reference_id: PMID:10085068
+      supporting_text: play a major role in the processing of CAAX-type prenylated
+- term:
+    id: GO:0080120
+    label: CAAX-box protein maturation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: CAAX-box protein maturation is the broader parent process; RCE1 performs only the
+      proteolysis substep.
+    action: KEEP_AS_NON_CORE
+    reason: GO:0071586 (CAAX-box protein processing) is part_of GO:0080120 (CAAX-box protein
+      maturation). Full maturation additionally requires prenylation (FTase/GGTase-I) and
+      carboxymethylation (ICMT). RCE1 contributes only the proteolytic step, so the maturation-level
+      term is retained as a correct but non-core (broader) process annotation.
+    supported_by:
+    - reference_id: PMID:10085068
+      supporting_text: modification of the cysteine with either a
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proteolytically removes the C-
+- term:
+    id: GO:0000165
+    label: MAPK cascade
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5673001
+  qualifier: involved_in
+  review:
+    summary: MAPK-cascade involvement is indirect/downstream; RCE1 processes Ras upstream of the
+      cascade but is not itself a cascade component.
+    action: KEEP_AS_NON_CORE
+    reason: RCE1 does not act within the RAF-MEK-ERK kinase cascade. Its connection is through
+      processing Ras GTPases, which is required for their membrane localization and activation, so
+      loss of RCE1 activity indirectly blocks downstream MEK/ERK phosphorylation. Retained as a
+      non-core downstream-pathway context rather than a direct RCE1 activity.
+    supported_by:
+    - reference_id: PMID:19188362
+      supporting_text: USP17 expression blocks Ras membrane localization and
+- term:
+    id: GO:0004197
+    label: cysteine-type endopeptidase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9647999
+  qualifier: enables
+  review:
+    summary: RCE1 is a glutamate-type protease, not a cysteine-type endopeptidase; wrong catalytic
+      class.
+    action: MODIFY
+    reason: The Reactome cysteine-type assignment reflects an outdated view. Structural and mutational
+      work establishes RCE1 as a glutamate-type intramembrane protease (MEROPS family U48) using a
+      glutamate-activated water nucleophile and catalytic histidines, not a cysteine nucleophile; EC
+      3.4.26.1 is the glutamic-endopeptidase class. Replace with glutamic-type peptidase activity.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Belongs to the peptidase U48 family.
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proton donor/acceptor
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0008238
+    label: exopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10085068
+  qualifier: enables
+  review:
+    summary: RCE1 is an endopeptidase (removes an internal -AAX tripeptide), so exopeptidase is the
+      wrong mechanistic class.
+    action: MODIFY
+    reason: The experimental data (PMID:10085068) demonstrate prenyl-protein-specific proteolytic
+      activity, but the enzyme cleaves the internal peptide bond releasing the C-terminal -AAX
+      tripeptide, which is endoproteolysis (EC 3.4.26.1, glutamic-type endopeptidase), not
+      exopeptidase activity. This is an experimental annotation, so it is not removed but modified to
+      the correct catalytic-class term.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    supported_by:
+    - reference_id: PMID:10085068
+      supporting_text: The protease activity of hRCE1 activity was specific for
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0018342
+    label: protein prenylation
+  evidence_type: IDA
+  original_reference_id: PMID:10085068
+  qualifier: involved_in
+  review:
+    summary: RCE1 acts AFTER prenylation and does not itself prenylate substrates; this
+      over-annotates its role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Prenylation (attachment of the farnesyl/geranylgeranyl lipid to the CAAX cysteine) is
+      carried out by farnesyltransferase/geranylgeranyltransferase-I, and is the first CAAX step. RCE1
+      performs the subsequent proteolytic -AAX removal. PMID:10085068 shows RCE1 recognizes
+      already-prenylated substrates, not that it catalyzes prenylation. The term conflates
+      substrate-dependence-on-prenylation with performing prenylation.
+    supported_by:
+    - reference_id: PMID:10085068
+      supporting_text: modification of the cysteine with either a
+    - reference_id: PMID:10085068
+      supporting_text: The protease activity of hRCE1 activity was specific for
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Proteolytically removes the C-
+- term:
+    id: GO:0071586
+    label: CAAX-box protein processing
+  evidence_type: IDA
+  original_reference_id: PMID:10085068
+  qualifier: involved_in
+  review:
+    summary: Direct experimental support for CAAX-box protein processing; core function.
+    action: ACCEPT
+    reason: PMID:10085068 directly demonstrates that recombinant hRCE1 is a bona fide prenyl-protein
+      protease that processes CAAX-type prenylated proteins, defining the core RCE1 process.
+    supported_by:
+    - reference_id: PMID:10085068
+      supporting_text: bona fide prenyl protein proteases
+    - reference_id: PMID:10085068
+      supporting_text: play a major role in the processing of CAAX-type prenylated
+    - reference_id: PMID:10085068
+      supporting_text: farnesyl-Ki-Ras, farnesyl-N-Ras, farnesyl-Ha-Ras, and the farnesylated
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9653514
+  qualifier: located_in
+  review:
+    summary: ER membrane location (Reactome), consistent with the core localization.
+    action: ACCEPT
+    reason: Reactome (USP17L2 deubiquitinates RCE1) places RCE1 at the ER membrane, agreeing with the
+      authoritative UniProt/experimental localization.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:19188362
+      supporting_text: USP17 and RCE1 co-localize at the endoplasmic reticulum
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9647999
+  qualifier: located_in
+  review:
+    summary: ER membrane location (Reactome RAS processing), consistent with the core localization.
+    action: ACCEPT
+    reason: Reactome (RCE1 cleaves S-Farn proRAS proteins) places the RCE1 cleavage reaction at the ER
+      membrane, agreeing with the authoritative localization.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:19188362
+      supporting_text: USP17 and RCE1 co-localize at the endoplasmic reticulum
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5696600
+  qualifier: located_in
+  review:
+    summary: RCE1 is a polytopic ER membrane protein; a cytosol location is an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: RCE1 is a multi-pass ER membrane protease. The Reactome cytosol placement (USP17
+      deubiquitination reaction context) reflects the compartment abstraction of the deubiquitination
+      event rather than a soluble cytosolic pool of RCE1. The authoritative location is the ER
+      membrane.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0004175
+    label: endopeptidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:19188362
+  qualifier: enables
+  review:
+    summary: Direct experimental endopeptidase activity; correct, though a more specific mechanistic
+      term exists.
+    action: MODIFY
+    reason: PMID:19188362 assays RCE1 catalytic (endoproteolytic) activity toward Ras and shows it is
+      lost upon USP17-mediated deubiquitination. Endopeptidase activity is correct, but the specific
+      catalytic class is known (glutamic-type); refine to glutamic-type peptidase activity for
+      consistency with the other MF annotations.
+    proposed_replacement_terms:
+    - id: GO:0070002
+      label: glutamic-type peptidase activity
+    supported_by:
+    - reference_id: PMID:19188362
+      supporting_text: this effect is caused by the loss of RCE1
+    - reference_id: PMID:19188362
+      supporting_text: cannot block proliferation or Ras membrane localization in RCE1 null cells
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: Generic membrane localization from a high-throughput NK-cell membrane proteome; correct
+      but uninformative relative to ER membrane.
+    action: KEEP_AS_NON_CORE
+    reason: RCE1 was identified in a large-scale NK-cell (YTS) membrane-proteome mass-spectrometry
+      dataset. This is consistent with RCE1 being an integral membrane protein but is far less
+      informative than the specific ER membrane term, and does not localize it to a specific
+      compartment.
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: identified 1843 proteins with high confidence scores
+    - reference_id: PMID:19946888
+      supporting_text: predicted as plausible membrane proteins
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:19188362
+  qualifier: located_in
+  review:
+    summary: Direct experimental ER membrane localization; core location.
+    action: ACCEPT
+    reason: PMID:19188362 shows RCE1 co-localizes with USP17 at the ER, providing direct experimental
+      support for the authoritative ER membrane location.
+    supported_by:
+    - reference_id: PMID:19188362
+      supporting_text: USP17 and RCE1 co-localize at the endoplasmic reticulum
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0071586
+    label: CAAX-box protein processing
+  evidence_type: IMP
+  original_reference_id: PMID:19188362
+  qualifier: involved_in
+  review:
+    summary: Mutant/perturbation evidence supports RCE1&#39;s role in CAAX (Ras) processing; core
+      function.
+    action: ACCEPT
+    reason: PMID:19188362 uses RCE1-null cells and USP17-mediated inactivation to show RCE1 activity
+      is required for Ras membrane localization/processing, supporting involvement in CAAX-box protein
+      processing.
+    supported_by:
+    - reference_id: PMID:19188362
+      supporting_text: cannot block proliferation or Ras membrane localization in RCE1 null cells
+    - reference_id: PMID:19188362
+      supporting_text: One step in this process is the cleavage of the CAAX
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:10085068
+  qualifier: located_in
+  review:
+    summary: RCE1 resides in the ER membrane; a plasma-membrane location is not supported by the
+      current record.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is an old (2003) ProtInc author-statement (TAS) plasma-membrane call. The current
+      UniProt record localizes RCE1 exclusively to the ER membrane, and PMID:19188362 places it at the
+      ER. The PM call likely reflects the eventual destination of RCE1&#39;s Ras substrates rather than
+      RCE1 itself; it is over-annotated relative to the ER membrane localization.
+    supported_by:
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: file:human/RCE1/RCE1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: MISCITED
+    review_notes: &gt;-
+      InterPro2GO (IPR039731) pipeline reference. The CAAX-box protein processing mapping it produces
+      is correct, but the metalloendopeptidase activity mapping from the same reference is the wrong
+      catalytic class for this glutamate-type protease.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      PAN-GO phylogenetic (IBA) reference. The ER-membrane and CAAX-box protein processing inferences
+      are correct, but the metalloendopeptidase-activity inference propagated in the same tree assigns
+      the wrong catalytic class.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ARBA electronic annotations (endopeptidase activity, CAAX-box protein maturation). Both are
+      correct, if general; endopeptidase is refined here to the glutamic-type class.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Automated multi-method IEA producing the ER-membrane location (via UniProtKB-SubCell SL-0097),
+      consistent with the experimental localization.
+- id: PMID:10085068
+  title: Cloning and characterization of a mammalian prenyl protein-specific protease.
+  findings:
+  - statement: Cloned human RCE1 (hRCE1); recombinant enzyme is a prenyl-protein-specific protease
+      that removes the C-terminal -AAX tripeptide from farnesylated and geranylgeranylated CAAX
+      proteins (K-Ras, N-Ras, H-Ras, Ggamma1, geranylgeranyl-Rap1b) and is expressed in all tissues
+      examined.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational RCE1 characterization paper; PubMed-verified. Establishes the CAAX-processing
+      protease function, prenyl-substrate specificity, and substrate range. Abstract-only in the
+      cache (full_text_available: false); experimental IDA annotations derive from the full text read
+      by the curator.
+- id: PMID:19188362
+  title: USP17 regulates Ras activation and cell proliferation by blocking RCE1 activity.
+  findings:
+  - statement: RCE1 cleaves the Ras CAAX motif; its catalytic activity is required for Ras membrane
+      localization/activation and downstream MEK/ERK signaling. RCE1 and USP17 co-localize at the ER,
+      and USP17-mediated deubiquitination abolishes RCE1 catalytic activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Supports RCE1 endopeptidase activity, ER-membrane localization, the
+      CAAX/Ras-processing role, and ubiquitination-dependent activity regulation. Abstract-only in the
+      cache; IDA/IMP annotations derive from the full text.
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings:
+  - statement: Large-scale mass-spectrometry membrane-proteome survey of the NK-like YTS cell line;
+      RCE1 was among the 1843 identified proteins, supporting a generic membrane localization.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput proteomics dataset (HDA). Provides only a generic membrane-localization
+      datapoint, uninformative relative to the specific ER-membrane annotations.
+- id: Reactome:R-HSA-5673001
+  title: RAF/MAP kinase cascade
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome pathway. RCE1 is connected only indirectly (via processing of its Ras substrates
+      upstream of the cascade), so the MAPK-cascade annotation is downstream/non-core.
+- id: Reactome:R-HSA-5696600
+  title: USP17 deubiquitinates RCE1, CDC25A, DDX58, IFIH1
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction describing USP17-mediated deubiquitination/inhibition of RCE1. Supports the
+      regulation biology; its cytosol compartment placement is a reaction abstraction, not RCE1
+      residence.
+- id: Reactome:R-HSA-9647999
+  title: RCE1 cleaves S-Farn proRAS proteins
+  findings:
+  - statement: Reactome reaction placing RCE1-mediated C-terminal endoproteolysis of prenylated RAS
+      at the ER membrane, downstream of prenylation and required for RAS plasma-membrane localization.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction directly modeling the RCE1 CAAX-cleavage step at the ER membrane. Note the
+      associated Reactome molecular-function call (cysteine-type endopeptidase) is the wrong catalytic
+      class.
+- id: Reactome:R-HSA-9653514
+  title: USP17L2 deubiquitinates RCE1
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for USP17L2-mediated deubiquitination/inactivation of RCE1 at the ER membrane;
+      supports the ER localization and activity-regulation biology.
+core_functions:
+- description: RCE1 is a glutamate-type intramembrane endopeptidase that catalyzes the second CAAX
+    processing step - proteolytic removal of the C-terminal -AAX tripeptide from prenylated CAAX
+    proteins (Ras and related GTPases), leaving the prenylcysteine as the new C-terminus.
+  molecular_function:
+    id: GO:0070002
+    label: glutamic-type peptidase activity
+  directly_involved_in:
+  - id: GO:0071586
+    label: CAAX-box protein processing
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/RCE1/RCE1-uniprot.txt
+    supporting_text: Proteolytically removes the C-
+  - reference_id: file:human/RCE1/RCE1-uniprot.txt
+    supporting_text: Belongs to the peptidase U48 family.
+  - reference_id: file:human/RCE1/RCE1-uniprot.txt
+    supporting_text: EC=3.4.26.1 {ECO:0000269|PubMed:10085068}
+  - reference_id: PMID:10085068
+    supporting_text: play a major role in the processing of CAAX-type prenylated
+  - reference_id: PMID:10085068
+    supporting_text: bona fide prenyl protein proteases
+proposed_new_terms: []
+suggested_questions:
+- question: Should GO provide a specific, non-obsolete molecular-function term for prenyl-dependent
+    CAAX endopeptidase / glutamate-type intramembrane protease activity? The historically used
+    specific terms (GO:0008319 prenyl protein specific endopeptidase activity; GO:0008487
+    prenyl-dependent CAAX protease activity; GO:0070007 glutamic-type endopeptidase activity) are all
+    obsolete, leaving only the family-level GO:0070002 glutamic-type peptidase activity.
+  experts:
+  - GO molecular-function / protease ontology editors
+  - MEROPS curators
+- question: Should the metalloendopeptidase (GO:0004222) and cysteine-type endopeptidase (GO:0004197)
+    annotations on RCE1 be corrected across GOA/InterPro/Reactome to reflect its glutamate-type
+    mechanism?
+  experts:
+  - GOA/InterPro curators
+  - Reactome curators
+suggested_experiments:
+- description: Reconstitute purified recombinant human RCE1 in defined membranes/liposomes and
+    measure -AAX-tripeptide cleavage of a panel of farnesylated vs geranylgeranylated CAAX peptides to
+    quantify substrate preference and confirm endoproteolytic (not exopeptidase) cleavage by mapping
+    the exact scissile bond via mass spectrometry.
+- description: Perform structure-guided alanine mutagenesis of the predicted catalytic glutamate and
+    histidine residues (human equivalents of the U48 active-site residues) to confirm the
+    glutamate-type mechanism and rule out metal or cysteine catalysis (e.g. metal-chelation and
+    cysteine-alkylation sensitivity assays).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

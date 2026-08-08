@@ -1,0 +1,74 @@
+# Central runtime configuration for the agentic AI GitHub Actions.
+#
+# This is the single source of truth for which Claude model backs each agent
+# workflow. It is read at run time by the composite action
+# `.github/actions/resolve-agent-config`, which resolves the effective model and
+# exports it as the `AGENT_MODEL` environment variable (and a step output). To
+# bump a model tier repo-wide, edit this file — no workflow YAML changes needed.
+#
+# Resolution order (highest priority first):
+#   1. an explicit per-run override (a workflow_dispatch `model:` input, passed
+#      to the action as `model-override`),
+#   2. the per-workflow `model:` (or `matrix:` for a fan-out) below,
+#   3. `default_model`.
+#
+# Keys under `workflows:` are the workflow file stem under .github/workflows/.
+# `tests/test_agent_config.py` enforces that every key here maps to a real
+# workflow that actually sources its model from this config, and that no
+# workflow re-hardcodes a `--model claude-...` inline.
+#
+# Scope note: this centralises the *AI model* for the agentic workflows only.
+# Cron cadence lives in `.github/cron-profiles.yaml` (GitHub cannot parameterise
+# `schedule:` at run time). `provider` is reserved for a future provider
+# abstraction and is not yet consumed.
+
+default_model: claude-opus-5
+provider: anthropic
+
+workflows:
+  # The "@ai4c-agent please ..." mention responder. Open-ended requests from a
+  # controller, so it gets the top tier.
+  ai:
+    model: claude-opus-5
+
+  # The "@claude" mention responder (interactive, controller-gated).
+  claude:
+    model: claude-sonnet-5
+
+  # curation-scanner fans out across effort tiers in parallel, each tier bound to
+  # a model and a GitHub label selector. The resolver's --matrix mode emits this
+  # list, and curation-scanner's setup job feeds it to `strategy.matrix.include`.
+  curation-scanner:
+    matrix:
+      - effort: low_effort
+        model: claude-haiku-4-5-20251001
+        selector: "label:curation label:low_effort"
+      - effort: medium_effort
+        model: claude-sonnet-5
+        selector: "label:curation label:medium_effort -label:low_effort"
+      - effort: high_effort
+        model: claude-opus-5
+        selector: "label:curation -label:low_effort -label:medium_effort"
+
+  claude-code-review:
+    model: claude-opus-5
+
+  # Scans the upstream geneontology/go-annotation tracker for issues this repo
+  # can act on. Deep judgment about GO evidence, so it stays on the top tier.
+  go-annotation-scanner:
+    model: claude-opus-5
+
+  # Reviews ARBA/UniRule annotation rules raised in go-annotation issues.
+  arba-issue-monitor:
+    model: claude-opus-5
+
+  # Triage-only: reads a deterministic packet and files handoff issues.
+  litscan-module-member:
+    model: claude-haiku-4-5-20251001
+
+  pr-shepherd:
+    model: claude-opus-5
+
+  # Weekly sweep that improves the lowest-scoring gene reviews.
+  weekly-compliance:
+    model: claude-opus-5

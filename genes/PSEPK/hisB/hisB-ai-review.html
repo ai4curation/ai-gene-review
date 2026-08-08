@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hisB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hisB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R45" target="_blank" class="term-link">
+                        Q88R45
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hisB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R45" data-a="DESCRIPTION: hisB encodes imidazoleglycerol-phosphate dehydrata..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>hisB encodes imidazoleglycerol-phosphate dehydratase (IGPD; EC 4.2.1.19), which removes water from imidazole-glycerol phosphate to form imidazole-acetol phosphate in the sixth reaction of L-histidine biosynthesis. The Pseudomonas putida KT2440 protein is a compact monofunctional IGPD; unlike enterobacterial bifunctional HisB proteins, it does not contain a fused histidinol-phosphate phosphatase domain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                    GO:0000105
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R45" data-a="GO:0000105" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisB performs the sixth reaction of the PRPP-to-histidine pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt entry, UniPathway assignment, and IGPD-specific family signatures place this reaction in L-histidine biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R45" data-a="GO:0003824" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This root catalytic term is correct but uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003824 is a generic ancestor of the specific imidazoleglycerol-phosphate dehydratase activity already annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004424" target="_blank" class="term-link">
+                                    GO:0004424
+                                </a>
+                            </span>
+                            <span class="term-label">imidazoleglycerol-phosphate dehydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R45" data-a="GO:0004424" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining catalytic activity of the KT2440 HisB protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004424 matches EC 4.2.1.19, RHEA:11040, the reviewed product name, and the IGPD family assignments.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hisB/hisB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes **imidazoleglycerol-phosphate dehydratase (IGPD; EC 4.2.1.19)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R45" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisB is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported by UniProt but is contextual rather than the core biochemical function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Dehydrates imidazole-glycerol phosphate to imidazole-acetol phosphate in the sixth reaction of L-histidine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88R45" data-a="FUNCTION: Dehydrates imidazole-glycerol phosphate to imidazo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004424" target="_blank" class="term-link">
+                            imidazoleglycerol-phosphate dehydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                L-histidine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisB/hisB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Imidazoleglycerol-phosphate dehydratase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hisB/hisB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">the enzyme is the **monofunctional** form (197 aa, a single IGPD/PF00475 domain)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisB/hisB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK hisB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88R45 as monofunctional imidazoleglycerol-phosphate dehydratase for step 6 of L-histidine biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisB/hisB-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK hisB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the four existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hisB/hisB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK HisB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Corroborates the monofunctional IGPD assignment and absence of a fused histidinol-phosphatase domain. Its exclusive assignment of the separate phosphatase step to PP_3157 is not adopted because gene-level evidence also supports the unrelated PP_5147 HAD-family candidate.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hisB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R45" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *hisB* (Q88R45, PP_0289) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T05:41:43.588046</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hisB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-hisb-q88r45-pp_0289-in-pseudomonas-putida-kt2440">Functional Annotation of <em>hisB</em> (Q88R45, PP_0289) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> hisB | <strong>Locus:</strong> PP_0289 | <strong>UniProt:</strong> Q88R45<br />
+<strong>Protein:</strong> Imidazoleglycerol-phosphate dehydratase (IGPD), EC 4.2.1.19<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> strain ATCC 47054 / DSM 6125 / KT2440 (PSEPK)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><em>hisB</em> (PP_0289) encodes <strong>imidazoleglycerol-phosphate dehydratase (IGPD; EC 4.2.1.19)</strong>, a cytoplasmic, manganese(II)-dependent hydro-lyase that catalyzes the <strong>sixth step of the nine-step L-histidine biosynthetic pathway</strong>. It removes water from D-<em>erythro</em>-1-(imidazol-4-yl)glycerol 3-phosphate (imidazoleglycerol phosphate, IGP) to yield 3-(imidazol-4-yl)-2-oxopropyl phosphate (imidazoleacetol phosphate, IAP). In <em>P. putida</em> the enzyme is the <strong>monofunctional</strong> form (197 aa, a single IGPD/PF00475 domain), in contrast to the bifunctional HisB of <em>Escherichia coli</em>; the downstream histidinol-phosphate phosphatase activity is supplied by a <strong>separate gene, PP_3157</strong>. The enzyme operates in the bacterial cytosol and, because the histidine pathway is absent in mammals, IGPD is a validated herbicide/antimicrobial target.</p>
+<p><strong>Gene-identity verification:</strong> CONFIRMED. UniProt Q88R45 (hisB/PP_0289, 197 aa, single IGPD domain, EC 4.2.1.19, cytoplasm) matches KEGG ppu:PP_0289 (K01693, IGPD) and the family/domain signatures (IPR000807, IPR020565, PF00475). All identifiers are internally consistent; there is no gene-symbol ambiguity for this protein.</p>
+<hr />
+<h2 id="2-primary-function-reaction-catalyzed-and-substrate-specificity">2. Primary Function: Reaction Catalyzed and Substrate Specificity</h2>
+<p><strong>Reaction (EC 4.2.1.19):</strong></p>
+<blockquote>
+<p>D-<em>erythro</em>-1-(imidazol-4-yl)glycerol 3-phosphate → 3-(imidazol-4-yl)-2-oxopropyl phosphate + H₂O</p>
+</blockquote>
+<p>This is a <strong>dehydration (hydro-lyase)</strong> reaction: elimination of the C-2′ hydroxyl (as water) from the glycerol-phosphate side chain of the imidazole substrate. The product, imidazoleacetol phosphate, is subsequently transaminated by histidinol-phosphate aminotransferase (HisC/PP_0967) to histidinol phosphate.</p>
+<p><strong>Substrate specificity.</strong> IGPD is highly specific for its physiological substrate IGP; recognition is dominated by the imidazole ring, which is anchored between the two active-site Mn(II) ions, while the phosphate and hydroxyl groups are held by a network of conserved basic and acidic residues. In the <em>Mycobacterium tuberculosis</em> IGPD–IGP complex the substrate contacts Glu21, Arg99, Glu180, Arg121 and Lys184 contributed by three different protomers (Ahangar et al., 2013, PMID 24311587). The imidazole-focused recognition also explains inhibition by the imidazole/triazole mimic <strong>3-amino-1,2,4-triazole (ATZ)</strong>, which is a competitive inhibitor (PMID 24311587), and by triazole-phosphonate herbicides (Glynn et al., 2005, PMID 16338409).</p>
+<p><strong>Cofactor requirement.</strong> IGPD is a <strong>Mn(II) metalloenzyme</strong>; two manganese ions per active site are essential both for catalysis and for assembly of the functional oligomer (PMID 16338409).</p>
+<hr />
+<h2 id="3-catalytic-mechanism-structuralmechanistic-evidence">3. Catalytic Mechanism (Structural/Mechanistic Evidence)</h2>
+<p>Although no <em>P. putida</em> IGPD structure has been solved, the mechanism is well established from high-resolution structures of orthologs that share the same fold and conserved residues:</p>
+<ul>
+<li>
+<p><strong>Quaternary structure:</strong> The active enzyme is a <strong>24-mer with 432 point-group symmetry</strong>, containing <strong>24 equivalent active sites</strong>, each built at the interface of three protomers. Assembly of the 24-mer from an inactive trimeric precursor is triggered by formation of a <strong>dimanganese cluster</strong> (<em>Arabidopsis thaliana</em> IGPD; Glynn et al., 2005, PMID 16338409). The same 24-meric architecture was confirmed for <em>M. tuberculosis</em> IGPD (PMID 24311587).</p>
+</li>
+<li>
+<p><strong>Chemical mechanism:</strong> The substrate's imidazole ring binds between the two Mn(II) ions as an <strong>imidazolate</strong>, which collapses to a high-energy <strong>diazafulvene intermediate</strong>; this activation enables elimination of water (PMID 16338409). Trapped catalytic-cycle snapshots of an inactive IGPD2 mutant show that substrate binding <strong>switches an active-site Mn(II) between six- and five-coordinate states</strong>, priming the site and facilitating the imidazolate intermediate (Bisson et al., 2015, PMID 26095028). This is a striking example of a metalloenzyme using controlled metal-coordination changes to drive discrete catalytic steps.</p>
+</li>
+<li>
+<p><strong>Evolutionary/bioinformatic support for the P. putida enzyme:</strong> The 197-aa Q88R45 sequence contains the <strong>two internally homologous, His-rich metal-binding motifs</strong> diagnostic of IGPD — Region 1 <code>KGDT**H**IDD**HH**</code> (His62/His66/His67) and Region 2 <code>RG**H**NT**HH**Q</code> (His159/His162/His163). This intra-subunit two-fold pseudosymmetry reflects the <strong>ancient gene duplication</strong> that created the two metal-binding half-sites (PMID 16338409), so the <em>P. putida</em> enzyme is predicted with high confidence to use the identical dimanganese mechanism.</p>
+</li>
+</ul>
+<hr />
+<h2 id="4-biological-process-and-pathway-context">4. Biological Process and Pathway Context</h2>
+<p><strong>Pathway:</strong> L-histidine biosynthesis from 5-phospho-α-D-ribose-1-diphosphate (PRPP) — KEGG map ppu00340 (Histidine metabolism) and module M00026 (PRPP ⇒ histidine). IGPD catalyzes <strong>step 6 of 9</strong> (UniProt/HAMAP MF_00076).</p>
+<p>In <em>P. putida</em> KT2440 the pathway enzymes are encoded by a <strong>distributed (non-operonic) set of genes</strong>, mapped here via KEGG:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme (EC)</th>
+<th>KO</th>
+<th><em>P. putida</em> locus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ATP phosphoribosyltransferase (2.4.2.17), <em>hisG</em></td>
+<td>K00765</td>
+<td>PP_0965</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Imidazoleglycerol-phosphate synthase (4.3.2.10), <em>hisF</em></td>
+<td>K02500</td>
+<td>PP_0293</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><strong>Imidazoleglycerol-phosphate dehydratase (4.2.1.19), <em>hisB</em></strong></td>
+<td><strong>K01693</strong></td>
+<td><strong>PP_0289</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Histidinol-phosphate aminotransferase (2.6.1.9), <em>hisC</em></td>
+<td>K00817</td>
+<td>PP_0967</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Histidinol-phosphate phosphatase (3.1.3.15)</td>
+<td>K05602</td>
+<td>PP_3157</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Histidinol dehydrogenase (1.1.1.23), <em>hisD</em></td>
+<td>K00013</td>
+<td>PP_0966</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Monofunctional vs bifunctional HisB.</strong> KEGG module M00026 encodes two mutually exclusive branches for the dehydratase/phosphatase steps: (i) a <strong>monofunctional IGPD (K01693)</strong> plus a <strong>separate histidinol-phosphatase</strong>, or (ii) a <strong>bifunctional IGPD/phosphatase (K01089)</strong>, as found in enterobacteria. <em>E. coli hisB</em> is the bifunctional 355-aa enzyme (Chiariotti et al., 1986, PMID 3007936). <em>P. putida</em> uses branch (i): the monofunctional 197-aa IGPD (PP_0289) works together with a <strong>separate PHP-family histidinol-phosphate phosphatase (PP_3157, K05602)</strong>. This definitively resolves that <em>hisB</em>/PP_0289 carries out <strong>only</strong> the dehydration step.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>The enzyme is <strong>cytoplasmic</strong> (UniProt Q88R45, HAMAP MF_00076). It has no signal peptide, no transmembrane segments, and no lipidation signal; the entire histidine biosynthetic pathway operates as a soluble cytosolic route. The catalytic reaction therefore occurs <strong>in the bacterial cytoplasm</strong>, where the enzyme functions as a large soluble homo-24-meric particle.</p>
+<hr />
+<h2 id="6-biological-translational-significance">6. Biological / Translational Significance</h2>
+<ul>
+<li><strong>Essentiality:</strong> IGPD activity is required for histidine prototrophy; loss abolishes de novo histidine synthesis (histidine auxotrophy).</li>
+<li><strong>Drug/herbicide target:</strong> Because the histidine pathway is absent in mammals, IGPD is an attractive, selective target. It is competitively inhibited by 3-amino-1,2,4-triazole (PMID 24311587) and is the target of triazole-phosphonate herbicides (PMID 16338409). Histidine metabolism/IGPD has also been implicated in bacterial biofilm formation (Zhou et al., 2018, PMID 29675012).</li>
+</ul>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1: <em>hisB</em>/PP_0289 is a monofunctional IGPD catalyzing step 6 of histidine biosynthesis (IGP → IAP + H₂O). — Supported by UniProt catalytic-activity annotation, KEGG K01693 mapping, and sequence length/domain content.<br />
+- H2: The enzyme uses a conserved dimanganese active site and imidazolate/diazafulvene mechanism. — Supported by ortholog crystal structures (PMID 16338409, 26095028, 24311587) and conservation of the two His-rich motifs in Q88R45.<br />
+- H3: The enzyme is cytoplasmic. — Supported by UniProt/HAMAP and absence of localization/membrane signals.<br />
+- H4: In <em>P. putida</em> the phosphatase step is encoded separately (not by hisB). — Supported by KEGG module logic and identification of PP_3157 (K05602).</p>
+<p><strong>Refuted / ruled out:</strong><br />
+- <em>hisB</em> of <em>P. putida</em> is NOT the bifunctional IGPD+histidinol-phosphatase enzyme found in <em>E. coli</em> (197 aa single domain vs 355 aa two-domain; separate PP_3157 phosphatase present).</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct P. putida experimental data:</strong> Function is assigned by strong homology/annotation transfer and family-wide structural/mechanistic studies (Mtb, <em>Arabidopsis</em>), not by biochemical characterization of the <em>P. putida</em> enzyme itself. Enzyme kinetics (kcat/Km for IGP), metal dependence, and a <em>P. putida</em> IGPD structure remain to be determined experimentally.</li>
+<li><strong>Start-codon note:</strong> UniProt annotates a 197-aa product; KEGG lists a 210-aa product with a 13-residue N-terminal extension. This is a start-site annotation discrepancy and does not affect the catalytic domain or function.</li>
+<li><strong>Regulation:</strong> Transcriptional/feedback regulation of the <em>P. putida</em> his genes (e.g., attenuation, feedback inhibition of HisG by histidine) was not examined in detail and would refine the physiological picture.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>Glynn SE, et al. Structure and mechanism of imidazoleglycerol-phosphate dehydratase. <em>Structure</em> 2005. <strong>PMID 16338409</strong>.</li>
+<li>Bisson C, et al. Crystal structures reveal that the reaction mechanism of IGPD is controlled by switching Mn(II) coordination. <em>Structure</em> 2015. <strong>PMID 26095028</strong>.</li>
+<li>Ahangar MS, et al. Structures of native, substrate-bound and inhibited forms of <em>M. tuberculosis</em> IGPD. <em>Acta Cryst D</em> 2013. <strong>PMID 24311587</strong>.</li>
+<li>Chiariotti L, et al. Gene structure in the histidine operon of <em>E. coli</em>: identification and nucleotide sequence of the hisB gene. 1986. <strong>PMID 3007936</strong>.</li>
+<li>Zhou X, et al. Histidine metabolism and IGPD play a key role in cefquinome inhibiting biofilm formation. 2018. <strong>PMID 29675012</strong>.</li>
+<li>Database annotations: UniProt Q88R45 (HAMAP MF_00076); KEGG ppu:PP_0289 (K01693), module M00026; InterPro IPR000807/IPR020565/IPR038494; Pfam PF00475.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hisB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hisB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R45
+gene_symbol: hisB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  hisB encodes imidazoleglycerol-phosphate dehydratase (IGPD; EC 4.2.1.19),
+  which removes water from imidazole-glycerol phosphate to form
+  imidazole-acetol phosphate in the sixth reaction of L-histidine biosynthesis.
+  The Pseudomonas putida KT2440 protein is a compact monofunctional IGPD; unlike
+  enterobacterial bifunctional HisB proteins, it does not contain a fused
+  histidinol-phosphate phosphatase domain.
+existing_annotations:
+- term:
+    id: GO:0000105
+    label: L-histidine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: HisB performs the sixth reaction of the PRPP-to-histidine pathway.
+    action: ACCEPT
+    reason: &gt;-
+      The reviewed UniProt entry, UniPathway assignment, and IGPD-specific
+      family signatures place this reaction in L-histidine biosynthesis.
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: This root catalytic term is correct but uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0003824 is a generic ancestor of the specific
+      imidazoleglycerol-phosphate dehydratase activity already annotated.
+- term:
+    id: GO:0004424
+    label: imidazoleglycerol-phosphate dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining catalytic activity of the KT2440 HisB protein.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0004424 matches EC 4.2.1.19, RHEA:11040, the reviewed product name,
+      and the IGPD family assignments.
+    supported_by:
+    - reference_id: file:PSEPK/hisB/hisB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        encodes **imidazoleglycerol-phosphate dehydratase (IGPD; EC 4.2.1.19)**
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: HisB is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The location is supported by UniProt but is contextual rather than the
+      core biochemical function.
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/hisB/hisB-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK hisB
+  findings:
+  - statement: &gt;-
+      Identifies Q88R45 as monofunctional imidazoleglycerol-phosphate
+      dehydratase for step 6 of L-histidine biosynthesis.
+- id: file:PSEPK/hisB/hisB-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK hisB
+  findings:
+  - statement: Contains the four existing annotations reviewed above.
+- id: file:PSEPK/hisB/hisB-deep-research-openscientist.md
+  title: OpenScientist functional report for PSEPK HisB
+  findings:
+  - statement: &gt;-
+      Corroborates the monofunctional IGPD assignment and absence of a fused
+      histidinol-phosphatase domain. Its exclusive assignment of the separate
+      phosphatase step to PP_3157 is not adopted because gene-level evidence
+      also supports the unrelated PP_5147 HAD-family candidate.
+core_functions:
+- description: &gt;-
+    Dehydrates imidazole-glycerol phosphate to imidazole-acetol phosphate in
+    the sixth reaction of L-histidine biosynthesis.
+  molecular_function:
+    id: GO:0004424
+    label: imidazoleglycerol-phosphate dehydratase activity
+  directly_involved_in:
+  - id: GO:0000105
+    label: L-histidine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/hisB/hisB-uniprot.txt
+    supporting_text: Full=Imidazoleglycerol-phosphate dehydratase
+  - reference_id: file:PSEPK/hisB/hisB-deep-research-openscientist.md
+    supporting_text: &gt;-
+      the enzyme is the **monofunctional** form (197 aa, a single IGPD/PF00475
+      domain)
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

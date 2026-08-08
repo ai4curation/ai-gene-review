@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dapF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dapF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CF3" target="_blank" class="term-link">
+                        Q88CF3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dapF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CF3" data-a="DESCRIPTION: DapF Q88CF3 (PP_5228) is a diaminopimelate epimera..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DapF Q88CF3 (PP_5228) is a diaminopimelate epimerase (EC 5.1.1.7) that interconverts LL-2,6-diaminopimelate and meso-2,6-diaminopimelate in the diaminopimelate route to L-lysine. It retains the canonical DapF catalytic cysteine pair at Cys75 and Cys219. KT2440 also encodes the putative paired-serine DapF-SS paralog Q88GD4; their relative physiological contributions are unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CF3" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DapF Q88CF3 is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is valid but secondary to the substrate-specific reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CF3" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This duplicates the retained bacterial cytoplasm annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No distinct DapF pool is established by the parent/child location pair.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008837" target="_blank" class="term-link">
+                                    GO:0008837
+                                </a>
+                            </span>
+                            <span class="term-label">diaminopimelate epimerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CF3" data-a="GO:0008837" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining DapF molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 5.1.1.7, RHEA:15393, HAMAP MF_00197, and NCBIfam:TIGR00652 agree. The exact sequence retains the canonical DapF catalytic cysteines at positions 75 and 219, although Q88CF3 itself has not been assayed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Diaminopimelate epimerase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**; protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes **diaminopimelate epimerase**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                    GO:0009085
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CF3" data-a="GO:0009085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DapF supplies meso-diaminopimelate in the DAP route to L-lysine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns Q88CF3 to L-lysine biosynthesis via the DAP pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Converts LL-2,6-diaminopimelate to meso-2,6-diaminopimelate in the L-lysine DAP pathway.</h3>
+                <span class="vote-buttons" data-g="Q88CF3" data-a="FUNCTION: Converts LL-2,6-diaminopimelate to meso-2,6-diamin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008837" target="_blank" class="term-link">
+                            diaminopimelate epimerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009085" target="_blank" class="term-link">
+                                L-lysine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Diaminopimelate epimerase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**; protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes **diaminopimelate epimerase**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK DapF Q88CF3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns Q88CF3 to EC 5.1.1.7, the DapF-specific family, and the stereoinversion that supplies meso-diaminopimelate.</div>
+
+                        <div class="finding-text">"Full=Diaminopimelate epimerase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK DapF Q88CF3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the four existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist literature and database synthesis for PSEPK DapF Q88CF3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Corroborates Q88CF3/PP_5228 as an EC 5.1.1.7 DapF candidate.</div>
+
+                        <div class="finding-text">"The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**; protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes **diaminopimelate epimerase**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirms that the exact Q88CF3 sequence has the canonical DapF-CC catalytic cysteine pair.</div>
+
+                        <div class="finding-text">"In Q88CF3 these are **Cys75 (proton donor active site) and Cys219 (proton acceptor active site)**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct Q88CF3 characterization was found. Gene-specific essentiality, RppH moonlighting, redox regulation, and dominance over Q88GD4 are not adopted from ortholog evidence.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of the *P. putida* KT2440 orthologue."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dapF__Q88CF3-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CF3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *dapF* (PP_5228, UniProt Q88CF3) — Diaminopimelate Epimerase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T14:55:46.897211</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapF__Q88CF3-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dapF__Q88CF3-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-dapf-pp_5228-uniprot-q88cf3-diaminopimelate-epimerase-of-pseudomonas-putida-kt2440">Functional Annotation of <em>dapF</em> (PP_5228, UniProt Q88CF3) — Diaminopimelate Epimerase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <code>dapF</code> (ordered locus <strong>PP_5228</strong>) · <strong>UniProt:</strong> Q88CF3 (DAPF_PSEPK, 276 aa) · <strong>EC 5.1.1.7</strong> · <strong>KEGG ortholog:</strong> K01778<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / <strong>KT2440</strong>), a Gram-negative gammaproteobacterium.</p>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>dapF</strong> (ordered locus name <strong>PP_5228</strong>; UniProt <strong>Q88CF3</strong>; protein DAPF_PSEPK, 276 aa) of <em>Pseudomonas putida</em> KT2440 encodes <strong>diaminopimelate epimerase</strong> (DAP epimerase; <strong>EC 5.1.1.7</strong>), a small, cytoplasmic, cofactor-independent amino-acid racemase/epimerase. Its primary and defining function is the reversible stereoinversion of <strong>LL-2,6-diaminopimelate (LL-DAP) to meso-(D,L)-2,6-diaminopimelate (meso-DAP)</strong>. This reaction constitutes the <strong>penultimate step of the diaminopimelate (DAP) branch of L-lysine biosynthesis</strong>. The identity of the target is unambiguous: the UniProt annotation, HAMAP rule MF_00197, KEGG orthology K01778, and the conserved Pfam DAP_epimerase (PF01678) domain architecture all converge on a canonical DAP epimerase, and the organism assignment (<em>P. putida</em> KT2440) is confirmed by the locus tag PP_5228 in the KEGG genome. There is no ambiguity or literature conflict for this gene symbol in this context.</p>
+<p>Mechanistically, DapF is a paradigm <strong>pyridoxal-5′-phosphate (PLP)-independent, metal-independent amino acid racemase</strong>. It abstracts and re-adds the proton at the α-carbon of one of the two stereocenters of DAP using <strong>two catalytic cysteines</strong> that alternate roles as a base (thiolate) and an acid (thiol). In Q88CF3 these are <strong>Cys75 (proton donor active site) and Cys219 (proton acceptor active site)</strong>, both experimentally supported by homology to structurally characterized DapF enzymes and confirmed by sequence analysis to sit within the diagnostic DAP-epimerase signature motifs. The enzyme adopts a two-domain α/β "DAP-epimerase fold," functions as a <strong>homodimer</strong>, and undergoes <strong>substrate-induced domain closure</strong> that encapsulates DAP and positions the two cysteines for catalysis. A conserved dimerization tyrosine (Tyr270 in Q88CF3) is required for the active dimer.</p>
+<p>Biologically, DapF operates in the <strong>cytoplasm</strong> and supplies <strong>meso-DAP</strong>, a metabolite with a dual and essential fate in Gram-negative bacteria: (i) it is the direct precursor for L-lysine (decarboxylated by the genomically adjacent LysA/PP_5227), and (ii) it is directly incorporated as the cross-linking residue of the peptidoglycan pentapeptide. In <em>P. putida</em> KT2440, dapF sits immediately downstream of, and overlaps, lysA, coupling the final two steps of the pathway. Because DapF is the sole route to meso-DAP and the entire DAP/lysine pathway is absent in mammals, the enzyme is a validated, selective antibacterial/herbicide target. A distinct, well-characterized <strong>moonlighting function</strong> — physical stimulation of the RNA pyrophosphohydrolase RppH to promote 5′-end-dependent mRNA decay — has been documented for <em>E. coli</em> DapF and represents a second potential role for the <em>P. putida</em> orthologue.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Per the mandatory verification protocol, all identity checks passed:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol matches protein description</td>
+<td>✅ "dapF" is the standard symbol for diaminopimelate epimerase; matches EC 5.1.1.7 annotation</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>Pseudomonas putida</em> KT2440; KEGG locus <strong>ppu:PP_5228</strong> confirms the strain assignment</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ Pfam <strong>PF01678 (DAP_epimerase)</strong>; InterPro IPR001653/IPR018510; PhzF/DAP-epimerase-like superfamily — all consistent with the DAP epimerase literature</td>
+</tr>
+<tr>
+<td>No conflicting literature for a same-symbol gene</td>
+<td>✅ No ambiguity; "dapF" refers consistently to DAP epimerase across bacteria</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> The research target is correctly identified as diaminopimelate epimerase. The report below proceeds with high confidence.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-dapf-catalyzes-the-stereoinversion-of-ll-diaminopimelate-to-meso-dap-ec-5117">Finding 1 — DapF catalyzes the stereoinversion of LL-diaminopimelate to meso-DAP (EC 5.1.1.7)</h3>
+<p>The core function of Q88CF3 is the reversible epimerization <strong>LL-DAP ⇌ meso-(D,L)-DAP</strong>. UniProt (DAPF_PSEPK, 276 aa) annotates the enzyme under EC 5.1.1.7 and HAMAP rule MF_00197, with the FUNCTION statement "Catalyzes the stereoinversion of LL-2,6-diaminopimelate," and assigns it to L-lysine biosynthesis via the DAP pathway. This reaction is the <strong>penultimate step of the DAP/lysine pathway</strong>: DapF inverts one of the two stereocenters of the symmetric diaminopimelate scaffold, converting the LL-isomer into the meso-isomer.</p>
+<p>This assignment is strongly supported by the primary literature. A 2025 study on cofactor-independent epimerases describes "diaminopimelic acid epimerase (DapF-CC), which produces D,L-diaminopimelic acid (DAP) as the penultimate step in lysine biosynthesis in most bacteria and photosynthetic organisms, and for Gram-negative bacterial peptidoglycan" (<a href="https://pubmed.ncbi.nlm.nih.gov/40774471/">PMID: 40774471</a>). This directly states both the product (meso/D,L-DAP) and its dual biological role. The foundational mechanistic paper on <em>Haemophilus influenzae</em> DapF states plainly that "D,L-Diaminopimelate is generated from the corresponding L,L-isomer by the dapF-encoded epimerase" (<a href="https://pubmed.ncbi.nlm.nih.gov/10194362/">PMID: 10194362</a>), defining the exact reaction catalyzed.</p>
+<p>The product meso-DAP has two essential fates in a Gram-negative organism like <em>P. putida</em>: it is decarboxylated by LysA (diaminopimelate decarboxylase) to yield L-lysine, and it is directly incorporated into the peptidoglycan pentapeptide where it forms the 3→4 cross-link of the murein sacculus.</p>
+<h3 id="finding-2-cofactor-independent-two-cysteine-thiolthiolate-catalytic-mechanism">Finding 2 — Cofactor-independent, two-cysteine (thiol/thiolate) catalytic mechanism</h3>
+<p>DapF is a defining member of the <strong>PLP-independent amino-acid racemases</strong>. Unlike alanine racemase and most amino-acid racemases, it requires no pyridoxal-5′-phosphate cofactor and no metal ion. Instead, catalysis proceeds through <strong>two cysteine residues acting in concert</strong>, one serving as a catalytic base (thiolate) to abstract the α-proton and the other as a catalytic acid (thiol) to reprotonate the resulting planar carbanion intermediate from the opposite face — a "two-base" 1,1-proton-transfer mechanism that achieves net inversion of configuration at the α-carbon.</p>
+<p>For Q88CF3, UniProt assigns <strong>ACT_SITE 75 (proton donor)</strong> and <strong>ACT_SITE 219 (proton acceptor)</strong>, and sequence analysis confirms <strong>position 75 = Cys and position 219 = Cys</strong>, both embedded in the diagnostic DAP-epimerase signature motifs (…EQ-<strong>C</strong>GN-GAR-C… and …QA-<strong>C</strong>GT-GAC…). The mechanistic literature is explicit: DapF "requires no cofactors and it functions through an unusual mechanism involving two cysteine residues acting in concert and alternating as a base (thiolate) and as an acid (thiol)" (<a href="https://pubmed.ncbi.nlm.nih.gov/19013471/">PMID: 19013471</a>). The <em>H. influenzae</em> study establishes that "Diaminopimelate epimerase is a representative of the pyridoxal phosphate-independent amino acid racemases, for which substantial evidence exists supporting the role of two cysteine residues as the catalytic acid and base" (<a href="https://pubmed.ncbi.nlm.nih.gov/10194362/">PMID: 10194362</a>). Kinetic/pH analysis of the <em>H. influenzae</em> enzyme shows a single catalytic group with pK ≈ 6.1–7.0 that must be unprotonated for activity — consistent with a cysteine thiolate base.</p>
+<h3 id="finding-3-cytoplasmic-two-domain-homodimer-with-substrate-induced-domain-closure">Finding 3 — Cytoplasmic, two-domain homodimer with substrate-induced domain closure</h3>
+<p>DapF is a <strong>cytoplasmic</strong> enzyme (UniProt SUBCELLULAR LOCATION = Cytoplasm) that functions as a <strong>homodimer</strong> (UniProt SUBUNIT = Homodimer). It adopts a two-domain α/β architecture — the "DAP-epimerase fold" — in which the active site lies in the cleft between an N-terminal and a C-terminal domain, each contributing one of the two catalytic cysteines.</p>
+<p>Two structural principles are firmly established. First, <strong>dimerization is essential for catalysis</strong>: in <em>E. coli</em> DapF, the monomeric Y268A mutant is catalytically dead — "Y268A is catalytically inactive, thus demonstrating that dimerization of DAP epimerase is essential for catalysis" (<a href="https://pubmed.ncbi.nlm.nih.gov/23426375/">PMID: 23426375</a>). Q88CF3 conserves the analogous dimerization tyrosine at <strong>Tyr270</strong> (UniProt SITE 270, confirmed in sequence), supporting the homodimer annotation. Second, catalysis is coupled to a <strong>conformational switch</strong>: "Substrate binding to the C-terminal domain triggers the closure of the N-terminal domain coupled with tight encapsulation of the ligand" (<a href="https://pubmed.ncbi.nlm.nih.gov/17889830/">PMID: 17889830</a>). This open→closed motion sequesters the substrate from solvent and juxtaposes the two cysteines with the α-carbon, protecting the carbanion intermediate and enforcing stereocontrol.</p>
+<h3 id="finding-4-substrate-specificity-dap-specific-symmetric-two-subsite-active-site-druggable-by-aziridine-and-methyl-amino-acid-inhibitors">Finding 4 — Substrate specificity: DAP-specific, symmetric two-subsite active site; druggable by aziridine and α-methyl-amino-acid inhibitors</h3>
+<p>DapF is highly specific for the <strong>diaminopimelate scaffold</strong>. Crystallography of <em>Arabidopsis</em> DapF bound to the substrate-mimicking irreversible inhibitor LL-2-(4-amino-4-carboxybutyl)-aziridine-2-carboxylate reveals a <strong>highly symmetric catalytic site</strong> that binds both the L and D stereocenters of DAP at a "proximal" subsite, while specific interactions at a "distal" subsite confer substrate recognition: "the highly symmetric catalytic site that can accommodate both the L and D stereogenic centers of DAP at the proximal site, whereas specific interactions at the distal site" determine specificity (<a href="https://pubmed.ncbi.nlm.nih.gov/19013471/">PMID: 19013471</a>). The symmetry of the proximal subsite is what allows the enzyme to act on the pseudo-symmetric DAP molecule in both directions.</p>
+<p>Specificity for DAP (rather than other amino acids) is encoded in the <strong>distal-site residues</strong>. Homologs sharing the same fold achieve entirely different specificities by substitutions at these positions — e.g., <strong>DcsC</strong> (O-ureidoserine racemase) and <strong>CntK</strong> (histidine racemase) — demonstrating that DapF's DAP selectivity is a tunable property of the distal subsite. In Q88CF3, the predicted binding residues include Asn13, Gln46, Asn66, Asn159, and Asn192, plus backbone contributions from the 210–211 and 220–221 loops. The enzyme is druggable: beyond the aziridine irreversible inhibitor, 2025 work reports "inhibition of diaminopimelic acid epimerase by slow-binding α-methyl amino acids" (<a href="https://pubmed.ncbi.nlm.nih.gov/40299312/">PMID: 40299312</a>), which act as substrate mimics. Critically, DapF has <strong>no mammalian homolog</strong>, underpinning its value as an antibacterial/herbicide target.</p>
+<h3 id="finding-5-moonlighting-function-dapf-stimulates-rpph-dependent-5-end-mrna-decay">Finding 5 — Moonlighting function: DapF stimulates RppH-dependent 5′-end mRNA decay</h3>
+<p>Beyond metabolism, <em>E. coli</em> DapF has a well-characterized <strong>second ("moonlighting") role</strong> in mRNA turnover. It physically binds and potentiates the <strong>RNA pyrophosphohydrolase RppH</strong>, the enzyme that removes pyrophosphate from 5′-triphosphorylated/diphosphorylated mRNA termini to generate the 5′-monophosphate ends that trigger 5′-end-dependent RNA degradation. Structural and kinetic work shows "the RNA pyrophosphohydrolase RppH, which can be stimulated by DapF, a diaminopimelate epimerase involved in amino acid and cell wall biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/29733359/">PMID: 29733359</a>). DapF enhances RppH reactivity toward diphosphorylated RNAs (the predominant natural substrates) in a length-dependent manner and also boosts triphosphorylated-RNA reactivity via DapF-induced conformational changes in RppH — mechanistically paralleling eukaryotic decapping stimulation. This role is distinct from the epimerase activity and, given the conservation of both proteins, is plausibly retained in <em>P. putida</em> (to be confirmed experimentally).</p>
+<h3 id="finding-6-potential-redox-regulation-via-a-reversible-active-site-disulfide">Finding 6 — Potential redox regulation via a reversible active-site disulfide</h3>
+<p>Because DapF's two catalytic cysteines sit in close proximity, the enzyme is susceptible to <strong>redox regulation</strong>. Crystal structures of <em>Corynebacterium glutamicum</em> DapF under oxidizing vs. reducing conditions show that "the function of CgDapF is regulated by redox-switch modulation via reversible disulfide bond formation between two catalytic cysteine residues" (<a href="https://pubmed.ncbi.nlm.nih.gov/28176858/">PMID: 28176858</a>). When oxidized, Cys–Cys disulfide formation reorganizes the dynamic active-site loop and locks the enzyme in an inactive state; reduction restores free thiols and activity. A product (D,L-DAP) complex captured the large open→closed domain movement that fully buries the substrate. Since Q88CF3 conserves the same two proximal catalytic cysteines (Cys75/Cys219), an analogous redox switch is structurally plausible in <em>P. putida</em> DapF, potentially linking cell-wall/lysine flux to cellular redox state.</p>
+<h3 id="finding-7-pathway-placement-in-p-putida-kt2440-penultimate-step-of-two-dap-based-lysine-routes">Finding 7 — Pathway placement in <em>P. putida</em> KT2440: penultimate step of two DAP-based lysine routes</h3>
+<p>KEGG assigns <strong>ppu:PP_5228</strong> the orthology <strong>K01778</strong> (diaminopimelate epimerase, EC 5.1.1.7) and maps it to <strong>Lysine biosynthesis (ppu00300)</strong>, <strong>D-Amino acid metabolism (ppu00470)</strong>, <strong>Biosynthesis of amino acids (ppu01230)</strong>, and the global metabolic-pathways maps. <em>P. putida</em> KT2440 possesses two DAP-pathway variants that both route through DapF: <strong>module M00016</strong> (succinyl-DAP pathway, aspartate ⇒ lysine) and <strong>module M00527</strong> (DAP-aminotransferase pathway, aspartate ⇒ lysine). In every variant, DapF performs the <strong>LL-DAP → meso-DAP</strong> epimerization immediately upstream of meso-DAP decarboxylation. The protein carries the Pfam <strong>DAP_epimerase (PF01678)</strong> domain and belongs to the <strong>PhzF/DAP-epimerase-like superfamily</strong>.</p>
+<h3 id="finding-8-genomic-linkage-dapf-is-tandem-with-and-overlaps-lysa">Finding 8 — Genomic linkage: dapF is tandem with and overlaps lysA</h3>
+<p>In the KT2440 genome, dapF is <strong>physically coupled to lysA</strong>. KEGG coordinates place <strong>PP_5227 (lysA-II, diaminopimelate decarboxylase, K01586/EC 4.1.1.20)</strong> at 5,961,105–5,962,352 and <strong>PP_5228 (dapF)</strong> at 5,962,324–5,963,187 on the <strong>same strand</strong>, with the two genes <strong>overlapping by ~29 bp</strong> (the start of dapF precedes the end of lysA). This arrangement is a hallmark of <strong>translational coupling/operonic organization</strong> and physically links the final two enzymatic steps of the pathway: DapF produces meso-DAP, which LysA immediately decarboxylates to L-lysine. The immediate neighbors are a lipoprotein (PP_5226) and an uncharacterized conserved protein (PP_5229).</p>
+<h3 id="finding-9-dapf-is-essential-and-a-validated-mammalian-homolog-free-drug-target">Finding 9 — DapF is essential and a validated, mammalian-homolog-free drug target</h3>
+<p>DapF provides the <strong>only enzymatic route to meso-DAP</strong>, which is indispensable for both L-lysine synthesis and peptidoglycan cross-linking. Loss of DapF therefore blocks cell-wall assembly. In <em>Mycobacterium tuberculosis</em>, "The interconversion of L,L-DAP and meso-DAP is catalysed by the DAP epimerase DapF, a gene product that is essential in M. tuberculosis" (<a href="https://pubmed.ncbi.nlm.nih.gov/19307721/">PMID: 19307721</a>). Because the entire DAP/lysine pathway is absent in mammals, its enzymes are attractive selective targets; a review "discusses the suitability of interrupting lysine biosynthesis as target for new antibacterial and antifungal compounds" (<a href="https://pubmed.ncbi.nlm.nih.gov/23504110/">PMID: 23504110</a>). As a Gram-negative bacterium that incorporates meso-DAP directly into peptidoglycan, <em>P. putida</em> KT2440 is expected, by strong inference, to depend on DapF for viability.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent picture of DapF as the stereochemical gatekeeper at the end of the lysine/DAP pathway.</p>
+<h3 id="pathway-context">Pathway context</h3>
+<div class="codehilite"><pre><span></span><code>   L-aspartate
+       │  (aspartokinase, ASADH, DapA/B, ...)
+       ▼
+   <span class="k">...</span> tetrahydrodipicolinate ...
+       │  (succinyl-DAP route M00016  OR  DAP-aminotransferase route M00527)
+       ▼
+   LL-2,6-diaminopimelate  (LL-DAP)
+       │
+       │   ┌─────────────────────────────────────────┐
+       │   │  DapF (PP_5228, Q88CF3)  EC 5.1.1.7      │
+       └──▶│  LL-DAP  ⇌  meso-(D,L)-DAP              │   ← THIS ENZYME
+   │  cofactor-independent, 2-Cys mechanism  │
+   └─────────────────────────────────────────┘
+                 │
+  ┌──────────────┴───────────────┐
+  ▼                               ▼
+   LysA (PP_5227)                 Peptidoglycan
+   meso-DAP decarboxylase         (meso-DAP is the 3→4
+   EC 4.1.1.20                     cross-linking residue in
+  │                        Gram-negative murein)
+  ▼
+     L-LYSINE
+</code></pre></div>
+
+<h3 id="catalytic-model-two-cysteine-acidbase-epimerization">Catalytic model (two-cysteine acid/base epimerization)</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">Cys75</span><span class="o">-</span><span class="n">S</span><span class="err">⁻</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="p">)</span><span class="w">                    </span><span class="n">Cys75</span><span class="o">-</span><span class="n">SH</span><span class="w"> </span><span class="p">(</span><span class="n">acid</span><span class="p">)</span>
+<span class="w">     </span><span class="err">│</span><span class="w">                                  </span><span class="err">│</span>
+<span class="w">   </span><span class="n">LL</span><span class="o">-</span><span class="n">DAP</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">α</span><span class="o">-</span><span class="n">C</span><span class="err">–</span><span class="n">H</span><span class="w"> </span><span class="n">abstraction</span><span class="w">     </span><span class="n">planar</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">reprotonation</span>
+<span class="w">   </span><span class="n">H</span><span class="err">–</span><span class="n">Cα</span><span class="w"> </span><span class="err">─────┼──────────────▶</span><span class="w">  </span><span class="p">[</span><span class="w"> </span><span class="n">Cα</span><span class="w"> </span><span class="n">carbanion</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="err">─┼─────────────▶</span><span class="w">  </span><span class="n">meso</span><span class="o">-</span><span class="n">DAP</span>
+<span class="w">     </span><span class="err">│</span><span class="w">                  </span><span class="p">(</span><span class="n">stabilized</span><span class="p">,</span><span class="w">      </span><span class="err">│</span><span class="w">   </span><span class="n">from</span><span class="w"> </span><span class="n">opposite</span><span class="w"> </span><span class="n">face</span>
+<span class="n">Cys219</span><span class="o">-</span><span class="n">SH</span><span class="w"> </span><span class="p">(</span><span class="n">acid</span><span class="p">)</span><span class="w">         </span><span class="n">encapsulated</span><span class="p">)</span><span class="w">   </span><span class="n">Cys219</span><span class="o">-</span><span class="n">S</span><span class="err">⁻</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The reaction is a <strong>1,1-proton transfer</strong>: one thiolate removes the α-proton to generate a resonance-stabilized carbanion, and the second cysteine (thiol) delivers a proton to the opposite face, inverting the stereocenter. Substrate-induced <strong>domain closure</strong> (Finding 3) is essential — it excludes water (preventing non-stereospecific protonation and hydrolysis of the intermediate) and precisely positions the two cysteines. <strong>Dimerization</strong> (Tyr270) is required to complete the catalytically competent active site. The two proximal cysteines that make DapF such an efficient PLP-free catalyst also make it <strong>redox-sensitive</strong> (Finding 6): oxidative disulfide formation switches the enzyme off, offering a plausible regulatory link between cell-wall/lysine flux and redox status.</p>
+<h3 id="two-functions-one-protein">Two functions, one protein</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Location</th>
+<th>Partner/Substrate</th>
+<th>Evidence class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Diaminopimelate epimerase</strong> (primary)</td>
+<td>Cytoplasm</td>
+<td>LL-DAP → meso-DAP</td>
+<td>Direct (annotation + extensive DapF structural/kinetic literature)</td>
+</tr>
+<tr>
+<td><strong>RppH-stimulating factor</strong> (moonlighting)</td>
+<td>Cytoplasm</td>
+<td>RppH / mRNA 5′-ends</td>
+<td>Direct in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29733359/">PMID: 29733359</a>); inferred for <em>P. putida</em></td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-the-enzyme-matters">Why the enzyme matters</h3>
+<p>meso-DAP is a metabolic node unique to bacteria (and plants). Its production by DapF feeds two indispensable outputs — <strong>protein synthesis (via L-lysine)</strong> and <strong>cell envelope integrity (via peptidoglycan cross-linking)</strong>. The genomic fusion-like overlap of dapF with lysA (Finding 8) suggests selection for co-expression/co-regulation of the final two steps, channeling meso-DAP efficiently toward lysine while leaving a pool for peptidoglycan. The absence of the pathway in humans (Finding 9) is the basis for its status as an antibacterial and herbicide target.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports/informs the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10194362/">10194362</a></td>
+<td><em>Chemical mechanism of H. influenzae DAP epimerase</em></td>
+<td>Defines the LL→D,L(meso)-DAP reaction and establishes PLP-independence + two-cysteine acid/base roles; pH-dependence data (Findings 1, 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40774471/">40774471</a></td>
+<td><em>Cofactor-independent amino acid epimerases with catalytic serines</em></td>
+<td>States product (D,L-DAP) and dual role in lysine biosynthesis and Gram-negative peptidoglycan (Finding 1)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19013471/">19013471</a></td>
+<td><em>Crystal structure of Arabidopsis DAP epimerase</em></td>
+<td>Two-cysteine cofactor-free mechanism; symmetric proximal / specific distal two-subsite active site; aziridine irreversible inhibitor (Findings 2, 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17889830/">17889830</a></td>
+<td><em>Dynamics of catalysis from mutant DAP epimerase structures</em></td>
+<td>Substrate-induced domain closure encapsulating the ligand (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23426375/">23426375</a></td>
+<td><em>Dimerization of bacterial DAP epimerase is essential for catalysis</em></td>
+<td>Y268A monomer is inactive → dimerization required; supports Tyr270/homodimer annotation (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40299312/">40299312</a></td>
+<td><em>Inhibition of DAP epimerase by slow-binding α-methyl amino acids</em></td>
+<td>Documents substrate-mimic inhibitors; druggability (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29733359/">29733359</a></td>
+<td><em>Stimulation of RppH-dependent RNA degradation by DapF</em></td>
+<td>Direct evidence of DapF moonlighting to stimulate 5′-end mRNA decay (Finding 5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28176858/">28176858</a></td>
+<td><em>Redox sensitivity of C. glutamicum DAP epimerase</em></td>
+<td>Reversible disulfide between catalytic cysteines as a redox switch (Finding 6)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19307721/">19307721</a></td>
+<td><em>Structure of M. tuberculosis DAP epimerase DapF</em></td>
+<td>dapF essential in M. tuberculosis; supports inferred essentiality (Finding 9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23504110/">23504110</a></td>
+<td><em>Lysine biosynthesis as a drug target</em></td>
+<td>Validates DAP/lysine pathway (incl. DapF) as antibacterial target absent in mammals (Finding 9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14747737/">14747737</a></td>
+<td><em>H. influenzae DapF at 1.75 Å</em></td>
+<td>High-resolution structure; stereocontrol mechanism; supports fold/mechanism (Findings 2, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34877716/">34877716</a></td>
+<td><em>O-ureidoserine racemase (DcsC) structure</em></td>
+<td>Homolog with altered specificity via distal residues (Thr72/Thr198/Tyr219); supports distal-site specificity model (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31129210/">31129210</a></td>
+<td><em>CntK histidine racemase structure</em></td>
+<td>Same fold, different specificity via distal residues; two-base mechanism; supports specificity model (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19559030/">19559030</a></td>
+<td><em>3-methylitaconate-Δ-isomerase (Mii)</em></td>
+<td>Illustrates the broader DAP-epimerase-fold superfamily and two-domain open/closed architecture</td>
+</tr>
+</tbody>
+</table>
+<p>Database evidence: <strong>UniProt Q88CF3</strong> (DAPF_PSEPK; EC 5.1.1.7; HAMAP MF_00197; ACT_SITE 75/219; SITE 270; Cytoplasm; Homodimer) and <strong>KEGG ppu:PP_5228</strong> (K01778; maps ppu00300/00470/01230; modules M00016, M00527; genomic overlap with PP_5227/lysA).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 orthologue.</strong> All enzymatic, structural, and kinetic evidence derives from orthologues (<em>H. influenzae</em>, <em>E. coli</em>, <em>M. tuberculosis</em>, <em>C. glutamicum</em>, <em>Arabidopsis</em>). Q88CF3's function is assigned by strong homology, conserved catalytic residues (Cys75/Cys219, Tyr270), and database annotation — not by a dedicated study of the <em>P. putida</em> protein. No purified-enzyme kinetics (kcat, Km for LL-/meso-DAP), no crystal structure, and no gene-knockout phenotype exist specifically for PP_5228.</li>
+<li><strong>Essentiality in <em>P. putida</em> is inferred, not demonstrated.</strong> Essentiality is established in <em>M. tuberculosis</em>; the corresponding gene-deletion experiment has not been reported for KT2440. <em>P. putida</em> has two DAP-pathway variants (M00016, M00527), but both converge on DapF, so essentiality is strongly expected.</li>
+<li><strong>Moonlighting RppH role is unconfirmed in <em>P. putida</em>.</strong> The DapF–RppH interaction is characterized in <em>E. coli</em>. Whether the KT2440 orthologue retains this activity, and its physiological significance, is untested.</li>
+<li><strong>Redox regulation is a structural inference.</strong> The disulfide redox switch is demonstrated in <em>C. glutamicum</em>. Conservation of both cysteines makes it plausible for Q88CF3, but the <em>in vivo</em> redox sensitivity of <em>P. putida</em> DapF is unknown.</li>
+<li><strong>Distal-site binding residues are predicted.</strong> The specific residues (Asn13, Gln46, Asn66, Asn159, Asn192) proposed to determine DAP specificity in Q88CF3 are assigned by homology modeling, not by co-crystal structures of the <em>P. putida</em> enzyme.</li>
+<li><strong>Possible paralogy (PP_5227 annotated "lysA-II").</strong> The naming implies additional lysine-pathway paralogy in KT2440 that was not exhaustively mapped here; whether any paralog could bypass DapF is not established (biochemically unlikely, as DapF is the only DAP epimerase).</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Direct enzymatic validation.</strong> Heterologously express and purify Q88CF3; measure epimerase activity and steady-state kinetics (kcat, Km) for LL-DAP and meso-DAP using a coupled assay (e.g., with meso-DAP dehydrogenase or LysA/decarboxylase readout). Confirm cofactor independence and the pH-rate profile predicted for a two-cysteine mechanism.</li>
+<li><strong>Catalytic-residue mutagenesis.</strong> Generate C75S, C219S (and the double mutant) and the Y270A dimerization mutant; test activity to confirm the two-cysteine mechanism and the essentiality of dimerization in the <em>P. putida</em> protein.</li>
+<li><strong>Genetic essentiality test.</strong> Attempt a clean dapF deletion (or CRISPRi knockdown) in KT2440 with and without exogenous meso-DAP/lysine supplementation to establish essentiality and distinguish the lysine vs. peptidoglycan requirements.</li>
+<li><strong>Structure determination.</strong> Solve the crystal or cryo-EM structure of <em>P. putida</em> DapF, ideally as a complex with the aziridine inhibitor or meso-DAP, to confirm the two-domain fold, domain closure, distal-site specificity residues, and the geometry of Cys75/Cys219.</li>
+<li><strong>Redox-switch assay.</strong> Test whether purified Q88CF3 is reversibly inactivated by oxidation (disulfide formation between Cys75/Cys219) and reactivated by reductant (DTT/thioredoxin), assessing physiological redox regulation.</li>
+<li><strong>Moonlighting test.</strong> Perform pull-down/interaction and RNA-deprotection kinetic assays between <em>P. putida</em> DapF and its RppH orthologue to determine whether the RNA-decay-stimulating moonlighting function is conserved.</li>
+<li><strong>Operon/co-expression analysis.</strong> Use RT-PCR or RNA-seq to confirm whether PP_5227 (lysA) and PP_5228 (dapF) are co-transcribed as a translationally coupled operon, as the ~29 bp overlap suggests.</li>
+<li><strong>Inhibitor profiling for biotech relevance.</strong> Given <em>P. putida</em>'s use as an industrial chassis, characterize DapF inhibition (aziridine, α-methyl amino acids) to inform metabolic engineering of lysine flux and to explore selective antibacterial leads.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>dapF</em> (PP_5228, UniProt Q88CF3) of <em>Pseudomonas putida</em> KT2440 encodes <strong>diaminopimelate epimerase (EC 5.1.1.7)</strong>, a small, cytoplasmic, cofactor-independent amino-acid epimerase that catalyzes the reversible stereoinversion of <strong>LL-2,6-diaminopimelate to meso-(D,L)-diaminopimelate</strong> — the penultimate step of the DAP branch of L-lysine biosynthesis. It uses a <strong>two-cysteine (Cys75/Cys219) thiol/thiolate acid–base mechanism</strong> with no PLP or metal cofactor, is highly specific for the diaminopimelate scaffold via a symmetric proximal / discriminating distal two-subsite active site, and functions as a <strong>substrate-clamping homodimer</strong> (Tyr270). Its product, <strong>meso-DAP</strong>, is both the direct precursor of L-lysine (decarboxylated by the genomically adjacent LysA/PP_5227) and the cross-linking residue of Gram-negative peptidoglycan, making DapF essential and a validated, mammalian-homolog-free antibacterial/herbicide target. A conserved active-site cysteine pair additionally renders the enzyme potentially redox-regulated, and the <em>E. coli</em> orthologue exhibits a documented moonlighting role stimulating RppH-dependent 5′-end mRNA decay.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dapF__Q88CF3-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dapF__Q88CF3-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:40774471</li>
+<li>PMID:10194362</li>
+<li>PMID:19013471</li>
+<li>PMID:23426375</li>
+<li>PMID:17889830</li>
+<li>PMID:40299312</li>
+<li>PMID:29733359</li>
+<li>PMID:28176858</li>
+<li>PMID:19307721</li>
+<li>PMID:23504110</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CF3
+gene_symbol: dapF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  DapF Q88CF3 (PP_5228) is a diaminopimelate epimerase (EC 5.1.1.7) that
+  interconverts LL-2,6-diaminopimelate and meso-2,6-diaminopimelate in the
+  diaminopimelate route to L-lysine. It retains the canonical DapF catalytic
+  cysteine pair at Cys75 and Cys219. KT2440 also encodes the putative
+  paired-serine DapF-SS paralog Q88GD4; their relative physiological
+  contributions are unresolved.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: DapF Q88CF3 is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is valid but secondary to the substrate-specific reaction.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: This duplicates the retained bacterial cytoplasm annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: No distinct DapF pool is established by the parent/child location pair.
+- term:
+    id: GO:0008837
+    label: diaminopimelate epimerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining DapF molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      EC 5.1.1.7, RHEA:15393, HAMAP MF_00197, and NCBIfam:TIGR00652 agree. The
+      exact sequence retains the canonical DapF catalytic cysteines at
+      positions 75 and 219, although Q88CF3 itself has not been assayed.
+    supported_by:
+    - reference_id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+      supporting_text: Full=Diaminopimelate epimerase
+    - reference_id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**;
+        protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes
+        **diaminopimelate epimerase**
+- term:
+    id: GO:0009085
+    label: L-lysine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: DapF supplies meso-diaminopimelate in the DAP route to L-lysine.
+    action: ACCEPT
+    reason: UniProt assigns Q88CF3 to L-lysine biosynthesis via the DAP pathway.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+  title: UniProtKB reviewed entry for PSEPK DapF Q88CF3
+  findings:
+  - statement: &gt;-
+      Assigns Q88CF3 to EC 5.1.1.7, the DapF-specific family, and the
+      stereoinversion that supplies meso-diaminopimelate.
+    supporting_text: Full=Diaminopimelate epimerase
+- id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK DapF Q88CF3
+  findings:
+  - statement: Contains the four existing annotations reviewed above.
+- id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+  title: OpenScientist literature and database synthesis for PSEPK DapF Q88CF3
+  findings:
+  - statement: Corroborates Q88CF3/PP_5228 as an EC 5.1.1.7 DapF candidate.
+    supporting_text: &gt;-
+      The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**;
+      protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes
+      **diaminopimelate epimerase**
+  - statement: &gt;-
+      Confirms that the exact Q88CF3 sequence has the canonical DapF-CC
+      catalytic cysteine pair.
+    supporting_text: &gt;-
+      In Q88CF3 these are **Cys75 (proton donor active site) and Cys219 (proton
+      acceptor active site)**
+  - statement: &gt;-
+      No direct Q88CF3 characterization was found. Gene-specific essentiality,
+      RppH moonlighting, redox regulation, and dominance over Q88GD4 are not
+      adopted from ortholog evidence.
+    supporting_text: &gt;-
+      No direct experimental characterization of the *P. putida* KT2440
+      orthologue.
+core_functions:
+- description: &gt;-
+    Converts LL-2,6-diaminopimelate to meso-2,6-diaminopimelate in the
+    L-lysine DAP pathway.
+  molecular_function:
+    id: GO:0008837
+    label: diaminopimelate epimerase activity
+  directly_involved_in:
+  - id: GO:0009085
+    label: L-lysine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-uniprot.txt
+    supporting_text: Full=Diaminopimelate epimerase
+  - reference_id: file:PSEPK/dapF__Q88CF3/dapF__Q88CF3-deep-research-openscientist.md
+    supporting_text: &gt;-
+      The gene **dapF** (ordered locus name **PP_5228**; UniProt **Q88CF3**;
+      protein DAPF_PSEPK, 276 aa) of *Pseudomonas putida* KT2440 encodes
+      **diaminopimelate epimerase**
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>paaA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>paaA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HS5" target="_blank" class="term-link">
+                        Q88HS5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "paaA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HS5" data-a="DESCRIPTION: PaaA is the predicted catalytic alpha subunit of t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PaaA is the predicted catalytic alpha subunit of the soluble PaaABCE ring 1,2-phenylacetyl-CoA epoxidase system in Pseudomonas putida KT2440. As part of the multicomponent complex, it contributes to oxygen-dependent aromatic ring epoxidation during aerobic phenylacetate catabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HS5" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for the soluble epoxidase system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PaaA is a non-membrane oxygenase subunit in a cytosolic CoA-ester pathway.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010124" target="_blank" class="term-link">
+                                    GO:0010124
+                                </a>
+                            </span>
+                            <span class="term-label">phenylacetate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HS5" data-a="GO:0010124" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation for the PaaA epoxidase subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact target is named as the alpha subunit of phenylacetyl-CoA epoxidase and lies in the paa catabolic locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/paaA/paaA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097266" target="_blank" class="term-link">
+                                    GO:0097266
+                                </a>
+                            </span>
+                            <span class="term-label">phenylacetyl-CoA 1,2-epoxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HS5" data-a="GO:0097266" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct activity at complex level, but not independently enabled by PaaA alone.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PaaA is one component of the PaaABCE epoxidase system. The inherited enables qualifier overstates the isolated subunit; the core-function model instead records that PaaA contributes to the complex activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/paaA/paaA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted catalytic alpha subunit of the PaaABCE oxygenase system, contributing to phenylacetyl-CoA 1,2-epoxidation in aerobic phenylacetate catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88HS5" data-a="FUNCTION: Predicted catalytic alpha subunit of the PaaABCE o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010124" target="_blank" class="term-link">
+                                phenylacetate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaA/paaA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/paaA/paaA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PaaAC forms a catalytic core with a monooxygenase fold with PaaA being the catalytic α subunit and PaaC, the structural β subunit</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/paaA/paaA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88HS5 for Pseudomonas putida KT2440 paaA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88HS5 as the alpha subunit of the pathway epoxidase.</div>
+
+                        <div class="finding-text">"SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/paaA/paaA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK paaA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ortholog evidence identifies PaaA as the catalytic alpha subunit.</div>
+
+                        <div class="finding-text">"PaaAC forms a catalytic core with a monooxygenase fold with PaaA being the catalytic α subunit and PaaC, the structural β subunit"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Definitive subunit-level experiments were performed on the E. coli complex.</div>
+
+                        <div class="finding-text">"Direct characterization is largely from *E. coli*, not *P. putida* KT2440."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which catalytic or assembly functions are uniquely supplied by KT2440 PaaA?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HS5" data-a="Q: Which catalytic or assembly functions are uniquely..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the epoxidase with systematic subunit omission and PaaA active-site variants, measuring complex assembly and epoxide production.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HS5" data-a="EXPERIMENT: Reconstitute the epoxidase with systematic subunit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(paaA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HS5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *paaA* (Q88HS5, PP_3278) — Ring 1,2-Phenylacetyl-CoA Epoxidase α-Subunit in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T11:53:29.184504</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="paaA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="paaA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-paaa-q88hs5-pp_3278-ring-12-phenylacetyl-coa-epoxidase-subunit-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>paaA</em> (Q88HS5, PP_3278) — Ring 1,2-Phenylacetyl-CoA Epoxidase α-Subunit in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>paaA</strong> (UniProt <strong>Q88HS5</strong>; ordered locus <strong>PP_3278</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>catalytic α-subunit of the ring 1,2-phenylacetyl-CoA epoxidase</strong> (EC 1.14.13.149), the oxygen- and NAD(P)H-dependent enzyme that catalyzes the committed, ring-dearomatizing step of the aerobic <strong>phenylacetate (PAA) catabolic pathway</strong>. PaaA is not a stand-alone enzyme: it is the iron-binding catalytic core of a <strong>multicomponent bacterial monooxygenase</strong> (the PaaABC(D)E complex), in which PaaA (α, catalytic) pairs with PaaC (β, structural) to form a di-iron oxygenase, PaaB is an accessory subunit required for activity, PaaE is the NAD(P)H-dependent reductase that supplies electrons, and PaaD is dispensable for catalysis. This enzyme performs the biochemically difficult task of activating the extremely stable aromatic ring of phenylacetyl-CoA by inserting a single atom of molecular oxygen to yield a <strong>ring 1,2-epoxide</strong> (1,2-epoxyphenylacetyl-CoA), the first non-aromatic intermediate of the pathway.</p>
+<p>The phenylacetate pathway is one of the most widely distributed bacterial routes for the aerobic degradation of aromatic compounds — a metabolic "funnel" through which phenylalanine, phenylethylamine, styrene, ethylbenzene, and numerous environmental aromatic pollutants are channeled after conversion to the common intermediate <strong>phenylacetyl-CoA (PA-CoA)</strong>. PaaA sits at the mechanistic heart of this funnel: its epoxidation reaction is what breaks aromaticity and permits all downstream ring-opening and β-oxidation chemistry. Remarkably, the PaaA-containing complex is <strong>bifunctional</strong>: in addition to forming the ring 1,2-epoxide, it can catalyze the NADPH-dependent <strong>removal</strong> of the epoxide oxygen, regenerating phenylacetyl-CoA and releasing water. This oxygenase/deoxygenase duality serves as a built-in detoxification safety valve for the reactive, unstable epoxide product.</p>
+<p>The gene product functions in the <strong>cytoplasm</strong> (all reactions of the paa pathway involve soluble CoA-thioester intermediates), is expressed from the <em>paa</em> gene cluster, and is transcriptionally induced when its own substrate, PA-CoA, accumulates and de-represses the pathway by binding the <strong>PaaX</strong> repressor. Downstream, the epoxide is isomerized to an unusual seven-membered oxygen heterocycle (<strong>oxepin-CoA</strong>) by PaaG, subjected to hydrolytic (non-oxygenolytic) ring cleavage by the bifunctional enzyme <strong>PaaZ</strong>, and processed by β-oxidation-like steps to the central-metabolism building blocks <strong>acetyl-CoA and succinyl-CoA</strong>. This report documents the enzymatic identity, mechanism, cellular context, pathway integration, and evidence base for PaaA, and clearly distinguishes it from the many unrelated genes that share the "paaA" symbol.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity check confirms the research target is correct:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>UniProt annotation (Q88HS5)</th>
+<th>Literature match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>paaA</em></td>
+<td>✓ <em>paa</em> cluster gene, phenylacetate degradation</td>
+</tr>
+<tr>
+<td>Protein description</td>
+<td>Ring 1,2-phenylacetyl-CoA epoxidase α-subunit; EC 1.14.13.149</td>
+<td>✓ PaaA = catalytic α-subunit (Grishin et al. 2011)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>✓ paa cluster characterized in <em>P. putida</em> and <em>E. coli</em></td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>PaaA (IPR011881); PaaA_PaaC (IPR007814); Ferritin-like/Ferritin-like_SF (IPR012347/IPR009078); Aromatic_CoA_ox/epox (IPR052703)</td>
+<td>✓ Ferritin-like fold houses the di-iron center of multicomponent monooxygenases</td>
+</tr>
+</tbody>
+</table>
+<p>The domain architecture is decisive. The <strong>Ferritin-like superfamily fold (IPR009078/IPR012347)</strong> is the structural hallmark of <strong>di-iron carboxylate oxygenases</strong> (the same fold family as the hydroxylase components of soluble methane monooxygenase and toluene monooxygenases). The dedicated <strong>PaaA (IPR011881)</strong> and <strong>PaaA_PaaC (IPR007814)</strong> signatures confirm this is the phenylacetyl-CoA oxygenase α-subunit, not an unrelated protein. This is fully consistent with the assigned reaction (EC 1.14.13.149) and rules out mis-identification.</p>
+<blockquote>
+<p><strong>Note on symbol ambiguity:</strong> "paaA" and "PAAA"-like symbols are reused across biology for entirely unrelated genes (plant/eukaryotic proteins; unrelated bacterial loci). The literature search surfaced several off-target hits — e.g., an Arabidopsis UDP-glucosyltransferase acting on phenylacetic acid (<a href="https://pubmed.ncbi.nlm.nih.gov/32868079/">PMID: 32868079</a>), and a copper–phenanthroline antimicrobial compound abbreviated "P-FAH-Cu-phen" (<a href="https://pubmed.ncbi.nlm.nih.gov/41912070/">PMID: 41912070</a>) — that are <strong>NOT</strong> relevant to this bacterial enzyme. All findings below are restricted to the bacterial phenylacetate-CoA epoxidase α-subunit that matches Q88HS5's annotation and domain architecture.</p>
+</blockquote>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-paaa-is-the-catalytic-subunit-of-the-ring-12-phenylacetyl-coa-epoxidase-the-committed-step-of-aerobic-phenylacetate-catabolism">Finding 1 — PaaA is the catalytic α-subunit of the ring 1,2-phenylacetyl-CoA epoxidase, the committed step of aerobic phenylacetate catabolism</h3>
+<p>The central, well-supported conclusion of this investigation is that <strong>PaaA is the catalytic α-subunit of a multicomponent oxygenase that epoxidizes the aromatic ring of phenylacetyl-CoA</strong>. This is the first and rate-committing chemical transformation of the aerobic phenylacetate degradation pathway.</p>
+<p>The pathway itself was elucidated by Teufel and colleagues, who showed that bacterial aerobic degradation of phenylalanine/phenylacetate is fundamentally different from classical aromatic-ring dioxygenation: it proceeds through <strong>coenzyme A thioesters</strong>, and "the aromatic ring of phenylacetyl-CoA becomes activated to a ring 1,2-epoxide by a distinct multicomponent oxygenase" (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>). This pathway is encoded by the <em>paa</em> gene cluster and is remarkably widespread, present in roughly 16% of sequenced bacterial genomes, including both <em>Escherichia coli</em> and <em>Pseudomonas putida</em>.</p>
+<p>The precise subunit role of PaaA was established structurally and biochemically by Grishin et al., who reconstituted the <em>E. coli</em> phenylacetyl-CoA monooxygenase complex. They demonstrated that "<strong>PaaAC forms a catalytic core with a monooxygenase fold with PaaA being the catalytic α subunit and PaaC, the structural β subunit</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>). Their reconstitution further showed that <strong>PaaA, PaaB, PaaC, and PaaE are each required for catalysis, whereas PaaD is dispensable</strong>. PaaA is therefore the iron-binding catalytic heart of the complex, and its ferritin-like fold (matching Q88HS5's domain annotation) houses the di-iron active site where O₂ activation and ring epoxidation occur.</p>
+<p>The reaction can be written as:</p>
+<div class="codehilite"><pre><span></span><code>phenylacetyl-CoA + O2 + NAD(P)H + H+  →  1,2-epoxyphenylacetyl-CoA + NAD(P)+ + H2O
+    (catalyzed by PaaABCE; PaaA = catalytic α-subunit; EC 1.14.13.149)
+</code></pre></div>
+
+<p>This is a <strong>substrate-specific</strong> reaction: the enzyme acts on the CoA thioester of phenylacetate, not on free phenylacetic acid. The prior activation of phenylacetate to phenylacetyl-CoA is carried out by a dedicated phenylacetate-CoA ligase (PaaK), meaning the pathway commits its substrate to CoA-thioester chemistry before PaaA acts.</p>
+<h3 id="finding-2-the-paaa-complex-is-a-bifunctional-oxygenasedeoxygenase-with-a-di-iron-center-that-self-detoxifies-its-reactive-epoxide-product">Finding 2 — The PaaA complex is a bifunctional oxygenase/deoxygenase with a di-iron center that self-detoxifies its reactive epoxide product</h3>
+<p>A striking mechanistic property of the PaaA-containing enzyme is that it is <strong>bifunctional</strong>. Teufel, Friedrich, and Fuchs purified the multicomponent monooxygenase (PaaABCE) and demonstrated that it "<strong>not only transforms phenylacetyl-CoA into its ring-1,2-epoxide, but also mediates the NADPH-dependent removal of the epoxide oxygen, regenerating phenylacetyl-CoA with formation of water</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a>). The same study provided evidence for a <strong>catalytic di-iron center</strong>, consistent with the ferritin-like fold annotated for Q88HS5.</p>
+<p>The biological logic of this oxygenase/deoxygenase duality is detoxification. The ring 1,2-epoxide product is chemically reactive and unstable — a potentially cytotoxic electrophile if it accumulates or escapes the pathway. By retaining the capacity to reverse its own reaction (stripping the epoxide oxygen and regenerating the harmless CoA thioester), the enzyme provides an <strong>intrinsic safety valve</strong> that prevents dangerous build-up of the epoxide when downstream flux is limiting.</p>
+<p>Structural analysis reinforces that this complex is mechanistically distinct from other di-iron monooxygenases. Grishin et al. found that <strong>PaaAC lacks the conserved hydrogen-bond network</strong> connecting the di-iron center to the protein surface that is seen in canonical bacterial multicomponent monooxygenases (like methane/toluene monooxygenases) (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>). This implies a <strong>distinct mode of reductase association and electron transfer</strong> — electrons for O₂ activation are delivered by the flavin/[2Fe-2S] reductase subunit <strong>PaaE</strong> (which uses NAD(P)H), and the unusual active-site architecture likely underlies both the epoxidation and the reverse deoxygenation chemistry.</p>
+<h3 id="finding-3-paaa-launches-a-cytoplasmic-hybrid-pathway-that-ends-in-acetyl-coa-and-succinyl-coa-and-is-transcriptionally-gated-by-phenylacetyl-coa">Finding 3 — PaaA launches a cytoplasmic hybrid pathway that ends in acetyl-CoA and succinyl-CoA, and is transcriptionally gated by phenylacetyl-CoA</h3>
+<p>PaaA's epoxidation is the entry point of a defined, ordered downstream sequence. Teufel et al. showed that "<strong>the reactive nonaromatic epoxide is isomerized to a seven-member O-heterocyclic enol ether, an oxepin. This isomerization is followed by hydrolytic ring cleavage and beta-oxidation steps, leading to acetyl-CoA and succinyl-CoA</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>). This is termed a <strong>"hybrid" pathway</strong> because, although it is aerobic and uses O₂ at the PaaA step, the ring is ultimately opened by <strong>hydrolysis (non-oxygenolytic cleavage)</strong> — a strategy more reminiscent of anaerobic aromatic degradation, combined with β-oxidation-like chemistry.</p>
+<p>The specific downstream steps are:</p>
+<ol>
+<li><strong>PaaG</strong> (an enoyl-CoA isomerase of the crotonase superfamily) isomerizes the ring 1,2-epoxide to <strong>oxepin-CoA</strong>, an unusual seven-membered oxygen heterocycle.</li>
+<li><strong>PaaZ</strong>, a bifunctional fusion enzyme with a C-terminal (R)-specific enoyl-CoA hydratase (MaoC-like) domain and an N-terminal NADP⁺-dependent aldehyde dehydrogenase domain, cleaves the oxepin ring. The hydratase produces a highly reactive aldehyde, which the aldehyde dehydrogenase immediately oxidizes to <strong>3-oxo-5,6-dehydrosuberyl-CoA</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>). The fusion architecture prevents the reactive aldehyde from cyclizing into a stable dead-end product.</li>
+<li>A series of <strong>β-oxidation-like enzymes</strong> (including the PaaF enoyl-CoA hydratase and PaaG isomerase, which form a defined <strong>PaaFG complex</strong>; <a href="https://pubmed.ncbi.nlm.nih.gov/22961985/">PMID: 22961985</a>) shorten the chain and ultimately yield <strong>acetyl-CoA and succinyl-CoA</strong>, which enter central metabolism via the TCA cycle.</li>
+</ol>
+<p>The physical organization of these downstream enzymes into complexes (PaaFG) is thought to accelerate the pathway following PaaA's production of the "toxic and unstable epoxide-CoA," channeling the reactive intermediates and minimizing their escape (<a href="https://pubmed.ncbi.nlm.nih.gov/22961985/">PMID: 22961985</a>).</p>
+<p>Expression of <em>paaA</em> (and the entire <em>paa</em> cluster) is controlled by the transcriptional repressor <strong>PaaX</strong>. Fernández et al. showed that the pathway's own first intermediate acts as the inducer: PaaX "is able to bind and inhibit the activity of Px [the PaaX-regulated promoter] in a phenylacetyl-coenzyme A (PA-CoA) dependent manner" (<a href="https://pubmed.ncbi.nlm.nih.gov/24983528/">PMID: 24983528</a>). In other words, when phenylacetate is available and converted to PA-CoA, PA-CoA binds PaaX, relieves repression, and switches on transcription of the genes — including <em>paaA</em> — that consume it. The crystal structure of <em>E. coli</em> W PaaX reveals a novel transcription-regulator fold with a crevice sized to bind the PA-CoA effector, and confirms that induction proceeds by release of PaaX from its operator (<a href="https://pubmed.ncbi.nlm.nih.gov/37949283/">PMID: 37949283</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the three findings produces a coherent picture of PaaA's role. The following diagram places PaaA within the complete phenylacetate funnel:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="nt">UPSTREAM</span><span class="w"> </span><span class="nt">AROMATIC</span><span class="w"> </span><span class="nt">SOURCES</span><span class="w"> </span><span class="o">(</span><span class="nt">funneled</span><span class="w"> </span><span class="nt">into</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">pathway</span><span class="o">)</span>
+<span class="w"> </span><span class="nt">phenylalanine</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">phenylethylamine</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">styrene</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">ethylbenzene</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">2-phenylethanol</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">env</span><span class="o">.</span><span class="w"> </span><span class="nt">pollutants</span>
+<span class="w">                   </span><span class="o">|</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">        </span><span class="nt">phenylacetic</span><span class="w"> </span><span class="nt">acid</span><span class="w"> </span><span class="o">(</span><span class="nt">PAA</span><span class="o">)</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaK</span><span class="w"> </span><span class="o">(</span><span class="nt">phenylacetate-CoA</span><span class="w"> </span><span class="nt">ligase</span><span class="o">,</span><span class="w"> </span><span class="nt">ATP</span><span class="o">)</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">        </span><span class="nt">phenylacetyl-CoA</span><span class="w"> </span><span class="o">(</span><span class="nt">PA-CoA</span><span class="o">)</span><span class="w"> </span><span class="nt">---------</span><span class="o">&gt;</span><span class="w"> </span><span class="nt">binds</span><span class="w"> </span><span class="nt">PaaX</span><span class="w"> </span><span class="nt">repressor</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">                          </span><span class="o">=&gt;</span><span class="w"> </span><span class="nt">DE-REPRESSES</span><span class="w"> </span><span class="nt">paa</span><span class="w"> </span><span class="nt">operon</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">                             </span><span class="o">(</span><span class="nt">induces</span><span class="w"> </span><span class="nt">paaA</span><span class="w"> </span><span class="nt">transcription</span><span class="o">)</span>
+<span class="w">     </span><span class="o">+</span><span class="nt">---------------------</span><span class="o">+</span><span class="nt">---------------------</span><span class="o">+</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaABC</span><span class="o">(</span><span class="nt">D</span><span class="o">)</span><span class="nt">E</span><span class="w"> </span><span class="nt">MULTICOMPONENT</span><span class="w"> </span><span class="nt">MONOOXYGENASE</span><span class="w"> </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">catalytic</span><span class="w"> </span><span class="nt">alpha-subunit</span><span class="w"> </span><span class="o">(</span><span class="nt">di-iron</span><span class="o">)|</span><span class="w">  </span><span class="o">&lt;===</span><span class="w"> </span><span class="nt">THIS</span><span class="w"> </span><span class="nt">GENE</span><span class="w"> </span><span class="o">(</span><span class="nt">Q88HS5</span><span class="o">)</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">structural</span><span class="w"> </span><span class="nt">beta-subunit</span><span class="w">          </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">required</span><span class="w"> </span><span class="nt">accessory</span><span class="w"> </span><span class="nt">subunit</span><span class="w">        </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">NAD</span><span class="o">(</span><span class="nt">P</span><span class="o">)</span><span class="nt">H</span><span class="w"> </span><span class="nt">reductase</span><span class="w"> </span><span class="o">(</span><span class="nt">e-</span><span class="w"> </span><span class="nt">donor</span><span class="o">)</span><span class="w">      </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">dispensable</span><span class="w">                       </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">O2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">NAD</span><span class="o">(</span><span class="nt">P</span><span class="o">)</span><span class="nt">H</span><span class="w"> </span><span class="nt">consumed</span><span class="w">                    </span><span class="o">|</span>
+<span class="w">     </span><span class="o">|</span><span class="w">   </span><span class="nt">BIFUNCTIONAL</span><span class="o">:</span><span class="w"> </span><span class="nt">also</span><span class="w"> </span><span class="nt">deoxygenates</span><span class="w"> </span><span class="nt">epoxide</span><span class="w">  </span><span class="o">|</span>
+<span class="w">     </span><span class="o">+</span><span class="nt">---------------------</span><span class="o">+</span><span class="nt">---------------------</span><span class="o">+</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">    </span><span class="nt">1</span><span class="o">,</span><span class="nt">2-epoxyphenylacetyl-CoA</span><span class="w">  </span><span class="o">(</span><span class="nt">reactive</span><span class="o">,</span><span class="w"> </span><span class="nt">toxic</span><span class="w"> </span><span class="nt">epoxide</span><span class="o">)</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaG</span><span class="w"> </span><span class="o">(</span><span class="nt">isomerase</span><span class="o">)</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">             </span><span class="nt">oxepin-CoA</span><span class="w">  </span><span class="o">(</span><span class="nt">7-membered</span><span class="w"> </span><span class="nt">O-heterocycle</span><span class="o">)</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaZ</span><span class="w"> </span><span class="o">(</span><span class="nt">hydratase</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">aldehyde</span><span class="w"> </span><span class="nt">dehydrogenase</span><span class="o">;</span><span class="w"> </span><span class="nt">hydrolytic</span><span class="w"> </span><span class="nt">ring</span><span class="w"> </span><span class="nt">cleavage</span><span class="o">)</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">    </span><span class="nt">3-oxo-5</span><span class="o">,</span><span class="nt">6-dehydrosuberyl-CoA</span>
+<span class="w">                   </span><span class="o">|</span><span class="w">   </span><span class="nt">PaaF</span><span class="o">/</span><span class="nt">PaaG</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nt">beta-oxidation</span><span class="w"> </span><span class="nt">enzymes</span><span class="w"> </span><span class="o">(</span><span class="nt">PaaFG</span><span class="w"> </span><span class="nt">complex</span><span class="o">)</span>
+<span class="w">                   </span><span class="nt">v</span>
+<span class="w">    </span><span class="nt">acetyl-CoA</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">succinyl-CoA</span><span class="w">  </span><span class="nt">--</span><span class="o">&gt;</span><span class="w"> </span><span class="nt">TCA</span><span class="w"> </span><span class="nt">cycle</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">central</span><span class="w"> </span><span class="nt">metabolism</span>
+</code></pre></div>
+
+<p><strong>Primary function (enzyme, reaction, substrate specificity).</strong> PaaA is an <strong>oxidoreductase (monooxygenase/oxygenase), EC 1.14.13.149</strong>. As the catalytic α-subunit, it activates O₂ at a <strong>di-iron center</strong> and inserts one oxygen atom across the C1–C2 bond of the aromatic ring of <strong>phenylacetyl-CoA</strong>, producing the <strong>ring 1,2-epoxide</strong>; the other oxygen atom is reduced to water using electrons from NAD(P)H delivered via PaaE. Substrate specificity is for the <strong>CoA thioester of phenylacetate</strong>, not free PAA — the pathway deliberately commits substrate to CoA chemistry (via PaaK) before PaaA acts. The enzyme is additionally a <strong>deoxygenase</strong>, able to reverse the epoxidation for detoxification.</p>
+<p><strong>Cellular localization.</strong> PaaA functions in the <strong>cytoplasm</strong>. There are no signal-peptide/membrane features; the substrate and all intermediates are soluble CoA thioesters, and the reductase (PaaE, NAD(P)H-dependent) and downstream enzymes (PaaG, PaaZ, PaaF) are cytoplasmic. The reaction therefore occurs entirely within the cytosol, integrated with the cytoplasmic NAD(P)H/CoA pools.</p>
+<p><strong>Pathway role.</strong> PaaA catalyzes the <strong>committed, ring-dearomatizing step</strong> of the aerobic phenylacetate catabolic pathway — a globally important microbial "funnel" for aromatic-compound degradation. Its product feeds isomerization (PaaG) → hydrolytic ring cleavage (PaaZ) → β-oxidation → acetyl-CoA + succinyl-CoA. Its expression is gated by the PA-CoA/PaaX regulatory switch, ensuring the potentially hazardous epoxidation chemistry is only active when substrate is present.</p>
+<p><strong>Why this matters.</strong> Because the paa pathway is the convergence point for degradation of styrene, ethylbenzene, and other aromatic pollutants (and because <em>P. putida</em> KT2440 is a workhorse for bioremediation and industrial biocatalysis), PaaA is the key "dearomatization engine" that enables these compounds to be mineralized. In <em>P. putida</em> F1, the ability to sense and swim toward PAA (energy taxis via the Aer2 receptor) is coupled to the cell's capacity to metabolize it through this same pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">PMID: 23377939</a>). Upstream funneling is illustrated by styrene-degrading <em>Rhodococcus</em>, which converts styrene → styrene oxide → phenylacetaldehyde → phenylacetic acid → phenylacetyl-CoA before entering the PaaA-initiated route (<a href="https://pubmed.ncbi.nlm.nih.gov/21996027/">PMID: 21996027</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+<th>Strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">20660314</a></td>
+<td><em>Bacterial phenylalanine and phenylacetate catabolic pathway revealed</em></td>
+<td>Establishes the whole pathway; ring 1,2-epoxidation of PA-CoA by a multicomponent oxygenase; downstream oxepin/hydrolysis/β-ox to acetyl-CoA + succinyl-CoA; ~16% of bacterial genomes</td>
+<td>Landmark primary study (PNAS)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">21247899</a></td>
+<td><em>Structural and functional studies of the E. coli phenylacetyl-CoA monooxygenase complex</em></td>
+<td>Directly identifies <strong>PaaA as the catalytic α-subunit</strong> and PaaC as structural β-subunit; PaaA/B/C/E required, PaaD dispensable; distinct electron-transfer architecture</td>
+<td>Primary structural/biochemical (JBC)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">22398448</a></td>
+<td><em>An oxygenase that forms and deoxygenates toxic epoxide</em></td>
+<td>Demonstrates <strong>bifunctional oxygenase/deoxygenase</strong> activity and the <strong>di-iron center</strong>; NADPH-dependent epoxide removal → self-detoxification</td>
+<td>Primary study (Nature)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">21296885</a></td>
+<td><em>Studies on the mechanism of ring hydrolysis in phenylacetate degradation</em></td>
+<td>Characterizes PaaZ bifunctional ring-cleavage downstream of PaaA; explains reactive-aldehyde handling; metabolic branch point</td>
+<td>Primary study</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24983528/">24983528</a></td>
+<td><em>Insights on regulation of the phenylacetate degradation pathway from E. coli</em></td>
+<td>PA-CoA-dependent inhibition of PaaX → de-repression; defines regulatory context of <em>paaA</em> expression</td>
+<td>Primary regulatory study</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37949283/">37949283</a></td>
+<td><em>Structural characterization of PaaX</em></td>
+<td>Crystal structure of the PaaX repressor; novel fold; crevice for PA-CoA effector; induction by release from operator</td>
+<td>Primary structural study</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22961985/">22961985</a></td>
+<td><em>Protein-protein interactions in the β-oxidation part... PaaF-PaaG complex</em></td>
+<td>Shows downstream β-oxidation enzymes form defined complexes; frames PaaABCE as producing a "toxic and unstable epoxide-CoA" requiring rapid downstream channeling</td>
+<td>Primary structural study</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">23377939</a></td>
+<td><em>Taxis of P. putida F1 toward phenylacetic acid...</em></td>
+<td>Confirms a <em>paa</em> cluster in <em>P. putida</em>; PAA is a metabolizable chemoattractant via energy taxis; physiological relevance</td>
+<td>Primary study (same species)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21996027/">21996027</a></td>
+<td><em>Styrene metabolism genes... Rhodococcus</em></td>
+<td>Illustrates how upstream aromatics (styrene→PAA→PA-CoA) funnel into the PAA pathway that PaaA initiates</td>
+<td>Supporting/context</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30861343/">30861343</a></td>
+<td><em>Shunting Phenylacetic Acid Catabolism for Tropone Biosynthesis</em></td>
+<td>Demonstrates that the PAA catabolic module (incl. the epoxidation/PaaZ steps) can be redirected for biosynthesis, underscoring intermediate reactivity</td>
+<td>Supporting/applied</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Confidence and transfer of inference.</strong> The most detailed subunit-level (PaaA = catalytic α-subunit) and mechanistic (bifunctional di-iron oxygenase/deoxygenase) evidence derives from the <em>E. coli</em> orthologue (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a>). Function is assigned to the <em>P. putida</em> KT2440 protein Q88HS5 by strong orthology — identical PaaA-specific InterPro signatures (IPR011881, IPR007814) plus the ferritin-like di-iron domains (IPR012347, IPR009078) — combined with the curated UniProt EC assignment (1.14.13.149) and the demonstrated presence and physiological function of the <em>paa</em> cluster in <em>P. putida</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">PMID: 23377939</a>).</p>
+<p><strong>Off-target / non-relevant hits identified during search</strong> (explicitly excluded): <a href="https://pubmed.ncbi.nlm.nih.gov/32868079/">PMID: 32868079</a> (Arabidopsis UGT84B1, a plant glucosyltransferase acting on phenylacetic acid — unrelated eukaryotic gene) and <a href="https://pubmed.ncbi.nlm.nih.gov/41912070/">PMID: 41912070</a> (copper–phenanthroline antimicrobial "P-FAH-Cu-phen" — no relation to the bacterial enzyme). These illustrate the symbol/keyword ambiguity flagged in the identity-verification step and do not inform the annotation of Q88HS5.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- <strong>H1</strong> — PaaA is the catalytic α-subunit of a di-iron phenylacetyl-CoA epoxidase. <em>Supported</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a>).<br />
+- <strong>H2</strong> — Its substrate is the CoA thioester phenylacetyl-CoA, not free phenylacetate. <em>Supported</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>).<br />
+- <strong>H3</strong> — It initiates a cytoplasmic hybrid pathway ending in acetyl-CoA + succinyl-CoA. <em>Supported</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a>).<br />
+- <strong>H4</strong> — The complex has an intrinsic deoxygenase/detoxification function. <em>Supported</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a>).</p>
+<p><strong>Refuted / excluded:</strong><br />
+- PaaA is NOT a classical Rieske ring-hydroxylating dioxygenase acting on a free aromatic substrate; it is a ferritin-like di-iron oxygenase acting on a CoA thioester.<br />
+- The "paaA" of Q88HS5 is unrelated to plant/auxin PAA-metabolism genes or other eukaryotic genes that share the "PAA" string.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>Direct characterization is largely from <em>E. coli</em>, not <em>P. putida</em> KT2440.</strong> The definitive structural and biochemical dissection of subunit roles (PaaA as α-catalytic subunit; PaaABCE requirement; bifunctional deoxygenation) was performed on the <em>E. coli</em> enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a>). The <em>P. putida</em> KT2440 ortholog (Q88HS5/PP_3278) is annotated by strong homology and the <em>P. putida paa</em> cluster is functionally validated at the pathway/physiology level (<a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">PMID: 23377939</a>), but strain-specific kinetic constants, structural coordinates, and any subtle substrate-range differences for the <em>P. putida</em> PaaA itself have not been directly measured here.</p>
+</li>
+<li>
+<p><strong>No experimental high-resolution structure of PaaA from <em>P. putida</em> was examined.</strong> The di-iron site geometry and residue-level catalytic mechanism are inferred from the ferritin-like fold annotation and <em>E. coli</em> work; an AlphaFold model or crystal structure of Q88HS5 was not analyzed in this investigation.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters (kcat, Km) and substrate-specificity breadth are not quantified.</strong> While the substrate is clearly the CoA thioester of phenylacetate, tolerance for ring-substituted phenylacetyl-CoA analogs (relevant to degrading substituted aromatic pollutants) is not established from the reviewed literature.</p>
+</li>
+<li>
+<p><strong>Electron-transfer stoichiometry and the mechanistic basis of the oxygenase↔deoxygenase switch</strong> remain incompletely defined. The unusual absence of the conserved di-iron-to-surface H-bond network suggests a novel reductase-coupling mechanism, but the precise electron path from PaaE to the PaaA di-iron center is not fully resolved.</p>
+</li>
+<li>
+<p><strong>Role of PaaB and PaaD.</strong> PaaB is required for activity and PaaD is dispensable, but the molecular functions of these accessory subunits (e.g., assembly, stability, or effector roles) are not fully explained.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and in vitro reconstitution of the <em>P. putida</em> KT2440 PaaABCE complex</strong> to directly measure epoxidation kinetics (kcat, Km for phenylacetyl-CoA), O₂ and NAD(P)H stoichiometry, and to confirm the bifunctional deoxygenase activity in the <em>Pseudomonas</em> enzyme, rather than relying on <em>E. coli</em> orthology.</p>
+</li>
+<li>
+<p><strong>Structural determination of the <em>P. putida</em> PaaA/PaaC catalytic core</strong> (cryo-EM or X-ray) and/or AlphaFold-Multimer modeling with di-iron site validation, to map active-site residues, confirm the ferritin-like di-iron geometry, and rationalize the absence of the canonical surface H-bond network.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity profiling</strong> using a panel of ring-substituted phenylacetyl-CoA analogs (derived from methyl-, halo-, or hydroxy-styrenes/ethylbenzenes) to define the pollutant range that the <em>P. putida</em> pathway can dearomatize — directly relevant to bioremediation applications.</p>
+</li>
+<li>
+<p><strong>Targeted <em>paaA</em> knockout in <em>P. putida</em> KT2440</strong> followed by growth assays on phenylacetate and phenylalanine, plus metabolomic detection of accumulated phenylacetyl-CoA, to confirm that PaaA is genetically essential for aerobic PAA catabolism in this strain and non-redundant.</p>
+</li>
+<li>
+<p><strong>In vivo epoxide-stress and channeling studies</strong> — quantify epoxide/oxepin-CoA intermediate leakage under conditions where downstream enzymes (PaaG/PaaZ) are limiting, testing the physiological importance of PaaA's built-in deoxygenase safety valve and the PaaFG-type metabolite channeling.</p>
+</li>
+<li>
+<p><strong>Reductase-coupling mechanism dissection</strong> — reconstitute PaaE electron transfer with the <em>P. putida</em> complex and use rapid kinetics/EPR spectroscopy on the di-iron center to define the oxygenase→deoxygenase mechanistic switch.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PaaA (Q88HS5, PP_3278) of <em>Pseudomonas putida</em> KT2440 is the <strong>catalytic α-subunit of the ring 1,2-phenylacetyl-CoA epoxidase</strong> (EC 1.14.13.149), a cytoplasmic, di-iron, ferritin-fold multicomponent monooxygenase (the PaaABC(D)E complex). It catalyzes the O₂- and NAD(P)H-dependent epoxidation of the aromatic ring of phenylacetyl-CoA — the committed, ring-dearomatizing entry step of the widely distributed aerobic phenylacetate catabolic pathway — and is uniquely bifunctional, also deoxygenating its own reactive epoxide product as a detoxification mechanism. Its product is funneled through oxepin-CoA (PaaG), hydrolytic ring cleavage (PaaZ), and β-oxidation to acetyl-CoA and succinyl-CoA, with expression controlled by the PA-CoA/PaaX regulatory switch. The annotation is robustly supported by structural, biochemical, and pathway-level evidence, with the principal caveat that the most detailed mechanistic work was performed on the <em>E. coli</em> ortholog.</p>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Teufel R, et al. <em>Bacterial phenylalanine and phenylacetate catabolic pathway revealed.</em> PNAS 2010. <a href="https://pubmed.ncbi.nlm.nih.gov/20660314/">PMID: 20660314</a></li>
+<li>Grishin AM, et al. <em>Structural and functional studies of the E. coli phenylacetyl-CoA monooxygenase complex.</em> J Biol Chem 2011. <a href="https://pubmed.ncbi.nlm.nih.gov/21247899/">PMID: 21247899</a></li>
+<li>Teufel R, Friedrich T, Fuchs G. <em>An oxygenase that forms and deoxygenates toxic epoxide.</em> Nature 2012. <a href="https://pubmed.ncbi.nlm.nih.gov/22398448/">PMID: 22398448</a></li>
+<li>Teufel R, et al. <em>Studies on the mechanism of ring hydrolysis in phenylacetate degradation: a metabolic branching point.</em> J Biol Chem 2011. <a href="https://pubmed.ncbi.nlm.nih.gov/21296885/">PMID: 21296885</a></li>
+<li>Fernández C, Díaz E, García JL. <em>Insights on the regulation of the phenylacetate degradation pathway from E. coli.</em> Environ Microbiol Rep 2014. <a href="https://pubmed.ncbi.nlm.nih.gov/24983528/">PMID: 24983528</a></li>
+<li>Grishin AM, et al. <em>Protein-protein interactions in the β-oxidation part of the phenylacetate utilization pathway: crystal structure of the PaaF-PaaG hydratase-isomerase complex.</em> J Biol Chem 2012. <a href="https://pubmed.ncbi.nlm.nih.gov/22961985/">PMID: 22961985</a></li>
+<li><em>Structural characterization of PaaX, the main repressor of the phenylacetate degradation pathway in E. coli W.</em> 2023. <a href="https://pubmed.ncbi.nlm.nih.gov/37949283/">PMID: 37949283</a></li>
+<li>Luu RA, et al. <em>Taxis of Pseudomonas putida F1 toward phenylacetic acid is mediated by the energy taxis receptor Aer2.</em> 2013. <a href="https://pubmed.ncbi.nlm.nih.gov/23377939/">PMID: 23377939</a></li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="paaA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="paaA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:32868079</li>
+<li>PMID:41912070</li>
+<li>PMID:20660314</li>
+<li>PMID:21247899</li>
+<li>PMID:22398448</li>
+<li>PMID:21296885</li>
+<li>PMID:22961985</li>
+<li>PMID:24983528</li>
+<li>PMID:37949283</li>
+<li>PMID:23377939</li>
+<li>PMID:21996027</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(paaA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HS5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="paaa-curation-notes">paaA curation notes</h1>
+<p>Q88HS5/PP_3278 is the alpha subunit of the ring<br />
+1,2-phenylacetyl-CoA epoxidase<br />
+[UniProtKB:Q88HS5, "SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha<br />
+subunit"].</p>
+<p>The epoxidase molecular function belongs to the assembled PaaABCE system.<br />
+The inherited <code>enables</code> annotation is therefore modified to<br />
+<code>contributes_to_molecular_function</code> in the core-function model.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HS5
+gene_symbol: paaA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PaaA is the predicted catalytic alpha subunit of the soluble PaaABCE ring
+  1,2-phenylacetyl-CoA epoxidase system in Pseudomonas putida KT2440. As part
+  of the multicomponent complex, it contributes to oxygen-dependent aromatic
+  ring epoxidation during aerobic phenylacetate catabolism.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Correct expected location for the soluble epoxidase system.
+    action: ACCEPT
+    reason: PaaA is a non-membrane oxygenase subunit in a cytosolic CoA-ester pathway.
+- term:
+    id: GO:0010124
+    label: phenylacetate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct process annotation for the PaaA epoxidase subunit.
+    action: ACCEPT
+    reason: &gt;-
+      The exact target is named as the alpha subunit of
+      phenylacetyl-CoA epoxidase and lies in the paa catabolic locus.
+    supported_by:
+    - reference_id: file:PSEPK/paaA/paaA-uniprot.txt
+      supporting_text: &#39;SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit&#39;
+- term:
+    id: GO:0097266
+    label: phenylacetyl-CoA 1,2-epoxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct activity at complex level, but not independently enabled by PaaA alone.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PaaA is one component of the PaaABCE epoxidase system. The inherited
+      enables qualifier overstates the isolated subunit; the core-function
+      model instead records that PaaA contributes to the complex activity.
+    supported_by:
+    - reference_id: file:PSEPK/paaA/paaA-uniprot.txt
+      supporting_text: &#39;SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit&#39;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/paaA/paaA-uniprot.txt
+  title: UniProtKB entry Q88HS5 for Pseudomonas putida KT2440 paaA
+  findings:
+  - statement: UniProt identifies Q88HS5 as the alpha subunit of the pathway epoxidase.
+    supporting_text: &#39;SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession. The submitted-name and EC assignment are
+      homology-based, so subunit-level qualifier semantics remain important.
+- id: file:PSEPK/paaA/paaA-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK paaA
+  findings:
+  - statement: Ortholog evidence identifies PaaA as the catalytic alpha subunit.
+    supporting_text: &gt;-
+      PaaAC forms a catalytic core with a monooxygenase fold with PaaA being
+      the catalytic α subunit and PaaC, the structural β subunit
+    reference_section_type: RESULTS
+  - statement: Definitive subunit-level experiments were performed on the E. coli complex.
+    supporting_text: &gt;-
+      Direct characterization is largely from *E. coli*, not *P. putida*
+      KT2440.
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The family/domain interpretation supports a catalytic-alpha assignment
+      for the exact target, but the definitive subunit reconstitution is from
+      E. coli. PaaD dispensability, reverse deoxygenation, detailed di-iron
+      mechanism, localization, and regulatory claims were not imported.
+core_functions:
+- description: &gt;-
+    Predicted catalytic alpha subunit of the PaaABCE oxygenase system,
+    contributing to phenylacetyl-CoA 1,2-epoxidation in aerobic
+    phenylacetate catabolism.
+  contributes_to_molecular_function:
+    id: GO:0097266
+    label: phenylacetyl-CoA 1,2-epoxidase activity
+  directly_involved_in:
+  - id: GO:0010124
+    label: phenylacetate catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/paaA/paaA-uniprot.txt
+    supporting_text: &#39;SubName: Full=Ring 1,2-phenylacetyl-CoA epoxidase alpha subunit&#39;
+  - reference_id: file:PSEPK/paaA/paaA-deep-research-openscientist.md
+    supporting_text: &gt;-
+      PaaAC forms a catalytic core with a monooxygenase fold with PaaA being
+      the catalytic α subunit and PaaC, the structural β subunit
+suggested_questions:
+- question: Which catalytic or assembly functions are uniquely supplied by KT2440 PaaA?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the epoxidase with systematic subunit omission and PaaA
+    active-site variants, measuring complex assembly and epoxide production.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

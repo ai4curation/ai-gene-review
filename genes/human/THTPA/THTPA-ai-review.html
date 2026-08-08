@@ -1,0 +1,3336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THTPA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>THTPA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BU02" target="_blank" class="term-link">
+                        Q9BU02
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "THTPA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BU02" data-a="DESCRIPTION: THTPA encodes thiamine-triphosphatase (ThTPase; EC..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>THTPA encodes thiamine-triphosphatase (ThTPase; EC 3.6.1.28), a soluble, Mg2+-dependent hydrolase that specifically hydrolyzes thiamine triphosphate (ThTP) to thiamine diphosphate (ThDP) plus inorganic phosphate. The enzyme is highly specific for ThTP and has high affinity for its substrate (KM ~8 uM), and functions as a regulator of the cellular steady-state level of thiamine triphosphate, contributing to thiamine (vitamin B1) phosphate homeostasis. It is a 230-residue monomeric protein built on a single CYTH domain, adopting the triphosphate-tunnel metalloenzyme (TTM) fold characteristic of the CYTH superfamily, and binds one catalytic Mg2+ ion per subunit. THTPA is localized to the cytoplasm/cytosol and is widely expressed across mammalian tissues, generally at low levels.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050333" target="_blank" class="term-link">
+                                    GO:0050333
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine triphosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0050333" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred thiamine triphosphatase activity. This is the defining molecular function of THTPA and is directly supported by experimental characterization of the recombinant human enzyme, so it is the core function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042357" target="_blank" class="term-link">
+                                    GO:0042357
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine diphosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0042357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The direct product of the ThTPase reaction is thiamine diphosphate (ThDP), so this is an accurate and specific biological process for the enzyme&#39;s activity. Retained as the process context of the core catalytic function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0000287" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ThTPase binds one catalytic Mg2+ per subunit, required for hydrolysis. Supported by the UniProt cofactor annotation and Mg2+-binding residues. A genuine molecular feature that supports the core catalytic activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with the experimentally determined subcellular location of the soluble enzyme. The more specific cytosol term (GO:0005829) is also annotated; this parent term is correct but less informative.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0005829" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization for this soluble ThTPase. Consistent with the UniProt Cytoplasm location and the Reactome cytosol annotation. Correct and appropriately specific cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006772" target="_blank" class="term-link">
+                                    GO:0006772
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0006772" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad but correct: ThTPase participates in thiamine (vitamin B1) phosphate homeostasis by hydrolyzing thiamine triphosphate. This is a parent of the more specific thiamine-diphosphate and thiamine-containing compound metabolic process terms already annotated; kept as a valid, less specific process term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042723" target="_blank" class="term-link">
+                                    GO:0042723
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0042723" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process term for an enzyme acting on thiamine phosphate esters (ThTP to ThDP). This is a parent of thiamine diphosphate metabolic process (GO:0042357); accurate but less specific.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050333" target="_blank" class="term-link">
+                                    GO:0050333
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine triphosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0050333" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronically inferred (multiple IEA methods, incl. EC:3.6.1.28 and RHEA:11744 mappings) core molecular function, identical to the experimentally supported IDA/IBA annotations. Retained as the core function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a single high-throughput binary interactome (HuRI) yeast two-hybrid hit (THTPA-TLX3, Q9BU02-O43711 in IntAct). No functional context for THTPA and no specific molecular function is implied. Uninformative; marked as over-annotated per policy (not removed for an IPI).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9BU02; O43711: TLX3; NbExp=3; IntAct=EBI-2820864, EBI-3939165;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0000287" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same magnesium ion binding function as the IBA/ISS annotations, here transferred electronically from the mouse ortholog (Q8JZL3). Consistent with the UniProt Mg2+ cofactor annotation. Correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042357" target="_blank" class="term-link">
+                                    GO:0042357
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine diphosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0042357" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic ortholog transfer of the same specific process (production of thiamine diphosphate by ThTP hydrolysis). Correct and appropriately specific; redundant with the IBA/ISS annotations of the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0000287" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Magnesium ion binding inferred by sequence similarity from the mouse ortholog (Q8JZL3). Consistent with the experimentally supported Mg2+ cofactor requirement (1 ion per subunit). Correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042357" target="_blank" class="term-link">
+                                    GO:0042357
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine diphosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0042357" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Thiamine diphosphate metabolic process inferred by sequence similarity to the mouse ortholog. Accurate: the enzyme produces ThDP from ThTP. Redundant with the IBA/IEA annotations of the same specific term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-965067
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0005829" data-r="Reactome:R-HSA-965067" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization asserted by the Reactome reaction &#34;THTPA:Mg2+ hydrolyzes ThTP to TDP&#34; in the Vitamin B1 metabolism pathway. Consistent with the UniProt soluble/cytoplasm annotation. Correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-965067
+
+                                </span>
+
+                                <div class="support-text">THTPA:Mg2+ hydrolyzes ThTP to TDP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006091" target="_blank" class="term-link">
+                                    GO:0006091
+                                </a>
+                            </span>
+                            <span class="term-label">generation of precursor metabolites and energy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11827967
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a specific thiamine triphospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0006091" data-r="PMID:11827967" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement invoking the historical hypothesis that ThTP may act as a phosphate donor / energy-related signaling molecule. ThTPase hydrolyzes and thereby removes ThTP; it does not generate energy precursor metabolites. This broad term is not supported by the enzyme&#39;s established biochemistry and represents an over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                                        PMID:11827967
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it may act as a phosphate donor for the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016311" target="_blank" class="term-link">
+                                    GO:0016311
+                                </a>
+                            </span>
+                            <span class="term-label">dephosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11827967
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a specific thiamine triphospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0016311" data-r="PMID:11827967" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Directly assayed hydrolysis of a phosphoanhydride (ThTP to ThDP + Pi) is correctly captured as dephosphorylation. Accurate but a high-level parent process; the thiamine-specific process terms are more informative, so this is kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                                        PMID:11827967
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hydrolyzing ThTP with virtually absolute specificity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006772" target="_blank" class="term-link">
+                                    GO:0006772
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11827967
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a specific thiamine triphospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0006772" data-r="PMID:11827967" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable statement that this enzyme participates in thiamine metabolism (regulating cellular ThTP levels). Correct but broad; a parent of the more specific thiamine-diphosphate/thiamine-containing compound metabolic process terms. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                                        PMID:11827967
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">purified a soluble thiamine triphosphatase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11827967
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a specific thiamine triphospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0016787" data-r="PMID:11827967" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general: THTPA is a hydrolase, but the specific and experimentally established activity is thiamine triphosphate phosphatase activity (GO:0050333), which is a descendant of this term. Modify to the specific child term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050333" target="_blank" class="term-link">
+                                    thiamine triphosphate phosphatase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/THTPA/THTPA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050333" target="_blank" class="term-link">
+                                    GO:0050333
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine triphosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11827967
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular characterization of a specific thiamine triphospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BU02" data-a="GO:0050333" data-r="PMID:11827967" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of thiamine triphosphatase activity for the recombinant human enzyme, which was specific for ThTP. This is the strongest evidence for the core molecular function of THTPA.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                                        PMID:11827967
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hydrolyzing ThTP with virtually absolute specificity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Specific, Mg2+-dependent hydrolysis of thiamine triphosphate (ThTP) to thiamine diphosphate (ThDP) and inorganic phosphate, regulating cellular ThTP levels within thiamine (vitamin B1) phosphate homeostasis.</h3>
+                <span class="vote-buttons" data-g="Q9BU02" data-a="FUNCTION: Specific, Mg2+-dependent hydrolysis of thiamine tr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050333" target="_blank" class="term-link">
+                            thiamine triphosphate phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042357" target="_blank" class="term-link">
+                                thiamine diphosphate metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/THTPA/THTPA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Hydrolase highly specific for thiamine triphosphate (ThTP).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                                PMID:11827967
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">hydrolyzing ThTP with virtually absolute specificity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11827967" target="_blank" class="term-link">
+                            PMID:11827967
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular characterization of a specific thiamine triphosphatase widely expressed in mammalian tissues.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified a soluble thiamine triphosphatase from calf brain (a 24-kDa monomer) that hydrolyzes ThTP with virtually absolute specificity, and identified and expressed the human ortholog (this 230-aa protein), which showed ThTP-specific ThTPase activity.</div>
+
+                        <div class="finding-text">"hydrolyzing ThTP with virtually absolute specificity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The mRNA is widely expressed across human tissues but at relatively low levels.</div>
+
+                        <div class="finding-text">"expressed in most human"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-965067
+
+                    </span>
+                </div>
+
+                <div class="reference-title">THTPA:Mg2+ hydrolyzes ThTP to TDP</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction placing THTPA (with Mg2+) as the catalyst that hydrolyzes thiamine triphosphate to thiamine diphosphate in the cytosol, within the Vitamin B1 (thiamin) metabolism pathway.</div>
+
+                        <div class="finding-text">"THTPA:Mg2+ hydrolyzes ThTP to TDP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(THTPA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BU02" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="thtpa-thiamine-triphosphatase-thtpase-review-notes">THTPA (Thiamine-triphosphatase, ThTPase) — review notes</h1>
+<p>UniProt: Q9BU02 (THTPA_HUMAN); HGNC:18987; GeneID 79178; chromosome 14. EC=3.6.1.28.<br />
+230 aa; single CYTH domain (residues 5–201). Evidence at protein level (PE 1).</p>
+<h2 id="core-biology-grounded-in-uniprot-file">Core biology (grounded in UniProt file)</h2>
+<ul>
+<li><strong>Function</strong>: "Hydrolase highly specific for thiamine triphosphate (ThTP)."<br />
+  [file:human/THTPA/THTPA-uniprot.txt] (FUNCTION line, ECO:0000269|PubMed:11827967, PubMed:23707715).</li>
+<li><strong>Catalytic activity</strong>: "thiamine triphosphate + H2O = thiamine diphosphate + phosphate + H(+)";<br />
+  Rhea:RHEA:11744; EC=3.6.1.28 [file:human/THTPA/THTPA-uniprot.txt]. So the enzyme converts ThTP → ThDP (thiamine diphosphate / TDP) + Pi.</li>
+<li><strong>Cofactor</strong>: "Name=Mg(2+)"; "Binds 1 Mg(2+) ion per subunit." [file:human/THTPA/THTPA-uniprot.txt]<br />
+  (ECO:0000269|PubMed:23707715). Multiple Mg2+-binding residues annotated (BINDING 7, 9, 145, 157, 159).</li>
+<li><strong>Kinetics</strong>: "KM=8 uM for thiamine triphosphate"; "Vmax=59 umol/min/mg enzyme" [file:human/THTPA/THTPA-uniprot.txt]<br />
+  — high affinity, consistent with a physiological role keeping cellular ThTP low.</li>
+<li><strong>Subunit</strong>: "Monomer." [file:human/THTPA/THTPA-uniprot.txt] (PubMed:23707715).</li>
+<li><strong>Subcellular location</strong>: "Cytoplasm" [file:human/THTPA/THTPA-uniprot.txt] (ECO:0000269|PubMed:11827967).</li>
+<li><strong>Tissue specificity</strong>: "Widely expressed but at a low level." [file:human/THTPA/THTPA-uniprot.txt]</li>
+<li><strong>Family</strong>: "Belongs to the ThTPase family." [file:human/THTPA/THTPA-uniprot.txt]; CYTH / triphosphate-tunnel<br />
+  metalloenzyme (TTM) superfamily (CDD cd07758 ThTPase; Pfam PF01928 CYTH; PROSITE PS51707 CYTH).</li>
+<li><strong>Structure</strong>: X-ray structures 3BHD (1.50 Å) and 3TVL (2.30 Å, complex with triphosphate). CYTH tunnel fold.</li>
+</ul>
+<h2 id="key-references">Key references</h2>
+<ul>
+<li><strong>PMID:11827967</strong> (Lakaye et al. 2002, J Biol Chem) — cached abstract only (<code>full_text_available: false</code>).<br />
+  First molecular characterization of a specific mammalian ThTPase. Purified soluble ThTPase from calf brain,<br />
+  a "24-kDa monomer, hydrolyzing ThTP with virtually absolute specificity." Identified the human ortholog<br />
+  (MGC2652 / this 230-aa protein), expressed recombinant human enzyme in E. coli (ThTPase activity, ThTP-specific),<br />
+  and showed the mRNA is "expressed in most human tissues but at relatively low levels."<br />
+  Supports FUNCTION, IDA thiamine-triphosphatase activity, cytoplasmic location, tissue specificity.<br />
+  Abstract quote: "hydrolyzing ThTP with virtually absolute specificity"; "The mRNA was expressed in most human<br />
+  tissues but at relatively low levels."</li>
+<li><strong>PMID:23707715</strong> (Delvaux et al. 2013, BBA) — NOT cached locally. Per the UniProt record, this is the X-ray<br />
+  crystallography (2.30 Å) paper establishing CATALYTIC ACTIVITY, FUNCTION, COFACTOR (Mg2+), kinetics (KM, Vmax),<br />
+  monomeric SUBUNIT, and extensive active-site mutagenesis (K11, D37, Y39, W53, K65, Y79, E81, D147, K193).<br />
+  Underpins the ECO:0000269 experimental FUNCTION/COFACTOR/kinetic statements above. Not cited in GOA rows,<br />
+  so used only as UniProt-sourced provenance, not quoted as a publication.</li>
+<li><strong>PMID:32296183</strong> (Luck et al. 2020, "A reference map of the human binary protein interactome", HuRI) —<br />
+  cached full text. Systematic Y2H interactome; source of the IntAct interaction Q9BU02 (THTPA) – O43711 (TLX3).<br />
+  Bare "protein binding" (GO:0005515) IPI; high-throughput binary interaction, no functional context for THTPA.</li>
+<li><strong>Reactome R-HSA-965067</strong> "THTPA:Mg2+ hydrolyzes ThTP to TDP" — the ThTPase reaction in the human<br />
+  Vitamin B1 (thiamin) metabolism pathway (R-HSA-196819). Source of the TAS cytosol location.</li>
+</ul>
+<h2 id="go-review-reasoning">GO review reasoning</h2>
+<ul>
+<li><strong>Core MF</strong> = GO:0050333 thiamine triphosphate phosphatase activity (IDA from PMID:11827967; also IBA, IEA).<br />
+  This is the defining, experimentally established activity (recombinant human enzyme; crystal structure + kinetics).</li>
+<li><strong>Mg2+ binding</strong> GO:0000287 — supported by COFACTOR (Mg2+, 1 per subunit) and BINDING residues in UniProt;<br />
+  contributes to catalysis. IBA/ISS/IEA — accept as a genuine molecular function feature (non-core relative to the<br />
+  triphosphatase activity, but real).</li>
+<li><strong>Core BP</strong>: the enzyme's direct product is thiamine diphosphate (ThDP), so GO:0042357 (thiamine diphosphate<br />
+  metabolic process) is the most precise BP; GO:0042723 (thiamine-containing compound metabolic process) and<br />
+  GO:0006772 (thiamine metabolic process) are broader parents. GO:0006772 is a child of GO:0042723 (verified in<br />
+  go.db entailed_edge). All three describe the same underlying vitamin-B1 phosphate homeostasis role.</li>
+<li><strong>GO:0016311 dephosphorylation</strong> (IDA, PMID:11827967) — accurate high-level BP for a phosphatase; kept as<br />
+  non-core (the specific triphosphatase activity + thiamine BP terms are more informative).</li>
+<li><strong>GO:0016787 hydrolase activity</strong> (TAS) — correct but a parent of GO:0050333; over-general, MODIFY to GO:0050333.</li>
+<li><strong>GO:0006091 generation of precursor metabolites and energy</strong> (NAS, PMID:11827967) — weak/dubious. ThTP's role<br />
+  as a phosphate donor and possible energy-related signaling was speculative in 2002; ThTPase hydrolyzes ThTP<br />
+  (removes it) rather than generating energy metabolites. NAS + broad term = over-annotation.</li>
+<li><strong>Cytosol/cytoplasm</strong> GO:0005829 / GO:0005737 — supported (UniProt Cytoplasm; Reactome cytosol). Correct CC.</li>
+<li><strong>GO:0005515 protein binding</strong> (IPI, PMID:32296183) — single HuRI Y2H interaction with TLX3; uninformative;<br />
+  MARK_AS_OVER_ANNOTATED per policy (never REMOVE an IPI protein-binding).</li>
+</ul>
+<p>No disease association established for THTPA (MIM:611612 gene only). No knockout phenotype in the literature we can<br />
+access. Physiological role inferred: regulator of cellular ThTP steady-state levels (thiamine phosphate homeostasis).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BU02
+gene_symbol: THTPA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  THTPA encodes thiamine-triphosphatase (ThTPase; EC 3.6.1.28), a soluble,
+  Mg2+-dependent hydrolase that specifically hydrolyzes thiamine triphosphate
+  (ThTP) to thiamine diphosphate (ThDP) plus inorganic phosphate. The enzyme is
+  highly specific for ThTP and has high affinity for its substrate (KM ~8 uM),
+  and functions as a regulator of the cellular steady-state level of thiamine
+  triphosphate, contributing to thiamine (vitamin B1) phosphate homeostasis. It
+  is a 230-residue monomeric protein built on a single CYTH domain, adopting the
+  triphosphate-tunnel metalloenzyme (TTM) fold characteristic of the CYTH
+  superfamily, and binds one catalytic Mg2+ ion per subunit. THTPA is localized
+  to the cytoplasm/cytosol and is widely expressed across mammalian tissues,
+  generally at low levels.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9BU02-1
+- name: &#39;2&#39;
+  id: Q9BU02-2
+  sequence_note: VSP_047213, VSP_047214
+existing_annotations:
+- term:
+    id: GO:0050333
+    label: thiamine triphosphate phosphatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred thiamine triphosphatase activity. This is the
+      defining molecular function of THTPA and is directly supported by
+      experimental characterization of the recombinant human enzyme, so it is
+      the core function of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+- term:
+    id: GO:0042357
+    label: thiamine diphosphate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The direct product of the ThTPase reaction is thiamine diphosphate (ThDP),
+      so this is an accurate and specific biological process for the enzyme&#39;s
+      activity. Retained as the process context of the core catalytic function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ThTPase binds one catalytic Mg2+ per subunit, required for hydrolysis.
+      Supported by the UniProt cofactor annotation and Mg2+-binding residues.
+      A genuine molecular feature that supports the core catalytic activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Binds 1 Mg(2+) ion per subunit.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is consistent with the experimentally determined
+      subcellular location of the soluble enzyme. The more specific cytosol term
+      (GO:0005829) is also annotated; this parent term is correct but less
+      informative.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization for this soluble ThTPase. Consistent with the
+      UniProt Cytoplasm location and the Reactome cytosol annotation. Correct
+      and appropriately specific cellular component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0006772
+    label: thiamine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad but correct: ThTPase participates in thiamine (vitamin B1)
+      phosphate homeostasis by hydrolyzing thiamine triphosphate. This is a
+      parent of the more specific thiamine-diphosphate and thiamine-containing
+      compound metabolic process terms already annotated; kept as a valid,
+      less specific process term.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+- term:
+    id: GO:0042723
+    label: thiamine-containing compound metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct process term for an enzyme acting on thiamine phosphate esters
+      (ThTP to ThDP). This is a parent of thiamine diphosphate metabolic process
+      (GO:0042357); accurate but less specific.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate
+- term:
+    id: GO:0050333
+    label: thiamine triphosphate phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronically inferred (multiple IEA methods, incl. EC:3.6.1.28 and
+      RHEA:11744 mappings) core molecular function, identical to the
+      experimentally supported IDA/IBA annotations. Retained as the core
+      function of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a single high-throughput binary interactome
+      (HuRI) yeast two-hybrid hit (THTPA-TLX3, Q9BU02-O43711 in IntAct). No
+      functional context for THTPA and no specific molecular function is implied.
+      Uninformative; marked as over-annotated per policy (not removed for an IPI).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Q9BU02; O43711: TLX3; NbExp=3; IntAct=EBI-2820864, EBI-3939165;&#34;
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Same magnesium ion binding function as the IBA/ISS annotations, here
+      transferred electronically from the mouse ortholog (Q8JZL3). Consistent
+      with the UniProt Mg2+ cofactor annotation. Correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Binds 1 Mg(2+) ion per subunit.&#34;
+- term:
+    id: GO:0042357
+    label: thiamine diphosphate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic ortholog transfer of the same specific process (production of
+      thiamine diphosphate by ThTP hydrolysis). Correct and appropriately
+      specific; redundant with the IBA/ISS annotations of the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Magnesium ion binding inferred by sequence similarity from the mouse
+      ortholog (Q8JZL3). Consistent with the experimentally supported Mg2+
+      cofactor requirement (1 ion per subunit). Correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Binds 1 Mg(2+) ion per subunit.&#34;
+- term:
+    id: GO:0042357
+    label: thiamine diphosphate metabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Thiamine diphosphate metabolic process inferred by sequence similarity to
+      the mouse ortholog. Accurate: the enzyme produces ThDP from ThTP. Redundant
+      with the IBA/IEA annotations of the same specific term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=thiamine triphosphate + H2O = thiamine diphosphate + phosphate
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-965067
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization asserted by the Reactome reaction &#34;THTPA:Mg2+
+      hydrolyzes ThTP to TDP&#34; in the Vitamin B1 metabolism pathway. Consistent
+      with the UniProt soluble/cytoplasm annotation. Correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-965067
+      supporting_text: &#34;THTPA:Mg2+ hydrolyzes ThTP to TDP&#34;
+- term:
+    id: GO:0006091
+    label: generation of precursor metabolites and energy
+  evidence_type: NAS
+  original_reference_id: PMID:11827967
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Non-traceable author statement invoking the historical hypothesis that
+      ThTP may act as a phosphate donor / energy-related signaling molecule.
+      ThTPase hydrolyzes and thereby removes ThTP; it does not generate energy
+      precursor metabolites. This broad term is not supported by the enzyme&#39;s
+      established biochemistry and represents an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:11827967
+      supporting_text: &gt;-
+        it may act as a phosphate donor for the
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+- term:
+    id: GO:0016311
+    label: dephosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:11827967
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Directly assayed hydrolysis of a phosphoanhydride (ThTP to ThDP + Pi) is
+      correctly captured as dephosphorylation. Accurate but a high-level parent
+      process; the thiamine-specific process terms are more informative, so this
+      is kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:11827967
+      supporting_text: &#34;hydrolyzing ThTP with virtually absolute specificity&#34;
+- term:
+    id: GO:0006772
+    label: thiamine metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:11827967
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable statement that this enzyme participates in thiamine metabolism
+      (regulating cellular ThTP levels). Correct but broad; a parent of the more
+      specific thiamine-diphosphate/thiamine-containing compound metabolic
+      process terms. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:11827967
+      supporting_text: &#34;purified a soluble thiamine triphosphatase&#34;
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: TAS
+  original_reference_id: PMID:11827967
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but overly general: THTPA is a hydrolase, but the specific and
+      experimentally established activity is thiamine triphosphate phosphatase
+      activity (GO:0050333), which is a descendant of this term. Modify to the
+      specific child term.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0050333
+      label: thiamine triphosphate phosphatase activity
+    supported_by:
+    - reference_id: file:human/THTPA/THTPA-uniprot.txt
+      supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+- term:
+    id: GO:0050333
+    label: thiamine triphosphate phosphatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11827967
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration of thiamine triphosphatase activity for
+      the recombinant human enzyme, which was specific for ThTP. This is the
+      strongest evidence for the core molecular function of THTPA.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11827967
+      supporting_text: &#34;hydrolyzing ThTP with virtually absolute specificity&#34;
+core_functions:
+- description: &gt;-
+    Specific, Mg2+-dependent hydrolysis of thiamine triphosphate (ThTP) to
+    thiamine diphosphate (ThDP) and inorganic phosphate, regulating cellular
+    ThTP levels within thiamine (vitamin B1) phosphate homeostasis.
+  molecular_function:
+    id: GO:0050333
+    label: thiamine triphosphate phosphatase activity
+  supported_by:
+  - reference_id: file:human/THTPA/THTPA-uniprot.txt
+    supporting_text: &#34;Hydrolase highly specific for thiamine triphosphate (ThTP).&#34;
+  - reference_id: PMID:11827967
+    supporting_text: &#34;hydrolyzing ThTP with virtually absolute specificity&#34;
+  directly_involved_in:
+  - id: GO:0042357
+    label: thiamine diphosphate metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11827967
+  title: Molecular characterization of a specific thiamine triphosphatase widely expressed
+    in mammalian tissues.
+  findings:
+  - statement: &gt;-
+      Purified a soluble thiamine triphosphatase from calf brain (a 24-kDa
+      monomer) that hydrolyzes ThTP with virtually absolute specificity, and
+      identified and expressed the human ortholog (this 230-aa protein), which
+      showed ThTP-specific ThTPase activity.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;hydrolyzing ThTP with virtually absolute specificity&#34;
+  - statement: &gt;-
+      The mRNA is widely expressed across human tissues but at relatively low
+      levels.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;expressed in most human&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Cached entry is abstract-only (full_text_available:false).
+      Directly establishes the ThTP-specific triphosphatase activity, cytoplasmic
+      localization, and broad low-level tissue expression of the human enzyme.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI systematic yeast two-hybrid interactome; source of the single
+      THTPA-TLX3 (Q9BU02-O43711) binary interaction underlying the bare
+      protein binding IPI. No THTPA-specific functional information.
+- id: Reactome:R-HSA-965067
+  title: THTPA:Mg2+ hydrolyzes ThTP to TDP
+  findings:
+  - statement: &gt;-
+      Reactome reaction placing THTPA (with Mg2+) as the catalyst that
+      hydrolyzes thiamine triphosphate to thiamine diphosphate in the cytosol,
+      within the Vitamin B1 (thiamin) metabolism pathway.
+    reference_section_type: OTHER
+    supporting_text: &#34;THTPA:Mg2+ hydrolyzes ThTP to TDP&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction consistent with the enzyme&#39;s characterized activity and
+      cytosolic localization.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

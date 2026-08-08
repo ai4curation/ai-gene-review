@@ -8,6 +8,30 @@ sidecars:
 ---
 # Unfolded Protein Binding Annotation Review
 
+> **⚠️ STATUS UPDATE (2026-07-25) — the obsoletion went through and the holdase NTR was never created.**
+> Verified live against QuickGO and OLS while reviewing human/CRYAA:
+>
+> - **GO:0051082 is now formally obsolete** (`isObsolete: true`, name `obsolete unfolded protein binding`).
+>   The request below to **block** obsoletion pending the holdase NTR was **not honoured**.
+> - **No general "holdase chaperone activity" term exists.** A GO search for that concept returns only
+>   GO:0140309 and GO:0044183. The primary NTR in [Open Ontology Gaps](#open-ontology-gaps) was never created.
+> - GO:0051082's obsoletion comment offers only two replacements — *"protein folding chaperone (GO:0044183)
+>   or unfolded protein holdase activity (GO:0140309)"* — **neither of which fits an in-situ holdase.**
+>
+> Net effect: **CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8 and HSPH1 are now stranded on a formally
+> obsolete term with no correct replacement.** This needs escalating upstream (comment on
+> [go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962) /
+> [#30552](https://github.com/geneontology/go-ontology/issues/30552)) rather than resolving gene-by-gene.
+> Until then these genes retain GO:0051082 as an interim annotation with `proposed_replacement_terms: [id: NTR]`.
+>
+> **One detail below has drifted:** this page states that `holdase` is a **BROAD** synonym on GO:0140309.
+> QuickGO now reports all three synonyms (`holdase`, `unfolded protein carrier activity`,
+> `holdase-carrier chaperone`) as **exact**, and `holdase` has been promoted to GO:0140309's **primary
+> label** ("unfolded protein holdase activity"). This weakens that particular supporting argument, but
+> **not the conclusion** — GO:0140309's *definition* is unchanged and still requires escorting the client
+> "to an acceptor molecule or to a specific location", and it remains a child of GO:0140597
+> "protein carrier chaperone". A relabel is not a redefinition; the carrier-specificity objection stands.
+
 > **Editor Brief (as of 2026-02-14, revised after full cross-species audit):**
 > GO:0051082 "unfolded protein binding" and GO:0031249 "denatured protein binding" are proposed
 > for obsoletion ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)).
@@ -131,7 +155,10 @@ Ontology changes needed to properly annotate genes in this set:
      (a) GO:0051082 is a "binding" term and Val/Pascale want "activity" terms, (b) GO:0044183
      already covers foldase, and (c) a standalone holdase term is more composable than a subtype
      of a binding term being obsoleted.
-   - **Until this NTR is created, GO:0051082 obsoletion should be blocked** for holdase genes.
+   - ~~**Until this NTR is created, GO:0051082 obsoletion should be blocked** for holdase genes.~~
+     **(2026-07-25: NOT HONOURED — GO:0051082 was obsoleted anyway, and this NTR still does not
+     exist. These genes are now stranded on an obsolete term with no fitting replacement. See the
+     status update at the top of this page.)**
    - Affects: CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8, HSPH1.
 
 2. **Misfolded protein sensor activity** — Recognition of misfolded protein conformation to

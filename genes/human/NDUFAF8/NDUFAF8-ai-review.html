@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDUFAF8 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NDUFAF8</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A1L188" target="_blank" class="term-link">
+                        A1L188
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NDUFAF8";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A1L188" data-a="DESCRIPTION: NDUFAF8 (formerly C17orf89) is a small (74 aa) sol..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NDUFAF8 (formerly C17orf89) is a small (74 aa) soluble mitochondrial protein that acts as an assembly factor for respiratory chain Complex I (NADH:ubiquinone oxidoreductase). It is not a structural subunit of the mature holoenzyme and has no known catalytic activity. NDUFAF8 carries a twin CX9C / CHCH domain stabilized by two intramolecular disulfide bonds, the hallmark of substrates of the mitochondrial MIA40/CHCHD4 disulfide-relay import system; it reaches the mitochondrial matrix via a two-step import pathway in which a weak targeting sequence drives slow TIM23-dependent matrix import while allowing en-route oxidation by the intermembrane-space disulfide relay. In the matrix it binds and stabilizes the early Complex I assembly factor NDUFAF5, which is required for maturation of the Q module during early Complex I (NADH:ubiquinone oxidoreductase) biogenesis. Loss of NDUFAF8 destabilizes NDUFAF5 and stalls Q-module assembly, producing an isolated Complex I deficiency; bi-allelic loss-of-function variants cause a mitochondrial Complex I deficiency (Leigh syndrome, MC1DN34).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) mitochondrial localization. NDUFAF8 is a mitochondrial assembly factor, so mitochondrial localization is correct, but this is subsumed by the more specific and directly-supported mitochondrial matrix localization (GO:0005759, IDA). Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0032981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) support for the core biological process. NDUFAF8 is a validated Complex I assembly factor; this agrees with the experimental IMP (PMID:27499296). Represents the core function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we validated C17orf89 as a complex I (CI) assembly factor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005739" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) mitochondrial localization. Consistent with the experimental data; subsumed by the more specific mitochondrial matrix localization. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0032981" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) mapping of the NDUFAF8 family signature (IPR034595) to the Complex I assembly process. This correctly captures the core function and is corroborated by experimental IMP evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we validated C17orf89 as a complex I (CI) assembly factor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005515" data-r="PMID:27499296" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5). This is the biologically meaningful, focused interaction (IntAct NbExp=11) that underlies NDUFAF8 function: NDUFAF8 binds and is required to stabilize NDUFAF5. The bare &#34;protein binding&#34; term is uninformative, but the NDUFAF5 interaction is the mechanistic basis of the core assembly-factor role. Per policy an IPI protein-binding annotation is retained rather than removed; flagged as over-annotated because the specific partner/role (NDUFAF5 stabilization) is captured in core_functions.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required
+  to stabilize NDUFAF5</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5) from the BioPlex (Huttlin 2017) large-scale AP-MS interactome. Corroborates the NDUFAF5 interaction but the bare &#34;protein binding&#34; term is uninformative and this is high-throughput. Retained (IPI) but marked over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5) from the BioPlex 3.0 (Huttlin 2021) proteome-scale AP-MS interactome. Corroborates the NDUFAF5 interaction; bare &#34;protein binding&#34; term is uninformative and this is high-throughput. Retained (IPI) but marked over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA mitochondrial localization from curated immunofluorescence (HPA). Consistent with the experimental data; subsumed by the more specific mitochondrial matrix localization. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) mitochondrial-proteome detection supports mitochondrial localization. Consistent with experimental data; subsumed by the more specific matrix localization. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Quantitative high-confidence human mitochondrial proteome and its dynamics in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37159021" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37159021
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A two-step mitochondrial import pathway couples the disulfid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005759" data-r="PMID:37159021" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA mitochondrial matrix localization. This is the accurate, most specific location: NDUFAF8 transits the intermembrane space (where its disulfide bonds are formed) but its functional destination is the matrix, where it stabilizes NDUFAF5. Represents the core cellular location of NDUFAF8 function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37159021" target="_blank" class="term-link">
+                                        PMID:37159021
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A weak targeting sequence drives TIM23-dependent NDUFAF8 matrix import</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0005739" data-r="PMID:27499296" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA mitochondrial localization from Floyd et al. 2016, the experimental reference underlying the UniProt subcellular-location statement. Correct but subsumed by the more specific matrix localization (GO:0005759). Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:27499296}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A1L188" data-a="GO:0032981" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence from Floyd et al. 2016: disruption of C17orf89 (NDUFAF8) markedly reduced Complex I activity, validating it as a Complex I assembly factor. This is the core, experimentally-established biological process of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                        PMID:27499296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Disruption of C17orf89 markedly reduced CI activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mitochondrial Complex I assembly factor. NDUFAF8 is a small soluble matrix protein that binds and stabilizes the early Complex I assembly factor NDUFAF5. Its demonstrated molecular action is a specific protein-protein interaction with NDUFAF5 (not a catalytic activity); this stabilization is required for NDUFAF5-dependent maturation of the Q module during early Complex I (NADH:ubiquinone oxidoreductase) biogenesis. NDUFAF8 is not a subunit of the mature holoenzyme. Loss of NDUFAF8 leads to NDUFAF5 degradation, a stalled Q-module intermediate, and isolated Complex I deficiency.</h3>
+                <span class="vote-buttons" data-g="A1L188" data-a="FUNCTION: Mitochondrial Complex I assembly factor. NDUFAF8 i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                PMID:27499296
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we validated C17orf89 as a complex I (CI) assembly factor</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                                PMID:27499296
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Disruption of C17orf89 markedly reduced CI activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NDUFAF8/NDUFAF8-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Required
+  to stabilize NDUFAF5</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37159021" target="_blank" class="term-link">
+                                PMID:37159021
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">NDUFAF8 interacts with its partner NDUFAF5 to stabilize and activate it</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Affinity-enrichment MS interaction mapping validated C17orf89 (NDUFAF8) as a Complex I assembly factor whose disruption markedly reduces Complex I activity and whose depletion is found in an unresolved case of isolated Complex I deficiency.</div>
+
+                        <div class="finding-text">"we validated C17orf89 as a complex I (CI) assembly factor. Disruption of C17orf89 markedly reduced CI activity, and its depletion is found in an unresolved case of CI deficiency."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37159021" target="_blank" class="term-link">
+                            PMID:37159021
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A two-step mitochondrial import pathway couples the disulfide relay with matrix complex I biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NDUFAF8 reaches the matrix via a two-step import pathway (weak MTS + TIM23) that exposes it to the IMS disulfide relay for oxidation; in the matrix it binds and stabilizes NDUFAF5, and its loss causes NDUFAF5 degradation, stalled Q-module assembly, and isolated Complex I deficiency.</div>
+
+                        <div class="finding-text">"NDUFAF8 interacts with its partner NDUFAF5 to stabilize and activate it"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NDUFAF8-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A1L188" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ndufaf8-a1l188-review-notes">NDUFAF8 (A1L188) review notes</h1>
+<p>Human NADH dehydrogenase [ubiquinone] 1 alpha subcomplex assembly factor 8;<br />
+synonym C17orf89; gene HGNC:33551 on chromosome 17.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>NDUFAF8 is a small (74 aa, ~7.8 kDa) soluble mitochondrial protein that functions as an<br />
+assembly factor for respiratory chain Complex I (NADH:ubiquinone oxidoreductase). It is<br />
+NOT a structural subunit of the mature holoenzyme and has no known catalytic activity. Its<br />
+demonstrated molecular role is to bind and stabilize the early Complex I assembly factor<br />
+NDUFAF5; loss of NDUFAF8 leads to loss of NDUFAF5, a stalled Q-module intermediate, and<br />
+isolated Complex I deficiency.</p>
+<h2 id="structural-domain-evidence-from-uniprot-a1l188">Structural / domain evidence (from UniProt A1L188)</h2>
+<ul>
+<li>74 aa; CHCH domain (residues 22–69) with two Cx9C motifs (25–35, 51–61) and two disulfide<br />
+  bonds (25↔61, 35↔51). [file:human/NDUFAF8/NDUFAF8-uniprot.txt "DOMAIN 22..69 /note=\"CHCH\""]</li>
+<li>Keyword "Disulfide bond"; the twin-Cx9C/CHCH architecture is the hallmark of a MIA40/CHCHD4<br />
+  disulfide-relay import substrate.</li>
+<li>No enzymatic/EC annotation; despite the RecName "NADH dehydrogenase [ubiquinone] 1 alpha<br />
+  subcomplex assembly factor 8", the name refers to its assembly-factor role, not a<br />
+  dehydrogenase/oxidoreductase catalytic activity.</li>
+</ul>
+<h2 id="functional-evidence">Functional evidence</h2>
+<ul>
+<li>Floyd et al. 2016 (PMID:27499296): AE-MS mitochondrial interaction mapping. Validated<br />
+  C17orf89 (= NDUFAF8) as a Complex I assembly factor. "we validated C17orf89 as a complex I<br />
+  (CI) assembly factor. Disruption of C17orf89 markedly reduced CI activity, and its depletion<br />
+  is found in an unresolved case of CI deficiency." Establishes: FUNCTION (CI assembly),<br />
+  SUBCELLULAR LOCATION (mitochondrion), and INTERACTION WITH NDUFAF5 (UniProt: "Required to<br />
+  stabilize NDUFAF5"; SUBUNIT "Interacts with NDUFAF5"). IntAct A1L188–Q5TEU4, NbExp=11.</li>
+<li>Alston et al. 2020 (PMID:31866046, not cached; cited in UniProt): bi-allelic NDUFAF8<br />
+  mutations cause Leigh syndrome with isolated Complex I deficiency (MC1DN34, MIM:618776);<br />
+  variant Phe55Leu. Confirms the assembly-factor role is physiologically essential.</li>
+<li>Peker et al. 2023 (PMID:37159021): characterises the two-step import pathway. NDUFAF8 has a<br />
+  weak MTS driving TIM23-dependent matrix import while en route being oxidised by the IMS<br />
+  disulfide relay (MIA40/CHCHD4). In the matrix, NDUFAF8 "interacts with its partner NDUFAF5<br />
+  to stabilize and activate it". "loss of NDUFAF8 results in NDUFAF5 degradation and causes a<br />
+  stalled Q module assembly, leading to the accumulation of an assembly intermediate containing<br />
+  NDUFS2, NDUFS3, and NDUFA5 and consequently an isolated complex I deficiency." Establishes<br />
+  mitochondrial matrix localization (IDA in GOA).</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion (UniProt SUBCELLULAR LOCATION, PubMed:27499296; IDA in GOA).</li>
+<li>Mitochondrial matrix — final destination after two-step import (PMID:37159021, IDA in GOA).<br />
+  The protein transits the IMS (where it is oxidised by the disulfide relay) but its functional<br />
+  site is the matrix, where it stabilizes NDUFAF5.</li>
+<li>HTP mitochondrial-proteome detection (PMID:34800366, mitochondrion) corroborates.</li>
+</ul>
+<h2 id="interaction-annotations-ipi-go0005515-protein-binding">Interaction annotations (IPI, GO:0005515 protein binding)</h2>
+<p>Three IPI "protein binding" annotations all record the with/from partner UniProtKB:Q5TEU4<br />
+(= NDUFAF5):<br />
+- PMID:27499296 (Floyd et al., IntAct/UniProt) — the biologically meaningful, focused<br />
+  interaction underlying NDUFAF8 function (NbExp=11).<br />
+- PMID:28514442 (BioPlex, Huttlin 2017) — large-scale AP-MS interactome.<br />
+- PMID:33961781 (BioPlex 3.0, Huttlin 2021) — large-scale AP-MS interactome.<br />
+These support NDUFAF5 binding but the bare "protein binding" (GO:0005515) term is<br />
+uninformative; kept as non-core / over-annotated per policy (never REMOVE an IPI).</p>
+<h2 id="curation-decisions">Curation decisions</h2>
+<ul>
+<li>Core BP: mitochondrial respiratory chain complex I assembly (GO:0032981). IMP from<br />
+  PMID:27499296 = ACCEPT (core). IBA and IEA duplicates = ACCEPT / KEEP_AS_NON_CORE.</li>
+<li>Mitochondrion (GO:0005739) IDA (PMID:27499296) = ACCEPT. Matrix (GO:0005759) IDA<br />
+  (PMID:37159021) is the more specific/accurate location.</li>
+<li>Do NOT assign NADH-dehydrogenase / oxidoreductase catalytic MF — NDUFAF8 is an accessory<br />
+  assembly factor with no demonstrated catalytic activity.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A1L188
+gene_symbol: NDUFAF8
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NDUFAF8 (formerly C17orf89) is a small (74 aa) soluble mitochondrial protein that acts as
+  an assembly factor for respiratory chain Complex I (NADH:ubiquinone oxidoreductase). It is
+  not a structural subunit of the mature holoenzyme and has no known catalytic activity.
+  NDUFAF8 carries a twin CX9C / CHCH domain stabilized by two intramolecular disulfide bonds,
+  the hallmark of substrates of the mitochondrial MIA40/CHCHD4 disulfide-relay import system;
+  it reaches the mitochondrial matrix via a two-step import pathway in which a weak targeting
+  sequence drives slow TIM23-dependent matrix import while allowing en-route oxidation by the
+  intermembrane-space disulfide relay. In the matrix it binds and stabilizes the early Complex I
+  assembly factor NDUFAF5, which is required for maturation of the Q module during early Complex I
+  (NADH:ubiquinone oxidoreductase) biogenesis. Loss of NDUFAF8 destabilizes NDUFAF5 and stalls
+  Q-module assembly, producing an isolated Complex I deficiency; bi-allelic loss-of-function
+  variants cause a mitochondrial Complex I deficiency (Leigh syndrome, MC1DN34).
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) mitochondrial localization. NDUFAF8 is a mitochondrial assembly factor,
+      so mitochondrial localization is correct, but this is subsumed by the more specific and
+      directly-supported mitochondrial matrix localization (GO:0005759, IDA). Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Mitochondrion
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) support for the core biological process. NDUFAF8 is a validated Complex I
+      assembly factor; this agrees with the experimental IMP (PMID:27499296). Represents the core
+      function of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499296
+      supporting_text: &gt;-
+        we validated C17orf89 as a complex I (CI) assembly factor
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) mitochondrial localization. Consistent with the experimental data;
+      subsumed by the more specific mitochondrial matrix localization. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Mitochondrion
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) mapping of the NDUFAF8 family signature (IPR034595) to the Complex I
+      assembly process. This correctly captures the core function and is corroborated by
+      experimental IMP evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499296
+      supporting_text: &gt;-
+        we validated C17orf89 as a complex I (CI) assembly factor
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5). This is the biologically meaningful,
+      focused interaction (IntAct NbExp=11) that underlies NDUFAF8 function: NDUFAF8 binds and
+      is required to stabilize NDUFAF5. The bare &#34;protein binding&#34; term is uninformative, but the
+      NDUFAF5 interaction is the mechanistic basis of the core assembly-factor role. Per policy an
+      IPI protein-binding annotation is retained rather than removed; flagged as over-annotated
+      because the specific partner/role (NDUFAF5 stabilization) is captured in core_functions.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+      supporting_text: &gt;-
+        Required
+          to stabilize NDUFAF5
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5) from the BioPlex (Huttlin 2017) large-scale
+      AP-MS interactome. Corroborates the NDUFAF5 interaction but the bare &#34;protein binding&#34; term
+      is uninformative and this is high-throughput. Retained (IPI) but marked over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: &gt;-
+        Architecture of the human interactome defines protein communities and disease
+        networks.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI interaction with UniProtKB:Q5TEU4 (NDUFAF5) from the BioPlex 3.0 (Huttlin 2021)
+      proteome-scale AP-MS interactome. Corroborates the NDUFAF5 interaction; bare &#34;protein
+      binding&#34; term is uninformative and this is high-throughput. Retained (IPI) but marked
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        Dual proteome-scale networks reveal cell-specific remodeling of the human
+        interactome.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA mitochondrial localization from curated immunofluorescence (HPA). Consistent with the
+      experimental data; subsumed by the more specific mitochondrial matrix localization.
+      Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Mitochondrion
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) mitochondrial-proteome detection supports mitochondrial localization.
+      Consistent with experimental data; subsumed by the more specific matrix localization.
+      Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:34800366
+      supporting_text: &gt;-
+        Quantitative high-confidence human mitochondrial proteome and its dynamics in
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:37159021
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA mitochondrial matrix localization. This is the accurate, most specific location:
+      NDUFAF8 transits the intermembrane space (where its disulfide bonds are formed) but its
+      functional destination is the matrix, where it stabilizes NDUFAF5. Represents the core
+      cellular location of NDUFAF8 function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:37159021
+      supporting_text: &gt;-
+        A weak targeting sequence drives
+        TIM23-dependent NDUFAF8 matrix import
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:27499296
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA mitochondrial localization from Floyd et al. 2016, the experimental reference underlying
+      the UniProt subcellular-location statement. Correct but subsumed by the more specific matrix
+      localization (GO:0005759). Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:27499296}
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IMP
+  original_reference_id: PMID:27499296
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP evidence from Floyd et al. 2016: disruption of C17orf89 (NDUFAF8) markedly reduced
+      Complex I activity, validating it as a Complex I assembly factor. This is the core,
+      experimentally-established biological process of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499296
+      supporting_text: &gt;-
+        Disruption of C17orf89 markedly
+        reduced CI activity
+core_functions:
+- description: &gt;-
+    Mitochondrial Complex I assembly factor. NDUFAF8 is a small soluble matrix protein that binds
+    and stabilizes the early Complex I assembly factor NDUFAF5. Its demonstrated molecular action
+    is a specific protein-protein interaction with NDUFAF5 (not a catalytic activity); this
+    stabilization is required for NDUFAF5-dependent maturation of the Q module during early
+    Complex I (NADH:ubiquinone oxidoreductase) biogenesis. NDUFAF8 is not a subunit of the mature
+    holoenzyme. Loss of NDUFAF8 leads to NDUFAF5 degradation, a stalled Q-module intermediate, and
+    isolated Complex I deficiency.
+  directly_involved_in:
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:27499296
+    supporting_text: &gt;-
+      we validated C17orf89 as a complex I (CI) assembly factor
+  - reference_id: PMID:27499296
+    supporting_text: &gt;-
+      Disruption of C17orf89 markedly
+      reduced CI activity
+  - reference_id: file:human/NDUFAF8/NDUFAF8-uniprot.txt
+    supporting_text: &gt;-
+      Required
+        to stabilize NDUFAF5
+  - reference_id: PMID:37159021
+    supporting_text: &gt;-
+      NDUFAF8 interacts with its partner NDUFAF5 to stabilize and activate it
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.
+  findings:
+  - statement: &gt;-
+      Affinity-enrichment MS interaction mapping validated C17orf89 (NDUFAF8) as a Complex I
+      assembly factor whose disruption markedly reduces Complex I activity and whose depletion is
+      found in an unresolved case of isolated Complex I deficiency.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      we validated C17orf89 as a complex I (CI) assembly factor. Disruption of C17orf89 markedly
+      reduced CI activity, and its depletion is found in an unresolved case of CI
+      deficiency.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary experimental reference establishing NDUFAF8 (C17orf89) as a Complex I assembly
+      factor, its mitochondrial localization, and its NDUFAF5 interaction. Matches UniProt
+      FUNCTION/SUBUNIT/SUBCELLULAR LOCATION statements.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex (Huttlin 2017) large-scale AP-MS interactome; source of an IPI protein-binding
+      annotation with NDUFAF5 (Q5TEU4). Corroborating high-throughput evidence only.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 (Huttlin 2021) proteome-scale AP-MS interactome; source of an IPI
+      protein-binding annotation with NDUFAF5 (Q5TEU4). Corroborating high-throughput evidence only.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput human mitochondrial proteome; supports mitochondrial localization of NDUFAF8.
+- id: PMID:37159021
+  title: A two-step mitochondrial import pathway couples the disulfide relay with matrix complex I biogenesis.
+  findings:
+  - statement: &gt;-
+      NDUFAF8 reaches the matrix via a two-step import pathway (weak MTS + TIM23) that exposes it
+      to the IMS disulfide relay for oxidation; in the matrix it binds and stabilizes NDUFAF5, and
+      its loss causes NDUFAF5 degradation, stalled Q-module assembly, and isolated Complex I
+      deficiency.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      NDUFAF8 interacts with its partner NDUFAF5 to stabilize and activate it
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes mitochondrial matrix localization (IDA) and the NDUFAF8-&gt;NDUFAF5 stabilization
+      mechanism; characterizes the disulfide-relay/two-step import consistent with the CHCH /
+      twin-Cx9C domain in UniProt.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

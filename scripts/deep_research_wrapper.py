@@ -20,6 +20,7 @@ import re
 
 # Default timeout for deep research subprocess (seconds)
 DEFAULT_TIMEOUT = 600
+DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
 
 
@@ -160,6 +161,7 @@ def _build_cmd(
     uniprot_context: dict | None = None,
     extra_args: list | None = None,
     use_template: bool = True,
+    provider_timeout: int | None = None,
 ) -> list[str]:
     """Build the deep-research-client command list."""
     actual_provider = "perplexity" if provider == "perplexity-lite" else provider
@@ -205,6 +207,9 @@ def _build_cmd(
             "--param", "model=sonar-pro",
             "--output", str(output_path)
         ]
+
+    if actual_provider == "openscientist" and provider_timeout is not None:
+        cmd.extend(["--param", f"timeout={provider_timeout}"])
 
     if extra_args:
         cmd.extend(extra_args)
@@ -262,6 +267,7 @@ def run_deep_research(
             uniprot_context=uniprot_context,
             extra_args=extra_args,
             use_template=prov_use_template,
+            provider_timeout=timeout,
         )
 
         label = f"[fallback {i}/{len(providers_to_try)-1}] " if is_fallback else ""
@@ -307,8 +313,10 @@ def main():
     parser.add_argument(
         "--timeout",
         type=int,
-        default=DEFAULT_TIMEOUT,
-        help=f"Timeout in seconds for each provider attempt (default: {DEFAULT_TIMEOUT})"
+        help=(
+            "Timeout in seconds for each provider attempt "
+            f"(default: {DEFAULT_TIMEOUT}; OpenScientist: {DEFAULT_OPENSCIENTIST_TIMEOUT})"
+        ),
     )
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, help="Extra args to pass to deep-research-client")
 
@@ -367,6 +375,14 @@ def main():
     # Create directory if it doesn't exist
     base_dir.mkdir(parents=True, exist_ok=True)
 
+    effective_timeout = args.timeout
+    if effective_timeout is None:
+        effective_timeout = (
+            DEFAULT_OPENSCIENTIST_TIMEOUT
+            if args.provider == "openscientist"
+            else DEFAULT_TIMEOUT
+        )
+
     # Run deep research
     return run_deep_research(
         organism=args.organism,
@@ -377,7 +393,7 @@ def main():
         uniprot_context=uniprot_context,
         extra_args=args.extra_args,
         use_template=use_template,
-        timeout=args.timeout,
+        timeout=effective_timeout,
         fallback_providers=args.fallback,
     )
 

@@ -1,0 +1,4456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAAO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HAAO</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P46952" target="_blank" class="term-link">
+                        P46952
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HAAO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P46952" data-a="DESCRIPTION: HAAO encodes 3-hydroxyanthranilate 3,4-dioxygenase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HAAO encodes 3-hydroxyanthranilate 3,4-dioxygenase (3-HAO; EC 1.13.11.6), a cytosolic non-heme ferrous-iron (Fe2+)-dependent dioxygenase acting in the kynurenine pathway of L-tryptophan catabolism. It catalyzes the oxidative ring opening of 3-hydroxyanthranilate, incorporating both atoms of molecular oxygen to yield 2-amino-3-carboxymuconate-6-semialdehyde (ACMS). ACMS cyclizes spontaneously to quinolinate, the universal precursor for de novo NAD+ biosynthesis from tryptophan (via quinolinate phosphoribosyltransferase), unless it is diverted by ACMSD toward picolinate and glutaryl-CoA. HAAO thus sits immediately upstream of quinolinate and de novo NAD+ synthesis. The 286-residue protein is a monomer with a bicupin (RmlC-like cupin/jelly-roll) fold; the active-site catalytic iron is coordinated by conserved His and Glu residues, and Zn2+ is an in vitro inhibitor. The enzyme is highly expressed in liver. Biallelic loss-of-function variants in HAAO cause a congenital NAD-deficiency malformation syndrome (vertebral, cardiac, renal, and limb defects), which in mouse models is preventable by niacin supplementation during gestation. Because quinolinate is a potent excitotoxin, 3-HAO activity has also been studied in neurological disease.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0019805" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the quinolinate biosynthetic process. This is a core biological role of HAAO: its product ACMS cyclizes spontaneously to quinolinate. Consistent with experimental annotations (PMID:7514594, PMID:12007609, PMID:28792876) and UniProt PATHWAY &#34;quinolinate from L-kynurenine: step 3/3&#34;.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                    GO:0034354
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0034354" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of de novo NAD+ biosynthesis from L-tryptophan. This is a core pathway-level role for HAAO, which generates quinolinate, the precursor of de novo NAD+. Directly supported by PMID:28792876 (HAAO loss-of-function causes systemic NAD deficiency).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) cytoplasm annotation. Correct but less specific than the experimentally supported cytosol (GO:0005829). Retained as a non-core, less-informative parent of the cytosol location.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                                    GO:0000334
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyanthranilate 3,4-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0000334" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the defining catalytic molecular function. This is the core function of HAAO and is independently confirmed by multiple experimental (IDA) annotations (PMID:7514594, PMID:12007609, PMID:28792876).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                                    GO:0000334
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyanthranilate 3,4-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0000334" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/UniRule/EC-based) assignment of the defining catalytic activity. Correct; redundant with the experimental IDA annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment of iron ion binding. Correct in essence but less specific than the experimentally demonstrated ferrous (Fe2+) iron binding (GO:0008198, IDA from PMID:12007609 and PMID:28375145). The enzyme strictly requires Fe(II).
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                                    ferrous iron binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic cytoplasm location. Correct but less specific than the experimentally supported cytosol (GO:0005829, IDA PMID:7514594).
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt subcellular location) cytosol annotation. Correct and consistent with the experimental IDA cytosol annotation (PMID:7514594).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006569" target="_blank" class="term-link">
+                                    GO:0006569
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0006569" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniRule) assignment placing HAAO in tryptophan catabolism. Biologically correct: 3-HAO is a kynurenine-pathway enzyme of tryptophan degradation. Retained as an accurate higher-level BP; the more specific quinolinate/NAD+ biosynthesis terms are the core annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                                    GO:0008198
+                                </a>
+                            </span>
+                            <span class="term-label">ferrous iron binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0008198" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniRule) ferrous iron binding. Correct and matches the experimental IDA annotations (PMID:12007609, PMID:28375145). Fe(II) is the strictly required catalytic cofactor.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0019805" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniRule) quinolinate biosynthesis. Core BP role, redundant with experimental IDA/NAS annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034354" target="_blank" class="term-link">
+                                    GO:0034354
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; NAD+ biosynthetic process from L-tryptophan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0034354" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniRule) de novo NAD+ biosynthesis from tryptophan. Core pathway role, supported by the disease genetics (PMID:28792876).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO generic metal ion binding. True but uninformative; the specific and experimentally supported ferrous iron binding (GO:0008198) captures the actual cofactor. Marked as over-annotated (over-general).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale Y2H interactome map (Rual et al. 2005, CCSB-HI1). Uninformative for molecular function and not tied to any characterized complex or biological role for this cytosolic enzyme (UniProt lists only screen-derived GAD1/POT1 interactions). Not removed per policy; flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21044950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide YFP fluorescence complementation screen identifi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005515" data-r="PMID:21044950" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a genome-wide split-Venus BiFC telomere- interactome screen (Lee et al. 2011); the POT1 (Q9NUX5) pairing is a high-throughput screen hit with no established functional relationship to a cytosolic kynurenine-pathway enzyme. Uninformative for MF; not removed per policy; flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HI-II-14 systematic binary interactome map (Rolland et al. 2014). Uninformative for MF; not removed per policy; flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from an ExAC-variant Y2H interaction screen (Fragoza et al. 2019). Uninformative for MF; not removed per policy; flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI reference binary interactome (Luck et al. 2020). Uninformative for MF; not removed per policy; flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0009435" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniPathway) NAD+ biosynthetic process. Correct but less specific than the de novo NAD+ biosynthesis from L-tryptophan term (GO:0034354). Retained as a non-core, more-general parent.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                                    GO:0000334
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyanthranilate 3,4-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28792876
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAD Deficiency, Congenital Malformations, and Niacin Supplem...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0000334" data-r="PMID:28792876" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of the defining catalytic activity: recombinant HAAO and its VCRL1 truncation variants were tested for enzyme activity, with &#34;greatly reduced activity in vitro&#34; for the mutants. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                                    GO:0008198
+                                </a>
+                            </span>
+                            <span class="term-label">ferrous iron binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28375145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28375145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human 3-hydroxyanthranilate 3,4-dioxyg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0008198" data-r="PMID:28375145" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of ferrous iron binding, from crystal structures with native iron bound in the active site; &#34;non-heme iron-containing, ring-cleaving extradiol dioxygenase&#34;. Core cofactor-binding function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28792876
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAD Deficiency, Congenital Malformations, and Niacin Supplem...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0009435" data-r="PMID:28792876" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from human/mouse loss-of-function genetics: biallelic HAAO loss-of-function causes systemic NAD deficiency (&#34;The patients had reduced levels of circulating NAD&#34;; Haao-null mice reproduce the phenotype). Correct but less specific than the de novo NAD+ from L-tryptophan term (GO:0034354). Retained as non-core relative to the more specific term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28792876
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAD Deficiency, Congenital Malformations, and Niacin Supplem...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0019805" data-r="PMID:28792876" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA supporting quinolinate biosynthesis (enzyme assay of HAAO forming the quinolinate precursor). Core biological process for HAAO.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71218
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005829" data-r="Reactome:R-HSA-71218" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol location for the 3-hydroxyanthranilate + O2 reaction (&#34;Cytosolic 3-hydroxyanthranilate oxygenase ...&#34;). Consistent with the experimental IDA cytosol annotation. Core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                                    GO:0000334
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyanthranilate 3,4-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12007609
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of human 3-hydroxyanthranilic acid dioxygenase in Es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0000334" data-r="PMID:12007609" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of the catalytic activity of purified recombinant human 3-HAO expressed in E. coli, converting 3-hydroxyanthranilic acid to quinolinic acid. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                                    GO:0000334
+                                </a>
+                            </span>
+                            <span class="term-label">3-hydroxyanthranilate 3,4-dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7514594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of human 3-hydro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0000334" data-r="PMID:7514594" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) from the original cloning/functional expression of human 3-HAO; recombinant enzyme catalyzes quinolinate synthesis with Km(3-HANA) ~2 microM. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7514594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of human 3-hydro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0005829" data-r="PMID:7514594" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA cytosol localization from the cloning/expression study; matches UniProt &#34;Cytoplasm, cytosol&#34; and Reactome. Core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                                    GO:0008198
+                                </a>
+                            </span>
+                            <span class="term-label">ferrous iron binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12007609
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of human 3-hydroxyanthranilic acid dioxygenase in Es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0008198" data-r="PMID:12007609" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA ferrous iron binding: enzymatic activity &#34;can occur only in the presence of Fe(II)&#34;; other metals do not support catalysis. Core cofactor-binding function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7514594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of human 3-hydro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0009055" data-r="PMID:7514594" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS &#34;electron transfer activity&#34; is mechanistically incorrect for HAAO: it is a non-heme Fe(II) extradiol dioxygenase that incorporates both atoms of O2 into the substrate during ring cleavage (PMID:28375145), not an electron carrier. This is an author-statement over-annotation superseded by the structural/mechanistic characterization. Marked as over-annotated (retained per NAS/non-experimental over-annotation policy).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010043" target="_blank" class="term-link">
+                                    GO:0010043
+                                </a>
+                            </span>
+                            <span class="term-label">response to zinc ion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12007609
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of human 3-hydroxyanthranilic acid dioxygenase in Es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0010043" data-r="PMID:12007609" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA &#34;response to zinc ion&#34; derives from the in vitro observation that Zn2+ inhibits 3-HAO catalysis (&#34;Zn2+, could be of physiological relevance&#34; as an inhibitor). Inhibitor sensitivity of a purified enzyme is not evidence that HAAO participates in a cellular response-to-zinc process; this is an over-interpretation of an inhibition assay. Kept (experimental IDA) but flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12007609
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of human 3-hydroxyanthranilic acid dioxygenase in Es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0019805" data-r="PMID:12007609" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS quinolinate biosynthesis; correct core BP, redundant with the experimental IDA annotations for the same term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019805" target="_blank" class="term-link">
+                                    GO:0019805
+                                </a>
+                            </span>
+                            <span class="term-label">quinolinate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7514594
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of human 3-hydro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0019805" data-r="PMID:7514594" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS quinolinate biosynthesis from the original cloning paper; correct core BP, redundant with the experimental IDA annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046686" target="_blank" class="term-link">
+                                    GO:0046686
+                                </a>
+                            </span>
+                            <span class="term-label">response to cadmium ion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12007609
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of human 3-hydroxyanthranilic acid dioxygenase in Es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0046686" data-r="PMID:12007609" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA &#34;response to cadmium ion&#34; traces to in vitro metal-inhibition testing of purified 3-HAO. As with the zinc annotation, in vitro metal inhibition is not evidence of a cellular response-to-cadmium process. Kept (experimental IDA) but flagged as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070050" target="_blank" class="term-link">
+                                    GO:0070050
+                                </a>
+                            </span>
+                            <span class="term-label">neuron cellular homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2967497" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2967497
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    3-Hydroxyanthranilate oxygenase activity is increased in the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P46952" data-a="GO:0070050" data-r="PMID:2967497" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Based on the observation that 3-hydroxyanthranilate oxygenase activity is increased in Huntington disease striatum (PMID:2967497), linking excess quinolinate to excitotoxic neuronal loss. This is a disease-correlation finding about pathway activity, not a demonstration that HAAO maintains neuronal homeostasis; the term is peripheral to the core enzymatic role. Retained as a non-core, disease-context process annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-heme ferrous-iron-dependent 3-hydroxyanthranilate 3,4-dioxygenase that catalyzes oxidative extradiol ring cleavage of 3-hydroxyanthranilate to 2-amino-3-carboxymuconate-6-semialdehyde, the immediate precursor (via spontaneous cyclization to quinolinate) of de novo NAD+ biosynthesis in the kynurenine pathway.</h3>
+                <span class="vote-buttons" data-g="P46952" data-a="FUNCTION: Non-heme ferrous-iron-dependent 3-hydroxyanthranil..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                            3-hydroxyanthranilate 3,4-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link">
+                                PMID:7514594
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">3-Hydroxyanthranilic-acid dioxygenase (3-HAO; 3-hydroxyanthranilate 3,4-dioxygenase, EC 1.13.11.6) is the enzyme that catalyzes the synthesis of QUIN from 3-hydroxyanthranilic acid</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link">
+                                PMID:12007609
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">3-hydroxyanthranilic acid oxygenase (3-HAO) catalyses the conversion of 3-hydroxyanthranilic acid to quinolinic acid</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HAAO/HAAO-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the oxidative ring opening of 3-hydroxyanthranilate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds a catalytic ferrous (Fe2+) iron ion in the active site, strictly required for dioxygenase activity; other metals do not support catalysis and Zn2+ inhibits.</h3>
+                <span class="vote-buttons" data-g="P46952" data-a="FUNCTION: Binds a catalytic ferrous (Fe2+) iron ion in the a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008198" target="_blank" class="term-link">
+                            ferrous iron binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link">
+                                PMID:12007609
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">enzymatic activity which can occur only in the presence of Fe(II)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28375145" target="_blank" class="term-link">
+                                PMID:28375145
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">3HAO is a non-heme iron-containing, ring-cleaving extradiol dioxygenase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Produces the quinolinate precursor feeding de novo NAD+ biosynthesis from L-tryptophan via the kynurenine pathway; loss of HAAO causes systemic NAD deficiency and a congenital malformation syndrome.</h3>
+                <span class="vote-buttons" data-g="P46952" data-a="FUNCTION: Produces the quinolinate precursor feeding de novo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000334" target="_blank" class="term-link">
+                            3-hydroxyanthranilate 3,4-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                                PMID:28792876
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Nicotinamide adenine dinucleotide (NAD) is synthesized de novo from tryptophan through the kynurenine pathway. The patients had reduced levels of circulating NAD.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HAAO/HAAO-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12007609" target="_blank" class="term-link">
+                            PMID:12007609
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning of human 3-hydroxyanthranilic acid dioxygenase in Escherichia coli: characterisation of the purified enzyme and its in vitro inhibition by Zn2+.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified recombinant human 3-HAO converts 3-hydroxyanthranilic acid to quinolinic acid and is catalytically active only in the presence of Fe(II); Zn2+ inhibits the reaction.</div>
+
+                        <div class="finding-text">"The recombinant human protein, obtained in E. coli, retains its enzymatic activity which can occur only in the presence of Fe(II)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link">
+                            PMID:21044950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide YFP fluorescence complementation screen identifies new regulators for telomere signaling in human cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28375145" target="_blank" class="term-link">
+                            PMID:28375145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structures of human 3-hydroxyanthranilate 3,4-dioxygenase with native and non-native metals bound in the active site.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human 3HAO is a non-heme iron extradiol ring-cleaving dioxygenase; crystal structures show native iron bound in the active site.</div>
+
+                        <div class="finding-text">"3HAO is a non-heme iron-containing, ring-cleaving extradiol dioxygenase that catalyzes the addition of both atoms of O2 to the kynurenine pathway metabolite 3-hydroxyanthranilic acid (3-HANA) to form quinolinic acid (QUIN)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28792876" target="_blank" class="term-link">
+                            PMID:28792876
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAD Deficiency, Congenital Malformations, and Niacin Supplementation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic loss-of-function variants in HAAO (and KYNU) reduce enzyme activity, cause systemic NAD deficiency, and produce a congenital malformation syndrome; niacin supplementation prevents defects in mice.</div>
+
+                        <div class="finding-text">"Variants were identified in two genes that encode enzymes of the kynurenine pathway, 3-hydroxyanthranilic acid 3,4-dioxygenase (HAAO) and kynureninase (KYNU)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2967497" target="_blank" class="term-link">
+                            PMID:2967497
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">3-Hydroxyanthranilate oxygenase activity is increased in the brains of Huntington disease victims.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">3-hydroxyanthranilate oxygenase activity is detectable in human brain and is increased in the striatum of Huntington disease brains.</div>
+
+                        <div class="finding-text">"The activity of 3-hydroxyanthranilate oxygenase is increased in Huntington disease brains as compared to control brains."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7514594" target="_blank" class="term-link">
+                            PMID:7514594
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and functional expression of human 3-hydroxyanthranilic-acid dioxygenase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning and functional expression of human 3-HAO; recombinant enzyme catalyzes quinolinate synthesis with Km(3-HANA) ~2 microM.</div>
+
+                        <div class="finding-text">"The Km value of 3-HANA for recombinant h3-HAO (approximately 2 microM) was in good agreement with that reported for the native enzyme."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71218
+
+                    </span>
+                </div>
+
+                <div class="reference-title">3-hydroxyanthranilate + O2 =&gt; 2-amino-3-carboxymuconate semialdehyde</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HAAO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P46952" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="haao-p46952-review-notes">HAAO (P46952) — review notes</h1>
+<h2 id="identity-and-core-biochemistry">Identity and core biochemistry</h2>
+<p>HAAO encodes <strong>3-hydroxyanthranilate 3,4-dioxygenase</strong> (3-HAO; also "3-hydroxyanthranilic acid dioxygenase / oxygenase"; EC 1.13.11.6), a 286-aa cytosolic enzyme of the kynurenine pathway of tryptophan degradation.</p>
+<ul>
+<li>UniProt RecName and EC: "3-hydroxyanthranilate 3,4-dioxygenase ... EC=1.13.11.6" [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>FUNCTION: "Catalyzes the oxidative ring opening of 3-hydroxyanthranilate to 2-amino-3-carboxymuconate semialdehyde, which spontaneously cyclizes to quinolinate." [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>CATALYTIC ACTIVITY: "3-hydroxyanthranilate + O2 = (2Z,4Z)-2-amino-3-carboxymuconate 6-semialdehyde" (Rhea:RHEA:17953) [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>COFACTOR: "Name=Fe(2+)" [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>PATHWAY: "Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from L-kynurenine: step 3/3." [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>SUBCELLULAR LOCATION: "Cytoplasm, cytosol" [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>SUBUNIT: "Monomer." [file:human/HAAO/HAAO-uniprot.txt].</li>
+<li>Family: "Belongs to the 3-HAO family." Structural fold is a bicupin (RmlC-like cupin / jelly roll), a non-heme Fe(II) extradiol ring-cleaving dioxygenase [file:human/HAAO/HAAO-uniprot.txt; PMID:28375145].</li>
+</ul>
+<p>The product ACMS (2-amino-3-carboxymuconate-6-semialdehyde) cyclises non-enzymatically to quinolinate, the universal precursor of de novo NAD+ biosynthesis (via QPRT), unless it is diverted by ACMSD toward picolinate/glutaryl-CoA. Thus HAAO sits directly upstream of quinolinate and de novo NAD+ from tryptophan.</p>
+<h2 id="key-experimental-evidence-cited-goa-references">Key experimental evidence (cited GOA references)</h2>
+<ul>
+<li>
+<p><strong>PMID:7514594</strong> (Malherbe et al. 1994, JBC) — molecular cloning and functional expression of human 3-HAO; recombinant enzyme active; "The Km value of 3-HANA for recombinant h3-HAO (approximately 2 microM)"; catalyzes "the synthesis of QUIN from 3-hydroxyanthranilic acid" <a href="https://pubmed.ncbi.nlm.nih.gov/7514594">PMID:7514594</a>. Supports catalytic MF (GO:0000334), quinolinate biosynthesis (GO:0019805), and cytosolic location (basis for UniProt's ECO:0000305 cytosol call). Abstract-only in cache (full_text_available: false); curator (UniProtKB) read the full paper.</p>
+</li>
+<li>
+<p><strong>PMID:12007609</strong> (Calderone et al. 2002, BBA) — E. coli-expressed purified human 3-HAO; "3-hydroxyanthranilic acid oxygenase (3-HAO) catalyses the conversion of 3-hydroxyanthranilic acid to quinolinic acid"; "enzymatic activity which can occur only in the presence of Fe(II); several other metals have been tested but in no case the formation of the product has been observed"; "two of the ions tested inhibit the catalytic reaction and one of them, Zn2+, could be of physiological relevance" <a href="https://pubmed.ncbi.nlm.nih.gov/12007609">PMID:12007609</a>. Supports catalytic MF (GO:0000334), Fe(II)/ferrous iron binding (GO:0008198), and Zn2+ inhibition (basis of the GOA "response to zinc ion" and "response to cadmium ion" IDA calls — see caveats below).</p>
+</li>
+<li>
+<p><strong>PMID:28375145</strong> (Pidugu et al. 2017, Acta Cryst D) — first crystal structures of human 3HAO with native iron and with zinc (an inhibitor); "3HAO is a non-heme iron-containing, ring-cleaving extradiol dioxygenase that catalyzes the addition of both atoms of O2 to ... 3-hydroxyanthranilic acid (3-HANA) to form quinolinic acid (QUIN)" <a href="https://pubmed.ncbi.nlm.nih.gov/28375145">PMID:28375145</a>. Supports ferrous iron binding (GO:0008198, IDA) and the extradiol dioxygenase mechanism. Active-site Fe residues His47/His91/Glu53 (BINDING features) [file:human/HAAO/HAAO-uniprot.txt].</p>
+</li>
+<li>
+<p><strong>PMID:28792876</strong> (Shi/Dunwoodie et al. 2017, NEJM) — biallelic loss-of-function HAAO (and KYNU) variants cause a congenital NAD-deficiency malformation syndrome (VCRL1). "Variants were identified in two genes that encode enzymes of the kynurenine pathway, 3-hydroxyanthranilic acid 3,4-dioxygenase (HAAO) and kynureninase (KYNU)"; "The mutant enzymes had greatly reduced activity in vitro"; "NAD is synthesized de novo from tryptophan through the kynurenine pathway"; "The patients had reduced levels of circulating NAD"; Haao-null and Kynu-null mice reproduce the defects; "Niacin supplementation during gestation prevented the malformations in mice" <a href="https://pubmed.ncbi.nlm.nih.gov/28792876">PMID:28792876</a>. Supports catalytic MF IDA (in-vitro enzyme assay of variants), quinolinate biosynthesis IDA, and NAD+ biosynthetic process IMP. UniProt DISEASE: "Vertebral, cardiac, renal, and limb defects syndrome 1 (VCRL1) [MIM:617660]" [file:human/HAAO/HAAO-uniprot.txt].</p>
+</li>
+<li>
+<p><strong>PMID:2967497</strong> (Schwarcz et al. 1988, PNAS) — 3-hydroxyanthranilate oxygenase activity detected in human brain and increased in Huntington disease striatum: "The activity of 3-hydroxyanthranilate oxygenase is increased in Huntington disease brains as compared to control brains" <a href="https://pubmed.ncbi.nlm.nih.gov/2967497">PMID:2967497</a>. This is the basis of the GOA IMP "neuron cellular homeostasis" (GO:0070050) call — a correlational disease-association observation, not a demonstration that HAAO participates in maintaining neuronal homeostasis. Weak support for that specific BP term; kept as non-core.</p>
+</li>
+</ul>
+<h2 id="protein-binding-ipi-annotations-go0005515">Protein-binding IPI annotations (GO:0005515)</h2>
+<p>All five bare "protein binding" (GO:0005515) IPI annotations come from high-throughput interactome/screen datasets, per GOA WITH/FROM and UniProt INTERACTION block (partners GAD1 = Q99259/Q8IVA8, POT1 = Q9NUX5):<br />
+- PMID:16189514 — Rual et al. 2005, first CCSB Y2H human interactome map (CCSB-HI1) <a href="https://pubmed.ncbi.nlm.nih.gov/16189514">PMID:16189514</a>.<br />
+- PMID:21044950 — Lee et al. 2011, genome-wide split-Venus BiFC telomere-interactome screen; POT1 (Q9NUX5) among six telomere baits <a href="https://pubmed.ncbi.nlm.nih.gov/21044950">PMID:21044950</a>.<br />
+- PMID:25416956 — Rolland et al. 2014, HI-II-14 systematic binary interactome map <a href="https://pubmed.ncbi.nlm.nih.gov/25416956">PMID:25416956</a>.<br />
+- PMID:31515488 — Fragoza et al. 2019, ExAC-variant Y2H interaction screen <a href="https://pubmed.ncbi.nlm.nih.gov/31515488">PMID:31515488</a>.<br />
+- PMID:32296183 — Luck et al. 2020, HuRI reference binary interactome <a href="https://pubmed.ncbi.nlm.nih.gov/32296183">PMID:32296183</a>.</p>
+<p>None assigns a specific molecular function; the GAD1/POT1 pairings have no established biological rationale for a cytosolic kynurenine-pathway enzyme. Per policy, bare "protein binding" IPI is not removed but marked as over-annotated (uninformative for MF).</p>
+<h2 id="metal-response-bp-annotations-from-pmid12007609">Metal-response BP annotations (from PMID:12007609)</h2>
+<p>GO:0010043 (response to zinc ion) and GO:0046686 (response to cadmium ion) IDA both trace to PMID:12007609, which showed that Zn2+ (and another tested ion) <strong>inhibit</strong> the enzyme in vitro. This is an in-vitro inhibitor-sensitivity result, not evidence that HAAO participates in a cellular "response to zinc/cadmium ion" process. These are over-interpretations of an inhibition assay; kept but flagged as over-annotated (Zn) / mark-as-over-annotated (Cd).</p>
+<h2 id="electron-transfer-activity-nas-pmid7514594">Electron transfer activity (NAS, PMID:7514594)</h2>
+<p>GO:0009055 (electron transfer activity) NAS is mechanistically wrong: 3-HAO is a non-heme Fe(II) dioxygenase that incorporates both O2 atoms into the substrate (extradiol ring cleavage) — it is not an electron carrier/electron transfer protein. UniProt itself retains the NAS DR line but the assignment does not reflect the current mechanistic understanding (PMID:28375145 "ring-cleaving extradiol dioxygenase") <a href="https://pubmed.ncbi.nlm.nih.gov/28375145">PMID:28375145</a>. NAS (author statement) — mark as over-annotated rather than accept.</p>
+<h2 id="summary-of-core-functions">Summary of core functions</h2>
+<ul>
+<li>MF: 3-hydroxyanthranilate 3,4-dioxygenase activity (GO:0000334) with ferrous iron (Fe2+) as catalytic cofactor (GO:0008198).</li>
+<li>BP: quinolinate biosynthetic process (GO:0019805) / de novo NAD+ biosynthesis from L-tryptophan (GO:0034354); the enzyme's product feeds de novo NAD+ synthesis.</li>
+<li>CC: cytosol (GO:0005829).</li>
+</ul>
+<p>Disease: biallelic LoF causes congenital NAD-deficiency malformation syndrome (VCRL1), rescuable in mice by gestational niacin (PMID:28792876).<br />
+</content><br />
+</invoke></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P46952
+gene_symbol: HAAO
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HAAO encodes 3-hydroxyanthranilate 3,4-dioxygenase (3-HAO; EC 1.13.11.6), a
+  cytosolic non-heme ferrous-iron (Fe2+)-dependent dioxygenase acting in the
+  kynurenine pathway of L-tryptophan catabolism. It catalyzes the oxidative ring
+  opening of 3-hydroxyanthranilate, incorporating both atoms of molecular oxygen
+  to yield 2-amino-3-carboxymuconate-6-semialdehyde (ACMS). ACMS cyclizes
+  spontaneously to quinolinate, the universal precursor for de novo NAD+
+  biosynthesis from tryptophan (via quinolinate phosphoribosyltransferase),
+  unless it is diverted by ACMSD toward picolinate and glutaryl-CoA. HAAO thus
+  sits immediately upstream of quinolinate and de novo NAD+ synthesis. The
+  286-residue protein is a monomer with a bicupin (RmlC-like cupin/jelly-roll)
+  fold; the active-site catalytic iron is coordinated by conserved His and Glu
+  residues, and Zn2+ is an in vitro inhibitor. The enzyme is highly expressed in
+  liver. Biallelic loss-of-function variants in HAAO cause a congenital
+  NAD-deficiency malformation syndrome (vertebral, cardiac, renal, and limb
+  defects), which in mouse models is preventable by niacin supplementation
+  during gestation. Because quinolinate is a potent excitotoxin, 3-HAO activity
+  has also been studied in neurological disease.
+alternative_products:
+- name: &#39;1&#39;
+  id: P46952-1
+- name: &#39;2&#39;
+  id: P46952-2
+  sequence_note: VSP_036239
+existing_annotations:
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the quinolinate biosynthetic process.
+      This is a core biological role of HAAO: its product ACMS cyclizes
+      spontaneously to quinolinate. Consistent with experimental annotations
+      (PMID:7514594, PMID:12007609, PMID:28792876) and UniProt PATHWAY
+      &#34;quinolinate from L-kynurenine: step 3/3&#34;.
+    action: ACCEPT
+- term:
+    id: GO:0034354
+    label: &#39;&#39;&#39;de novo&#39;&#39; NAD+ biosynthetic process from L-tryptophan&#39;
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of de novo NAD+ biosynthesis from
+      L-tryptophan. This is a core pathway-level role for HAAO, which generates
+      quinolinate, the precursor of de novo NAD+. Directly supported by
+      PMID:28792876 (HAAO loss-of-function causes systemic NAD deficiency).
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) cytoplasm annotation. Correct but less specific than
+      the experimentally supported cytosol (GO:0005829). Retained as a
+      non-core, less-informative parent of the cytosol location.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0005829
+      label: cytosol
+- term:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the defining catalytic molecular
+      function. This is the core function of HAAO and is independently
+      confirmed by multiple experimental (IDA) annotations
+      (PMID:7514594, PMID:12007609, PMID:28792876).
+    action: ACCEPT
+- term:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/UniRule/EC-based) assignment of the defining catalytic
+      activity. Correct; redundant with the experimental IDA annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic assignment of iron ion binding. Correct in essence
+      but less specific than the experimentally demonstrated ferrous (Fe2+) iron
+      binding (GO:0008198, IDA from PMID:12007609 and PMID:28375145). The enzyme
+      strictly requires Fe(II).
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0008198
+      label: ferrous iron binding
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic cytoplasm location. Correct but less specific than the
+      experimentally supported cytosol (GO:0005829, IDA PMID:7514594).
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0005829
+      label: cytosol
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt subcellular location) cytosol annotation. Correct and
+      consistent with the experimental IDA cytosol annotation (PMID:7514594).
+    action: ACCEPT
+- term:
+    id: GO:0006569
+    label: L-tryptophan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniRule) assignment placing HAAO in tryptophan catabolism.
+      Biologically correct: 3-HAO is a kynurenine-pathway enzyme of tryptophan
+      degradation. Retained as an accurate higher-level BP; the more specific
+      quinolinate/NAD+ biosynthesis terms are the core annotations.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008198
+    label: ferrous iron binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (UniRule) ferrous iron binding. Correct and matches the
+      experimental IDA annotations (PMID:12007609, PMID:28375145). Fe(II) is the
+      strictly required catalytic cofactor.
+    action: ACCEPT
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniRule) quinolinate biosynthesis. Core BP role, redundant
+      with experimental IDA/NAS annotations.
+    action: ACCEPT
+- term:
+    id: GO:0034354
+    label: &#39;&#39;&#39;de novo&#39;&#39; NAD+ biosynthetic process from L-tryptophan&#39;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniRule) de novo NAD+ biosynthesis from tryptophan. Core
+      pathway role, supported by the disease genetics (PMID:28792876).
+    action: ACCEPT
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO generic metal ion binding. True but uninformative; the
+      specific and experimentally supported ferrous iron binding (GO:0008198)
+      captures the actual cofactor. Marked as over-annotated (over-general).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale Y2H interactome map (Rual et al.
+      2005, CCSB-HI1). Uninformative for molecular function and not tied to any
+      characterized complex or biological role for this cytosolic enzyme (UniProt
+      lists only screen-derived GAD1/POT1 interactions). Not removed per policy;
+      flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21044950
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a genome-wide split-Venus BiFC telomere-
+      interactome screen (Lee et al. 2011); the POT1 (Q9NUX5) pairing is a
+      high-throughput screen hit with no established functional relationship to
+      a cytosolic kynurenine-pathway enzyme. Uninformative for MF; not removed
+      per policy; flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HI-II-14 systematic binary interactome map
+      (Rolland et al. 2014). Uninformative for MF; not removed per policy;
+      flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from an ExAC-variant Y2H interaction screen
+      (Fragoza et al. 2019). Uninformative for MF; not removed per policy;
+      flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI reference binary interactome (Luck
+      et al. 2020). Uninformative for MF; not removed per policy; flagged as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniPathway) NAD+ biosynthetic process. Correct but less
+      specific than the de novo NAD+ biosynthesis from L-tryptophan term
+      (GO:0034354). Retained as a non-core, more-general parent.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:28792876
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of the defining catalytic activity: recombinant HAAO
+      and its VCRL1 truncation variants were tested for enzyme activity, with
+      &#34;greatly reduced activity in vitro&#34; for the mutants. Core molecular
+      function.
+    action: ACCEPT
+- term:
+    id: GO:0008198
+    label: ferrous iron binding
+  evidence_type: IDA
+  original_reference_id: PMID:28375145
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of ferrous iron binding, from crystal structures with
+      native iron bound in the active site; &#34;non-heme iron-containing,
+      ring-cleaving extradiol dioxygenase&#34;. Core cofactor-binding function.
+    action: ACCEPT
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:28792876
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP from human/mouse loss-of-function genetics: biallelic HAAO
+      loss-of-function causes systemic NAD deficiency (&#34;The patients had reduced
+      levels of circulating NAD&#34;; Haao-null mice reproduce the phenotype).
+      Correct but less specific than the de novo NAD+ from L-tryptophan term
+      (GO:0034354). Retained as non-core relative to the more specific term.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:28792876
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA supporting quinolinate biosynthesis (enzyme assay of HAAO forming the
+      quinolinate precursor). Core biological process for HAAO.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71218
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol location for the 3-hydroxyanthranilate + O2 reaction
+      (&#34;Cytosolic 3-hydroxyanthranilate oxygenase ...&#34;). Consistent with the
+      experimental IDA cytosol annotation. Core localization.
+    action: ACCEPT
+- term:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12007609
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of the catalytic activity of purified recombinant human
+      3-HAO expressed in E. coli, converting 3-hydroxyanthranilic acid to
+      quinolinic acid. Core molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7514594
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) from the original cloning/functional expression of
+      human 3-HAO; recombinant enzyme catalyzes quinolinate synthesis with
+      Km(3-HANA) ~2 microM. Core molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:7514594
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA cytosol localization from the cloning/expression study; matches
+      UniProt &#34;Cytoplasm, cytosol&#34; and Reactome. Core localization.
+    action: ACCEPT
+- term:
+    id: GO:0008198
+    label: ferrous iron binding
+  evidence_type: IDA
+  original_reference_id: PMID:12007609
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA ferrous iron binding: enzymatic activity &#34;can occur only in the
+      presence of Fe(II)&#34;; other metals do not support catalysis. Core
+      cofactor-binding function.
+    action: ACCEPT
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: NAS
+  original_reference_id: PMID:7514594
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NAS &#34;electron transfer activity&#34; is mechanistically incorrect for HAAO: it
+      is a non-heme Fe(II) extradiol dioxygenase that incorporates both atoms of
+      O2 into the substrate during ring cleavage (PMID:28375145), not an
+      electron carrier. This is an author-statement over-annotation superseded by
+      the structural/mechanistic characterization. Marked as over-annotated
+      (retained per NAS/non-experimental over-annotation policy).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0010043
+    label: response to zinc ion
+  evidence_type: IDA
+  original_reference_id: PMID:12007609
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA &#34;response to zinc ion&#34; derives from the in vitro observation that Zn2+
+      inhibits 3-HAO catalysis (&#34;Zn2+, could be of physiological relevance&#34; as an
+      inhibitor). Inhibitor sensitivity of a purified enzyme is not evidence that
+      HAAO participates in a cellular response-to-zinc process; this is an
+      over-interpretation of an inhibition assay. Kept (experimental IDA) but
+      flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:12007609
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS quinolinate biosynthesis; correct core BP, redundant with the
+      experimental IDA annotations for the same term.
+    action: ACCEPT
+- term:
+    id: GO:0019805
+    label: quinolinate biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:7514594
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS quinolinate biosynthesis from the original cloning paper; correct core
+      BP, redundant with the experimental IDA annotations.
+    action: ACCEPT
+- term:
+    id: GO:0046686
+    label: response to cadmium ion
+  evidence_type: IDA
+  original_reference_id: PMID:12007609
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA &#34;response to cadmium ion&#34; traces to in vitro metal-inhibition testing
+      of purified 3-HAO. As with the zinc annotation, in vitro metal inhibition
+      is not evidence of a cellular response-to-cadmium process. Kept
+      (experimental IDA) but flagged as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0070050
+    label: neuron cellular homeostasis
+  evidence_type: IMP
+  original_reference_id: PMID:2967497
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Based on the observation that 3-hydroxyanthranilate oxygenase activity is
+      increased in Huntington disease striatum (PMID:2967497), linking excess
+      quinolinate to excitotoxic neuronal loss. This is a disease-correlation
+      finding about pathway activity, not a demonstration that HAAO maintains
+      neuronal homeostasis; the term is peripheral to the core enzymatic role.
+      Retained as a non-core, disease-context process annotation.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Non-heme ferrous-iron-dependent 3-hydroxyanthranilate 3,4-dioxygenase that
+    catalyzes oxidative extradiol ring cleavage of 3-hydroxyanthranilate to
+    2-amino-3-carboxymuconate-6-semialdehyde, the immediate precursor (via
+    spontaneous cyclization to quinolinate) of de novo NAD+ biosynthesis in the
+    kynurenine pathway.
+  molecular_function:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  supported_by:
+  - reference_id: PMID:7514594
+    supporting_text: &gt;-
+      3-Hydroxyanthranilic-acid dioxygenase (3-HAO; 3-hydroxyanthranilate
+      3,4-dioxygenase, EC 1.13.11.6) is the enzyme that catalyzes the synthesis
+      of QUIN from 3-hydroxyanthranilic acid
+  - reference_id: PMID:12007609
+    supporting_text: &gt;-
+      3-hydroxyanthranilic acid oxygenase (3-HAO) catalyses the conversion of
+      3-hydroxyanthranilic acid to quinolinic acid
+  - reference_id: file:human/HAAO/HAAO-uniprot.txt
+    supporting_text: Catalyzes the oxidative ring opening of 3-hydroxyanthranilate
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  in_complex: null
+- description: &gt;-
+    Binds a catalytic ferrous (Fe2+) iron ion in the active site, strictly
+    required for dioxygenase activity; other metals do not support catalysis and
+    Zn2+ inhibits.
+  molecular_function:
+    id: GO:0008198
+    label: ferrous iron binding
+  supported_by:
+  - reference_id: PMID:12007609
+    supporting_text: &gt;-
+      enzymatic activity which can occur only in the presence of Fe(II)
+  - reference_id: PMID:28375145
+    supporting_text: &gt;-
+      3HAO is a non-heme iron-containing, ring-cleaving extradiol dioxygenase
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Produces the quinolinate precursor feeding de novo NAD+ biosynthesis from
+    L-tryptophan via the kynurenine pathway; loss of HAAO causes systemic NAD
+    deficiency and a congenital malformation syndrome.
+  molecular_function:
+    id: GO:0000334
+    label: 3-hydroxyanthranilate 3,4-dioxygenase activity
+  supported_by:
+  - reference_id: PMID:28792876
+    supporting_text: &gt;-
+      Nicotinamide adenine dinucleotide (NAD) is synthesized de novo from
+      tryptophan through the kynurenine pathway. The patients had reduced levels
+      of circulating NAD.
+  - reference_id: file:human/HAAO/HAAO-uniprot.txt
+    supporting_text: &#39;Cofactor biosynthesis; NAD(+) biosynthesis; quinolinate from&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12007609
+  title: &#39;Cloning of human 3-hydroxyanthranilic acid dioxygenase in Escherichia coli:
+    characterisation of the purified enzyme and its in vitro inhibition by Zn2+.&#39;
+  findings:
+  - statement: &gt;-
+      Purified recombinant human 3-HAO converts 3-hydroxyanthranilic acid to
+      quinolinic acid and is catalytically active only in the presence of Fe(II);
+      Zn2+ inhibits the reaction.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The recombinant human protein, obtained in E. coli, retains its enzymatic
+      activity which can occur only in the presence of Fe(II)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Supports catalytic MF (GO:0000334) and ferrous iron
+      binding (GO:0008198). The response-to-zinc/cadmium IDA calls derive from
+      the in vitro metal-inhibition experiments here and are over-interpretations
+      (see annotation reviews).
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput Y2H interactome map (CCSB-HI1). Source of a bare
+      &#34;protein binding&#34; IPI only; no specific function for HAAO.
+- id: PMID:21044950
+  title: Genome-wide YFP fluorescence complementation screen identifies new regulators
+    for telomere signaling in human cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-wide split-Venus BiFC telomere-interactome screen; POT1 pairing is a
+      screen hit. Source of a bare &#34;protein binding&#34; IPI only.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HI-II-14 systematic binary interactome map. Source of a bare
+      &#34;protein binding&#34; IPI only.
+- id: PMID:28375145
+  title: Crystal structures of human 3-hydroxyanthranilate 3,4-dioxygenase with native
+    and non-native metals bound in the active site.
+  findings:
+  - statement: &gt;-
+      Human 3HAO is a non-heme iron extradiol ring-cleaving dioxygenase;
+      crystal structures show native iron bound in the active site.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      3HAO is a non-heme iron-containing, ring-cleaving extradiol dioxygenase
+      that catalyzes the addition of both atoms of O2 to the kynurenine pathway
+      metabolite 3-hydroxyanthranilic acid (3-HANA) to form quinolinic acid
+      (QUIN).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Structural basis of ferrous iron binding (GO:0008198) and
+      the extradiol dioxygenase mechanism; contradicts the NAS &#34;electron transfer
+      activity&#34; annotation.
+- id: PMID:28792876
+  title: NAD Deficiency, Congenital Malformations, and Niacin Supplementation.
+  findings:
+  - statement: &gt;-
+      Biallelic loss-of-function variants in HAAO (and KYNU) reduce enzyme
+      activity, cause systemic NAD deficiency, and produce a congenital
+      malformation syndrome; niacin supplementation prevents defects in mice.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Variants were identified in two genes that encode enzymes of the
+      kynurenine pathway, 3-hydroxyanthranilic acid 3,4-dioxygenase (HAAO) and
+      kynureninase (KYNU).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Establishes the physiological (de novo NAD+ from
+      tryptophan) role and disease relevance (VCRL1); supports catalytic MF,
+      quinolinate biosynthesis, and NAD+ biosynthesis annotations.
+- id: PMID:2967497
+  title: 3-Hydroxyanthranilate oxygenase activity is increased in the brains of Huntington
+    disease victims.
+  findings:
+  - statement: &gt;-
+      3-hydroxyanthranilate oxygenase activity is detectable in human brain and
+      is increased in the striatum of Huntington disease brains.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The activity of 3-hydroxyanthranilate oxygenase is increased in Huntington
+      disease brains as compared to control brains.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Disease-correlation study; basis of the peripheral
+      &#34;neuron cellular homeostasis&#34; IMP annotation (kept non-core).
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ExAC-variant Y2H interaction screen. Source of a bare &#34;protein binding&#34;
+      IPI only.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI reference binary interactome. Source of a bare &#34;protein binding&#34;
+      IPI only.
+- id: PMID:7514594
+  title: Molecular cloning and functional expression of human 3-hydroxyanthranilic-acid
+    dioxygenase.
+  findings:
+  - statement: &gt;-
+      Cloning and functional expression of human 3-HAO; recombinant enzyme
+      catalyzes quinolinate synthesis with Km(3-HANA) ~2 microM.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      The Km value of 3-HANA for recombinant h3-HAO (approximately 2 microM) was
+      in good agreement with that reported for the native enzyme.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Original human 3-HAO cloning/expression; supports
+      catalytic MF, quinolinate biosynthesis, and cytosolic localization. The
+      NAS &#34;electron transfer activity&#34; annotation from this paper is
+      mechanistically superseded.
+- id: Reactome:R-HSA-71218
+  title: 3-hydroxyanthranilate + O2 =&gt; 2-amino-3-carboxymuconate semialdehyde
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for cytosolic 3-hydroxyanthranilate oxygenase; supports
+      the cytosol localization (TAS) and the catalytic reaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -303,7 +303,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
     assert (
         f"| All GO-valued AIGR core-function slots | "
         f"{overlap['core']['n_reference_terms']:,} | "
-        f"{overlap['core']['n_overlap']:,} | 3.8 |"
+        f"{overlap['core']['n_overlap']:,} | 3.9 |"
     ) in supplement
     assert "**71.0% CNN**" in slides
     assert "**15.9% NPI/PLI/REP**" in slides
