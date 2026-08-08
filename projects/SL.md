@@ -117,6 +117,36 @@ others have SPKW analogues.
 | **C. Family-rule propagation** | A location true of some family members is attached to all by a HAMAP/UniRule rule or a sequence feature | PSEPK and METEA enolase (`Secreted` from pathogen moonlighting); yeast THI22 (signal-peptide prediction); human PGRMC1 | subclade divergence |
 | **D. Transit annotated as destination** | Protein passes through a compartment to reach a tethered, injected or embedded destination | SALTY slrP (T3SS effector); STAAU lytN (cross-wall); ACET2 SdbA (SLH-tethered) | toxin vs effector |
 
+### Sweep: do any flagged cases need terms that do not exist?
+
+After the [GO:0034045 audit](CONDENSATES/GO_0034045-annotation-audit.md) found three genes
+wrongly parked at `ACCEPT` because their destination did not exist, the whole SL flagged set
+was swept for the same mistake. The test: a flagged SL-unique annotation with no
+`proposed_replacement_terms` and no more-specific CC term anywhere on the gene — "stranded".
+
+42 annotations are stranded, but **almost none are missing-term cases.** They are stranded
+because the protein is *not in the compartment at all*, which `REMOVE` and
+`MARK_AS_OVER_ANNOTATED` express correctly — human PGRMC1 has no extracellular pool, METEA and
+PSEPK enolase are not secreted, yeast THI22 is a signal-peptide prediction. There is no
+destination because there is nothing to relocate.
+
+Two corrections came out of the sweep, both in the other direction — a destination existed and
+was not used:
+
+- **rat Tp53** `GO:0005759` mitochondrial matrix. The review's own text named the outer
+  mitochondrial membrane, but the verdict was `MARK_AS_OVER_ANNOTATED` with no replacement.
+  `GO:0005741` exists and the gene lacks it; upgraded to `MODIFY`.
+- **Pattern B** was described on the [cytoskeleton page](SL/SL-0090-CYTOSKELETON.md) as parked
+  pending a policy decision about `located_in` semantics. It was not parked: SGCA and SGCE
+  were already `MODIFY` to `GO:0016010` and `GO:0042383`. A protein associating with the
+  cytoskeleton *through a named complex* can be annotated to the complex. Page corrected.
+
+**So the missing-term situation is specific to SL-0221**, where the target GO term is itself
+defective and the replacements (phagophore membrane, phagophore rim, ER-phagophore contact
+site) genuinely do not exist and are now proposed on the ATG2A, ATG2B and atg-18 reviews.
+Everywhere else in the SL corpus, the destination exists — the question is only whether the
+reviewer looked for it.
+
 Pattern C is the one with a targeted fix: auditing the handful of family rules that attach
 `Secreted`/`Cell surface` to housekeeping enzyme families would remove a disproportionate
 share of the *wrong* (as opposed to merely vague) annotations. HAMAP MF_00318 on enolase

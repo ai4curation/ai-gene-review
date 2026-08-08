@@ -68,10 +68,28 @@ more specific term already present from independent evidence:
 | human WIPF1 | GO:0005884 actin filament; GO:0015629 actin cytoskeleton | IBA |
 | worm che-3 | GO:0005868 cytoplasmic dynein complex; GO:0005930 axoneme | IBA |
 
-Pattern B cases were left alone deliberately. Deciding whether SGCA-like proteins should lose
-the annotation or keep it with a qualifier is a question about GO's `located_in` semantics for
-peripheral associations, not a granularity call, and it should be settled as a policy before
-being applied gene by gene.
+### Correction: pattern B was already solved, by existing terms
+
+An earlier version of this page said the pattern B cases "were left alone deliberately"
+pending a policy decision about `located_in` semantics for peripheral association. **That was
+wrong on both counts.** Re-reading those reviews:
+
+- **SGCE** was already `MODIFY` → `GO:0016010` dystrophin-associated glycoprotein complex.
+- **SGCA** was already `MODIFY` → `GO:0042383` sarcolemma *and* `GO:0016010`.
+
+Both had real destinations, both already used them. GO has `GO:0016010`,
+`GO:0016011` dystroglycan complex, and `GO:0016012` sarcoglycan complex — a protein that
+associates with the cytoskeleton *through a named complex* can be annotated to the complex,
+which says exactly what the evidence supports and drops the false implication of membership.
+
+The generalisable lesson is the same one the [GO:0034045 audit](../CONDENSATES/GO_0034045-annotation-audit.md)
+learned the hard way: **check for a destination before declaring there isn't one.** Pattern B
+does not need a new relation or a policy ruling in the cases seen here. It needs the complex
+term the protein actually belongs to.
+
+Whether pattern B *ever* needs a relation change remains open — a protein that binds the
+cytoskeleton without belonging to any named complex would have nowhere to go — but no such
+case appears in this corpus.
 
 ## Note on redundancy
 
