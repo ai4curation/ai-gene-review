@@ -8,27 +8,22 @@ self_evaluation_pairwise: tie
 faith_pct: 100.0
 n_discoveries: 40
 citation_count: 41
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ERCC4 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Affinage's own head-to-head self-evaluation scored this record `pairwise = tie` (not `win`) vs the curated UniProt reference — treat the narrative with extra scepticism.
 
 ## Current model (mechanistic narrative)
 
 ERCC4 (XPF) is the catalytic subunit of a structure-specific endonuclease that operates as an obligate heterodimer with ERCC1 to incise DNA at single-strand/double-strand junctions across multiple genome-maintenance pathways [PMID:8253090, PMID:8253091, PMID:7559382, PMID:9525876]. The purified heterodimer cleaves bubble, splayed-arm, and flap substrates on the 5' side of ss/ds junctions, requiring divalent cations and a minimal stretch of unpaired nucleotides [PMID:9525876], with the nuclease active site mapping to XPF residues 670–740 where point mutations abolish catalysis without affecting DNA binding [PMID:11953324]. Structural work resolves the basis for substrate engagement: ERCC1 and XPF contribute non-equivalent (HhH)₂ and central domains that bind ssDNA and dsDNA asymmetrically [PMID:16076955, PMID:22483113], and cryo-EM shows the DNA-free complex adopts an auto-inhibited conformation that masks the active site until junction engagement couples the ERCC1 (HhH)₂ to the nuclease domains [PMID:32111838]. In nucleotide excision repair, the complex is recruited through direct ERCC1–XPA interaction to execute the 5' incision [PMID:8197175, PMID:17948053], and its participation is distributive, with damage-induced transient immobilization at lesions [PMID:10320375]. Beyond NER, XPF-ERCC1 carries out interstrand crosslink unhooking downstream of FANCD2 ubiquitylation and SLX4 recruitment, with RPA activating incision at replication-fork ICL structures and SNM1A loading from the resulting nicks [PMID:19805513, PMID:24726325, PMID:28607004, PMID:28292785], and it functions in double-strand break end-joining and single-strand annealing [PMID:18541667, PMID:17962301]. The complex additionally maintains telomeres [PMID:18812185], processes R-loops in association with XAB2 [PMID:34039990], drives ALT telomere synthesis via TERRA R-loops [PMID:36184605], and supports CTCF/cohesin-dependent chromatin looping for transcriptional regulation and imprinted-gene silencing independent of repair, a role requiring its catalytic activity [PMID:22771116, PMID:28368372]. Heterodimerization governs the complex's integrity and compartmentalization: XPF stability requires ERCC1 [PMID:20418188], nuclear import of ERCC1 requires XPF [PMID:28130555], and USP45-mediated deubiquitylation of ERCC1 promotes recruitment to damage sites [PMID:25538220]. Biallelic ERCC4 mutations cause Fanconi anemia, and the spectrum of XP, XFE progeroid, and FA phenotypes reflects mutations that separably impair NER, ICL repair, or proper localization [PMID:20221251, PMID:23623386, PMID:30165384].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140097 catalytic activity, acting on DNA, GO:0016787 hydrolase activity, GO:0003677 DNA binding, GO:0003723 RNA binding
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

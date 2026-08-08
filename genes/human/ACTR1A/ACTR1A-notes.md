@@ -403,7 +403,8 @@ should go to ACTR1A and not to ACTR10.
 ## Process log
 
 - `just fetch-gene human ACTR1A` -> 43 GOA rows, 3 PMIDs newly cached.
-- affinage record: `gates_passed: True`, 2 citations (both numeric PMIDs:
+- affinage record: `self_evaluation_pairwise: win`, trust gates clear, 2 citations (both
+  numeric PMIDs:
   31221720, 41142317), no bioRxiv-DOI-in-PMID-field entries. Its narrative is
   confined to TLR2 and SETD3 and says nothing about dynactin architecture, so
   the structural content of this review comes from UniProt, the primary

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 
 n_discoveries: 3
 citation_count: 4
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTR1B (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTR1B (beta-centractin) is an actin-related protein that functions as a stoichiometric minor subunit of the cytosolic 20S dynactin complex [PMID:7696711]. It partitions predominantly to the cytosolic fraction with no detectable free pool, residing within dynactin at a fixed ratio of approximately 1:15 relative to alpha-centractin, which establishes its identity as a constitutive structural component of this complex rather than an independently acting protein [PMID:7696711]. Beyond its membership in dynactin, ACTR1B abundance is modulated in a cell-type-specific manner: it is differentially altered in human platelets upon glycoprotein VI activation [PMID:20107233] and down-regulated in dendritic cells pulsed with high-metastatic-potential hepatocellular carcinoma lysates, where its reduction tracks with diminished CD86 expression and impaired allostimulatory capacity [PMID:17619203, PMID:17925177]. No direct functional dissection of ACTR1B's role within dynactin or in these cellular contexts has been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0005198 structural molecule activity
 - **localization:** GO:0005829 cytosol

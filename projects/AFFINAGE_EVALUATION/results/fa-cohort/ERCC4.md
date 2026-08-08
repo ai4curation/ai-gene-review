@@ -1,6 +1,6 @@
 # ERCC4 (FANCQ / XPF) — AIGR vs Affinage
 
-**Affinage record:** run 2026-06-09 · 40 discoveries · 41 citations · self-eval pairwise = **tie** (CAUTION) · gates **not** passed (`gates_passed: False`).
+**Affinage record:** run 2026-06-09 · 40 discoveries · 41 citations · self-eval pairwise = **tie** · trust gate tripped at generation time (the `tie` gate).
 
 ## Agreement (brief)
 
@@ -30,7 +30,7 @@ which specialized roles rise to annotation.
 | Cytoplasmic mislocalization / nuclear import interdependence | Emphasizes XPF stability requires ERCC1 (PMID:20418188), ERCC1 nuclear import requires XPF (PMID:28130555), USP45 deubiquitylation (PMID:25538220) | Not annotated as separate functions; localization captured by nucleus/chromosome/complex terms | **AIGR (defensible).** These are regulatory/stability mechanisms of the heterodimer, already implied by the complex-membership and localization annotations; not additional GO functions. |
 | FA-Q disease grounding | Cites PMID:23623386 for biallelic ERCC4 → Fanconi anemia with separable NER/ICL activities | Description named FANCQ but **cited nothing** for it | **Affinage surfaces a real gap.** PMID:23623386 now incorporated (below) onto the ICL-repair annotation. |
 
-## Was the CAUTION warranted?
+## Was the trust-gate flag warranted?
 
 **Partly — as a prompt for scrutiny, not as a verdict on accuracy.** The `tie` self-eval and
 tripped gate correctly flagged that this record should not be trusted wholesale, and two
@@ -46,7 +46,7 @@ That said, the **factual narrative is strong and PMID-dense**: no fabricated or 
 claims were found on spot-check, and the core mechanistic account (5' incision, ss/ds
 junction specificity, ICL unhooking, SLX4/FANCD2 order, auto-inhibition) is accurate and
 well-cited. So the `tie` reflects **coarse GO grounding + breadth-over-focus**, not factual
-unreliability. The CAUTION was a reasonable trigger for skeptical reading; the underlying
+unreliability. The flag was a reasonable trigger for skeptical reading; the underlying
 literature synthesis held up.
 
 ## Papers incorporated into the review
@@ -70,5 +70,5 @@ MARK_AS_OVER_ANNOTATED decisions, and deliberate exclusion of the specialized/th
 phenotypes Affinage foregrounds. Affinage's value here was **breadth of primary citation** — it
 surfaced exactly one real gap (the FANCQ disease-defining paper, PMID:23623386), now incorporated.
 Its coarse `mechanism_profile` (parent-level catalytic terms + spurious RNA binding) should not be
-imported, consistent with the CAUTION. Net: AIGR ahead on grounding and focus; Affinage a useful
+imported, consistent with the flag. Net: AIGR ahead on grounding and focus; Affinage a useful
 citation net that justified one conservative, validated addition.

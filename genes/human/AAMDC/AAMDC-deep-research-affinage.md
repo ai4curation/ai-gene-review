@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 4
 citation_count: 2
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for AAMDC (human)
@@ -22,9 +23,7 @@ note: >-
 
 AAMDC is an oncogenic signaling regulator amplified in estrogen receptor-positive breast cancer that drives estrogen-independent tumor growth by activating the PI3K-AKT-mTOR axis [PMID:33772001]. Downstream of this signaling, AAMDC controls the translational upregulation of ATF4 and MYC and the transcriptional output of AAMDC-dependent promoters, and ectopic AAMDC expression is sufficient to activate AKT [PMID:33772001]. Through these effectors AAMDC reprograms cellular metabolism, governing the expression of enzymes in the one-carbon folate, methionine, and lipid metabolism pathways [PMID:33772001]. AAMDC physically interacts with the Rab GTPase-activating protein RabGAP1L and colocalizes with RabGAP1L and Rab7a at endolysosomes, forming an assembly platform that links it to the endolysosomal compartment [PMID:33772001]. Beyond these findings, the biochemical activity of AAMDC itself and the structural basis of its signaling and RabGAP1L interaction have not been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** *(none)*
 - **localization:** GO:0005764 lysosome, GO:0005768 endosome

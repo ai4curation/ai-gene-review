@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 30
 citation_count: 30
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCG (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCG (identical to XRCC9) is a tetratricopeptide-repeat (TPR) scaffold protein of the Fanconi anemia (FA) DNA-repair pathway, originally identified by its ability to complement the mitomycin C-, cisplatin-, and crosslink-hypersensitive phenotype and chromosomal instability of FA-G cells [PMID:9806548, PMID:9256465]. Within the FA nuclear core complex, FANCG directly binds FANCA through an arginine-rich motif at the FANCA N-terminus and its own C-terminal/TPR contact surfaces, mutually stabilizing the two proteins, promoting nuclear import of the complex, and additionally recruiting FANCC via its C-terminus [PMID:10373536, PMID:10567393, PMID:11050007, PMID:10961856]; cryo-EM of the FANCA-FANCG complex shows FANCG making independent contacts with the FANCA N-terminal region and C-terminal HEAT solenoid, both required for FANCA nuclear localization [PMID:32002546]. Its TPR motifs (notably TPR1, 2, 5, 6) constitute the protein-protein interaction scaffold needed for assembly of both the core complex and downstream complexes [PMID:14697762, PMID:20450923]. The assembled core complex is required for damage-induced monoubiquitination of FANCD2, the central activating event of the pathway [PMID:11751423, PMID:11719385]. Independently of core-complex function, FANCG nucleates a discrete D1-D2-G-X3 complex with BRCA2/FANCD1, FANCD2, and the RAD51 paralog XRCC3, an assembly that depends on phosphorylation of FANCG at Ser7 and supports homologous-recombination repair of interstrand crosslinks [PMID:12915460, PMID:16621732, PMID:18212739], consistent with FANCG being required for efficient HR repair of double-strand breaks [PMID:12861027]. FANCG is further phosphorylated at Ser383/Ser387 by Cdc2 during mitosis [PMID:15367677] and modified by K63-linked polyubiquitin chains that recruit the Rap80-BRCA1 complex for HR repair while being dispensable for FANCD2 monoubiquitination [PMID:25132264], and it links the pathway to the ERCC1-XPF endonuclease that performs ICL unhooking through its TPR motifs [PMID:20518486]. A mitochondrial pool of FANCG, separable from its nuclear repair function, protects against oxidative stress and supports FANCJ helicase iron-sulfur integrity via frataxin [PMID:32989015].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0005198 structural molecule activity
 - **localization:** GO:0005634 nucleus, GO:0005829 cytosol, GO:0005739 mitochondrion

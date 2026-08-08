@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 29
 citation_count: 29
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCA (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCA is a large nuclear protein that serves as a scaffold organizer of the Fanconi anemia (FA) core complex, the assembly required for activating the FA/BRCA interstrand crosslink (ICL) repair pathway [PMID:9789045, PMID:21273304]. Through an N-terminal arginine-rich motif (residues 18–29, with Arg1/Arg2/Leu8 critical) FANCA binds FANCG, and the two proteins reciprocally stabilize each other and promote nuclear accumulation of the complex [PMID:10567393, PMID:11050007, PMID:32002546]; cryo-EM defines a C-terminal arc-shaped HEAT-repeat solenoid that forms a pseudo-symmetric dimer and engages FANCG at both N- and C-terminal interfaces, with disease mutations at these contacts blocking nuclear import and pathway function [PMID:32002546]. FANCA additionally complexes with FANCC and FANCF, and its nuclear localization is necessary and sufficient for correcting mitomycin C hypersensitivity in FA-A cells, distinct from FANCC's separable cytoplasmic role [PMID:9398857, PMID:9746759, PMID:11063725]. FAAP20 directly binds and stabilizes FANCA, and its loss reduces FANCD2 monoubiquitination and reproduces FA phenotypes, placing FANCA upstream of the central ICL-repair switch [PMID:22396592]. Patient-derived missense and truncation mutations cause FA by preventing nuclear relocation and pathway activation rather than by graded loss of an intrinsic activity, accounting for the absence of genotype–phenotype correlation [PMID:21273304]. FANCA is regulated by DNA-damage-induced ATR phosphorylation on Ser1449 and by NEK2 phosphorylation on Thr351 at centrosomes [PMID:19109555, PMID:23806870]. Beyond core-complex scaffolding, purified FANCA possesses intrinsic nucleic acid binding (RNA > ssDNA > dsDNA) via its C-terminal domain and directly catalyzes single-strand annealing and strand exchange comparable to RAD52, acting in the single-strand-annealing branch of double-strand break repair independently of the canonical FA pathway, with FANCG stimulating these activities [PMID:22194614, PMID:30057198]. FANCA also localizes to centrosomes and pericentriolar material during mitosis, where it maintains centrosomal integrity, spindle assembly, and spindle-assembly-checkpoint function [PMID:23806870, PMID:26366677]. It engages additional partners — BRCA1, the SWI/SNF subunit BRG1, alpha-spectrin II, and mu-calpain — linking it to chromatin and to a spectrin scaffold that recruits FANCA to crosslink sites [PMID:10551855, PMID:11726552, PMID:12354784, PMID:20518497].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0003723 RNA binding, GO:0140097 catalytic activity, acting on DNA, GO:0060090 molecular adaptor activity, GO:0005198 structural molecule activity
 - **localization:** GO:0005634 nucleus, GO:0005829 cytosol, GO:0005815 microtubule organizing center

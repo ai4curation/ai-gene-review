@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 12
 citation_count: 12
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABRA (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABRA (STARS) is a striated-muscle-enriched actin-binding protein that couples sarcomeric actin dynamics to the transcriptional program governing muscle growth and adaptation [PMID:11983702]. It localizes to the sarcomeric Z disc/I-band, binds actin filaments, and activates Rho-GTPase signaling, which in turn drives nuclear translocation of the MRTF-A/MRTF-B co-activators to stimulate SRF-dependent transcription of muscle structural and growth genes [PMID:11983702, PMID:17415416]. Its actin-cytoskeleton-regulating activity is conserved through the C-terminal Costars domain, whose function in actin organization and motility is preserved across species [PMID:20940261]. The STARS→RhoA→MRTF→SRF axis operates as a feed-forward autoregulatory loop, since SRF binds the STARS proximal promoter and ABRA is itself required for cardiac development, with loss of zebrafish STARS causing severe cardiac dysfunction rescuable by SRF [PMID:22815879]. Beyond the heart, ABRA mediates fluid-shear-stress-induced arteriogenesis through NO-dependent Rho signaling in vascular smooth muscle [PMID:19778941] and tracks coordinately with skeletal muscle hypertrophy and atrophy [PMID:19255118]. ABRA transcription is induced by MEF2 and by PGC-1α/ERRα, repressed by GATA4, and its protein is suppressed post-transcriptionally by miR-628-5p with aging [PMID:17415416, PMID:21486805, PMID:22431517, PMID:27739650]. Its physical partners include the actin-binding ABLIM-2 and ABLIM-3 proteins, which synergistically enhance STARS-dependent SRF activation [PMID:17194709].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0008092 cytoskeletal protein binding, GO:0098772 molecular function regulator activity, GO:0140110 transcription regulator activity
 - **localization:** GO:0005856 cytoskeleton, GO:0005829 cytosol

@@ -249,8 +249,10 @@ and measure **net curation value** — not exact-GO overlap.
 - Several times Affinage's own cited evidence **reinforced** an AIGR non-core/over-annotation
   call (FANCC redox mutants; RAD51C is-not-an-endonuclease; XRCC2 is-not-a-damage-sensor; SLX4
   nuclease-dead), the opposite of redundancy.
-- The two `tie`/CAUTION records (ERCC4, BRCA1) were correctly flagged, but against the **GO
-  layer** (a spurious RNA-catalytic term on BRCA1), not the prose, which was factually sound.
+- The two `pairwise = tie` records (ERCC4, BRCA1) were correctly gate-flagged (the
+  `self_evaluation_pairwise` frontmatter field plus the tool's stderr trust-gate warning,
+  recorded in each review's `reference_review`), but the weakness was in the **GO layer**
+  (a spurious RNA-catalytic term on BRCA1), not the prose, which was factually sound.
 
 **Takeaway:** used as this project endorses — narrative-as-input, GO-layer-ignored — Affinage
 delivered measurable, conservative value on the very pathway where it should have been most

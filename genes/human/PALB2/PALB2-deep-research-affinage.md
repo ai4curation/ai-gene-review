@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 35
 citation_count: 35
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for PALB2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 PALB2 (Partner and Localizer of BRCA2) is the central scaffold of homologous recombination (HR) repair of DNA double-strand breaks, physically bridging BRCA1 and BRCA2 so that the recombinase machinery can be assembled at sites of damage [PMID:19268590, PMID:19584259]. Through its N-terminal coiled-coil it binds BRCA1 (residues L21/L24/L35) and through its C-terminus it binds BRCA2, thereby relaying BRCA1-mediated recruitment to BRCA2-RAD51 organization and strand invasion [PMID:17287723, PMID:19584259]; structurally the coiled-coil forms an antiparallel leucine-zipper that exists as a homodimer or as a BRCA1 heterodimer, and the switch from PALB2 homodimer to PALB2-BRCA1 heterodimer acts as the regulatory gate that activates HR [PMID:22941656, PMID:30289697]. PALB2 recruitment to breaks proceeds through an ubiquitin signaling cascade (MDC1, RNF8, RAP80, Abraxas upstream of BRCA1, and RNF168-generated ubiquitylated H2A read by BARD1-BRCA1), with the BRCA1-PALB2 heterodimer rather than the homodimer mediating RAD51 loading [PMID:23038782, PMID:28240985, PMID:34408138]. PALB2 carries intrinsic chromatin- and DNA-binding activities: a chromatin-association motif (ChAM) that engages the nucleosome acidic patch—an interaction antagonized by 53BP1 in BRCA1-deficient cells—and an N-terminal DNA-binding domain that stimulates RAD51 and possesses RAD51-independent strand-exchange activity [PMID:22193777, PMID:31017574, PMID:32041954]. Steady-state localization to actively transcribed genes occurs via MRG15 recognition of SETD2-deposited H3K36me3, protecting these regions during replication, and PALB2 is additionally recruited to stalled forks by phosphorylated RPA and sustains DNA polymerase η-dependent synthesis at blocked forks [PMID:28673974, PMID:25113031, PMID:24485656]. ATM/ATR-dependent phosphorylation of N-terminal S/Q sites is required for proper RAD51 foci formation and HR, and PALB2 also contributes to the G2/M checkpoint independently of CHK1/CHK2 [PMID:27113759, PMID:26420486, PMID:30337689]. Beyond DNA repair, PALB2 binds KEAP1 through a shared ETGE motif to promote NRF2-mediated antioxidant responses [PMID:22331464]. Patient-derived and systematic variant analyses establish that disruption of the BRCA1-PALB2 or BRCA2-PALB2 interactions, or destabilization of the WD40 domain, abolishes HR and confers sensitivity to platinum and PARP inhibitors, and mouse models disrupting these interactions produce Fanconi anemia-like and tumor-prone phenotypes [PMID:28319063, PMID:25016020, PMID:32732220, PMID:31636395, PMID:31757951].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0003677 DNA binding, GO:0140097 catalytic activity, acting on DNA, GO:0042393 histone binding, GO:0003723 RNA binding, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005654 nucleoplasm

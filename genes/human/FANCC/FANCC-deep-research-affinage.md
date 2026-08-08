@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 34
 citation_count: 34
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCC (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCC encodes a ~60-kDa protein with dual roles in genome maintenance and cytoprotection, originally defined as a Fanconi anemia gene required for cellular resistance to DNA interstrand cross-linking agents [PMID:8499901, PMID:7517562]. As part of a nuclear FA core complex, FANCC assembles with FANCA, FANCG, FANCF, and FANCE in a series of interdependent interactions: FANCA-FANCC binding [PMID:9398857], FANCG-bridged complex formation [PMID:10373536], FANCF incorporation [PMID:11063725], and FANCE-mediated linkage of FANCC to the substrate FANCD2 [PMID:16127171]; phosphorylation-dependent nuclear accumulation of this complex defines a common pathway disrupted across multiple FA complementation groups [PMID:9789045]. This assembly is required for FANCD2 monoubiquitination, and its loss abrogates that modification, elevates spontaneous chromosomal breakage, and confers selective sensitivity to cross-linking agents [PMID:16762635]. Downstream, FANCC promotes homologous recombination and error-prone repair of abasic sites, suppresses sister chromatid exchange, and acts in concert with BLM helicase to maintain genome stability [PMID:15327776, PMID:15616572], operating in parallel pathways with BRCA2 and HELQ [PMID:16687415, PMID:24005041]. Independently of the core complex, cytoplasmic FANCC exerts anti-apoptotic functions essential for hematopoietic progenitor survival [PMID:8621788, PMID:8977247]: it binds Hsp70 to form a ternary complex that inhibits the pro-apoptotic kinase PKR [PMID:11500375, PMID:12397061], binds non-phosphorylated STAT1 to facilitate its docking and activation at the IFN-gamma receptor [PMID:10848598], and attenuates NADPH cytochrome P450 reductase activity [PMID:9787138]. Patient-derived mutant FANCC (L554P) loses both core-complex (FANCA, cdc2) and signaling (STAT1) interactions [PMID:9398857, PMID:9242535, PMID:10848598].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity, GO:0003677 DNA binding
 - **localization:** GO:0005829 cytosol, GO:0005634 nucleus

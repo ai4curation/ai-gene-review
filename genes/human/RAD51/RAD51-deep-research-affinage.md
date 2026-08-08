@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 45
 citation_count: 45
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for RAD51 (human)
@@ -22,9 +23,7 @@ note: >-
 
 RAD51 is the central eukaryotic recombinase that assembles as an ATP-dependent nucleoprotein filament on single-stranded DNA and catalyzes homology search and DNA strand exchange, the core reaction of homologous recombination [PMID:9012806]. Filament assembly on RPA-coated ssDNA is rate-limited by nucleation, which BRCA2 overcomes by chaperoning a preassembled RAD51 nucleus onto ssDNA, displacing RPA and stabilizing the filament against ATP hydrolysis [PMID:20729832, PMID:36976771]; a C-terminal BRCA2 TR2 motif braces adjacent protomers across the filament interface, while the BRC repeats engage distinct RAD51 surfaces [PMID:37919288, PMID:15937124]. The filament's recombinase activity is intrinsically coupled to ATP hydrolysis and to an inter-subunit ATP cap that tunes turnover versus strand-exchange efficiency [PMID:9012806, PMID:22275364], and Loop2 residues impose strict mismatch intolerance that distinguishes RAD51 from its meiotic counterpart DMC1 [PMID:34871438]. A broad network of mediators governs the filament: RAD52 targets RAD51 to RPA-ssDNA and channels lesions between strand invasion and annealing [PMID:9450760, PMID:9450758, PMID:18337252], Rad54 stimulates homologous pairing and branch migration and drives ATPase-dependent filament turnover from duplex DNA [PMID:9590697, PMID:17567608, PMID:18617519], the RAD51 paralogs assemble into complexes that remodel and stabilize presynaptic filaments [PMID:10749867, PMID:26186187, PMID:23810717], and HOP2-MND1 and FANCD2/FANCI further stimulate or stabilize the filament [PMID:24943459, PMID:27694619, PMID:37526271]. Filament abundance at replication forks is set antagonistically by RADX, which competes for ssDNA, stimulates RAD51 ATPase, and destabilizes filaments in opposition to BRCA2 [PMID:30021152, PMID:33453169, PMID:32621611]. Chromatin loading is controlled by post-translational modification, including TOPBP1/PLK1-dependent Ser14 phosphorylation, Mec1-dependent phosphorylation of the yeast enzyme, and TOPORS-dependent SUMOylation [PMID:26811421, PMID:21738226, PMID:35061896]. Beyond canonical double-strand break repair and break-induced replication [PMID:14993274], RAD51 protects stalled and nascent replication forks—catalyzing fork reversal while bypassing the bound CMG helicase, shielding abasic sites and nascent strands from MRE11/DNA2/EXO1 nucleases, and suppressing transcription-replication conflicts [PMID:37104614, PMID:39178838, PMID:37526271, PMID:36002000]; in its absence, MRE11-driven degradation of unprotected nascent DNA releases cytosolic fragments that activate STING-mediated innate immunity [PMID:28334891]. RAD51 also promotes mitotic DNA synthesis and centromere integrity [PMID:34508092, PMID:36702125] and forms TERRA R-loops at telomeres [PMID:33057192].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0140657 ATP-dependent activity, GO:0140097 catalytic activity, acting on DNA, GO:0003723 RNA binding
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

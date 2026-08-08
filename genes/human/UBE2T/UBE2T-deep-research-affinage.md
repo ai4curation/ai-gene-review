@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 35
 citation_count: 37
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for UBE2T (human)
@@ -22,9 +23,7 @@ note: >-
 
 UBE2T is the dedicated E2 ubiquitin-conjugating enzyme of the Fanconi anemia (FA) DNA interstrand crosslink repair pathway, pairing with the E3 ligase FANCL to catalyze monoubiquitination of FANCD2 and FANCI on chromatin [PMID:16916645, PMID:19111657]. In vitro reconstitution established that FANCD2 monoubiquitination minimally requires UBE2T plus the FANCL RWD-like domain, with FANCI both stimulating the reaction and restricting it to the physiological substrate lysine K561, while FANCI itself is monoubiquitinated at K523 [PMID:19111657, PMID:19589784]. A crystal structure of the FANCL RING–UBE2T complex defined an extensive electrostatic and hydrophobic interface beyond the generic E2–E3 contact that determines selective recognition of UBE2T over other E2 enzymes [PMID:24389026]. This activity is governed by DNA damage-induced recruitment of UBE2T and FANCD2 to chromatin to form an active E2/E3 holoenzyme rather than by stable assembly of the core complex, and is negatively autoregulated by FANCL-stimulated UBE2T automonoubiquitination [PMID:16916645, PMID:17938197]. Biallelic loss-of-function mutations in UBE2T cause Fanconi anemia (FA-T subtype): patient cells lack FANCD2/FANCI monoubiquitination, fail to form FANCD2 foci, and are hypersensitive to crosslinkers, defects complemented by wild-type UBE2T [PMID:26119737, PMID:26046368, PMID:26085575]. Beyond crosslink repair, UBE2T contributes to nucleotide excision repair and to the resolution of R-loops and transcription-replication conflicts to maintain genome stability [PMID:22615860, PMID:36928776]. UBE2T protein abundance is controlled post-translationally by CaMKII-δ9-mediated phosphorylation-dependent degradation and by NEDD4L-directed proteasomal turnover [PMID:31481791, PMID:34838005]. In cancer, UBE2T acts as an oncogenic ubiquitin conjugator that ubiquitinates diverse substrates—including p53, RACK1, Akt, RPL6, CDC42, FOXO1, and CBX6—frequently through K48- or K63-linked chains and often independently of or in cooperation with various E3 ligases, thereby activating Wnt/β-catenin, PI3K/AKT, and related signaling outputs [PMID:33323973, PMID:35169125, PMID:36156329, PMID:39915000, PMID:39716485].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein, GO:0016740 transferase activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

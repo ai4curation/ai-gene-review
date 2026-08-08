@@ -8,27 +8,22 @@ self_evaluation_pairwise: tie
 faith_pct: 100.0
 n_discoveries: 22
 citation_count: 22
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for BRCA1 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Affinage's own head-to-head self-evaluation scored this record `pairwise = tie` (not `win`) vs the curated UniProt reference — treat the narrative with extra scepticism.
 
 ## Current model (mechanistic narrative)
 
 BRCA1 is a multifunctional nuclear tumor suppressor that safeguards genome integrity by promoting error-free homologous recombination (HR) repair of DNA double-strand breaks and limiting mutagenic nonhomologous repair [PMID:10549283]. It executes HR through two genetically separable activities: a coiled-coil-dependent function that counteracts the 53BP1-RIF1-Shieldin axis to license DNA end resection, and a Δ11-region/PALB2-dependent function that loads RAD51 onto resected DNA, with RNF168 acting redundantly with BRCA1 in the PALB2-loading step [PMID:30704900, PMID:32359443]. BRCA1 functions as a RING-domain heterodimer with BARD1; cryo-EM of the BRCA1-BARD1–nucleosome complex shows BARD1 ankyrin and BRCT domains reading nucleosomal histones, DNA, and the DSB-specific H2A K13/K15 monoubiquitin mark while the RING domains position an E2 enzyme for C-terminal H2A ubiquitylation that opposes 53BP1 [PMID:34321665]. Recruitment to ionizing-radiation-induced foci requires cooperation of the BRCA1 RING and BRCT domains and co-localization with MDC1, with cancer mutations abolishing targeting [PMID:15569676], and BRCA1 retention at breaks is organized by the RAP80/Abraxas(CCDC98)/MERIT40-containing BRCA1-A complex, which controls foci formation and the G2/M checkpoint [PMID:17643121, PMID:19261748]. Heterodimer assembly and DNA-damage localization are tuned by SIRT2-mediated deacetylation of the BARD1 RING interface, while BAP1 antagonizes the BRCA1/BARD1 ligase through both catalytic and non-catalytic mechanisms [PMID:33789098, PMID:19117993]. As an E3 ubiquitin ligase BRCA1/BARD1 modifies substrates including topoisomerase IIα, regulating DNA decatenation and chromosome segregation [PMID:15965487], and estrogen receptor-α, repressing its transcriptional activity [PMID:19887647]. BRCA1 activity is integrated into genotoxic stress signaling through ATR phosphorylation of multiple residues including Ser1423 at stalled replication forks [PMID:11114888] and through p53/CRM1-dependent nuclear export after DNA damage [PMID:15087457]. Beyond repair, BRCA1 maintains centromere stability by resolving R-loops at α-satellite repeats to preserve CENP-A loading [PMID:34599155], supports XIST RNA concentration and chromatin structure on the inactive X chromosome [PMID:12419249], and acts as a transcriptional regulator—autorepressing its own promoter via a BRCA1/E2F1/Rb complex dissolved by genotoxic stress [PMID:20068145] and controlling target genes such as SIRT1 and the ferroptosis regulators VDAC3 and GPX4 [PMID:18851829, PMID:38552003].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016874 ligase activity, GO:0140096 catalytic activity, acting on a protein, GO:0140110 transcription regulator activity, GO:0003677 DNA binding, GO:0140098 catalytic activity, acting on RNA
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005654 nucleoplasm
