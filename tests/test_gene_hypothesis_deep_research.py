@@ -653,7 +653,8 @@ def test_just_list_wrappers_preserve_genes_root_with_spaces(
     assert gene in result.stdout
 
 
-def test_just_research_wrapper_handles_empty_variadic_tail() -> None:
+@pytest.mark.parametrize("provider", ["falcon", "openscientist"])
+def test_just_research_wrapper_handles_empty_variadic_tail(provider: str) -> None:
     """A zero-length variadic tail must reach Python without an empty argument."""
     repo_root = Path(__file__).resolve().parents[1]
 
@@ -661,7 +662,7 @@ def test_just_research_wrapper_handles_empty_variadic_tail() -> None:
         [
             "just",
             "gene-hypothesis-research",
-            "falcon",
+            provider,
             "human",
             "AIGR_NO_SUCH_GENE",
         ],

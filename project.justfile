@@ -272,15 +272,24 @@ deep-research-interpro-family interpro_id provider="falcon" *args="":
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
-fetch-research-artifacts trajectory_id research_file *args="":
-    uv run python scripts/fetch_edison_artifacts.py {{trajectory_id}} {{research_file}} {{args}}
+[positional-arguments]
+fetch-research-artifacts trajectory_id research_file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trajectory_id="$1"
+    research_file="$2"
+    shift 2
+    uv run python scripts/fetch_edison_artifacts.py "$trajectory_id" "$research_file" "$@"
 
 # Index Edison/Falcon artifacts recorded in deep research report frontmatter
 # Examples:
 #   just index-research-artifacts
 #   just index-research-artifacts --check
-index-research-artifacts *args="":
-    uv run python scripts/index_research_artifacts.py {{args}}
+[positional-arguments]
+index-research-artifacts *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python scripts/index_research_artifacts.py "$@"
 
 # List focused hypothesis research candidates for one gene
 # Examples:
