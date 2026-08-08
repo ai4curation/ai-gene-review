@@ -495,6 +495,7 @@ def test_just_wrapper_preserves_quoted_free_text_arguments(tmp_path: Path) -> No
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
 
     assert result.returncode == 0, result.stderr
@@ -558,6 +559,7 @@ def test_just_wrappers_preserve_arguments_before_and_after_separator(
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
 
     assert result.returncode == 0, result.stderr
@@ -599,6 +601,7 @@ def test_just_wrapper_respects_exact_openscientist_param_overrides(
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
 
     assert result.returncode == 0, result.stderr
@@ -608,17 +611,68 @@ def test_just_wrapper_respects_exact_openscientist_param_overrides(
     assert "timeout=7200" not in result.stdout
 
 
-def test_positional_wrapper_variadics_have_no_empty_default() -> None:
-    """Positional variadics must not inject an empty fourth argument."""
-    justfile = (Path(__file__).resolve().parents[1] / "project.justfile").read_text()
-    recipes = [
-        "gene-hypothesis-research",
-        "gene-hypothesis-research-all-core",
-        "gene-hypothesis-research-combined-core",
-        "gene-function-support",
-        "gene-iba-support-research",
-    ]
+@pytest.mark.parametrize(
+    ("recipe", "iba_workspace", "gene"),
+    [
+        ("gene-hypothesis-list", False, "TEST"),
+        ("gene-iba-support-list", True, "IBAT"),
+    ],
+)
+def test_just_list_wrappers_preserve_genes_root_with_spaces(
+    tmp_path: Path,
+    recipe: str,
+    iba_workspace: bool,
+    gene: str,
+) -> None:
+    """List wrappers must preserve a multiword genes-root argument."""
+    workspace = tmp_path / "workspace with spaces"
+    genes_root = (
+        make_iba_workspace(workspace)
+        if iba_workspace
+        else make_gene_workspace(workspace)
+    )
+    repo_root = Path(__file__).resolve().parents[1]
 
-    for recipe in recipes:
-        assert f"{recipe} provider organism gene *args:" in justfile
-        assert f'{recipe} provider organism gene *args="":' not in justfile
+    result = subprocess.run(
+        [
+            "just",
+            recipe,
+            "human",
+            gene,
+            "--genes-root",
+            str(genes_root),
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert gene in result.stdout
+
+
+def test_just_research_wrapper_handles_empty_variadic_tail() -> None:
+    """A zero-length variadic tail must reach Python without an empty argument."""
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            "falcon",
+            "human",
+            "AIGR_NO_SUCH_GENE",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 2
+    assert "--hypothesis is required" in result.stderr
+    assert "unbound variable" not in result.stderr
+    assert "unrecognized arguments" not in result.stderr

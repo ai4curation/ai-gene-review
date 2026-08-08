@@ -286,8 +286,14 @@ index-research-artifacts *args="":
 # Examples:
 #   just gene-hypothesis-list human TP53
 #   just gene-hypothesis-list human TP53 --missing-provider openscientist
-gene-hypothesis-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-hypothesis-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list "$organism" "$gene" "$@"
 
 # Run focused deep research for one gene-level curation hypothesis
 # Dry-run is recommended while selecting a source record.
@@ -313,23 +319,25 @@ gene-hypothesis-research provider organism gene *args:
         has_max_iterations=false
         has_timeout=false
         expect_param=false
-        for arg in "${args[@]}"; do
-            if [[ "$has_separator" == false ]]; then
-                if [[ "$arg" == "--" ]]; then has_separator=true; fi
-                continue
-            fi
-            if [[ "$expect_param" == true ]]; then
-                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
-                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
-                expect_param=false
-                continue
-            fi
-            case "$arg" in
-                --param) expect_param=true ;;
-                --param=max_iterations=*) has_max_iterations=true ;;
-                --param=timeout=*) has_timeout=true ;;
-            esac
-        done
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
         if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
         if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
@@ -341,7 +349,11 @@ gene-hypothesis-research provider organism gene *args:
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider"
+    fi
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
@@ -367,23 +379,25 @@ gene-hypothesis-research-all-core provider organism gene *args:
         has_max_iterations=false
         has_timeout=false
         expect_param=false
-        for arg in "${args[@]}"; do
-            if [[ "$has_separator" == false ]]; then
-                if [[ "$arg" == "--" ]]; then has_separator=true; fi
-                continue
-            fi
-            if [[ "$expect_param" == true ]]; then
-                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
-                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
-                expect_param=false
-                continue
-            fi
-            case "$arg" in
-                --param) expect_param=true ;;
-                --param=max_iterations=*) has_max_iterations=true ;;
-                --param=timeout=*) has_timeout=true ;;
-            esac
-        done
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
         if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
         if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
@@ -395,7 +409,11 @@ gene-hypothesis-research-all-core provider organism gene *args:
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider"
+    fi
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
@@ -420,23 +438,25 @@ gene-hypothesis-research-combined-core provider organism gene *args:
         has_max_iterations=false
         has_timeout=false
         expect_param=false
-        for arg in "${args[@]}"; do
-            if [[ "$has_separator" == false ]]; then
-                if [[ "$arg" == "--" ]]; then has_separator=true; fi
-                continue
-            fi
-            if [[ "$expect_param" == true ]]; then
-                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
-                if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
-                expect_param=false
-                continue
-            fi
-            case "$arg" in
-                --param) expect_param=true ;;
-                --param=max_iterations=*) has_max_iterations=true ;;
-                --param=timeout=*) has_timeout=true ;;
-            esac
-        done
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
         if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
         if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
@@ -448,7 +468,11 @@ gene-hypothesis-research-combined-core provider organism gene *args:
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider"
+    fi
 
 # Find independent literature support for a gene-function hypothesis via deep research
 # Recall-tuned (expect false positives an agent then sifts); general-purpose,
@@ -467,24 +491,28 @@ gene-function-support provider organism gene *args:
     gene="$3"
     shift 3
     args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
     has_separator=false
     has_max_iterations=false
     expect_param=false
-    for arg in "${args[@]}"; do
-        if [[ "$has_separator" == false ]]; then
-            if [[ "$arg" == "--" ]]; then has_separator=true; fi
-            continue
-        fi
-        if [[ "$expect_param" == true ]]; then
-            if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
-            expect_param=false
-            continue
-        fi
-        case "$arg" in
-            --param) expect_param=true ;;
-            --param=max_iterations=*) has_max_iterations=true ;;
-        esac
-    done
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
     if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
         if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
@@ -492,7 +520,11 @@ gene-function-support provider organism gene *args:
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider"
+    fi
 
 # List IBA annotations that are candidates for support-finding research
 # By default only IBAs lacking independent PMID/DOI support are listed.
@@ -500,8 +532,14 @@ gene-function-support provider organism gene *args:
 #   just gene-iba-support-list human CFAP300
 #   just gene-iba-support-list human CFAP300 --missing-provider asta
 #   just gene-iba-support-list human CFAP300 --include-supported
-gene-iba-support-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-iba-support-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list-iba "$organism" "$gene" "$@"
 
 # Find independent literature support for a gene's IBA annotations via deep research
 # Thin wrapper over gene-function-support: feeds each IBA annotation in as a
@@ -521,24 +559,28 @@ gene-iba-support-research provider organism gene *args:
     gene="$3"
     shift 3
     args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
     has_separator=false
     has_max_iterations=false
     expect_param=false
-    for arg in "${args[@]}"; do
-        if [[ "$has_separator" == false ]]; then
-            if [[ "$arg" == "--" ]]; then has_separator=true; fi
-            continue
-        fi
-        if [[ "$expect_param" == true ]]; then
-            if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
-            expect_param=false
-            continue
-        fi
-        case "$arg" in
-            --param) expect_param=true ;;
-            --param=max_iterations=*) has_max_iterations=true ;;
-        esac
-    done
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
     if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
         if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
@@ -546,7 +588,11 @@ gene-iba-support-research provider organism gene *args:
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider"
+    fi
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 
