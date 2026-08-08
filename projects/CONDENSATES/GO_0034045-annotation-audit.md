@@ -20,7 +20,8 @@ the annotation counts cannot.
 ## Headline: we reproduced the failure mode
 
 **All 23 previously reviewed assertions were `ACCEPT`.** Not one had been questioned.
-After re-review, 18 of the 29 are `MODIFY`.
+After re-review, 23 of the 29 have moved — 18 to `MODIFY` and 5 to
+`MARK_AS_OVER_ANNOTATED` with the missing terms proposed.
 
 That is the strongest corroboration this corpus can offer for the mechanism described in
 §2 of the issue analysis: a reviewer meeting this term sees a plausible label and a
@@ -42,8 +43,8 @@ annotations there originally.
 
 ## Changes made
 
-**18 of the 29 assertions, across 11 genes, moved `ACCEPT` → `MODIFY`.** The remaining 11
-are held deliberately (see below). All files revalidate clean.
+**23 of the 29 assertions, across 14 genes, have moved off `ACCEPT`** — 18 to `MODIFY`,
+5 to `MARK_AS_OVER_ANNOTATED` with new terms proposed. All files revalidate clean.
 
 | species | gene | term | evidence | reference | n | destination |
 |---|---|---|---|---|---|---|
@@ -117,20 +118,44 @@ carries the same term as an IEA projected from mouse Rab7a via GO_REF:0000107
 (`WITH UniProtKB:P51150`). Correcting the source should carry through, and both have been
 changed together. This is a two-link instance of the amplification described in §5.1.
 
-## Cases left alone, and why
+## The missing-term cases: propose the term, don't hold the annotation
 
-`ATG2A` and `ATG2B` (human) were left as `ACCEPT`. Their reviews already describe the right
-biology — ATG2A's reads "at the ER-phagophore edge", ATG2B's "membrane tethering/lipid-transfer
-during phagophore expansion" — which is precisely the §5.4 hypothesis that these belong at a
-phagophore rim or a phagophore-ERES contact site. **There is nowhere correct to move them
-yet.** Generalizing them to `GO:0000407` would lose the contact-site information that makes
-them interesting, and `GO:0061908` would assert the wrong sub-structure. They are the argument
-for R3 and R7 being on the critical path, not for further per-gene action.
+`ATG2A`, `ATG2B` and `worm atg-18` were initially left as `ACCEPT` on the grounds that there
+was nowhere correct to move them. **That was wrong.** A review does not need an existing
+destination to record a verdict — `proposed_new_terms` exists precisely for this, and holding
+an annotation at `ACCEPT` because the ontology is incomplete records the opposite of what the
+reviewer actually believes.
 
-The `worm atg-18` IBA is in the same position. The *S. pombe* ATG8-conjugation genes were
-moved to `GO:0000407` rather than to a phagophore membrane because their cited evidence is
-punctum colocalization, which does not distinguish the two — the sheet-versus-system decision
-in §4.2 does not arise on that evidence.
+All five annotations now read `MARK_AS_OVER_ANNOTATED`, with the terms that ought to exist
+authored on the gene reviews themselves:
+
+| gene | annotations moved | `proposed_new_terms` authored |
+|---|---|---|
+| human ATG2A | 2 (IEA, EXP) | phagophore membrane; phagophore rim; endoplasmic reticulum-phagophore membrane contact site |
+| human ATG2B | 2 (IEA, EXP) | phagophore membrane; endoplasmic reticulum-phagophore membrane contact site |
+| worm atg-18 | 1 (IBA) | phagophore membrane |
+
+`MARK_AS_OVER_ANNOTATED` rather than `MODIFY`, because `MODIFY` requires
+`proposed_replacement_terms` carrying real identifiers and there are none to give — inventing
+an id would be worse than the problem. The verdict, the reasoning, and the terms that would
+resolve it are all recorded; only the identifier is missing, and that is GO's to mint.
+
+Each proposal maps onto a recommendation in the issue: **phagophore membrane** is R3,
+**phagophore rim** and **ER-phagophore membrane contact site** are R7. The `phagophore rim`
+proposal records the alternative label "phagophore edge" and cites `GO:0097203 phagocytic cup
+lip` as GO's existing precedent for the pattern; the `phagophore membrane` proposal takes the
+collective sheet-plus-rim reading and flags explicitly that the sheet-versus-system question
+of §4.2 is unresolved upstream, so an editor is not silently committed by the annotation.
+
+Knock-on: ATG2A's `core_functions.locations` carried `GO:0034045` alongside `GO:0044232`
+organelle membrane contact site and `GO:0005789` ER membrane, and ATG2B's carried it alongside
+`GO:0061908` and `GO:0005789`. In both cases the defective term was the least informative of
+the three and was dropped rather than replaced.
+
+The *S. pombe* ATG8-conjugation genes were moved to `GO:0000407` rather than to a proposed
+phagophore membrane because their cited evidence is punctum colocalization, which does not
+distinguish the two — the sheet-versus-system decision does not arise on that evidence, so
+there is nothing to propose.
 
 ## What this slice supports and does not
 
