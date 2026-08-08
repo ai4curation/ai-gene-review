@@ -256,6 +256,10 @@ def audit(text: str) -> list[str]:
             problems.append(f"H: {term} has divergent actions {dict(actions)}")
 
     problems.extend(audit_artifacts())
+    # K is independent of the computed artifacts, so run it in the main audit path.
+    # Keeping it downstream of audit_artifacts() allowed early returns in check J to
+    # suppress this guard entirely.
+    problems.extend(audit_retracted_phrases())
     return problems
 
 
@@ -311,7 +315,6 @@ def audit_artifacts() -> list[str]:
     if rows == 0:
         problems.append("J: matched zero zinc table rows - vacuous check")
 
-    problems.extend(audit_retracted_phrases())
     return problems
 
 
@@ -328,6 +331,18 @@ RETRACTED_PHRASES = {
     "no GAP assay has been reported on either human AGFG protein": (
         "states a search-derived negative as an existence claim"
     ),
+    "no GAP activity has been measured for any AGFG protein": (
+        "overgeneralises from an AGFG-specific section that names no assay and ignores "
+        "the same paper's blanket subfamily-level positive"
+    ),
+    "no GAP activity has ever been measured for the subfamily": (
+        "overgeneralises from an AGFG-specific section that names no assay and ignores "
+        "the same paper's blanket subfamily-level positive"
+    ),
+    "AGFG proteins are Arf effectors rather than Arf GAPs": (
+        "states the pseudoenzyme interpretation as settled despite the absence of a "
+        "direct catalytic assay"
+    ),
     "complete catalytic apparatus": (
         "AGFG1 retains 1 of the 3 catalytically required residues; the apparatus is "
         "structurally genuine but not catalytically complete"
@@ -337,9 +352,6 @@ RETRACTED_PHRASES = {
         "not just the arginine finger"
     ),
 }
-# The patch scripts must name the strings they replace, so they are exempt by
-# design rather than by accident.
-EXEMPT_SUFFIXES = ("patch_selfreview.py", "patch_review_round2.py", "patch_review_round2b.py", "audit_review.py")
 
 
 def audit_retracted_phrases() -> list[str]:
@@ -349,7 +361,6 @@ def audit_retracted_phrases() -> list[str]:
     surfaces = sorted(
         p
         for p in list(gene_dir.glob("*.yaml")) + list(gene_dir.glob("*.md")) + list(HERE.glob("*.md"))
-        if not p.name.endswith(EXEMPT_SUFFIXES)
     )
     if not surfaces:
         problems.append("K: no surfaces to scan - vacuous check")
