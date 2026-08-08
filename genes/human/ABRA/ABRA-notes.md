@@ -101,7 +101,8 @@ for the mouse record too.
 
 ## 5. Caveats on the affinage record
 
-`gates_passed: True`, all 12 citations are real numeric PMIDs, and the mechanistic narrative
+`self_evaluation_pairwise: win` with clear trust gates, all 12 citations are real numeric PMIDs,
+and the mechanistic narrative
 is accurate. One over-attribution:
 
 > "Its actin-cytoskeleton-regulating activity is conserved through the C-terminal Costars

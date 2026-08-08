@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 5
 citation_count: 5
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTL7B (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTL7B is a testis-enriched actin-related protein required for spermiogenesis and male fertility [PMID:36617158]. The intronless human gene on chromosome 9q31 arose by retroposition of a spliced actin-progenitor mRNA and encodes a 415-amino-acid actin-like protein expressed predominantly in testis [PMID:10373328]. Its germ-cell-restricted expression is controlled at two levels: repressive CpG methylation within the ORF CpG island silences the promoter in somatic cells, while demethylation accompanies expression in spermatogenic cells [PMID:12907721], and a bidirectional intergenic regulatory region together with CREMτ acting on CRE-like promoter motifs drives haploid germ-cell-specific transcription [PMID:12704725]. During spermiogenesis ACTL7B localizes to the developing acrosome, the early spermatid nucleus, and the flagellum connecting region, and its loss in mice produces severe oligoteratozoospermia with multiple morphological abnormalities of the flagellum and sperm head [PMID:36617158]. Beyond this established role, ACTL7B's intranuclear function and its candidate involvement in chromatin regulation through HDAC1/HDAC3 and nucleosome remodeler complexes have not been biochemically characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0008092 cytoskeletal protein binding
 - **localization:** GO:0005634 nucleus, GO:0031410 cytoplasmic vesicle

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 47
 citation_count: 47
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for MAD2L2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 MAD2L2 (REV7/MAD2B/FANCV) is a HORMA-domain adaptor that uses a multivalent 'safety-belt' surface to bind structurally diverse partners and thereby coordinates DNA damage tolerance, double-strand break (DSB) repair pathway choice, and mitotic cell-cycle control [PMID:20164194, PMID:28887307, PMID:31484720]. In translesion synthesis, REV7 is the non-catalytic subunit of DNA polymerase zeta, binding the catalytic subunit REV3L through two short sequence motifs and recruiting REV1 via a distinct interface, with REV7 dimerization tethered by the two REV3 motifs being required for assembly of a functional REV1/pol zeta complex [PMID:20164194, PMID:22859296, PMID:25567983, PMID:30111544]; this activity underlies damage-induced mutagenesis and resistance to UV and crosslinking agents [PMID:3897794, PMID:25567983], and a point mutation (C70R) that severs the REV7–REV3 interaction abolishes damage tolerance and causes germ-cell loss and infertility [PMID:24356953]. REV7 is the central subunit of the shieldin complex (with SHLD1, SHLD2/FAM35A, SHLD3), which is recruited to DSBs and telomeres through the H4K20me2–53BP1–RIF1 axis and inhibits 5' end resection to enforce NHEJ over homologous recombination; its loss restores resection in BRCA1-deficient cells and causes PARP-inhibitor resistance [PMID:25799992, PMID:25799990, PMID:30046110, PMID:30154076, PMID:29160738]. Shieldin assembly depends on SHLD2-driven REV7 dimerization and on REV7's C-terminal wrapping around SHLD3, and is reversed by TRIP13-catalyzed closed-to-open conformational switching together with p31comet, which also disassembles the REV7–REV3 complex; competing seatbelt ligands such as CHAMP1 likewise tune this balance [PMID:31796627, PMID:31915374, PMID:33051298, PMID:34521823, PMID:36044844]. Independently of shieldin, REV7 protects and restarts stalled replication forks in a REV3L/REV1-dependent manner by limiting MRE11 resection [PMID:36075897]. In mitotic control, MAD2L2 inhibits both CDH1-APC and CDC20-APC by binding the activators rather than the core APC [PMID:11459826, PMID:11459825], and biallelic inactivating REV7 mutations cause Fanconi anemia (REV7 = FANCV) [PMID:27500492].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity, GO:0003677 DNA binding
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

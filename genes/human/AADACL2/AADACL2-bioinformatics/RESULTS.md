@@ -60,10 +60,14 @@ Broken down by position, the aggregate understates the nucleophile badly:
 | 341 | Asp | 8 / 15 | 8 / 15 |
 | 371 | His | 8 / 15 | 8 / 15 |
 
-**Every one of the fifteen sources places its own catalytic serine on AADACL2 position 189**,
-and fourteen of them carry a serine there. The single exception is soybean HIDH, whose own
-annotated nucleophile is a threonine — and HIDH is the one source in the set that is not a
-hydrolase at all but a dehydratase, so the substitution is informative rather than noise. The
+**Every one of the fifteen sources places its own catalytic nucleophile on AADACL2 position
+189**, and fourteen of them carry a serine there. The single exception is soybean HIDH, whose own
+annotated nucleophile is a threonine — and HIDH is the one source in the set whose
+physiologically important reaction is a dehydration rather than a hydrolysis, so the
+substitution is informative rather than noise. (HIDH is bifunctional, not a pure lyase: it
+carries EC 3.1.1.1 alongside EC 4.2.1.105 and a `GO:0106435 carboxylesterase activity` IDA, so
+it does not threaten `GO:0016787` — it refutes only the *serine* mechanism term. See
+`NODE_PTN009058710.md`, the shared node-level audit for AADACL2, AADACL3 and AADACL4.) The
 8/15 triad-complete figure is driven entirely by the acid and the base, which sit in the
 C-terminal half where register is lost below 26.5% identity. The nucleophile elbow, the most
 conserved element of the fold, never loses register.
@@ -73,7 +77,10 @@ the acid, the base and the oxyanion loop are all present and all in register wit
 independently characterised bacterial carboxylesterases and with the 51.6%-identical human
 paralog AADAC. `GO:0017171 serine hydrolase activity` — whose definition requires exactly a
 serine nucleophile activated by an acid/base proton relay — is the term this evidence
-licenses. Nothing here identifies a substrate.
+licenses **for AADACL2 itself**. Nothing here identifies a substrate, and nothing here licenses
+the term on the `PTN009058710` IBA row: that row's donors include a threonine-nucleophile
+member, so the term has to be reached from the family node instead (section 5, and
+`NODE_PTN009058710.md`).
 
 ## 2. `GO:0016020 membrane` is a family-majority feature that AADACL2 alone lacks
 
@@ -191,3 +198,11 @@ triad is demonstrably conserved across the whole family including AADACL2 (Q1), 
 `GO:0017171` is safe at `PTN009058713`; the type-II signal anchor is not conserved in
 AADACL2, so `GO:0016020` is not. Moving the activity down to the family node and dropping
 the localisation from it would fix three human genes at once.
+
+Both halves of that claim were then tested donor by donor in `NODE_PTN009058710.md`, the
+shared node-level audit for AADACL2, AADACL3 and AADACL4. It confirms that `GO:0017171` is
+true of every donor PAINT cites at `PTN009058713` and IDA-supported by all three of them,
+and that at
+`PTN009058710` no candidate term below `GO:0016787` survives every donor — so the deep-node
+row cannot be upgraded, only recognised as redundant with the `IPR017157`-derived
+`GO:0052689` that all three genes already carry.

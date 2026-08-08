@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 8
 citation_count: 8
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABRACL (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABRACL is a small winged helix-like protein that regulates actin cytoskeletal dynamics and cell motility, a role conserved from the Dictyostelium ortholog Costars, whose loss produces aberrant F-actin distribution and excessive pseudopod formation that human ABRACL rescues [PMID:20940261]. Structurally it adopts a three-helix, four-stranded antiparallel β-sheet winged helix-like fold that lacks DNA-binding activity and presents a conserved hydrophobic groove implicated in protein–protein interaction [PMID:21082705]. Mechanistically, ABRACL binds cofilin and inhibits cofilin-stimulated F-actin depolymerization, shifting the F/G-actin balance toward polymerized actin at the leading edge to drive cell migration [PMID:33670794]. This actin-promoting activity underlies a recurrent pro-tumorigenic role: ABRACL knockdown suppresses proliferation, migration, and invasion across esophageal, breast, gastric, and glioma cancer models [PMID:33728339, PMID:35341461, PMID:39286126, PMID:39376051], with its expression transcriptionally activated by MYBL2 and CBX4 [PMID:35341461, PMID:39376051] and post-transcriptionally repressed by miR-145-5p [PMID:33728339]. In neural progenitor cells ABRACL localizes to the nucleus and inhibits neuronal differentiation, indicating a context-dependent role distinct from its cytoplasmic actin function [PMID:26537243].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0008092 cytoskeletal protein binding, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005856 cytoskeleton, GO:0005634 nucleus

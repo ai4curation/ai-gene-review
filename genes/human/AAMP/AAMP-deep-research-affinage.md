@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 10
 citation_count: 10
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for AAMP (human)
@@ -22,9 +23,7 @@ note: >-
 
 AAMP is a WD40- and immunoglobulin-domain-containing protein, distributed both intracellularly and at the cell surface, that governs cell migration, angiogenesis, and innate immune signaling primarily by acting as a positive regulator of Rho-family GTPases and the actin cytoskeleton [PMID:8683944, PMID:26350504, PMID:39404373]. Its amino-terminal positively charged region binds heparin with high affinity and mediates heparin-sensitive, glycosaminoglycan-dependent cell binding and clustering, and anti-AAMP antibody blocks endothelial tube formation [PMID:8683944, PMID:18634104]. In vascular endothelial cells AAMP is recruited by VEGF to membrane protrusions and is required for VEGF-induced tube formation, aortic ring sprouting, actin stress fiber formation, and gel contraction through RhoA/Rho-kinase signaling [PMID:26350504]. Mechanistically, AAMP binds RhoA directly and protects it from SMURF2-mediated ubiquitination and degradation, thereby raising active RhoA levels [PMID:34901393], regulates the stability and activity of both RhoA and RhoB and colocalizes with F-actin and cortactin at membrane ruffles where it constrains endothelial barrier function [PMID:39404373], and binds CDC42 to promote its activation by impeding the ARHGAP1–CDC42 interaction [PMID:33279622]; collectively these activities drive cancer cell adhesion, growth, and invasion [PMID:23564791, PMID:33279622, PMID:34901393]. Independently of its cytoskeletal role, AAMP interacts via its WD40 domains with the NLR protein Nod2 and modulates Nod1/Nod2-driven NF-κB activation [PMID:19535145], and binds the co-stimulatory protein B7-H3 to influence T-cell proliferation [PMID:35919070].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity, GO:0008092 cytoskeletal protein binding, GO:0060090 molecular adaptor activity, GO:0008289 lipid binding
 - **localization:** GO:0005829 cytosol, GO:0005886 plasma membrane, GO:0005576 extracellular region, GO:0005856 cytoskeleton

@@ -36,9 +36,32 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+
+
+@app.command()
+def audit_fulltext_flags(
+    repo_root: Path = typer.Option(Path("."), help="Repository root."),
+    gene_dir: List[Path] = typer.Option(
+        None, help="Limit to specific gene directories; defaults to all of genes/."
+    ),
+    fix: bool = typer.Option(False, "--fix", help="Remove the stale flags, not just report."),
+) -> None:
+    """Report references flagged full_text_unavailable whose cached publication has full text.
+
+    No validator compares that pair, and the flag discourages extracting the evidence an
+    annotation needs, so the defect is silent. A stale flag on a reference with zero findings
+    is the signature: the flag suppressed the extraction. Exits non-zero if any remain.
+    """
+    try:
+        code = audit_flags(repo_root, gene_dir, fix, echo=typer.echo)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if code:
+        raise typer.Exit(code=code)
 
 
 @app.command()

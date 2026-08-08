@@ -121,8 +121,8 @@ non-core.
 
 ## Affinage assessment
 
-The affinage report passed its trust gates (`gates_passed: True`, accession P04217 matching
-the local UniProt record) and its narrative — secreted Ig-domain plasma protein acting through
+The affinage report passed its trust gates at fetch time (accession P04217 matching the local
+UniProt record, no non-human organism token; it carries no `self_evaluation_pairwise` score) and its narrative — secreted Ig-domain plasma protein acting through
 protein–protein interactions with CRISP2 and NAMPT — agrees with the primary literature. Its
 own `mechanism_profile` grounding (`GO:0098772 molecular function regulator activity`,
 `GO:0005576 extracellular region`) is correct but coarse; `GO:0140311` was chosen instead as

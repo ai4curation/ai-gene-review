@@ -8,7 +8,7 @@ literature.
 
 The affinage record for A2ML1 **failed its trust gate**: affinage's own head-to-head
 self-evaluation scored it `pairwise = loss` against the curated UniProt reference
-(`gates_passed: False`). Everything taken from it was therefore re-verified against the
+(recorded in the record's own `self_evaluation_pairwise` frontmatter field). Everything taken from it was therefore re-verified against the
 cited PMIDs before use. In the event the narrative held up well — its core claim
 (secreted broad-spectrum alpha-2-macroglobulin-family protease inhibitor of stratified
 epithelia) matches UniProt and PMID:16298998 exactly. Where it is weakest is exactly where

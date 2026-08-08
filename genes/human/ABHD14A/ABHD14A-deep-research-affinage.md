@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 5
 citation_count: 4
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABHD14A (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABHD14A is a metabolic serine hydrolase of the α/β-hydrolase superfamily, closely related at the sequence level to ABHD14B, from which it is distinguished by defined sequence determinants [PMID:37974539]. A soluble N-terminally truncated form is an active enzyme that preferentially hydrolyzes short-chain esters, and its p-nitrophenyl-acetate hydrolysis is enhanced by CoA, consistent with a ping-pong type acetyltransferase mechanism analogous to ABHD14B [PMID:bio_10.1101_2025.11.28.691245]. Heterologously expressed full-length protein localizes to the Golgi apparatus, while endogenous protein is undetectable across immortalized cell lines and adult mouse tissues despite transcriptomic predictions [PMID:bio_10.1101_2025.11.28.691245]. At the transcriptional level, ABHD14A (Dorz1) is positively regulated by the zinc-finger transcription factor Zic1 in cerebellar granule neuron precursors [PMID:14667578]. Beyond these findings, the physiological substrates and in vivo role of ABHD14A have not been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016787 hydrolase activity, GO:0016740 transferase activity
 - **localization:** GO:0005794 Golgi apparatus

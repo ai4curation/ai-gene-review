@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 13
 citation_count: 13
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACRV1 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACRV1 (SP-10) is a testis-specific intra-acrosomal protein expressed in round spermatids that functions in the terminal steps of sperm–egg interaction [PMID:2310816, PMID:10529272]. It encodes a hydrophilic protein with an N-terminal signal peptide and an internal block of three amino-acid repeat types, with no homology to other characterized sequences, and is expressed as alternatively spliced mRNAs [PMID:1693291]. SP-10 is synthesized as a ~45 kDa precursor that is proteolytically processed by trypsin-like (acrosin-type) and other intra-acrosomal endoproteases into a heterogeneous family of 18–32 kDa peptides, with maturation beginning in the testis and continuing in the proximal epididymis [PMID:1637938, PMID:7888499]. Rather than being an integral membrane protein, it is a peripheral acrosomal protein tethered to the acrosomal membranes through a chaotrope-sensitive, detergent-resistant anchor [PMID:1591355]. During the acrosome reaction it redistributes to the inner acrosomal membrane of the equatorial segment, where it mediates sperm–oolemma binding in a beta-1 integrin-independent manner without participating in sperm–zona binding [PMID:2310816, PMID:10775167]. Transcription is controlled by a TATA-less 294-bp proximal promoter sufficient for round spermatid-specific expression [PMID:10529272]; TDP-43 binds GTGTGT motifs within this promoter to repress transcription and pause RNA polymerase II in spermatocytes through its RNA-binding RRM1 domain, while NF45/NF90 act through a Pu-box (AGAAAA) element to upregulate promoter activity [PMID:21252238, PMID:17942973]. The same promoter region functions as a CpG-free vertebrate insulator in somatic cells, where TDP-43-dependent tethering to the nuclear matrix blocks enhancer–promoter communication [PMID:14512027, PMID:17932037]. In ovarian cancer cells, ectopic ACRV1 acts together with ZNF280A and CUX2 to activate PI3K/AKT signaling and glycolysis [PMID:41338461].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098631 cell adhesion mediator activity
 - **localization:** GO:0031410 cytoplasmic vesicle, GO:0005886 plasma membrane

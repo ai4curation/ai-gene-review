@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 22
 citation_count: 22
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCL (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCL is the catalytic RING-type E3 ubiquitin ligase subunit of the Fanconi anemia core complex, partnering with the E2 enzyme UBE2T to monoubiquitinate FANCD2 and FANCI and thereby drive homologous-recombination repair of DNA interstrand crosslinks [PMID:19111657, PMID:17352736]. Its crystal structure resolves a tripartite architecture in which the central DRWD/URD domain binds the FANCD2/FANCI substrate dimer while the C-terminal RING domain mediates E2 recruitment, and an extensive electrostatic/hydrophobic RING–UBE2T interface confers selective recruitment of UBE2T over other E2 enzymes [PMID:20154706, PMID:24389026]. Reconstitution shows FANCL and UBE2T are sufficient to monoubiquitinate FANCD2, with FANCI both stimulating the reaction and restricting modification to the correct lysine (K561 on FANCD2; K523 on FANCI) [PMID:19111657, PMID:19589784]; the N-terminal ELF domain additionally binds free ubiquitin via the Ile44 patch to promote efficient damage-induced FANCD2 monoubiquitination in cells [PMID:26149689]. FANCL-dependent monoubiquitination is required for FANCD2 chromatin and nuclear-matrix association and for HR repair of induced chromosomal breaks, an epistatic relationship conserved from Drosophila to vertebrates [PMID:14712086, PMID:17352736, PMID:16860002]. A catalytic-cysteine knock-in mouse establishes that loss of RING E3 ligase activity alone reproduces all major Fanconi anemia phenotypes, and FANCL variants causing protein destabilization or cytoplasmic mislocalization underlie premature ovarian insufficiency [PMID:41259745, PMID:32048394]. Beyond DNA repair, FANCL extends K11-linked non-proteolytic ubiquitin chains on β-catenin to enhance Wnt target transcription in hematopoietic stem/progenitor cells [PMID:22653977], supports Parkin-mediated mitophagy through a ubiquitin ligase-independent mitochondrial function [PMID:35644338], and is required for primordial germ cell proliferation and oocyte survival through meiosis [PMID:12417526, PMID:20661450].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016874 ligase activity, GO:0140096 catalytic activity, acting on a protein, GO:0031386 protein tag activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005739 mitochondrion
