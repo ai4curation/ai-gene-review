@@ -5,7 +5,7 @@ description: >-
   of fungal conidium (asexual spore) formation, plus its upstream activation,
   repressive gating, spore maturation, and structural output.
 autolink_gene_symbols: false
-status: DESIGN
+maturity: MATURE
 ---
 
 # Conidiation regulatory cascade — module design proposal
