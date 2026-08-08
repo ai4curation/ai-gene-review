@@ -8,7 +8,8 @@ autolink_gene_symbols: false
 
 # GO:0034045 — corpus slice audit
 
-Supporting page for [Biomolecular Condensates](../CONDENSATES.md). This is a per-assertion
+Supporting page for [Biomolecular Condensates](../CONDENSATES.md), and the first subproject of
+[the SL project](../SL.md) (`SL-0221 Preautophagosomal structure membrane`). This is a per-assertion
 re-adjudication of every `GO:0034045` and `GO:0097632` annotation held in this repository,
 carried out against the analysis in GO issue
 [#29437](https://github.com/geneontology/go-ontology/issues/29437). It is a small slice —
@@ -19,6 +20,7 @@ the annotation counts cannot.
 ## Headline: we reproduced the failure mode
 
 **All 23 previously reviewed assertions were `ACCEPT`.** Not one had been questioned.
+After re-review, 18 of the 29 are `MODIFY`.
 
 That is the strongest corroboration this corpus can offer for the mechanism described in
 §2 of the issue analysis: a reviewer meeting this term sees a plausible label and a
@@ -40,24 +42,49 @@ annotations there originally.
 
 ## Changes made
 
-Six annotations across six genes were re-adjudicated `ACCEPT` → `MODIFY`. All six files
-revalidate clean.
+**18 of the 29 assertions, across 11 genes, moved `ACCEPT` → `MODIFY`.** The remaining 11
+are held deliberately (see below). All files revalidate clean.
 
-| species | gene | term | evidence | reference | new action | destination |
+| species | gene | term | evidence | reference | n | destination |
 |---|---|---|---|---|---|---|
-| mouse | Rab7 | GO:0034045 | IDA | PMID:19956673 | MODIFY | GO:0061908 phagophore |
-| human | RAB7A | GO:0034045 | IEA | GO_REF:0000107 | MODIFY | GO:0061908 phagophore |
-| DICDI | atg1 | GO:0034045 | IBA, ISS, IEA | GO_REF:0000033/24/44 | MODIFY ×3 | GO:0000407 |
-| SCHPO | atg101 | GO:0034045 | IEA | GO_REF:0000044 | MODIFY | GO:0000407 |
-| yeast | ATG7 | GO:0097632 | IDA | PMID:10233148 | MODIFY | GO:0000407 |
-| human | ATG14 | GO:0097632 | IBA, IDA | GO_REF:0000033, PMID:21518905 | MODIFY ×2 | GO:0000407 |
+| mouse | Rab7 | GO:0034045 | IDA | PMID:19956673 | 1 | GO:0061908 phagophore |
+| human | RAB7A | GO:0034045 | IEA | GO_REF:0000107 | 1 | GO:0061908 phagophore |
+| human | ATG5 | GO:0034045 | IBA, IDA, IEA, ISS | PMID:32960676 + refs | 4 | GO:0061908 phagophore |
+| DICDI | atg1 | GO:0034045 | IBA, ISS, IEA | GO_REF:0000033/24/44 | 3 | GO:0000407 |
+| SCHPO | atg101 | GO:0034045 | IEA | GO_REF:0000044 | 1 | GO:0000407 |
+| SCHPO | atg2 | GO:0034045 | IEA | GO_REF:0000044 | 1 | GO:0000407 |
+| SCHPO | atg5 | GO:0034045 | IBA, IEA | GO_REF:0000033/44 | 2 | GO:0000407 |
+| SCHPO | atg16 | GO:0034045 | IEA | GO_REF:0000044 | 1 | GO:0000407 |
+| SCHPO | atg38 | GO:0034045 | IEA | GO_REF:0000044 | 1 | GO:0000407 |
+| yeast | ATG7 | GO:0097632 | IDA | PMID:10233148 | 1 | GO:0000407 |
+| human | ATG14 | GO:0097632 | IBA, IDA | GO_REF:0000033, PMID:21518905 | 2 | GO:0000407 |
 
-`GO:0000407` is used as the conservative destination wherever the supported claim is
-"at the assembly site" — it is where `GO:0097632` already points via `part_of`, and it
-does not pre-empt the `phagophore membrane` term proposed as R3. Two knock-on edits were
-needed: ATG7's `core_functions.locations` carried `GO:0097632` and now carries
-`GO:0000407`; atg1's carried both `GO:0000407` and `GO:0034045`, and the duplicate was
-dropped.
+Two destinations, chosen by what the cited evidence actually shows:
+
+- **`GO:0061908` phagophore** where the source paper says *phagophore*. For human ATG5 the
+  supporting quote already read "RAB33B recruits the ATG16L1 complex to the phagophore", and
+  the abstract adds that "RAB33B and ATG16L1 mutually determined the localization of each
+  other on phagophores". The annotation said PAS membrane; the paper said phagophore. That is
+  the `phagophore` RELATED synonym on GO:0034045 doing exactly the damage §2 predicts.
+- **`GO:0000407`** where the evidence shows the punctum. Every *S. pombe* case is like this —
+  the quotes already in those reviews are "recruitment of Atg5 and Atg16 to PAS",
+  "PAS accumulation of Atg2, Atg18b, Atg24b, Atg5, Atg16, and Atg8", "Atg38 localizes to the
+  PAS". The evidence says PAS; the term says PAS *membrane*. `GO:0000407` is also where
+  `GO:0097632` already points via `part_of`, and neither destination pre-empts the
+  `phagophore membrane` term proposed as R3.
+
+Knock-on edits: ATG7's `core_functions.locations` carried `GO:0097632` and now carries
+`GO:0000407`; ATG5's carried `GO:0034045` and now carries `GO:0061908`; atg1's carried both
+`GO:0000407` and `GO:0034045`, and the duplicate was dropped. `propagation_review` blocks were
+added to the four IBA annotations changed to `MODIFY`.
+
+### The *S. pombe* set is the cleanest evidence in the audit
+
+Five of the moved annotations are *S. pombe* IEAs whose sole source is `GO_REF:0000044` —
+that is, SL-0221 with nothing else behind it. In every case a reviewer had written a
+justification quoting experimental evidence about **PAS puncta**, then accepted a term naming
+a **PAS membrane**, without noticing the substitution. The conflation is not buried in an
+axiom file here; it is visible inside our own prose, one line apart.
 
 ## One correction to the §5.4 triage: Rab7
 
@@ -92,17 +119,18 @@ changed together. This is a two-link instance of the amplification described in 
 
 ## Cases left alone, and why
 
-`ATG2A`, `ATG2B`, and the *S. pombe* `atg2`, `atg5`, `atg16`, `atg38` annotations were left
-as `ACCEPT`. Their reviews already describe the right biology — ATG2A's reads "at the
-ER-phagophore edge", ATG2B's "membrane tethering/lipid-transfer during phagophore
-expansion" — which is precisely the §5.4 hypothesis that these belong at a phagophore rim
-or phagophore-ERES contact site. **There is nowhere correct to move them yet.** Changing
-them now would substitute one wrong term for another. They are the argument for R3 and R7
-being on the critical path, not for further per-gene action.
+`ATG2A` and `ATG2B` (human) were left as `ACCEPT`. Their reviews already describe the right
+biology — ATG2A's reads "at the ER-phagophore edge", ATG2B's "membrane tethering/lipid-transfer
+during phagophore expansion" — which is precisely the §5.4 hypothesis that these belong at a
+phagophore rim or a phagophore-ERES contact site. **There is nowhere correct to move them
+yet.** Generalizing them to `GO:0000407` would lose the contact-site information that makes
+them interesting, and `GO:0061908` would assert the wrong sub-structure. They are the argument
+for R3 and R7 being on the critical path, not for further per-gene action.
 
-The `worm atg-18` IBA is in the same position, and *S. pombe* `atg5`/`atg16` are ATG8-
-conjugation machinery whose destination depends on the sheet-versus-system decision in
-§4.2.
+The `worm atg-18` IBA is in the same position. The *S. pombe* ATG8-conjugation genes were
+moved to `GO:0000407` rather than to a phagophore membrane because their cited evidence is
+punctum colocalization, which does not distinguish the two — the sheet-versus-system decision
+in §4.2 does not arise on that evidence.
 
 ## What this slice supports and does not
 
