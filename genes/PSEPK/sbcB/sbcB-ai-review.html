@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sbcB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sbcB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N51" target="_blank" class="term-link">
+                        Q88N51
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sbcB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N51" data-a="DESCRIPTION: SbcB is a magnesium-dependent Exonuclease I that d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SbcB is a magnesium-dependent Exonuclease I that degrades single-stranded DNA processively in the 3&#39;-to-5&#39; direction to nucleoside 5&#39;-phosphates. Its C-terminal region is predicted to interact with SSB, providing a mechanism for recruitment to single-stranded DNA. This directional activity makes SbcB a candidate nuclease for one orientation of mismatch-excision tracts, but a specific KT2440 mismatch-repair role has not been demonstrated directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000175" target="_blank" class="term-link">
+                                    GO:0000175
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;-5&#39;-RNA exonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0000175" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Remove. The Q88N51 record and Exonuclease I subfamily assignment (PTHR11046:SF11) specify a single-stranded DNA substrate; the RNA-exonuclease mapping comes from a broad overlapping InterPro family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Contradicted by the exact EC 3.1.11.1 DNA reaction and Exonuclease I domain architecture.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR11046:SF11; EXODEOXYRIBONUCLEASE I; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too broad relative to the substrate-specific exonuclease function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008310 captures both DNA substrate and direction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004527" target="_blank" class="term-link">
+                                    GO:0004527
+                                </a>
+                            </span>
+                            <span class="term-label">exonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0004527" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with GO:0008310.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A direction- and substrate-specific child term is present.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004529" target="_blank" class="term-link">
+                                    GO:0004529
+                                </a>
+                            </span>
+                            <span class="term-label">DNA exonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0004529" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but less informative than GO:0008310.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retaining both would duplicate the same core reaction at two levels.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0006281" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retain as non-core. Exonuclease I is used in DNA-processing and repair pathways, but the exact KT2440 pathway assignment has not been tested.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Conserved family context without organism-specific pathway evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008310" target="_blank" class="term-link">
+                                    GO:0008310
+                                </a>
+                            </span>
+                            <span class="term-label">single-stranded DNA 3&#39;-5&#39; DNA exonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N51" data-a="GO:0008310" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept as the core molecular function. The Q88N51 record assigns EC 3.1.11.1 for 3&#39;-to-5&#39; exonucleolytic cleavage of single-stranded DNA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact directional Exonuclease I chemistry.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.1.11.1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SbcB processively degrades single-stranded DNA in the 3&#39;-to-5&#39; direction, providing a directional DNA-processing activity that may support mismatch excision.</h3>
+                <span class="vote-buttons" data-g="Q88N51" data-a="FUNCTION: SbcB processively degrades single-stranded DNA in ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008310" target="_blank" class="term-link">
+                            single-stranded DNA 3&#39;-5&#39; DNA exonuclease activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=3.1.11.1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/sbcB/sbcB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK Exonuclease I SbcB (Q88N51)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"EC=3.1.11.1"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Interacts with ssb (via C-terminus)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PANTHER; PTHR11046:SF11; EXODEOXYRIBONUCLEASE I; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does SbcB remove 3&#39;-directed mismatch-excision tracts in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N51" data-a="Q: Does SbcB remove 3&#39;-directed mismatch-excision tra..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare repair of substrates nicked on either side of a mismatch in wild type and sbcB-null extracts, with purified Q88N51 complementation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SbcB supplies the major 3&#39;-to-5&#39; exonuclease activity during one orientation of KT2440 MMR.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: orientation-resolved mismatch excision assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88N51" data-a="EXPERIMENT: Compare repair of substrates nicked on either side..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sbcB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N51" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *sbcB* (PP_1365, UniProt Q88N51) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">15 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T18:07:52.517901</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sbcB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="sbcB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-sbcb-pp_1365-uniprot-q88n51-in-pseudomonas-putida-kt2440">Functional Annotation of <em>sbcB</em> (PP_1365, UniProt Q88N51) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>sbcB</em> (ordered locus name PP_1365; UniProt Q88N51) of <em>Pseudomonas putida</em> strain KT2440 encodes Exodeoxyribonuclease I (ExoI, EC 3.1.11.1), a magnesium-dependent, highly processive 3′→5′ exonuclease that is specific for single-stranded DNA (ssDNA).</strong> The enzyme binds the free 3′-hydroxyl end of ssDNA and processively hydrolyzes it in the 3′-to-5′ direction, releasing deoxyribonucleoside-5′-monophosphates. Catalysis proceeds through an RNase H-like DEDDh active site using a two-metal-ion (Mg²⁺) mechanism, and a distinctive DNA-encircling "crossover" loop together with an SH3-like domain provides the enzyme's high processivity.</p>
+<p>The gene symbol and the UniProt functional annotation are internally consistent, and the identification is secure. The <em>sbcB</em> symbol has a long, well-documented history in <em>Escherichia coli</em>, where it (and its allele name <em>xonA</em>) was biochemically defined as the structural gene for exonuclease I. The <em>P. putida</em> protein is a genuine ortholog: a global pairwise alignment gives <strong>48.0% amino-acid identity</strong> to the experimentally characterized <em>E. coli</em> enzyme, and every catalytic and metal-coordinating residue is perfectly conserved. The domain architecture flagged by UniProt/InterPro (Exodeoxyribonuclease_I, EXOI_SH3, Exonuc_1_C) matches the well-studied <em>E. coli</em> ExoI fold. There is therefore no ambiguity: this is authentically an exonuclease I gene, not a same-symbol homonym from another gene family.</p>
+<p>Functionally, SbcB is a soluble <strong>cytoplasmic</strong> enzyme that acts on ssDNA intermediates generated during DNA <strong>recombination, mismatch repair, and replication</strong>. It is a monomer that is physically recruited to its ssDNA substrate by single-stranded DNA-binding protein (SSB) through the conserved SSB C-terminal tail, an interaction that stimulates its nuclease activity. Biologically, ExoI is one of a set of partially redundant 3′-ssDNA exonucleases that trim and edit 3′ single-stranded tails, thereby limiting aberrant recombination substrates and safeguarding genome stability. All members of this functional network — SSB, the redundant exonucleases (ExoVII, SbcCD), and the RecBCD recombination machinery — are encoded in the <em>P. putida</em> KT2440 genome, so the pathway inferred from <em>E. coli</em> is structurally feasible in this organism. <strong>It must be emphasized that no <em>P. putida</em>-specific experimental characterization of PP_1365 exists;</strong> the functional assignment rests on strong orthology-based inference from the extensively characterized <em>E. coli</em> enzyme plus rule-based database annotation.</p>
+<h3 id="identity-at-a-glance">Identity at a glance</h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88N51</td>
+</tr>
+<tr>
+<td>Gene</td>
+<td><em>sbcB</em> (ordered locus <strong>PP_1365</strong>)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (ATCC 47054 / DSM 6125), taxid 160488</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Exodeoxyribonuclease I, <strong>EC 3.1.11.1</strong></td>
+</tr>
+<tr>
+<td>Length / state</td>
+<td>477 aa; monomer; soluble cytoplasmic</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>RNase_T catalytic (PF00929; SSF53098) + ExoI_SH3 (PF08411; IPR034747) + ExoI_C (PF26016; IPR058561)</td>
+</tr>
+<tr>
+<td>Orthology</td>
+<td>eggNOG COG2925; 48.0% identity to <em>E. coli</em> ExoI (P04995)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-sbcbpp_1365-is-exodeoxyribonuclease-i-a-processive-35-single-stranded-dna-exonuclease-ec-31111">F001 — SbcB/PP_1365 is Exodeoxyribonuclease I: a processive 3′→5′ single-stranded DNA exonuclease (EC 3.1.11.1)</h3>
+<p>UniProt Q88N51 assigns EC 3.1.11.1 with the catalytic activity "<em>Exonucleolytic cleavage in the 3′- to 5′-direction to yield nucleoside 5′-phosphates</em>," derived from the PIRNR000977 rule-based signature. This annotation is anchored in decades of biochemistry on the <em>E. coli</em> ortholog. The classic genetic and biochemical study by Phillips and Kushner established that the <em>sbcB</em>/<em>xonA</em> locus is the structural gene for exonuclease I, "<em>an enzyme that hydrolyzes single-stranded DNA to mononucleotides in the 3′-to-5′ direction</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/2834321/">PMID: 2834321</a>. Modern structural work confirms this substrate specificity and directionality: <em>E. coli</em> ExoI "<em>digests single-stranded DNA (ssDNA) in the 3′-5′ direction in a highly processive manner</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/23609540/">PMID: 23609540</a>. Independent sequence/family analysis likewise classifies <em>E. coli</em> exonuclease I among "<em>processive 3′→5′ exodeoxyribonucleases that degrade single-stranded DNA</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/9396823/">PMID: 9396823</a>.</p>
+<p>The enzyme requires a <strong>free 3′-OH terminus</strong>, does not act on the 5′ end, and does not degrade duplex DNA — properties that define its role as a <em>ssDNA 3′-end trimmer</em> rather than a general nuclease. The <em>P. putida</em> protein is a 477-amino-acid monomer whose domain layout mirrors the <em>E. coli</em> enzyme: a Pfam RNase_T (PF00929) catalytic domain, an ExoI_SH3 (PF08411) domain, and an ExoI_C (PF26016) C-terminal domain. In sum, the primary function of the gene product is unambiguous — it is an enzyme that catalyzes the processive, single-strand-specific, 3′→5′ hydrolysis of DNA into 5′-mononucleotides.</p>
+<h3 id="f002-catalysis-uses-an-rnase-h-like-deddh-fold-with-a-two-mg2-mechanism-and-a-crossover-loop-confers-processivity">F002 — Catalysis uses an RNase H-like DEDDh fold with a two-Mg²⁺ mechanism, and a crossover loop confers processivity</h3>
+<p>InterPro, Pfam, and SUPFAM place Q88N51 in the <strong>Ribonuclease H-like superfamily</strong> (SSF53098; IPR012337/IPR036397), decorated with an SH3-like domain (IPR034747/IPR013620) and an ExoI C-terminal domain (IPR058561). Membership in the <strong>DEDD(h)</strong> exonuclease superfamily positions three-to-four conserved acidic residues plus a catalytic histidine at the active site. The <em>E. coli</em> ExoI crystal structure reveals "<em>a C-shaped molecule with three domains that form a central positively charged groove. The active site is at the bottom of the groove, while an extended loop, proposed to encircle the DNA, crosses over the groove</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/23609540/">PMID: 23609540</a>. This crossover loop physically encircles the ssDNA substrate and, together with the SH3-like domain, is the structural basis of the enzyme's exceptional processivity — the enzyme threads the 3′ end into the active site while gripping downstream nucleotides. The same structure reveals "<em>an Mg²⁺ ion bound to the scissile phosphate in a position corresponding to Mg(B) in related two-metal nucleases</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/23609540/">PMID: 23609540</a>, establishing the two-metal-ion catalytic mechanism.</p>
+<p>Critically, this active-site architecture is shared across the DEDDh group. The structure of human ISG20 shows that "<em>its structure, including that of the active site, is very similar to those of the corresponding domains of two DEDDh-group DNases, the epsilon subunit of Escherichia coli DNA polymerase III and E. coli exonuclease I</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/15527770/">PMID: 15527770</a>. The convergence of exonuclease I, the Pol III ε proofreading subunit, and ISG20 on the same fold and mechanism strongly corroborates the mechanistic model transferred to the <em>P. putida</em> enzyme.</p>
+<h3 id="f003-sbcb-is-a-cytoplasmic-monomer-recruited-to-and-stimulated-by-single-stranded-dna-binding-protein-ssb">F003 — SbcB is a cytoplasmic monomer recruited to, and stimulated by, single-stranded DNA-binding protein (SSB)</h3>
+<p>UniProt Q88N51's SUBUNIT annotation states: "<em>Monomer. Interacts with ssb (via C-terminus); this interaction stimulates the exonuclease activity by recruiting the enzyme to its substrate.</em>" This is grounded in direct structural and biochemical evidence from the <em>E. coli</em> system. A co-crystal structure of <em>E. coli</em> ExoI bound to an SSB C-terminal (SSB-Ct) peptide shows the conserved amphipathic SSB tail docking into a pocket on ExoI; the authors concluded that "<em>SSB stimulates ExoI by recruiting the enzyme to its substrate</em>" and that this "<em>provide[s] a structural paradigm for understanding SSB's organizational role in genome maintenance</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/18591666/">PMID: 18591666</a>. Mutational mapping identified the specific molecular anchor: "<em>the C-terminal-most SSB-Ct Phe anchors the peptide to a binding pocket on ExoI</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/19527069/">PMID: 19527069</a>.</p>
+<p>Kinetically, SSB does more than tether the enzyme — it activates it by improving substrate handling: "<em>SSB stabilizes ExoI substrate binding and melts secondary structures that could impede ExoI processivity</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/21572106/">PMID: 21572106</a>, affecting both apparent <em>k</em>cat and <em>K</em>m. Because SbcB is a soluble enzyme (see F006) that acts on cytoplasmic/nucleoid ssDNA intermediates, its <strong>subcellular site of action is the cytoplasm</strong>, where it operates in concert with SSB-coated ssDNA at sites of active genome maintenance.</p>
+<h3 id="f004-exoi-functions-in-dna-repair-recombination-editing-and-mismatch-repair-with-partial-redundancy-among-3-ssdna-exonucleases">F004 — ExoI functions in DNA repair, recombination editing, and mismatch repair, with partial redundancy among 3′ ssDNA exonucleases</h3>
+<p>UniProt keywords (DNA damage, DNA repair) and Gene Ontology (DNA repair, GO:0006281) capture the biological process. Genetically, in <em>E. coli</em>, exonuclease I "<em>has been implicated in the DNA repair and recombination pathways mediated by the recB and recC gene products (exonuclease V)</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/2834321/">PMID: 2834321</a>; classic <em>sbcB</em> mutations were originally isolated as suppressors that restore recombination proficiency to <em>recBC</em> strains. By degrading 3′ single-stranded tails, ExoI edits recombination intermediates and modulates the balance of RecBCD/RecFOR-dependent recombination.</p>
+<p>A key genome-stability role is redundancy: cells surviving RecG loss and PriA-driven re-replication "<em>must have either RecG or a 3′ single-stranded DNA (ssDNA) exonuclease, which can be exonuclease I, exonuclease VII, or SbcCD</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">PMID: 20647503</a>. This demonstrates that ExoI acts as one of several interchangeable 3′-ssDNA exonucleases that trim aberrant 3′ tails, limit inappropriate recombination substrates, and thereby prevent lethal re-replication. The same work links these nucleases to mismatch repair; the eukaryotic counterpart role of the ExoI family in mismatch-repair excision is separately documented (e.g., 5′-directed MMR excision, <a href="https://pubmed.ncbi.nlm.nih.gov/14636568/">PMID: 14636568</a>), reinforcing the repair-and-editing theme. This redundancy means that loss of <em>sbcB</em> alone is frequently phenotypically buffered — consistent with ExoI being an <strong>editing/back-up nuclease</strong> rather than an essential replicative enzyme.</p>
+<h3 id="f005-p-putida-sbcb-shares-48-identity-with-e-coli-exoi-and-conserves-all-catalyticmg2-residues">F005 — <em>P. putida</em> SbcB shares 48% identity with <em>E. coli</em> ExoI and conserves all catalytic/Mg²⁺ residues</h3>
+<p>Because no direct experimental study of PP_1365 exists, the safety of transferring function from the <em>E. coli</em> enzyme was quantified by a Needleman–Wunsch global alignment (BLOSUM62) of Q88N51 (477 aa) against the experimentally characterized <em>E. coli</em> ExoI (P04995, 475 aa). This gives <strong>48.0% identity over 465 aligned columns</strong> — well above the ~30% threshold at which functional transfer between orthologs is considered reliable. More importantly, every functionally critical residue is conserved. The table below maps the key <em>E. coli</em> residues to their <em>P. putida</em> counterparts.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th><em>E. coli</em> (P04995)</th>
+<th><em>P. putida</em> (Q88N51)</th>
+<th>Conservation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mg²⁺-coordinating acidic (D)</td>
+<td>Asp15</td>
+<td>Asp9</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Mg²⁺-coordinating acidic (E)</td>
+<td>Glu17</td>
+<td>Glu11</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>DEDDh catalytic His ("important for activity")</td>
+<td>His181</td>
+<td>His174</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Mg²⁺-binding acidic (D)</td>
+<td>Asp186</td>
+<td>Asp179</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Substrate-contacting Arg</td>
+<td>Arg165</td>
+<td>Arg158</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Substrate-contacting Arg</td>
+<td>Arg148</td>
+<td>Arg142</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>N-terminal catalytic motif</td>
+<td>HDYETFG</td>
+<td>HDYETTG</td>
+<td>Conserved motif (HDYET<strong>x</strong>G)</td>
+</tr>
+<tr>
+<td>SSB-Ct-binding surface</td>
+<td>Tyr207</td>
+<td>Trp200</td>
+<td>Conservative aromatic</td>
+</tr>
+<tr>
+<td>SSB-Ct-binding surface</td>
+<td>Gln311</td>
+<td>Pro303</td>
+<td>Divergent</td>
+</tr>
+<tr>
+<td>SSB-Ct-binding surface</td>
+<td>Arg338</td>
+<td>Asn331</td>
+<td>Divergent</td>
+</tr>
+</tbody>
+</table>
+<p>The conserved Mg²⁺-coordinating residues (D9/E11/D179) are precisely those that mediate the two-metal catalysis described in the <em>E. coli</em> structure, where an "<em>Mg²⁺ ion bound to the scissile phosphate in a position corresponding to Mg(B)</em>" was observed <a href="https://pubmed.ncbi.nlm.nih.gov/23609540/">PMID: 23609540</a>. The SSB-contact surface is only partially conserved — a conservative Tyr→Trp swap plus two divergent positions — consistent with a <strong>species-tuned SSB interface</strong>, in line with the finding that "<em>the C terminus of SSB (SSB-Ct) forms the docking site for heterologous proteins</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/18591666/">PMID: 18591666</a>. The perfect conservation of the two-metal DEDDh catalytic core and the ssDNA-contacting arginines is direct bioinformatic evidence that PP_1365 is a <em>bona fide, catalytically active</em> exonuclease I — not merely a database label.</p>
+<h3 id="f006-q88n51-is-a-soluble-cytoplasmic-protein-and-its-partner-ssb-plus-redundant-3-exonucleases-are-all-encoded-in-the-p-putida-kt2440-genome">F006 — Q88N51 is a soluble cytoplasmic protein, and its partner SSB plus redundant 3′-exonucleases are all encoded in the <em>P. putida</em> KT2440 genome</h3>
+<p>UniProt Q88N51 carries <strong>no transmembrane and no signal-peptide feature</strong> (only Domain and Binding-site features), consistent with a soluble cytoplasmic enzyme acting on nucleoid ssDNA — where its substrates arise. A genome survey of <em>P. putida</em> KT2440 (taxid 160488) confirms that the entire functional network is present in this organism, so the pathway context inferred from <em>E. coli</em> is genetically feasible here rather than resting on extrapolation alone:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Gene</th>
+<th>Locus</th>
+<th>UniProt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exonuclease I (this study)</td>
+<td><em>sbcB</em></td>
+<td>PP_1365</td>
+<td>Q88N51</td>
+</tr>
+<tr>
+<td>SSB partner</td>
+<td><em>ssb</em></td>
+<td>PP_0485</td>
+<td>Q88QK5</td>
+</tr>
+<tr>
+<td>Exonuclease VII (large subunit)</td>
+<td><em>xseA</em></td>
+<td>PP_1027</td>
+<td>Q88P26</td>
+</tr>
+<tr>
+<td>Exonuclease VII (small subunit)</td>
+<td><em>xseB</em></td>
+<td>PP_0529</td>
+<td>Q88QG5</td>
+</tr>
+<tr>
+<td>SbcCD nuclease (SbcC)</td>
+<td><em>sbcC</em></td>
+<td>PP_2024</td>
+<td>Q88LB1</td>
+</tr>
+<tr>
+<td>SbcCD nuclease (SbcD)</td>
+<td><em>sbcD</em></td>
+<td>PP_2025</td>
+<td>Q88LB0</td>
+</tr>
+<tr>
+<td>RecBCD / ExoV (RecB)</td>
+<td><em>recB</em></td>
+<td>PP_4673</td>
+<td>Q88DZ5</td>
+</tr>
+<tr>
+<td>RecBCD / ExoV (RecC)</td>
+<td><em>recC</em></td>
+<td>PP_4674</td>
+<td>Q88DZ4</td>
+</tr>
+<tr>
+<td>5′→3′ ssDNA exonuclease</td>
+<td><em>recJ</em></td>
+<td>PP_1477</td>
+<td>Q88MU1</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of the redundant trio ExoI/ExoVII/SbcCD — the same set shown to be functionally interchangeable in <em>E. coli</em> <a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">PMID: 20647503</a> — grounds the redundancy model in <em>P. putida</em>. Likewise, the confirmed <em>ssb</em> gene (PP_0485) makes the SSB-mediated recruitment mechanism feasible in this organism <a href="https://pubmed.ncbi.nlm.nih.gov/18591666/">PMID: 18591666</a>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the six findings yields a coherent picture of SbcB as a cytoplasmic, SSB-guided 3′→5′ ssDNA exonuclease that edits DNA intermediates during repair and recombination.</p>
+<p><strong>Reaction catalyzed.</strong> SbcB binds the free 3′-OH terminus of a single-stranded DNA and processively removes nucleotides one at a time in the 3′→5′ direction, releasing deoxyribonucleoside-5′-monophosphates and stopping when a short 5′ remnant is reached. It is strictly single-strand-specific and requires Mg²⁺.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">SSB</span><span class="o">-</span><span class="n">coated</span><span class="w"> </span><span class="n">ssDNA</span><span class="w"> </span><span class="p">(</span><span class="n">cytoplasm</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">nucleoid</span><span class="p">)</span>
+<span class="w">   </span><span class="mi">5</span><span class="s">&#39;──────────────────────────────3&#39;</span><span class="o">-</span><span class="n">OH</span>
+<span class="err">▓▓▓▓▓</span><span class="w"> </span><span class="n">SSB</span><span class="w">   </span><span class="n">SSB</span><span class="w"> </span><span class="err">▓▓▓▓▓</span>
+<span class="w">          </span><span class="err">│</span><span class="w"> </span><span class="n">SSB</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">tail</span><span class="w"> </span><span class="p">(...</span><span class="n">D</span><span class="o">-</span><span class="n">D</span><span class="o">-</span><span class="n">D</span><span class="o">-</span><span class="n">I</span><span class="o">-</span><span class="n">P</span><span class="o">-</span><span class="n">F</span><span class="p">)</span>
+<span class="w">          </span><span class="err">│</span><span class="w">  </span><span class="n">docks</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">pocket</span><span class="p">;</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">Phe</span><span class="w"> </span><span class="n">anchors</span>
+<span class="w">          </span><span class="err">▼</span>
+<span class="w">    </span><span class="err">┌───────────┐</span>
+<span class="w">    </span><span class="err">│</span><span class="w">   </span><span class="n">SbcB</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">C</span><span class="o">-</span><span class="n">shaped</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="n">domains</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">ExoI</span><span class="p">)</span><span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">crossover</span><span class="w"> </span><span class="nf">loop</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">SH3</span><span class="w"> </span><span class="n">encircle</span><span class="w"> </span><span class="n">ssDNA</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">DEDDh</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">D9</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">E11</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">H174</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">D179</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">active</span><span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">Mg2</span><span class="o">+</span><span class="w">  </span><span class="p">(</span><span class="n">RNase</span><span class="w"> </span><span class="n">H</span><span class="o">-</span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="n">two</span><span class="o">-</span><span class="n">metal</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">site</span><span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="n">R142</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">R158</span><span class="w"> </span><span class="n">contact</span><span class="w"> </span><span class="n">substrate</span>
+<span class="w">    </span><span class="err">└─────┬─────┘</span>
+<span class="w">          </span><span class="err">│</span><span class="w">  </span><span class="n">processive</span><span class="w"> </span><span class="mi">3</span><span class="s">&#39;-&gt;5&#39;</span><span class="w"> </span><span class="n">hydrolysis</span>
+<span class="w">          </span><span class="err">▼</span>
+<span class="w">     </span><span class="n">released</span><span class="o">:</span><span class="w">  </span><span class="n">dNMP</span><span class="w">  </span><span class="n">dNMP</span><span class="w">  </span><span class="n">dNMP</span><span class="w"> </span><span class="p">...</span><span class="w">  </span><span class="p">(</span><span class="mi">5</span><span class="s">&#39;-mononucleotides)</span>
+</code></pre></div>
+
+<p><strong>Where it acts.</strong> The enzyme is soluble and operates in the cytoplasm on nucleoid-associated ssDNA. Its recruitment to substrate is organized by SSB: SSB coats ssDNA at replication forks, recombination intermediates, and repair gaps, and its exposed C-terminal tail docks SbcB directly onto the substrate. This raises the local concentration of enzyme at ssDNA, stabilizes substrate binding, and melts secondary structure that would otherwise stall the processive machine — coupling the enzyme's activity to the physiological state of the DNA.</p>
+<p><strong>Pathways.</strong> Biologically, SbcB is an "editing" nuclease. In recombination, it and other 3′-ssDNA exonucleases trim 3′ single-stranded tails, thereby modulating which substrates enter the RecBCD/RecA recombination pathway — the historical basis for <em>sbcB</em> mutations acting as suppressors in <em>recBC</em> backgrounds. In genome maintenance more broadly, SbcB is one of three functionally redundant 3′-ssDNA exonucleases (with Exonuclease VII and SbcCD) that remove aberrant 3′ tails and prevent lethal, PriA-driven re-replication when RecG is absent. This redundancy explains why single-gene <em>sbcB</em> deletions are typically phenotypically mild — a caveat directly relevant to interpreting any future knockout in <em>P. putida</em>.</p>
+<p><strong>Confidence and inference chain.</strong> The functional assignment for PP_1365 is inferential but robust. It rests on (1) rule-based EC assignment (PIRNR000977), (2) 48% identity to a biochemically defined ortholog, (3) perfect conservation of all catalytic and metal-binding residues, and (4) genomic confirmation that the full partner network exists in KT2440. The weakest link is the SSB-interaction interface, which is only partially conserved and may be species-tuned; and, most importantly, no direct experimental study of the <em>P. putida</em> protein exists.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/2834321/">2834321</a></td>
+<td><em>Physical and biochemical characterization of cloned sbcB and xonA mutations from E. coli K-12</em></td>
+<td>Defines <em>sbcB</em>/<em>xonA</em> as the structural gene for exonuclease I (3′→5′ ssDNA → mononucleotides); links it to RecBC repair/recombination (F001, F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23609540/">23609540</a></td>
+<td><em>Crystal structures of E. coli exonuclease I in complex with ssDNA</em></td>
+<td>Establishes processive 3′→5′ digestion, three-domain C-shape, DNA-encircling crossover loop, and the two-metal (Mg²⁺) mechanism (F001, F002, F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9396823/">9396823</a></td>
+<td><em>The proofreading domain of E. coli DNA polymerase I and other exonuclease domains</em></td>
+<td>Independent family analysis classifying ExoI as a processive 3′→5′ ssDNA exodeoxyribonuclease (F001)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15527770/">15527770</a></td>
+<td><em>Crystal structure of human ISG20, an interferon-induced antiviral ribonuclease</em></td>
+<td>Places ExoI in the DEDDh group; active site shared with Pol III ε and ISG20 (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18591666/">18591666</a></td>
+<td><em>Structural basis of E. coli SSB stimulation of exonuclease I</em></td>
+<td>Co-crystal showing SSB-Ct docking; SSB stimulates ExoI by recruitment to substrate (F003, F005, F006)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19527069/">19527069</a></td>
+<td><em>Peptide inhibitors identify roles for SSB C-terminal residues in SSB/ExoI complex formation</em></td>
+<td>Identifies the SSB C-terminal Phe as the anchoring residue for the ExoI-binding pocket (F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21572106/">21572106</a></td>
+<td><em>Mechanism of Exonuclease I stimulation by the single-stranded DNA-binding protein</em></td>
+<td>SSB stabilizes substrate binding and melts secondary structure to aid processivity (F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">20647503</a></td>
+<td><em>RecG protein and single-strand DNA exonucleases avoid cell lethality associated with PriA helicase activity</em></td>
+<td>Demonstrates functional redundancy of ExoI, ExoVII, and SbcCD as 3′-ssDNA exonucleases (F004, F006)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting/contextual literature.</strong> Structural studies of the trimeric archaeal PhoExo I (<a href="https://pubmed.ncbi.nlm.nih.gov/26138487/">PMID: 26138487</a>) and the NMR model of the Pol III ε proofreading subunit (<a href="https://pubmed.ncbi.nlm.nih.gov/11772007/">PMID: 11772007</a>) reinforce the RNase H-like/DEDDh mechanistic paradigm. Human EXO1 studies (<a href="https://pubmed.ncbi.nlm.nih.gov/12414623/">PMID: 12414623</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/24829445/">PMID: 24829445</a>) and mismatch-repair excision work (<a href="https://pubmed.ncbi.nlm.nih.gov/14636568/">PMID: 14636568</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16905530/">PMID: 16905530</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16085492/">PMID: 16085492</a>) document the broader family's role in DNA repair, though these concern eukaryotic exonucleases and are contextual rather than direct evidence for the bacterial 3′→5′ enzyme.</p>
+<p><strong>No contradicting evidence</strong> was found. All lines of evidence — genetic, biochemical, structural, bioinformatic, and genomic — converge on the same functional assignment.</p>
+<h3 id="supported-and-refuted-hypotheses">Supported and refuted hypotheses</h3>
+<p><strong>Supported</strong></p>
+<ul>
+<li><strong>H1</strong> — <em>sbcB</em> catalyzes processive 3′→5′ exonucleolytic degradation of ssDNA to 5′-mononucleotides (EC 3.1.11.1). <em>Supported</em> (PMID 2834321, 23609540, 9396823; UniProt).</li>
+<li><strong>H2</strong> — Catalysis is Mg²⁺-dependent via a DEDDh/RNase H-like two-metal mechanism; processivity comes from a DNA-encircling crossover loop/SH3 domain. <em>Supported</em> (PMID 23609540, 15527770; InterPro/Pfam).</li>
+<li><strong>H3</strong> — The enzyme is a cytoplasmic monomer recruited to and stimulated by SSB (SSB-Ct docking). <em>Supported</em> (UniProt; PMID 18591666, 19527069, 21572106).</li>
+<li><strong>H4</strong> — Biological role is 3′-ssDNA editing in recombination, MMR, and prevention of aberrant re-replication, with redundancy among 3′ exonucleases. <em>Supported</em> (PMID 2834321, 20647503).</li>
+</ul>
+<p><strong>Refuted / excluded</strong></p>
+<ul>
+<li>Not a 5′→3′ nuclease, not a double-strand-DNA nuclease, and not an RNA-degrading ribonuclease as its primary role (any "RNA exonuclease" GO term appears only as a low-confidence IEA projection; the biochemically defined substrate is ssDNA).</li>
+<li>Not a membrane or secreted protein; no transporter or signaling function.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No organism-specific experimental data.</strong> There is no published biochemical, genetic, or structural study of <em>P. putida</em> PP_1365 itself. The entire functional assignment is inferred from the <em>E. coli</em> ortholog plus rule-based database annotation. Enzyme kinetics, exact processivity, and metal-ion preferences have not been measured for the <em>P. putida</em> protein.</p>
+</li>
+<li>
+<p><strong>SSB interface divergence.</strong> While the catalytic core is perfectly conserved, the SSB-Ct docking surface is only partially conserved (conservative Y→W plus two divergent positions). Whether <em>P. putida</em> SSB stimulates SbcB with the same affinity and mechanism as in <em>E. coli</em> is untested; the enzyme is presumably stimulated by its own cognate SSB.</p>
+</li>
+<li>
+<p><strong>Redundancy obscures phenotype.</strong> Because ExoI, ExoVII, and SbcCD are functionally redundant, a single <em>sbcB</em> deletion is likely to have a subtle phenotype, complicating loss-of-function studies. Any physiological role unique to <em>P. putida</em> (e.g., under its characteristic environmental/solvent stresses) is unknown.</p>
+</li>
+<li>
+<p><strong>Structure is homology-inferred.</strong> No experimental structure of the <em>P. putida</em> protein exists. Residue mappings rely on sequence alignment to the <em>E. coli</em> structure; an AlphaFold model would strengthen (but not replace) this inference.</p>
+</li>
+<li>
+<p><strong>Family annotation caveat.</strong> UniProt lists "Protein Family: Not specified," and the EC assignment is rule-based (PIRNR/ARBA). Rule-based annotations can occasionally be imprecise, though here they are strongly corroborated by orthology.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzyme assay (highest priority).</strong> Express and purify His-tagged PP_1365 and directly assay 3′→5′ exonuclease activity on 3′-labeled ssDNA oligonucleotides, confirming (a) single-strand specificity, (b) 3′→5′ directionality, (c) release of 5′-mononucleotides, and (d) Mg²⁺ dependence. Include a catalytic-dead mutant (e.g., D9A/E11A or H174A) as a negative control.</p>
+</li>
+<li>
+<p><strong>SSB-stimulation test.</strong> Measure ExoI activity ± purified <em>P. putida</em> SSB (PP_0485), and ± an SSB-Ct peptide, to determine whether the recruitment/stimulation mechanism is conserved despite the divergent interface residues. Use surface plasmon resonance or ITC to quantify the SbcB–SSB affinity.</p>
+</li>
+<li>
+<p><strong>Structural model and validation.</strong> Generate an AlphaFold2/3 model of Q88N51, superpose it on the <em>E. coli</em> ExoI–ssDNA structure (PDB from PMID 23609540), and verify the crossover-loop geometry and active-site residue positions (D9, E11, H174, D179; R142, R158). Longer term, pursue an experimental crystal or cryo-EM structure.</p>
+</li>
+<li>
+<p><strong>Genetic redundancy analysis in KT2440.</strong> Construct single (Δ<em>sbcB</em>) and combinatorial (Δ<em>sbcB</em> Δ<em>xseA</em> Δ<em>sbcC</em>; ± Δ<em>recG</em>) knockouts and assay UV/MMS sensitivity, recombination frequency, and viability, testing whether the <em>E. coli</em> redundancy and PriA-lethality relationships hold in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Phenotypic context.</strong> Examine whether <em>sbcB</em> contributes to genome stability under <em>P. putida</em>-relevant stresses (oxidative, solvent, and stationary-phase conditions) where ssDNA repair intermediates accumulate.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>sbcB</em> (PP_1365, Q88N51) of <em>Pseudomonas putida</em> KT2440 is confidently annotated as <strong>Exodeoxyribonuclease I (EC 3.1.11.1)</strong> — a cytoplasmic, Mg²⁺-dependent, processive 3′→5′ single-stranded-DNA exonuclease that uses an RNase H-like DEDDh two-metal active site and a DNA-encircling crossover loop, is recruited to and stimulated by SSB, and functions as one of several partially redundant 3′-ssDNA exonucleases in DNA recombination, repair, and mismatch-repair editing. The assignment is inferential (48% identity and full active-site conservation relative to the biochemically defined <em>E. coli</em> enzyme, plus genomic confirmation of the complete partner network) but robust, and awaits direct experimental confirmation in <em>P. putida</em>.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sbcB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="sbcB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:2834321</li>
+<li>PMID:23609540</li>
+<li>PMID:9396823</li>
+<li>PMID:15527770</li>
+<li>PMID:18591666</li>
+<li>PMID:19527069</li>
+<li>PMID:21572106</li>
+<li>PMID:20647503</li>
+<li>PMID:14636568</li>
+<li>PMID:26138487</li>
+<li>PMID:11772007</li>
+<li>PMID:12414623</li>
+<li>PMID:24829445</li>
+<li>PMID:16905530</li>
+<li>PMID:16085492</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sbcB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N51" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sbcb-curation-notes">sbcB curation notes</h1>
+<p>Q88N51 has exact Exonuclease I chemistry (EC 3.1.11.1), 3'-to-5'<br />
+single-stranded DNA degradation, and an SSB-interaction prediction. The<br />
+InterPro-derived RNA exonuclease annotation was removed because it conflicts<br />
+with the substrate-specific record. A mismatch-repair role remains a candidate<br />
+module implementation, not a gene-level claim.</p>
+<h2 id="openscientist-adjudication">OpenScientist adjudication</h2>
+<p>The OpenScientist report corroborated the Mg-dependent, processive 3'-to-5'<br />
+single-stranded-DNA exonuclease reaction and SSB interaction from the exact<br />
+record and characterized orthologs. Its mismatch-repair discussion is not<br />
+target-specific and includes evidence from non-Pseudomonas and eukaryotic ExoI<br />
+systems, so it does not justify adding mismatch repair as a core Q88N51<br />
+process.</p>
+<p>The cached parent <code>PTHR11046</code> artifacts are retained as negative provenance:<br />
+the parent spans oligoribonuclease and Exonuclease I subfamilies, whereas<br />
+Q88N51 and the module's SbcB selector use the function-specific<br />
+<code>PTHR11046:SF11</code> Exonuclease I subfamily.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N51
+gene_symbol: sbcB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  SbcB is a magnesium-dependent Exonuclease I that degrades single-stranded DNA
+  processively in the 3&#39;-to-5&#39; direction to nucleoside 5&#39;-phosphates. Its
+  C-terminal region is predicted to interact with SSB, providing a mechanism
+  for recruitment to single-stranded DNA. This directional activity makes SbcB
+  a candidate nuclease for one orientation of mismatch-excision tracts, but a
+  specific KT2440 mismatch-repair role has not been demonstrated directly.
+existing_annotations:
+  - term:
+      id: GO:0000175
+      label: 3&#39;-5&#39;-RNA exonuclease activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Remove. The Q88N51 record and Exonuclease I subfamily assignment
+        (PTHR11046:SF11) specify a single-stranded DNA substrate; the
+        RNA-exonuclease mapping comes from a broad overlapping InterPro family.
+      action: REMOVE
+      reason: Contradicted by the exact EC 3.1.11.1 DNA reaction and Exonuclease I domain architecture.
+      supported_by:
+        - reference_id: file:PSEPK/sbcB/sbcB-uniprot.txt
+          supporting_text: &#34;Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction&#34;
+        - reference_id: file:PSEPK/sbcB/sbcB-uniprot.txt
+          supporting_text: &#34;PANTHER; PTHR11046:SF11; EXODEOXYRIBONUCLEASE I; 1.&#34;
+  - term:
+      id: GO:0003676
+      label: nucleic acid binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Too broad relative to the substrate-specific exonuclease function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: GO:0008310 captures both DNA substrate and direction.
+  - term:
+      id: GO:0004527
+      label: exonuclease activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: Correct parent activity but redundant with GO:0008310.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: A direction- and substrate-specific child term is present.
+  - term:
+      id: GO:0004529
+      label: DNA exonuclease activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct parent activity but less informative than GO:0008310.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: Retaining both would duplicate the same core reaction at two levels.
+  - term:
+      id: GO:0006281
+      label: DNA repair
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Retain as non-core. Exonuclease I is used in DNA-processing and repair
+        pathways, but the exact KT2440 pathway assignment has not been tested.
+      action: KEEP_AS_NON_CORE
+      reason: Conserved family context without organism-specific pathway evidence.
+  - term:
+      id: GO:0008310
+      label: single-stranded DNA 3&#39;-5&#39; DNA exonuclease activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Accept as the core molecular function. The Q88N51 record assigns
+        EC 3.1.11.1 for 3&#39;-to-5&#39; exonucleolytic cleavage of single-stranded DNA.
+      action: ACCEPT
+      reason: Exact directional Exonuclease I chemistry.
+      supported_by:
+        - reference_id: file:PSEPK/sbcB/sbcB-uniprot.txt
+          supporting_text: &#34;EC=3.1.11.1&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/sbcB/sbcB-uniprot.txt
+    title: UniProtKB entry for PSEPK Exonuclease I SbcB (Q88N51)
+    findings:
+      - supporting_text: &#34;EC=3.1.11.1&#34;
+      - supporting_text: &#34;Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction&#34;
+      - supporting_text: &#34;Interacts with ssb (via C-terminus)&#34;
+      - supporting_text: &#34;PANTHER; PTHR11046:SF11; EXODEOXYRIBONUCLEASE I; 1.&#34;
+core_functions:
+  - description: &gt;-
+      SbcB processively degrades single-stranded DNA in the 3&#39;-to-5&#39;
+      direction, providing a directional DNA-processing activity that may
+      support mismatch excision.
+    molecular_function:
+      id: GO:0008310
+      label: single-stranded DNA 3&#39;-5&#39; DNA exonuclease activity
+    supported_by:
+      - reference_id: file:PSEPK/sbcB/sbcB-uniprot.txt
+        supporting_text: &#34;EC=3.1.11.1&#34;
+      - reference_id: file:PSEPK/sbcB/sbcB-uniprot.txt
+        supporting_text: &#34;Exonucleolytic cleavage in the 3&#39;- to 5&#39;-direction&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: Does SbcB remove 3&#39;-directed mismatch-excision tracts in KT2440?
+suggested_experiments:
+  - hypothesis: SbcB supplies the major 3&#39;-to-5&#39; exonuclease activity during one orientation of KT2440 MMR.
+    description: &gt;-
+      Compare repair of substrates nicked on either side of a mismatch in wild
+      type and sbcB-null extracts, with purified Q88N51 complementation.
+    experiment_type: orientation-resolved mismatch excision assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
