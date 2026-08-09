@@ -27,7 +27,9 @@ existing_annotations:
     original_reference_id: PMID:1
     review:
       action: ACCEPT
-      summary: UPRE reporter assay
+      summary: |-
+        UPRE
+          reporter assay
       supported_by:
         - reference_id: PMID:2
 """
@@ -42,7 +44,7 @@ existing_annotations:
         "full_text_available: true\nNo assay vocabulary here.\n"
     )
     (pubs_dir / "PMID_2.md").write_text(
-        "full_text_available: true\nA UPRE reporter assay was performed.\n"
+        "full_text_available: true\nA UPRE\n  reporter assay was performed.\n"
     )
 
     catalog = root / "catalog with spaces.yaml"
@@ -54,7 +56,7 @@ readouts:
     convergence: high
     aligned_label_regex: 'unfolded protein'
     commonly_overmapped_to: [GO:0006986]
-    patterns: ['\bUPRE\b']
+    patterns: ['\bUPRE\s+reporter']
 """
     )
     return genes_dir, pubs_dir, catalog
@@ -86,7 +88,20 @@ def test_assay_mine_preserves_shared_paths_for_both_miners(tmp_path: Path) -> No
     )
 
     assert result.returncode == 0, result.stderr
-    assert (out_dir / "readout_matches.tsv").exists()
+    with (out_dir / "readout_matches.tsv").open(newline="") as handle:
+        rows = list(csv.DictReader(handle, delimiter="\t"))
+    assert [row["matched"] for row in rows] == ["UPRE reporter"]
+    assert [row["snippet"] for row in rows] == ["UPRE reporter assay"]
+    assert len((out_dir / "readout_matches.tsv").read_text().splitlines()) == 2
+    with (out_dir / "matched_string_counts.tsv").open(newline="") as handle:
+        counts = list(csv.DictReader(handle, delimiter="\t"))
+    assert counts == [
+        {
+            "readout_class": "UPR_ER_STRESS",
+            "matched_string": "upre reporter",
+            "count": "1",
+        }
+    ]
     assert (out_dir / "paper_readout_matches.tsv").exists()
 
 
@@ -112,6 +127,18 @@ def test_assay_mine_supporting_routes_only_paper_outputs(tmp_path: Path) -> None
     assert [(row["pmid"], row["ref_role"]) for row in rows] == [
         ("2", "supporting")
     ]
+    with (out_dir / "paper_matched_string_counts.tsv").open(newline="") as handle:
+        counts = list(csv.DictReader(handle, delimiter="\t"))
+    assert counts == [
+        {
+            "readout_class": "UPR_ER_STRESS",
+            "matched_string": "upre reporter",
+            "papers": "1",
+        }
+    ]
+    assert len(
+        (out_dir / "paper_matched_string_counts.tsv").read_text().splitlines()
+    ) == 2
     assert sorted(path.name for path in out_dir.iterdir()) == [
         "paper_action_crosstab_aligned.tsv",
         "paper_action_crosstab_all.tsv",

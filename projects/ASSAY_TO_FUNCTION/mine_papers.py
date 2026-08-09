@@ -260,6 +260,11 @@ def load_catalog(path: Path) -> dict[str, dict[str, Any]]:
     return catalog
 
 
+def normalize_match_text(value: str) -> str:
+    """Collapse regex-matched whitespace for single-line TSV fields."""
+    return re.sub(r"\s+", " ", value).strip()
+
+
 def build_aspect_map(genes_dir: Path) -> dict[str, str]:
     """Map GO id -> aspect (MF/BP/CC) by scanning every *-goa.tsv once."""
     aspect: dict[str, str] = {}
@@ -320,7 +325,8 @@ class PubCache:
                     # record the distinct matched substrings for QC (cheap: only
                     # runs on the rare screen-passing papers)
                     for mm in rx.finditer(text):
-                        self.matched_counts[name][mm.group(0).lower()] += 1
+                        matched = normalize_match_text(mm.group(0)).lower()
+                        self.matched_counts[name][matched] += 1
         result = (classes, "full_text_available: true" in low)
         self._cache[pmid] = result
         return result
