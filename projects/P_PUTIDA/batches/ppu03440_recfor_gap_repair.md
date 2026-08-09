@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Exclude RecBCD end resection, replisome subunits, replication restart, and SOS regulation.
 - [x] Add reviewed UniProt exemplars and directly relevant RecQ and RecA PAINT nodes.
 - [x] Validate and render the module, genes, and project page.
-- [ ] Open one PR for this module.
+- [x] Open one PR for this module.
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
@@ -54,7 +54,12 @@ SOS response and poor homologous-recombination efficiency.
 - RecF's imported repair-synthesis annotation is removed because RecF loads
   recombinase and does not catalyze DNA synthesis.
 - RecF, RecO, and RecR receive DNA recombinase assembly GO:0000730 as the
-  specific shared process for their mediator role.
+  specific shared process for their mediator role, using reviewed bacterial
+  exemplars rather than the module itself as ISS evidence.
+- RecO receives single-stranded DNA binding GO:0003697, filling the molecular-
+  function gap on the RecO leaf with homolog-level experimental support.
+- RecQ replisome membership is removed: replication-associated activity does
+  not establish stable membership in the bacterial replisome.
 
 ## Boundary Decisions
 
@@ -72,7 +77,10 @@ SOS response and poor homologous-recombination efficiency.
 Every leaf is grounded by a concrete KT2440 UniProt protein and a reviewed E. coli
 exemplar from the matching PANTHER family. PTN000344873 grounds RecQ directional
 helicase activity and recombination, while PTN000534381 grounds RecA strand
-exchange and recombinational repair.
+exchange and recombinational repair. Primary literature grounds RecO-mediated
+SSB displacement (PMID:32297860), Pseudomonas RecR mediator complexes
+(PMID:29633970), and the separable RecJ/RecQ and RecFOR presynaptic roles
+(PMID:35653392).
 
 ## Research Status
 
