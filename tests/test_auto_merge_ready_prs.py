@@ -772,7 +772,9 @@ def test_file_inventory_head_check_rejects_movement_and_empty_heads(monkeypatch)
         "_gh",
         lambda args: calls.append(args) or "new-head\n",
     )
-    with pytest.raises(ValueError, match="head moved during the file-list read"):
+    with pytest.raises(
+        auto_merge.HeadMovedError, match="head moved during the file-list read"
+    ):
         auto_merge.require_unchanged_file_inventory_head("o/r", 7, "old-head")
     assert calls[0][:3] == ["pr", "view", "7"]
     assert calls[0][-2:] == ["--jq", ".headRefOid"]
@@ -784,6 +786,26 @@ def test_file_inventory_head_check_rejects_movement_and_empty_heads(monkeypatch)
 def test_file_inventory_head_check_accepts_case_insensitive_exact_head(monkeypatch):
     monkeypatch.setattr(auto_merge, "view_pr_head_sha", lambda *_: "ABCDEF")
     auto_merge.require_unchanged_file_inventory_head("o/r", 7, "abcdef")
+
+
+def test_view_pr_head_sha_retries_api_errors_and_empty_data(monkeypatch):
+    responses = [
+        subprocess.CalledProcessError(1, "gh", stderr="HTTP 502"),
+        "\n",
+        "head-sha\n",
+    ]
+    sleeps = []
+
+    def fake_gh(_args):
+        response = responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    monkeypatch.setattr(auto_merge, "_gh", fake_gh)
+    monkeypatch.setattr(auto_merge.time, "sleep", sleeps.append)
+    assert auto_merge.view_pr_head_sha("o/r", 7, attempts=3, delay=0.25) == "head-sha"
+    assert sleeps == [0.25, 0.5]
 
 
 def test_view_base_tip_encodes_branch_and_rejects_empty(monkeypatch):
@@ -968,12 +990,12 @@ def test_changed_file_count_mismatch_on_second_read_blocks_execute(
         (("--dry-run",), 0, "Skipped 1 near-miss"),
         (
             ("--execute", "--required-check", REQUIRED_CHECK),
-            1,
-            "Failed to merge 1",
+            0,
+            "Skipped 1 near-miss",
         ),
     ],
 )
-def test_head_movement_during_file_read_fails_closed_by_mode(
+def test_head_movement_during_file_read_is_a_benign_skip_in_both_modes(
     monkeypatch, tmp_path, args, expected_code, expected_summary
 ):
     code, merges, summary = _run_main(
@@ -985,6 +1007,19 @@ def test_head_movement_during_file_read_fails_closed_by_mode(
     assert code == expected_code
     assert merges == []
     assert expected_summary in summary
+    assert "head moved during the file-list read" in summary
+
+
+def test_head_movement_during_final_file_read_is_a_benign_skip(monkeypatch, tmp_path):
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        args=("--execute", "--required-check", REQUIRED_CHECK),
+        post_file_heads=[HEAD_SHA, "moved-head"],
+    )
+    assert code == 0
+    assert merges == []
+    assert "Skipped 1 near-miss" in summary
     assert "head moved during the file-list read" in summary
 
 

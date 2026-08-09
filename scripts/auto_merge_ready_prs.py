@@ -123,6 +123,10 @@ class ChangedFileInventory:
     previous_filenames: tuple[str, ...] = ()
 
 
+class HeadMovedError(ValueError):
+    """A benign PR-head race observed while collecting a file inventory."""
+
+
 def non_negative_int(value: str) -> int:
     """Parse an age threshold and reject values that widen it by accident."""
     parsed = int(value)
@@ -676,24 +680,34 @@ def list_pr_files(repo: str, number: int) -> ChangedFileInventory:
     return ChangedFileInventory(tuple(filenames), tuple(previous_filenames))
 
 
-def view_pr_head_sha(repo: str, number: int) -> str:
-    """Re-read the live PR head after a file-list request."""
-    oid = _gh(
-        [
-            "pr",
-            "view",
-            str(number),
-            "--repo",
-            repo,
-            "--json",
-            "headRefOid",
-            "--jq",
-            ".headRefOid",
-        ]
-    ).strip()
-    if not oid:
-        raise ValueError(f"could not resolve the current head for PR #{number}")
-    return oid
+def view_pr_head_sha(
+    repo: str, number: int, *, attempts: int = 5, delay: float = 2.0
+) -> str:
+    """Re-read the live PR head, retrying transient API errors or empty data."""
+    args = [
+        "pr",
+        "view",
+        str(number),
+        "--repo",
+        repo,
+        "--json",
+        "headRefOid",
+        "--jq",
+        ".headRefOid",
+    ]
+    for attempt in range(attempts):
+        try:
+            oid = _gh(args).strip()
+        except subprocess.CalledProcessError:
+            if attempt == attempts - 1:
+                raise
+        else:
+            if oid:
+                return oid
+            if attempt == attempts - 1:
+                raise ValueError(f"could not resolve the current head for PR #{number}")
+        time.sleep(delay * (2**attempt))
+    raise AssertionError("unreachable head-SHA retry state")
 
 
 def require_unchanged_file_inventory_head(
@@ -705,7 +719,7 @@ def require_unchanged_file_inventory_head(
         raise ValueError(f"PR #{number} had no head SHA before the file-list read")
     observed = view_pr_head_sha(repo, number)
     if observed.casefold() != expected.casefold():
-        raise ValueError(
+        raise HeadMovedError(
             f"PR #{number} head moved during the file-list read: "
             f"{expected} -> {observed}"
         )
@@ -963,6 +977,11 @@ def main(argv: list[str] | None = None) -> int:
                 args.repo, number, fresh.get("headRefOid")
             )
             current_base_sha = view_base_tip(args.repo, args.base_branch)
+        except HeadMovedError as exc:
+            reason = str(exc)
+            print(f"SKIP  #{number}: {reason}")
+            skipped.append({"number": number, "reason": reason})
+            continue
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
                 _gh_error(exc)
@@ -1022,6 +1041,11 @@ def main(argv: list[str] | None = None) -> int:
             require_unchanged_file_inventory_head(
                 args.repo, number, fresh.get("headRefOid")
             )
+        except HeadMovedError as exc:
+            reason = str(exc)
+            print(f"SKIP  #{number}: {reason}")
+            skipped.append({"number": number, "reason": reason})
+            continue
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
                 _gh_error(exc)

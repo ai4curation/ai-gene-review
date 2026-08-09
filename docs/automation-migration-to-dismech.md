@@ -365,7 +365,7 @@ The controller requires all of these at fresh reads immediately before merge:
 - the PR's tested base SHA equals the current `main` tip;
 - GitHub reports mergeable and clean;
 - all reported checks are complete/non-failing, and `test (3.12)` is explicitly
-successful.
+  successful.
 
 The path inventory is fetched from the paginated REST endpoint on both fresh
 verification passes, matched against the PR API's total `changedFiles` count,
@@ -384,7 +384,9 @@ fresh content needs additional observation time.
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
 (Contents write + pull-request write + Issues write) is supplied only to the
 head-pinned merge and courtesy-comment subprocesses. API uncertainty fails an
-execute run red.
+execute run red. A positively observed head/base movement is instead a benign
+skip: concurrent automation changed the candidate, so its new state must pass a
+later sweep.
 
 The feature flag and execute preflight are not substitutes for protection. The
 preflight's `GET branches/main` / `.protected == true` read is deliberately only
@@ -415,10 +417,13 @@ If any setting is weakened later, set the flag false and cancel any in-flight
 Shepherd run.
 
 Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
-proves the commit contains derived artifacts only, always builds from the
-default branch, enables auto-merge only under the same feature flag, and obtains
-an ai4c-reviewer approval anchored to the exact generated commit. The general
-Shepherd controller and agent both exclude that lane. Before calling
+proves the commit contains derived artifacts only and always builds from the
+default branch. After pushing, it first asks ai4c-reviewer for an approval
+anchored to the exact generated commit; rollout or protection-check failures
+therefore cannot suppress the independent review. A later step enables
+auto-merge only under the shared feature flag, only when that approval step
+succeeded, and only with the exact generated head pin. The general Shepherd
+controller and agent both exclude this lane. Before calling
 `gh pr merge --auto`, the generated lane also requires the repository default
 and literal PR base to both be `main`, then reads `branches/main` with its
 current ai4c-agent token and fails without arming if `.protected` is false or
@@ -426,8 +431,8 @@ unreadable. Like the Shepherd preflight, this is only a protection-existence
 smoke check; the exact settings still require the manual checklist above. If
 the reviewer App is temporarily unavailable after a long render, the approval
 step emits a loud warning but does not discard the already-pushed artifacts or
-red-X the job; protected `main` leaves the PR open and unmerged until approval
-is retried.
+red-X the job; the later step refuses to arm auto-merge until approval is
+retried.
 
 ## Recommended follow-up: append-only curation history
 
