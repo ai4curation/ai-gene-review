@@ -253,13 +253,14 @@ def test_rule_wrapper_analysis_dependency_uses_custom_cache(
         ]
 
 
-def test_render_all_rules_analysis_dependency_uses_custom_cache(
+def test_render_all_rules_preserves_custom_cache_argument(
     tmp_path: Path,
 ) -> None:
     rule_id = "ARBA00026249"
+    cache_name = "custom cache (draft), v1? $RULE_RENDER_CACHE_TOKEN"
     working_directory = tmp_path / "isolated working directory"
     working_directory.mkdir()
-    cache_dir = working_directory / "custom-cache"
+    cache_dir = working_directory / cache_name
     seed_analysis_outputs(cache_dir, rule_id)
     fake_bin, log_path = install_recording_uv(tmp_path)
 
@@ -268,16 +269,36 @@ def test_render_all_rules_analysis_dependency_uses_custom_cache(
         fake_bin,
         log_path,
         "render-all-rules",
-        "custom-cache",
+        cache_name,
+        extra_env={"RULE_RENDER_CACHE_TOKEN": "expanded"},
     )
 
     assert result.returncode == 0, result.stderr
+    assert cache_name in result.stdout
     assert "Rendered 1 rule reviews" in result.stdout
-    invocations = read_argv_log(log_path)
-    assert not any("examples/rule_analysis_demo.py" in argv for argv in invocations)
-    render_invocations = [argv for argv in invocations if argv[:3] == ["run", "python", "-c"]]
-    assert len(render_invocations) == 1
+    assert read_argv_log(log_path) == [
+        ["run", "python", "-c", RENDER_RULE_CODE, rule_id, cache_name]
+    ]
     assert not (working_directory / "rules" / "arba" / rule_id).exists()
+
+
+def test_render_all_rules_preserves_default_cache_argument(tmp_path: Path) -> None:
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        "render-all-rules",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Rendering all rule reviews in rules/arba" in result.stdout
+    assert "Rendered 0 rule reviews" in result.stdout
+    assert not log_path.exists()
+    assert not (working_directory / "rules").exists()
 
 
 def test_sync_rule_review_single_preserves_default_cache_argument(

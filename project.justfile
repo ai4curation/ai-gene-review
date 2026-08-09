@@ -1402,16 +1402,18 @@ render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" 
     uv run python -c 'import sys; from pathlib import Path; from ai_gene_review.etl.rule_analysis import render_rule_review_html; render_rule_review_html(sys.argv[1], Path(sys.argv[2]))' "$rule_id" "$cache_dir"
 
 # Render all rule reviews as HTML (automatically analyzes first if needed)
+[positional-arguments]
 render-all-rules cache_dir="rules/arba":
     #!/usr/bin/env bash
-    echo "Rendering all rule reviews in {{cache_dir}}..."
+    cache_dir="$1"
+    echo "Rendering all rule reviews in $cache_dir..."
     count=0
-    for review_yaml in {{cache_dir}}/*/*-review.yaml; do
+    for review_yaml in "$cache_dir"/*/*-review.yaml; do
         if [ -f "$review_yaml" ]; then
             rule_id=$(basename "$review_yaml" | sed 's/-review.yaml$//')
             echo "  Processing $rule_id..."
             # Use just to call render-rule which has analyze-rule as dependency
-            just render-rule "$rule_id" "{{cache_dir}}"
+            just render-rule "$rule_id" "$cache_dir"
             count=$((count + 1))
         fi
     done
