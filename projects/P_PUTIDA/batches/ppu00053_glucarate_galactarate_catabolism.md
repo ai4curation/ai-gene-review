@@ -46,9 +46,9 @@ same two downstream enzymes.
   4-hydroxy-tetrahydrodipicolinate synthase is removed. Q88GW8 is a reviewed
   KDGDH with Rhea 24608 and three substrate-specific family assignments; the
   DapA annotation crossed a paralog boundary within the shared TIM-barrel fold.
-- The `garD` D-galacturonate-catabolism annotation is removed. Q88GW6 is the
-  GarD SF1 protein, whereas altronate/UxaA chemistry belongs to a different
-  subfamily.
+- The `garD` D-galacturonate-catabolism annotation is kept as non-core because
+  characterized KT2440 Udh feeds D-galacturonate into D-galactarate before the
+  GarD reaction; the direct D-galactarate process remains the core annotation.
 - Broad `lyase activity` and `oxidoreductase activity` mappings are marked as
   over-annotations when exact substrate-specific molecular functions exist.
 - No module-level molecular function or redundant cytoplasm/cytosol pair is
