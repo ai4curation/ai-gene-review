@@ -7,7 +7,8 @@
 - Live QuickGO returned 33 human O60663 rows. Project normalization yielded 29 source annotation objects because four exact tuple groups collapsed: PMID:12792813 (two rows, LDB1), PMID:20211142 (two rows, LDB1 plus SSBP3), PMID:33961781 (two rows, the same two partners), and PMID:40205054 (two rows, the same two partners).
 - All 23 normalized rows with WITH/FROM data retain the exact ordered union of source identifiers. Live QuickGO had no NOT annotations and no target-isoform rows.
 - Four live annotation-extension sets were restored because the TSV serializer omits them: the ISS GO:0000981 row has five transcription-factor inputs; the ISS GO:0045944 row has four inputs; the TAS GO:0045944 row has WNT1 as input plus midbrain occurrence/pathway context; and the PMID:24399192 nucleus row is contextualized to a dopaminergic neuron.
-- The final evidence set contains 29 top-level references: six GO_REF records, 22 PMIDs, and the reviewed UniProt record. Ten PMID caches are abstract-only. PMID:24431302 and PMID:40205054 remain explicitly `UNVERIFIED`; the other manual reference reviews are `VERIFIED` with dataset, species, and assay limitations stated where needed.
+- A live QuickGO ontology lookup on 2026-08-09 confirmed that GO:0072248 is current, non-obsolete, and labeled `metanephric podocyte differentiation`; the verified label was added to the local GO term cache. [GO:0072248, QuickGO ontology record]
+- The final evidence set contains 30 top-level references: six GO_REF records, 23 PMIDs, and the reviewed UniProt record. Eleven PMID caches are abstract-only. PMID:24431302 and PMID:40205054 remain explicitly `UNVERIFIED`; the other manual reference reviews are `VERIFIED` with dataset, species, and assay limitations stated where needed.
 
 ## Protein architecture and isoforms
 
@@ -49,9 +50,9 @@ Accordingly, podocyte differentiation/maintenance is a defensible biological rol
 
 ### Limb and neuronal development
 
-The dorsal-limb patterning and dopaminergic-neuron annotations are biologically coherent developmental roles, but they are contextual outputs of the transcription factor rather than separate molecular functions. Mouse genetics strongly supports midbrain organizer and dopaminergic-neuron development, with partial Lmx1a/Lmx1b redundancy; direct human iPSC-mDAN work supports ongoing autophagy, mitochondrial, and stress-resilience roles. These evidence classes must not be conflated.
+The dorsal-limb patterning and neuronal annotations are biologically coherent developmental roles, but they are contextual outputs of the transcription factor rather than separate molecular functions. Mouse genetics strongly supports midbrain organizer and dopaminergic-neuron development, with partial Lmx1a/Lmx1b redundancy. Independent mouse loss-of-function evidence also establishes the serotonergic role: “A major determinant in the cascades is an LIM homeodomain-containing gene, Lmx1b, which is required for the development of all 5-HT neurons in the central nervous system.” [PMID:12897786] Direct human iPSC-mDAN work supports ongoing autophagy, mitochondrial, and stress-resilience roles. These evidence classes must not be conflated.
 
-The source GOA extensions appropriately preserve WNT1/PITX3/NR4A2/LMX1A inputs and midbrain context for the dopaminergic transcription annotations. Broad neuron differentiation remains non-core because LMX1B also has major renal, limb, ocular, and other developmental functions.
+The source GOA extensions appropriately preserve WNT1/PITX3/NR4A2/LMX1A inputs and midbrain context for the dopaminergic transcription annotations. Current GO has no dedicated serotonergic-neuron differentiation term, so the mouse serotonergic evidence supports the existing broad neuron-differentiation rows rather than a newly invented specific term. Broad neuron differentiation remains non-core because LMX1B also has major renal, limb, ocular, and other developmental functions.
 
 ## Source annotation decisions
 
@@ -66,7 +67,7 @@ The pair-specific evidence in PMIDs 20211142, 30833792, 33961781, and 40205054 i
 ## Current synthesis boundaries and gaps
 
 1. The core biochemical unit is nuclear, sequence-specific DNA-binding transcription activation. Target programs vary by cell type.
-2. Positive regulation of autophagy is directly supported in human HEK293T cells and iPSC-derived mDANs and is a strong missing annotation.
+2. Positive regulation of autophagy is directly supported in human HEK293T cells and iPSC-derived mDANs and is a strong missing annotation. ATG8 binding is retained as a direct molecular-function annotation but treated as a regulatory input to this transcriptional role, not as a separate conserved core function.
 3. Podocyte differentiation and adult maintenance are strong biological roles, but the relevant direct target set changes with developmental stage and human disease context.
 4. LDB1/SSBP3 and ATG8 proteins are context-dependent cofactors; no single constitutive stable LMX1B complex should be asserted.
 5. The tested splice product in many older and newer functional studies is not always mapped unambiguously onto current UniProt isoform numbering. Isoform-resolved DNA binding, coregulator use, ATG8 binding, and transcriptional output remain open questions.
