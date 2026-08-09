@@ -44,8 +44,9 @@ disposal; these are cross-module dependencies rather than additional parts.
   dependence is real but the physiological Ni2+-versus-Zn2+ preference is unresolved.
 - Valid `GO:0051596 methylglyoxal catabolic process` is added to GloA and
   accepted on GloB; obsolete route-specific GO:0019243 is not authored.
-- PP_0772 remains a candidate glyoxalase-II-family paralog rather than an
-  alternate implementation because its physiological substrate is untested.
+- PP_0772 is a PTHR46233:SF3 metallo-beta-lactamase-superfamily protein, not a
+  canonical GloB-family member; it remains outside the module because its
+  physiological substrate is untested.
 
 ## Boundary Decisions
 
@@ -68,9 +69,13 @@ cytoplasm/cytosol assertion.
 ## Research Status
 
 The OpenScientist report and artifacts are stored under
-`projects/P_PUTIDA/deep-research/`. Direct work on a *P. putida* glyoxalase I
-supports the first reaction, while the KT2440 GloB assignment has reviewed
-HAMAP support.
+`projects/P_PUTIDA/deep-research/`. Functional expression studies support the
+activity of a *P. putida* glyoxalase I (PMID:11461144; PMID:22358913), but those
+historical studies do not tie the tested gene to PP_3766/Q88GF8. The exact
+KT2440 assignment therefore rests on the Q88GF8 reaction and PTHR10374:SF30
+evidence. The KT2440 GloB assignment has reviewed HAMAP support; E. coli work
+also shows that GloB-dependent turnover need not determine acute methylglyoxal
+tolerance (PMID:21143325).
 
 ## Validation
 
