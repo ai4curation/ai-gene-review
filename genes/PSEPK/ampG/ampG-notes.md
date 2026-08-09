@@ -6,5 +6,6 @@
   cytoplasmic processing [PMID:28351914, "The transport of
   anhydro-muropeptides by the permease AmpG"].
 - This supports pathway placement but is not a direct transport assay of
-  Q88N61. The review therefore keeps substrate specificity explicit in prose
-  and proposes a specific transporter term without claiming direct evidence.
+  Q88N61. GO:0015647 already captures peptidoglycan transmembrane transporter
+  activity, so the review uses that existing term without claiming a
+  target-specific uptake assay.

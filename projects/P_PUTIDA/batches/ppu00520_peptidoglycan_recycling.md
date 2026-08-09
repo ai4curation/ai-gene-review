@@ -54,8 +54,10 @@ is recorded as a knowledge gap rather than silently treated as direct.
 - Broad kinase, phosphotransferase, hydrolase, transport, and carbohydrate
   process rows are retained as non-core or marked over-annotated when exact
   substrate chemistry is available.
-- `ampG` receives a proposed new peptidoglycan-turnover annotation and a request
-  for a muropeptide-specific transporter molecular-function term.
+- `ampG` receives a proposed new peptidoglycan-turnover annotation and uses the
+  existing GO:0015647 peptidoglycan transmembrane transporter activity term.
+- `nagZ` is sharpened to GO:0016231 beta-N-acetylglucosaminidase activity using
+  the local PAINT node rather than the broader hexosaminidase parent.
 - `anmK` and `mupP` require substrate-specific GO molecular-function terms;
   exact EC/Rhea chemistry is retained in prose without inventing identifiers.
 - Gene-level locations are retained where supported. They are not promoted to
