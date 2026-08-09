@@ -95,11 +95,19 @@ def init_rule_review(
 
     print(f"✓ Created {review_path}")
     print("\nNext steps:")
-    print(f"  1. Run: just analyze-rule {rule_id}")
-    print(f"  2. Run: just sync-rule-review-single {rule_id}")
-    print(f"  3. Run: just rules-deep-research-perplexity {rule_id}")
-    print(f"  4. Edit {review_path} to fill in TODO placeholders")
-    print(f"  5. Run: just render-rule {rule_id}")
+    if rule_type == 'ARBA':
+        print(f"  1. Run: just analyze-rule {rule_id}")
+        print(f"  2. Run: just sync-rule-review-single {rule_id}")
+        print(f"  3. Run: just rules-deep-research-perplexity {rule_id}")
+        print(f"  4. Edit {review_path} to fill in TODO placeholders")
+        print(f"  5. Run: just render-rule {rule_id}")
+    else:
+        print(f"  1. Run: just rules-deep-research-perplexity {rule_id}")
+        print(f"  2. Edit {review_path} to fill in TODO placeholders")
+        print(
+            "  Note: Post-enrichment analysis-dependent workflows currently "
+            "support ARBA IDs only."
+        )
 
     return review_path
 
