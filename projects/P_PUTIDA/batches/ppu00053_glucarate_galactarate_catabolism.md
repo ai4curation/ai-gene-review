@@ -21,10 +21,10 @@ autolink_gene_symbols: false
 - [x] Separate the aldarate route from KEGG-map spillover and paralogous routes.
 - [x] Fetch the four selected PSEPK genes.
 - [x] Review every GOA annotation for the selected genes.
-- [ ] Integrate the module/pathway/taxon OpenScientist report.
+- [x] Integrate the module/pathway/taxon OpenScientist report.
 - [x] Validate module and gene reviews.
 - [x] Render module, gene, and project pages.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
@@ -61,7 +61,7 @@ same two downstream enzymes.
 | `udh` | Oxidizes hexuronates to aldarates upstream of the substrate-specific entry reactions; it is not required when glucarate or galactarate is supplied |
 | `udg` | UDP-glucose dehydrogenase belongs to nucleotide-sugar metabolism rather than this catabolic route |
 | `PP_1256` | A 2,5-dioxovalerate dehydrogenase in the hydroxyproline locus; reserved for the separate hydroxyproline module |
-| `PP_2585` | A paralogous 2,5-dioxovalerate dehydrogenase without the local `garD`/KDGDH locus context; its physiological route remains unresolved |
+| `PP_2585` | A paralogous 2,5-dioxovalerate dehydrogenase outside the local `garD`/KDGDH locus; OpenScientist found polyamine-associated neighborhood context, but its physiological route remains unverified |
 
 ## Module Decisions
 
@@ -77,10 +77,14 @@ same two downstream enzymes.
 
 ## Research Status
 
-The long-running OpenScientist module/pathway/taxon retrieval is in progress.
-Its output will be integrated as provider-generated evidence; structural
-decisions in the module remain grounded in exact GO, Rhea, UniProt, PANTHER,
-and PAINT records.
+The completed [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__glucarate_galactarate_catabolism__ppu00053-deep-research-openscientist.md)
+supports the three-stage boundary and all four selected PSEPK assignments. It
+also distinguishes the aldarate-locus PP_3602 from PP_1256 and PP_2585, finds no
+GarL-supported *E. coli*-type downstream branch, and identifies PP_3600,
+PP_4758, PP_3603, and PP_4759 as accessory transport/regulatory context rather
+than core reaction steps. These are retrieval-supported conclusions; exact
+reaction claims remain grounded in GO, Rhea, UniProt, PANTHER, and PAINT
+records, and PP_2585 remains unresolved without direct physiological evidence.
 
 ## Validation
 
