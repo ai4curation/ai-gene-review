@@ -608,9 +608,23 @@ gene-iba-support-research provider organism gene *args:
 # Mine review prose and the publications corpus for assay/readout usage, then
 # QC + flag re-review candidates. Always inspect reports/*matched_string_counts*
 # for substring false positives before trusting a class total.
-assay-mine *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py {{args}}
-    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py {{args}}
+[positional-arguments]
+assay-mine *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py "$@"
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py "$@"
+
+# Broader, paper-only join across primary and supporting references. Keep its
+# outputs separate from the canonical primary-reference reports by default.
+[positional-arguments]
+assay-mine-supporting *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py \
+        --include-supporting \
+        --out-dir projects/ASSAY_TO_FUNCTION/reports/with_supporting \
+        "$@"
 
 assay-flag *args="":
     uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
