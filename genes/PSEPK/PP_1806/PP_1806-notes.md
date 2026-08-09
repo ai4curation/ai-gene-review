@@ -8,3 +8,8 @@
   name for this copy.
 - The molecular function is accepted while the physiological division of labor
   with kdsD remains an explicit question.
+- The reviewed record places both PP_1806 and KdsD in `PTHR42745:SF1`; the
+  second-API interpretation therefore comes from synteny and the comparative
+  E. coli GutQ paradigm, not a discriminating PANTHER subfamily
+  [PMID:16199563, "Recombinant GutQ was shown to indeed be a second copy of
+  API"].

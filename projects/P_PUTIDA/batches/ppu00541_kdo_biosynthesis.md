@@ -48,9 +48,11 @@ to the housekeeping copies remains an explicit question.
   synthetase molecular functions are accepted.
 - Broad carbohydrate, carboxylic-acid, isomerase, hydrolase, and binding terms
   are marked over-annotated or retained as non-core.
-- `kdsB` cytoplasm/cytosol duplication is collapsed in the core summary:
-  cytoplasm is retained once, while the unsupported redundant cytosol row is
-  marked over-annotated.
+- The compatible `kdsB` cytoplasm and cytosol rows are retained as non-core
+  evidence and omitted from the core function rather than duplicated there.
+- `kdsD` receives the missing lipopolysaccharide-biosynthesis process row from
+  its explicit UniProt pathway assignment. `PP_1806` retains only the API
+  molecular function because its KDO-pathway contribution is unresolved.
 
 ## Boundary Decisions
 
@@ -64,13 +66,18 @@ to the housekeeping copies remains an explicit question.
 Every alternative or required reaction has a KT2440 UniProt exemplar. Reviewed
 E. coli KdsD, GutQ, and KdsA exemplars orient the paralog families. Exact Rhea
 reactions define chaining; no molecular function is placed at module level.
+Both KT2440 API candidates map to `PTHR42745:SF1`; the SF2 selector therefore
+cannot be used to distinguish PP_1806 without contradicting its UniProt record.
 
 ## Research Status
 
 The OpenScientist report and artifacts are stored under
 `projects/P_PUTIDA/deep-research/`. Database-derived pathway structure was
 checked locally. Report-only sequence-identity estimates were not used as
-primary evidence in annotation decisions.
+primary evidence in annotation decisions. Comparative primary literature now
+grounds the E. coli second-API/redundancy paradigm (PMID:16199563 and
+PMID:16765569), while Bacteroides API feedback inhibition (PMID:24891442) is
+retained only as non-target pathway context.
 
 ## Validation
 
