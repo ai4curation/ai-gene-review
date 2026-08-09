@@ -7,6 +7,5 @@
   KT2440 lacks a resolved HldD ortholog; the upstream GmhB reaction does not by
   itself establish the L,D stereochemical endpoint
   [file:projects/P_PUTIDA/deep-research/PSEPK__adp-heptose-biosynthesis__ppu00541-deep-research-openscientist.md,
-  "ADP-L-glycero-D-manno-heptose is not demonstrably produced by an
-  M00064-canonical route"].
+  "is a genome-confirmed GAP in KT2440"].
 - GO:0009244 remains the endpoint-neutral biological-process anchor for GmhB.
