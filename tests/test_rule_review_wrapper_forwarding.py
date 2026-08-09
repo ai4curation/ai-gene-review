@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -53,7 +54,7 @@ def run_just(
 
 def test_init_rule_review_wrapper_uses_custom_cache_dir(tmp_path: Path) -> None:
     rule_id = "ARBA00026249"
-    cache_dir = tmp_path / "rule cache (draft), v1?"
+    cache_dir = tmp_path / "rule cache (draft), v1? $CACHE's"
     rule_dir = write_enriched_rule(cache_dir, rule_id)
 
     result = run_just(
@@ -68,9 +69,17 @@ def test_init_rule_review_wrapper_uses_custom_cache_dir(tmp_path: Path) -> None:
     review = yaml.safe_load(review_path.read_text())
     assert review["id"] == rule_id
     assert review["rule_type"] == "ARBA"
-    assert f"just analyze-rule {rule_id}" in result.stdout
-    assert f"just sync-rule-review-single {rule_id}" in result.stdout
-    assert f"just render-rule {rule_id}" in result.stdout
+    run_commands = [
+        shlex.split(line.split("Run: ", 1)[1])
+        for line in result.stdout.splitlines()
+        if "Run: " in line
+    ]
+    assert run_commands == [
+        ["just", "analyze-rule", rule_id, "--cache-dir", str(cache_dir)],
+        ["just", "sync-rule-review-single", rule_id, str(cache_dir)],
+        ["just", "rules-deep-research-perplexity", rule_id],
+        ["just", "render-rule", rule_id, str(cache_dir)],
+    ]
 
 
 def test_init_unirule_omits_unsupported_analysis_next_steps(tmp_path: Path) -> None:
