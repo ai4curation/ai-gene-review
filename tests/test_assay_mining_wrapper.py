@@ -44,7 +44,9 @@ existing_annotations:
         "full_text_available: true\nNo assay vocabulary here.\n"
     )
     (pubs_dir / "PMID_2.md").write_text(
-        "full_text_available: true\nA UPRE\n  reporter assay was performed.\n"
+        "full_text_available: true\n"
+        "A UPRE reporter assay, a UPRE   reporter assay, and a UPRE\n"
+        "  reporter assay were performed.\n"
     )
 
     catalog = root / "catalog with spaces.yaml"
@@ -56,7 +58,9 @@ readouts:
     convergence: high
     aligned_label_regex: 'unfolded protein'
     commonly_overmapped_to: [GO:0006986]
-    patterns: ['\bUPRE\s+reporter']
+    patterns:
+      - '\bUPRE[ \t]+reporter'
+      - '\bUPRE\n[ \t]+reporter'
 """
     )
     return genes_dir, pubs_dir, catalog
@@ -105,7 +109,9 @@ def test_assay_mine_preserves_shared_paths_for_both_miners(tmp_path: Path) -> No
     assert (out_dir / "paper_readout_matches.tsv").exists()
 
 
-def test_assay_mine_supporting_routes_only_paper_outputs(tmp_path: Path) -> None:
+def test_assay_mine_supporting_paper_matched_string_counts_once_per_paper(
+    tmp_path: Path,
+) -> None:
     genes_dir, pubs_dir, catalog = make_assay_fixture(tmp_path)
     out_dir = tmp_path / "supporting output with spaces"
 

@@ -324,8 +324,12 @@ class PubCache:
                     classes.add(name)
                     # record the distinct matched substrings for QC (cheap: only
                     # runs on the rare screen-passing papers)
+                    seen_matches: set[str] = set()
                     for mm in rx.finditer(text):
                         matched = normalize_match_text(mm.group(0)).lower()
+                        if matched in seen_matches:
+                            continue
+                        seen_matches.add(matched)
                         self.matched_counts[name][matched] += 1
         result = (classes, "full_text_available: true" in low)
         self._cache[pmid] = result
