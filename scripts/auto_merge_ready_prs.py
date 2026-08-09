@@ -150,6 +150,25 @@ def non_empty(value: str) -> str:
     return parsed
 
 
+def directory_path_prefix(value: str) -> str:
+    """Parse a normalized directory prefix with an explicit path boundary."""
+    parsed = non_empty(value)
+    if not parsed.endswith("/"):
+        raise argparse.ArgumentTypeError("must end with '/' to define a directory")
+    directory = parsed[:-1]
+    if (
+        not directory
+        or parsed.startswith("/")
+        or "\\" in parsed
+        or any(part in {"", ".", ".."} for part in directory.split("/"))
+        or any(ord(character) < 32 or ord(character) == 127 for character in parsed)
+    ):
+        raise argparse.ArgumentTypeError(
+            "must be a normalized relative directory prefix"
+        )
+    return parsed
+
+
 def normalize_login(login: str) -> str:
     """Normalize GitHub App login spellings without broadening trust."""
     normalized = login.strip().casefold()
@@ -657,6 +676,41 @@ def list_pr_files(repo: str, number: int) -> ChangedFileInventory:
     return ChangedFileInventory(tuple(filenames), tuple(previous_filenames))
 
 
+def view_pr_head_sha(repo: str, number: int) -> str:
+    """Re-read the live PR head after a file-list request."""
+    oid = _gh(
+        [
+            "pr",
+            "view",
+            str(number),
+            "--repo",
+            repo,
+            "--json",
+            "headRefOid",
+            "--jq",
+            ".headRefOid",
+        ]
+    ).strip()
+    if not oid:
+        raise ValueError(f"could not resolve the current head for PR #{number}")
+    return oid
+
+
+def require_unchanged_file_inventory_head(
+    repo: str, number: int, expected_head_sha: object
+) -> None:
+    """Reject a file inventory if the PR head moved while it was being read."""
+    expected = str(expected_head_sha or "").strip()
+    if not expected:
+        raise ValueError(f"PR #{number} had no head SHA before the file-list read")
+    observed = view_pr_head_sha(repo, number)
+    if observed.casefold() != expected.casefold():
+        raise ValueError(
+            f"PR #{number} head moved during the file-list read: "
+            f"{expected} -> {observed}"
+        )
+
+
 def view_base_tip(repo: str, base_branch: str) -> str:
     """Read the current base tip and fail closed on an empty response."""
     encoded_branch = quote(base_branch, safe="")
@@ -794,11 +848,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--allowed-path-prefix",
         action="append",
-        type=non_empty,
+        type=directory_path_prefix,
         default=[],
         help=(
-            "additional changed-file path prefix allowed by the merge controller; "
-            "repeatable (the conservative defaults always remain enabled)"
+            "additional normalized directory prefix allowed by the merge controller; "
+            "must end with '/', repeatable (the conservative defaults always remain)"
         ),
     )
     parser.add_argument(
@@ -905,6 +959,9 @@ def main(argv: list[str] | None = None) -> int:
             files = list_pr_files(args.repo, number)
             fresh["changed_files"] = list(files.filenames)
             fresh["previous_changed_filenames"] = list(files.previous_filenames)
+            require_unchanged_file_inventory_head(
+                args.repo, number, fresh.get("headRefOid")
+            )
             current_base_sha = view_base_tip(args.repo, args.base_branch)
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
@@ -962,6 +1019,9 @@ def main(argv: list[str] | None = None) -> int:
             files = list_pr_files(args.repo, number)
             fresh["changed_files"] = list(files.filenames)
             fresh["previous_changed_filenames"] = list(files.previous_filenames)
+            require_unchanged_file_inventory_head(
+                args.repo, number, fresh.get("headRefOid")
+            )
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
                 _gh_error(exc)

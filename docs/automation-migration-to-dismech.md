@@ -346,10 +346,14 @@ data prefixes by default: `genes/`, `genesets/`, `gocams/`, `interpro/`,
 `modules/`, `projects/`, `publications/`, `reactome/`, `rules/`, `terms/`,
 `families/`, or `research/`. A PR that mixes an allowed data change with even
 one path outside that set is ineligible. Repeatable CLI additions can expand
-the prefix set through `--allowed-path-prefix` for a deliberate one-off policy,
-but the production workflow passes none. Infrastructure and self-modifying
-automation changes — including `.github/`, `scripts/`, `src/`, `tests/`, and
-top-level build/configuration files — therefore require a manual merge.
+the prefix set through `--allowed-path-prefix` for a deliberate one-off policy;
+each addition must be a normalized directory prefix ending in `/`, so `src/`
+cannot accidentally authorize a sibling such as `src_generated/`. The
+production workflow passes none. Every path outside the twelve listed prefixes
+is therefore out of scope and requires a manual merge. Examples include
+infrastructure and self-modifying automation under `.github/`, `scripts/`,
+`src/`, and `tests/`, as well as `docs/`, `reports/`, `pages/`, and top-level
+build/configuration files.
 
 The controller requires all of these at fresh reads immediately before merge:
 
@@ -361,7 +365,13 @@ The controller requires all of these at fresh reads immediately before merge:
 - the PR's tested base SHA equals the current `main` tip;
 - GitHub reports mergeable and clean;
 - all reported checks are complete/non-failing, and `test (3.12)` is explicitly
-  successful.
+successful.
+
+The path inventory is fetched from the paginated REST endpoint on both fresh
+verification passes, matched against the PR API's total `changedFiles` count,
+and rejected above GitHub's 3,000-file REST completeness cap. Rename source
+paths are checked as well as destinations. The controller re-reads the head
+after each file inventory, and the final merge remains pinned to that head.
 
 The age gate intentionally measures `createdAt`, not the latest push, approval,
 or branch update. It is a backlog-age threshold, not a soak period for the

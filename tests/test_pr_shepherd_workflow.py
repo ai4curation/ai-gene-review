@@ -103,25 +103,58 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
     create = _step(job, "Create or update regeneration PR")
     approve = _step(job, "Approve exact generated commit")
     warning = _step(job, "Warn when generated approval is unavailable")
+    auto_merge = _step(job, "Validate protection and arm generated auto-merge")
     create_script = create["run"]
+    auto_script = auto_merge["run"]
+
+    step_names = [step.get("name") for step in job["steps"]]
+    assert step_names.index("Create or update regeneration PR") < step_names.index(
+        "Approve exact generated commit"
+    )
+    assert step_names.index("Approve exact generated commit") < step_names.index(
+        "Warn when generated approval is unavailable"
+    )
+    assert step_names.index(
+        "Warn when generated approval is unavailable"
+    ) < step_names.index("Validate protection and arm generated auto-merge")
 
     assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
     assert create["env"]["GH_TOKEN"] == "${{ steps.ai4c-token.outputs.token }}"
-    assert create["env"]["DEFAULT_BRANCH"] == (
+    assert "DEFAULT_BRANCH" not in create["env"]
+    assert "MERGE_ENABLED" not in create["env"]
+    assert "--auto" not in create_script
+    assert "branches/main" not in create_script
+    assert 'echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"' in (
+        create_script
+    )
+
+    assert auto_merge["env"]["GH_TOKEN"] == "${{ steps.ai4c-token.outputs.token }}"
+    assert auto_merge["env"]["DEFAULT_BRANCH"] == (
         "${{ github.event.repository.default_branch }}"
     )
-    assert "--auto" in create_script
-    assert "--match-head-commit" in create_script
-    assert "MERGE_ENABLED" in create_script
+    assert auto_merge["env"]["PR_NUMBER"] == ("${{ steps.regen-pr.outputs.pr_number }}")
+    assert auto_merge["env"]["EXPECTED_HEAD"] == (
+        "${{ steps.regen-pr.outputs.head_sha }}"
+    )
+    assert auto_merge["env"]["APPROVAL_OUTCOME"] == (
+        "${{ steps.approve-generated.outcome }}"
+    )
+    assert "!cancelled()" in auto_merge["if"]
+    assert "steps.regen-pr.outcome == 'success'" in auto_merge["if"]
+    assert "--auto" in auto_script
+    assert '--match-head-commit "$EXPECTED_HEAD"' in auto_script
+    assert "MERGE_ENABLED" in auto_script
 
-    flag_guard = create_script.index('if [ "$MERGE_ENABLED" != "true" ]')
-    branch_guard = create_script.index('if [ "$DEFAULT_BRANCH" != "main" ]')
-    pr_base_read = create_script.index("--json baseRefName")
-    pr_base_guard = create_script.index('if [ "$pr_base" != "main" ]')
-    protection_read = create_script.index('"repos/$GITHUB_REPOSITORY/branches/main"')
-    protection_guard = create_script.index('if [ "$protected" != "true" ]')
-    arm = create_script.index('echo "Arming auto-merge')
-    merge = create_script.index('gh pr merge "$PR_NUMBER"')
+    flag_guard = auto_script.index('if [ "$MERGE_ENABLED" != "true" ]')
+    branch_guard = auto_script.index('if [ "$DEFAULT_BRANCH" != "main" ]')
+    pr_base_read = auto_script.index("--json baseRefName")
+    pr_base_guard = auto_script.index('if [ "$pr_base" != "main" ]')
+    protection_read = auto_script.index('"repos/$GITHUB_REPOSITORY/branches/main"')
+    protection_guard = auto_script.index('if [ "$protected" != "true" ]')
+    approval_guard = auto_script.index('if [ "$APPROVAL_OUTCOME" != "success" ]')
+    head_guard = auto_script.index('if [ -z "$EXPECTED_HEAD" ]')
+    arm = auto_script.index('echo "Arming auto-merge')
+    merge = auto_script.index('gh pr merge "$PR_NUMBER"')
     assert (
         flag_guard
         < branch_guard
@@ -129,14 +162,17 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
         < pr_base_guard
         < protection_read
         < protection_guard
+        < approval_guard
+        < head_guard
         < arm
         < merge
     )
     assert "--base main" in create_script
-    assert 'if ! protected="$(gh api' in create_script
-    assert "Generated auto-merge base check failed" in create_script
-    assert "Generated auto-merge protection check failed" in create_script
-    assert "refusing to arm auto-merge" in create_script
+    assert 'if ! protected="$(gh api' in auto_script
+    assert "Generated auto-merge base check failed" in auto_script
+    assert "Generated auto-merge protection check failed" in auto_script
+    assert "Generated auto-merge head pin missing" in auto_script
+    assert "refusing to arm auto-merge" in auto_script
 
     assert approve["id"] == "approve-generated"
     assert approve["continue-on-error"] is True
@@ -148,7 +184,7 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
     assert "steps.approve-generated.outcome == 'failure'" in warning["if"]
     assert "!= 'success'" not in warning["if"]
     assert "::warning title=Generated PR approval unavailable::" in warning["run"]
-    assert "protected main will keep the PR open and unmerged" in warning["run"]
+    assert "the later step will not arm auto-merge" in warning["run"]
 
     action = APPROVE_REGEN.read_text()
     assert 'gh pr view "$PR_NUMBER"' in action

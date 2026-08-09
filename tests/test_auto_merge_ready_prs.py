@@ -190,6 +190,13 @@ def test_non_empty_strips_and_rejects_empty_values():
         auto_merge.non_empty("   ")
 
 
+def test_directory_path_prefix_requires_a_normalized_directory_boundary():
+    assert auto_merge.directory_path_prefix(" docs/policy/ ") == "docs/policy/"
+    for value in ("docs", "/docs/", "docs//", "docs/../", "docs\\policy/"):
+        with pytest.raises(argparse.ArgumentTypeError):
+            auto_merge.directory_path_prefix(value)
+
+
 # Exact-head trusted approval guards
 
 
@@ -758,6 +765,27 @@ def test_list_pr_files_rejects_missing_empty_or_malformed_data(monkeypatch, payl
         auto_merge.list_pr_files("o/r", 7)
 
 
+def test_file_inventory_head_check_rejects_movement_and_empty_heads(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda args: calls.append(args) or "new-head\n",
+    )
+    with pytest.raises(ValueError, match="head moved during the file-list read"):
+        auto_merge.require_unchanged_file_inventory_head("o/r", 7, "old-head")
+    assert calls[0][:3] == ["pr", "view", "7"]
+    assert calls[0][-2:] == ["--jq", ".headRefOid"]
+
+    with pytest.raises(ValueError, match="had no head SHA"):
+        auto_merge.require_unchanged_file_inventory_head("o/r", 7, "")
+
+
+def test_file_inventory_head_check_accepts_case_insensitive_exact_head(monkeypatch):
+    monkeypatch.setattr(auto_merge, "view_pr_head_sha", lambda *_: "ABCDEF")
+    auto_merge.require_unchanged_file_inventory_head("o/r", 7, "abcdef")
+
+
 def test_view_base_tip_encodes_branch_and_rejects_empty(monkeypatch):
     calls = []
     monkeypatch.setattr(
@@ -782,12 +810,14 @@ def _run_main(
     views=None,
     args=(),
     base_tips=None,
+    post_file_heads=None,
 ):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
     view = view or make_pr(number=42)
     snapshots = [dict(item) for item in (views or [view, view])]
     last_view = {"value": dict(view)}
     base_tips = list(base_tips or [BASE_SHA, BASE_SHA])
+    post_file_heads = list(post_file_heads or [HEAD_SHA, HEAD_SHA])
     merges = []
     monkeypatch.setattr(
         auto_merge,
@@ -813,6 +843,11 @@ def _run_main(
             tuple(last_view["value"].get("changed_files", [])),
             tuple(last_view["value"].get("previous_changed_filenames", [])),
         ),
+    )
+    monkeypatch.setattr(
+        auto_merge,
+        "view_pr_head_sha",
+        lambda _repo, _number: post_file_heads.pop(0),
     )
 
     def fake_base_tip(_repo, _base):
@@ -925,6 +960,32 @@ def test_changed_file_count_mismatch_on_second_read_blocks_execute(
     assert "state changed after verification" in summary
     assert "REST returned 1" in summary
     assert "PR API reports 2" in summary
+
+
+@pytest.mark.parametrize(
+    ("args", "expected_code", "expected_summary"),
+    [
+        (("--dry-run",), 0, "Skipped 1 near-miss"),
+        (
+            ("--execute", "--required-check", REQUIRED_CHECK),
+            1,
+            "Failed to merge 1",
+        ),
+    ],
+)
+def test_head_movement_during_file_read_fails_closed_by_mode(
+    monkeypatch, tmp_path, args, expected_code, expected_summary
+):
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        args=args,
+        post_file_heads=["moved-head"],
+    )
+    assert code == expected_code
+    assert merges == []
+    assert expected_summary in summary
+    assert "head moved during the file-list read" in summary
 
 
 def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_path):
@@ -1124,6 +1185,11 @@ def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
                 (older if number == 20 else newer).get("previous_changed_filenames", [])
             ),
         ),
+    )
+    monkeypatch.setattr(
+        auto_merge,
+        "view_pr_head_sha",
+        lambda _repo, number: (older if number == 20 else newer)["headRefOid"],
     )
     monkeypatch.setattr(auto_merge, "view_base_tip", lambda *_: BASE_SHA)
     merges = []
