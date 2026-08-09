@@ -1405,6 +1405,7 @@ render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" 
 [positional-arguments]
 render-all-rules cache_dir="rules/arba":
     #!/usr/bin/env bash
+    set -euo pipefail
     cache_dir="$1"
     echo "Rendering all rule reviews in $cache_dir..."
     count=0

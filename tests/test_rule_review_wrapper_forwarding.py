@@ -160,6 +160,11 @@ if "examples/rule_analysis_demo.py" in args and "--output-dir" in args:
     output_dir = Path(args[args.index("--output-dir") + 1])
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / f"{rule_id}-analysis.txt").write_text("fake report\\n")
+
+failed_rule = os.environ.get("RULE_WRAPPER_FAIL_RENDER_FOR")
+if args[:3] == ["run", "python", "-c"] and len(args) > 4 and args[4] == failed_rule:
+    print(f"forced render failure for {failed_rule}", file=sys.stderr)
+    raise SystemExit(23)
 """
     )
     fake_uv.chmod(0o755)
@@ -174,6 +179,7 @@ def run_isolated_just(
     extra_env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
+    env.pop("RULE_WRAPPER_FAIL_RENDER_FOR", None)
     env.update(
         {
             "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
@@ -299,6 +305,33 @@ def test_render_all_rules_preserves_default_cache_argument(tmp_path: Path) -> No
     assert "Rendered 0 rule reviews" in result.stdout
     assert not log_path.exists()
     assert not (working_directory / "rules").exists()
+
+
+def test_render_all_rules_stops_at_first_failed_render(tmp_path: Path) -> None:
+    rule_ids = ["ARBA00000001", "ARBA00000002", "ARBA00000003"]
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    cache_dir = working_directory / "custom-cache"
+    for rule_id in reversed(rule_ids):
+        seed_analysis_outputs(cache_dir, rule_id)
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        "render-all-rules",
+        "custom-cache",
+        extra_env={"RULE_WRAPPER_FAIL_RENDER_FOR": rule_ids[1]},
+    )
+
+    assert result.returncode == 23
+    assert f"Processing {rule_ids[0]}" in result.stdout
+    assert f"Processing {rule_ids[1]}" in result.stdout
+    assert f"Processing {rule_ids[2]}" not in result.stdout
+    assert "✓ Rendered" not in result.stdout
+    assert f"forced render failure for {rule_ids[1]}" in result.stderr
+    assert [argv[4] for argv in read_argv_log(log_path)] == rule_ids[:2]
 
 
 def test_sync_rule_review_single_preserves_default_cache_argument(
