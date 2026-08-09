@@ -2263,12 +2263,14 @@ clean-imodulondb-cache:
 # This creates:
 #   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields (WILL NOT OVERWRITE)
 #   - {cache_dir}/{rule_id}/{rule_id}.enriched.json (if missing)
-# Then run these commands in order:
+# For ARBA rules, then run these commands in order:
 #   1. just analyze-rule {rule_id}      # Generate analysis files
 #   2. just sync-rule-review-single {rule_id}  # Populate entries field
 #   3. just rules-deep-research-perplexity {rule_id}  # Research literature
 #   4. Edit the review YAML to fill in TODO placeholders
 #   5. just render-rule {rule_id}       # Generate HTML
+# For UniRule, continue with deep research and manual editing only;
+# post-enrichment analysis-dependent workflows currently support ARBA IDs only.
 # Examples:
 #   just init-rule-review ARBA00026249
 #   just init-rule-review UR000000070 --cache-dir rules/unirule
@@ -2375,6 +2377,16 @@ sync-ipr2go cache_dir="rules/arba":
     @echo "Syncing InterPro2GO mappings to {{cache_dir}}..."
     uv run python -c "from ai_gene_review.etl.rule_analysis import fetch_interpro2go_mappings; from pathlib import Path; mappings = fetch_interpro2go_mappings(Path('{{cache_dir}}')); print(f'✓ Cached {len(mappings)} InterPro → GO mappings')"
 
+[positional-arguments]
+_validate-arba-analysis-id rule_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    if [[ ! "$rule_id" =~ ^ARBA[0-9]{8}$ ]]; then
+        printf "error: unsupported rule ID '%s'; post-enrichment analysis currently supports ARBA######## IDs only\n" "$rule_id" >&2
+        exit 2
+    fi
+
 # Analyze an ARBA rule for InterPro overlap and ipr2go redundancy
 # Outputs YAML, JSON, and text formats
 # DEPENDENCIES:
@@ -2387,16 +2399,6 @@ sync-ipr2go cache_dir="rules/arba":
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
-[positional-arguments]
-_validate-arba-analysis-id rule_id:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    rule_id="$1"
-    if [[ ! "$rule_id" =~ ^ARBA[0-9]{8}$ ]]; then
-        printf "error: unsupported rule ID '%s'; post-enrichment analysis currently supports ARBA######## IDs only\n" "$rule_id" >&2
-        exit 2
-    fi
-
 analyze-rule rule_id *args="": (_validate-arba-analysis-id rule_id)
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
