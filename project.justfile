@@ -1393,8 +1393,13 @@ render-module module:
 # CREATES:
 #   - {rule_id}-review.html
 # Example: just render-rule ARBA00026249
+[positional-arguments]
 render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
-    uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run python -c 'import sys; from pathlib import Path; from ai_gene_review.etl.rule_analysis import render_rule_review_html; render_rule_review_html(sys.argv[1], Path(sys.argv[2]))' "$rule_id" "$cache_dir"
 
 # Render all rule reviews as HTML (automatically analyzes first if needed)
 render-all-rules cache_dir="rules/arba":
