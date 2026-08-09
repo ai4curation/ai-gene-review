@@ -2399,54 +2399,76 @@ _validate-arba-analysis-id rule_id:
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
-analyze-rule rule_id *args="": (_validate-arba-analysis-id rule_id)
+[positional-arguments]
+analyze-rule rule_id *args: (_validate-arba-analysis-id rule_id)
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
 
-    cache_dir="rules/arba"
-    if [[ "{{args}}" == *"--cache-dir"* ]]; then
-        cache_dir=$(echo "{{args}}" | sed -n 's/.*--cache-dir \([^ ]*\).*/\1/p')
-    fi
+    rule_id="$1"
+    shift
 
-    # Extract rule type from ID
-    if [[ "{{rule_id}}" == ARBA* ]]; then
-        rule_dir="$cache_dir/{{rule_id}}"
-    else
-        rule_dir="$cache_dir/{{rule_id}}"
-    fi
+    cache_dir="rules/arba"
+    force=false
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cache-dir)
+                if [[ $# -lt 2 ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                if [[ -z "$2" || "$2" == --* ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                cache_dir="$2"
+                shift 2
+                ;;
+            --force)
+                force=true
+                shift
+                ;;
+            *)
+                printf "error: unsupported analyze-rule argument '%s'\n" "$1" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    rule_dir="$cache_dir/$rule_id"
 
     mkdir -p "$rule_dir"
 
     # Check if analysis files already exist (lazy evaluation)
-    enriched_file="$rule_dir/{{rule_id}}.enriched.json"
-    analysis_yaml="$rule_dir/{{rule_id}}-analysis.yaml"
+    enriched_file="$rule_dir/$rule_id.enriched.json"
+    analysis_yaml="$rule_dir/$rule_id-analysis.yaml"
 
-    if [ -f "$enriched_file" ] && [ -f "$analysis_yaml" ]; then
-        echo "✓ Analysis files already exist for {{rule_id}}, skipping expensive rebuild"
+    if [[ "$force" == false && -f "$enriched_file" && -f "$analysis_yaml" ]]; then
+        echo "✓ Analysis files already exist for $rule_id, skipping expensive rebuild"
         echo "  - $enriched_file"
         echo "  - $analysis_yaml"
         echo "  Use --force to rebuild (add to args)"
         exit 0
     fi
 
-    echo "Analyzing {{rule_id}}..."
+    echo "Analyzing $rule_id..."
 
     # Run analysis once and save all formats (efficient)
-    uv run python examples/rule_analysis_demo.py {{rule_id}} \
+    uv run python examples/rule_analysis_demo.py "$rule_id" \
         --cache-dir "$cache_dir" \
         --output-dir "$rule_dir" \
         --no-report
 
     echo ""
     echo "✓ Analysis complete. Files created:"
-    echo "  - $rule_dir/{{rule_id}}-analysis.yaml"
-    echo "  - $rule_dir/{{rule_id}}-analysis.json"
-    echo "  - $rule_dir/{{rule_id}}-analysis.txt"
-    echo "  - $rule_dir/{{rule_id}}-heatmap.png"
+    echo "  - $rule_dir/$rule_id-analysis.yaml"
+    echo "  - $rule_dir/$rule_id-analysis.json"
+    echo "  - $rule_dir/$rule_id-analysis.txt"
+    echo "  - $rule_dir/$rule_id-heatmap.png"
     echo ""
     echo "Text report:"
     echo "----------------------------------------"
-    cat "$rule_dir/{{rule_id}}-analysis.txt"
+    cat "$rule_dir/$rule_id-analysis.txt"
 
 # ============== AI4CUI Dashboard ==============
 
