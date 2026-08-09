@@ -2334,8 +2334,13 @@ rules-validate *args="":
 #   - Requires {rule_id}-review.yaml to exist (create with init-rule-review first)
 #   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
 # Example: just sync-rule-review-single ARBA00027128
+[positional-arguments]
 sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
-    uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run ai-gene-review rules-sync "$cache_dir/$rule_id/$rule_id-review.yaml"
 
 # Sync rule review YAML files with analysis data (pairwise_overlap sections)
 # Examples:

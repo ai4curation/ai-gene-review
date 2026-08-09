@@ -206,7 +206,7 @@ def test_rule_wrapper_analysis_dependency_uses_custom_cache(
     rule_id = "ARBA00026249"
     working_directory = tmp_path / "isolated working directory"
     working_directory.mkdir()
-    cache_dir = working_directory / "custom-cache"
+    cache_dir = working_directory / "custom cache"
     seed_analysis_outputs(cache_dir, rule_id)
     fake_bin, log_path = install_recording_uv(tmp_path)
 
@@ -216,7 +216,7 @@ def test_rule_wrapper_analysis_dependency_uses_custom_cache(
         log_path,
         recipe,
         rule_id,
-        "custom-cache",
+        "custom cache",
     )
 
     assert result.returncode == 0, result.stderr
@@ -227,14 +227,14 @@ def test_rule_wrapper_analysis_dependency_uses_custom_cache(
     if recipe == "render-rule":
         assert len(invocations) == 1
         assert invocations[0][:3] == ["run", "python", "-c"]
-        assert "Path('custom-cache')" in invocations[0][3]
+        assert "Path('custom cache')" in invocations[0][3]
     else:
         assert invocations == [
             [
                 "run",
                 "ai-gene-review",
                 "rules-sync",
-                f"custom-cache/{rule_id}/{rule_id}-review.yaml",
+                f"custom cache/{rule_id}/{rule_id}-review.yaml",
             ]
         ]
 
@@ -264,3 +264,31 @@ def test_render_all_rules_analysis_dependency_uses_custom_cache(
     render_invocations = [argv for argv in invocations if argv[:3] == ["run", "python", "-c"]]
     assert len(render_invocations) == 1
     assert not (working_directory / "rules" / "arba" / rule_id).exists()
+
+
+def test_sync_rule_review_single_preserves_default_cache_argument(
+    tmp_path: Path,
+) -> None:
+    rule_id = "ARBA00026249"
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    seed_analysis_outputs(working_directory / "rules" / "arba", rule_id)
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        "sync-rule-review-single",
+        rule_id,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert read_argv_log(log_path) == [
+        [
+            "run",
+            "ai-gene-review",
+            "rules-sync",
+            f"rules/arba/{rule_id}/{rule_id}-review.yaml",
+        ]
+    ]
