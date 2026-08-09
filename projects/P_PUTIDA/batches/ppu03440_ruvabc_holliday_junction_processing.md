@@ -43,11 +43,11 @@ because RuvC supplies the conserved required resolution activity.
 ## Annotation Decisions
 
 - RuvA independently enables four-way-junction DNA binding and contributes to
-  RuvAB helicase activity, but imported ATP binding and generic independent
-  helicase activity are removed because the ATPase motor is RuvB.
-- RuvB independently enables the branch-migration motor and contributes DNA
-  contacts within the RuvA-recognized junction; the imported `enables`
-  qualifier on four-way-junction binding is modified accordingly.
+  RuvAB helicase activity. Generic independent helicase activity is marked
+  over-annotated, while ATP binding is removed because the ATPase motor is RuvB.
+- RuvB independently enables the branch-migration motor. Generic DNA binding is
+  retained as non-core direct-contact evidence, while the imported `enables`
+  qualifier on four-way-junction binding is modified to a complex contribution.
 - RuvB's duplicate core-function summaries are consolidated, and generic
   cytoplasmic localization is retained only as non-core context.
 - RuvC retains exact crossover-junction endonuclease activity; broad DNA
