@@ -56,6 +56,9 @@ is recorded as a knowledge gap rather than silently treated as direct.
   substrate chemistry is available.
 - `ampG` receives a proposed new peptidoglycan-turnover annotation and uses the
   existing GO:0015647 peptidoglycan transmembrane transporter activity term.
+  Live GO does not restrict this term to lipid-linked precursor export, and
+  reviewed E. coli AmpG P0AE16 has direct experimental support for it from
+  PMID:12426329.
 - `nagZ` is sharpened to GO:0016231 beta-N-acetylglucosaminidase activity using
   the local PAINT node rather than the broader hexosaminidase parent.
 - `anmK` and `mupP` require substrate-specific GO molecular-function terms;
@@ -89,14 +92,14 @@ The OpenScientist module/pathway/taxon report is integrated under
 `projects/P_PUTIDA/deep-research/`. Its strongest contribution was recovering
 AmpG, AmpD, and Mpl from outside the narrow KEGG candidate subset while keeping
 de novo nucleotide-sugar synthesis separate. Claims were checked against the
-cached full text of PMID:28351914, PMID:23831760, UniProt records, GOA, Rhea,
+cached full text of PMID:28351914, PMID:23831760, PMID:12426329, UniProt records, GOA, Rhea,
 and local PANTHER/PAINT data.
 
 ## Validation
 
 All eight gene reviews pass `just validate`. The module passes LinkML
 `ModuleReview` validation and the dedicated semantic validator. Remaining
-semantic messages are non-blocking namespace checks for InterPro/Pfam and a
-deliberate AnmK PAINT-node specificity warning: the node supports generic
-kinase activity while exact EC/Rhea chemistry is supplied separately. The
+semantic messages are non-blocking namespace checks for InterPro/Pfam and an
+advisory AnmK PAINT-node specificity note: the node supports generic kinase
+activity while exact EC/Rhea chemistry is supplied separately. The
 module, five newly fetched gene reviews, and project page render successfully.
