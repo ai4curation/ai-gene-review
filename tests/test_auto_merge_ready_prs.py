@@ -214,7 +214,29 @@ def test_same_named_non_bot_rest_reviewer_is_not_trusted(login, user_type):
     pr = make_pr(reviews=[approved_review(login=login, user_type=user_type)])
     decision = decide(pr)
     assert not decision.eligible
-    assert "no trusted reviewer" in decision.reason
+    assert "did not have a verified Bot identity" in decision.reason
+
+
+@pytest.mark.parametrize(
+    "review",
+    [
+        {"state": "APPROVED", "commit_id": HEAD_SHA},
+        {"user": None, "state": "APPROVED", "commit_id": HEAD_SHA},
+        {
+            "user": "ai4c-reviewer[bot]",
+            "state": "APPROVED",
+            "commit_id": HEAD_SHA,
+        },
+        {
+            "author": {"login": "ai4c-reviewer"},
+            "user": {"login": "different-bot[bot]", "type": "Bot"},
+            "state": "APPROVED",
+            "commit_id": HEAD_SHA,
+        },
+    ],
+)
+def test_missing_or_unrecognized_rest_user_shape_fails_closed(review):
+    assert not decide(make_pr(reviews=[review])).eligible
 
 
 def test_ai4c_agent_approval_intentionally_does_not_count():
@@ -224,12 +246,12 @@ def test_ai4c_agent_approval_intentionally_does_not_count():
     assert "no trusted reviewer" in decision.reason
 
 
-def test_named_additional_reviewer_can_be_explicitly_allowlisted():
-    pr = make_pr(reviews=[approved_review(login="maintainer")])
+def test_named_additional_bot_reviewer_can_be_explicitly_allowlisted():
+    pr = make_pr(reviews=[approved_review(login="release-reviewer[bot]")])
     assert not decide(pr).eligible
     assert decide(
         pr,
-        trusted_reviewers=(*auto_merge.DEFAULT_TRUSTED_REVIEWERS, "maintainer"),
+        trusted_reviewers=(*auto_merge.DEFAULT_TRUSTED_REVIEWERS, "release-reviewer"),
     ).eligible
 
 
@@ -273,13 +295,13 @@ def test_missing_head_sha_fails_closed_even_with_an_approval():
     assert "no head SHA" in decision.reason
 
 
-def test_graphql_review_shape_is_supported():
+def test_graphql_review_shape_fails_closed_without_actor_type():
     review = {
         "author": {"login": "ai4c-reviewer"},
         "state": "APPROVED",
         "commit": {"oid": HEAD_SHA},
     }
-    assert decide(make_pr(reviews=[review])).eligible
+    assert not decide(make_pr(reviews=[review])).eligible
 
 
 def test_no_trusted_reviewer_configuration_fails_closed():
@@ -474,27 +496,33 @@ def test_view_pr_retries_until_mergeability_resolves(monkeypatch):
         return json.dumps(payloads[len(calls) - 1])
 
     monkeypatch.setattr(auto_merge, "_gh", fake_gh)
-    monkeypatch.setattr(auto_merge.time, "sleep", lambda _: None)
-    assert auto_merge.view_pr("o/r", 7)["mergeable"] == "MERGEABLE"
+    sleeps = []
+    monkeypatch.setattr(auto_merge.time, "sleep", sleeps.append)
+    assert auto_merge.view_pr("o/r", 7, attempts=2, delay=0.5)["mergeable"] == (
+        "MERGEABLE"
+    )
     assert len(calls) == 2
+    assert sleeps == [0.5]
 
 
 def test_view_pr_raises_when_mergeability_stays_unknown(monkeypatch):
     calls = []
+    sleeps = []
 
     def fake_gh(args):
         calls.append(args)
         return json.dumps({"mergeable": "UNKNOWN", "mergeStateStatus": "UNKNOWN"})
 
     monkeypatch.setattr(auto_merge, "_gh", fake_gh)
-    monkeypatch.setattr(auto_merge.time, "sleep", lambda _: None)
+    monkeypatch.setattr(auto_merge.time, "sleep", sleeps.append)
     with pytest.raises(ValueError, match="mergeability remained UNKNOWN"):
         auto_merge.view_pr("o/r", 7)
-    assert len(calls) == 3
+    assert len(calls) == 5
+    assert sleeps == [2.0, 4.0, 8.0, 16.0]
 
 
 def test_list_pr_reviews_flattens_paginated_rest_response(monkeypatch):
-    pages = [[approved_review()], [approved_review(login="maintainer")]]
+    pages = [[approved_review()], [approved_review(login="release-reviewer[bot]")]]
     calls = []
     monkeypatch.setattr(
         auto_merge,

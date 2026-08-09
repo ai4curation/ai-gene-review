@@ -24,12 +24,13 @@ on an up-to-date merge result, dismisses stale approvals, resolves review
 threads, and grants neither automation App a bypass. The workflow keeps execute
 mode behind a repository feature flag until those settings are installed.
 
-The default trusted identity is the ai4c-reviewer GitHub App. Additional
+The default trusted identity is the ai4c-reviewer GitHub App. Additional Bot
 reviewers can be explicitly allowlisted with repeatable --trusted-reviewer
-arguments. Logins are normalized for GraphQL/REST spellings such as
-ai4c-reviewer, ai4c-reviewer[bot], and app/ai4c-reviewer. Load-bearing REST
-reviews must also identify the reviewer as a Bot, so normalization cannot make
-a same-named human account trusted.
+arguments; human reviewer accounts are never accepted by this trust gate.
+Logins are normalized for GraphQL/REST spellings such as ai4c-reviewer,
+ai4c-reviewer[bot], and app/ai4c-reviewer. Load-bearing REST reviews must also
+identify the reviewer as a Bot, so normalization cannot make a same-named human
+account trusted.
 
 The closing pass intentionally does not filter by PR author or head repository.
 An otherwise eligible human-authored PR, or a fork PR that received an explicit
@@ -54,7 +55,7 @@ import sys
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
 
@@ -131,18 +132,14 @@ def _parse_ts(value: str) -> datetime:
 
 
 def _review_author_login(review: dict) -> str:
-    author = review.get("author") or review.get("user")
-    if isinstance(author, dict):
-        return str(author.get("login") or "")
-    return str(author or "")
+    user = review.get("user")
+    if isinstance(user, dict):
+        return str(user.get("login") or "")
+    return ""
 
 
 def _review_author_is_bot(review: dict) -> bool:
-    """Require REST review authors to carry GitHub's Bot identity type."""
-    if "user" not in review:
-        # `gh pr view --json reviews` uses the GraphQL `author` shape. The
-        # load-bearing review fetch uses REST and always supplies `user`.
-        return True
+    """Require the load-bearing REST author to carry GitHub's Bot identity type."""
     user = review.get("user")
     return isinstance(user, dict) and str(user.get("type") or "").casefold() == "bot"
 
@@ -172,13 +169,15 @@ def trusted_head_approval_decision(
         return Decision(False, "no trusted reviewers configured")
 
     approvals_on_other_commits: set[str] = set()
+    approvals_without_bot_identity: set[str] = set()
     for review in reviews or []:
         if (review.get("state") or "").upper() != "APPROVED":
             continue
-        if not _review_author_is_bot(review):
-            continue
         login = normalize_login(_review_author_login(review))
         if login not in trusted:
+            continue
+        if not _review_author_is_bot(review):
+            approvals_without_bot_identity.add(login)
             continue
         review_sha = _review_commit_oid(review).strip()
         if review_sha.casefold() == head_sha.strip().casefold() and review_sha:
@@ -190,6 +189,12 @@ def trusted_head_approval_decision(
         return Decision(
             False,
             f"trusted approval by {reviewers} is not for current head {head_sha}",
+        )
+    if approvals_without_bot_identity:
+        reviewers = ", ".join(sorted(approvals_without_bot_identity))
+        return Decision(
+            False,
+            f"allowlisted approval did not have a verified Bot identity: {reviewers}",
         )
     return Decision(False, "no trusted reviewer approved the current head")
 
@@ -426,8 +431,8 @@ def list_open_prs(repo: str, limit: int, base_branch: str) -> list[dict]:
     return json.loads(out)
 
 
-def view_pr(repo: str, number: int, *, attempts: int = 3, delay: float = 2.0) -> dict:
-    """Fetch one PR, retrying while GitHub computes mergeability."""
+def view_pr(repo: str, number: int, *, attempts: int = 5, delay: float = 2.0) -> dict:
+    """Fetch one PR, retrying UNKNOWN mergeability with exponential backoff."""
     pr: dict = {}
     for attempt in range(attempts):
         pr = json.loads(
@@ -440,7 +445,7 @@ def view_pr(repo: str, number: int, *, attempts: int = 3, delay: float = 2.0) ->
         if "UNKNOWN" not in unresolved:
             return pr
         if attempt < attempts - 1:
-            time.sleep(delay)
+            time.sleep(delay * (2**attempt))
     unresolved_fields = [
         field
         for field in ("mergeable", "mergeStateStatus")
@@ -592,8 +597,8 @@ def main(argv: list[str] | None = None) -> int:
         type=non_empty,
         default=[],
         help=(
-            "additional reviewer login trusted to approve the exact head; repeatable "
-            "(ai4c-reviewer is always trusted)"
+            "additional Bot reviewer login trusted to approve the exact head; "
+            "repeatable (Bot accounts only; ai4c-reviewer is always trusted)"
         ),
     )
     parser.add_argument(
@@ -648,7 +653,7 @@ def main(argv: list[str] | None = None) -> int:
         *args.exclude_head_prefix,
     )
     dry_run = not args.execute
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     prs = list_open_prs(args.repo, args.limit, args.base_branch)
     if len(prs) >= args.limit:
         print(
@@ -714,7 +719,7 @@ def main(argv: list[str] | None = None) -> int:
 
         decision = evaluate(
             fresh,
-            now=datetime.now(UTC),
+            now=datetime.now(timezone.utc),
             min_age_days=args.min_age_days,
             base_branch=args.base_branch,
             trusted_reviewers=trusted_reviewers,
@@ -762,7 +767,7 @@ def main(argv: list[str] | None = None) -> int:
 
         final_decision = evaluate(
             fresh,
-            now=datetime.now(UTC),
+            now=datetime.now(timezone.utc),
             min_age_days=args.min_age_days,
             base_branch=args.base_branch,
             trusted_reviewers=trusted_reviewers,

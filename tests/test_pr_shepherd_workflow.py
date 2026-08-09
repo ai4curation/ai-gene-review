@@ -114,7 +114,8 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
     assert approve["with"]["base-branch"] == "main"
     assert approve["with"]["expected-author"] == "app/ai4c-agent"
     assert "always()" in warning["if"]
-    assert "steps.approve-generated.outcome != 'success'" in warning["if"]
+    assert "steps.approve-generated.outcome == 'failure'" in warning["if"]
+    assert "!= 'success'" not in warning["if"]
     assert "::warning title=Generated PR approval unavailable::" in warning["run"]
     assert "protected main will keep the PR open and unmerged" in warning["run"]
 
