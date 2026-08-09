@@ -46,7 +46,9 @@ define the Alg8-to-AlgE polymer conduit.
 
 - The `alg8` TreeGrafter node `PTN002740694` propagates hyaluronan synthase,
   hyaluronan biosynthesis, and extracellular-matrix assembly to a
-  PANTHER `PTHR22913:SF12` mannuronan synthase. Those three rows are removed.
+  target labeled as a PANTHER `PTHR22913:SF12` mannuronan synthase. The
+  hyaluronan rows are removed; extracellular-matrix assembly is retained only
+  as an over-annotated, condition-dependent consequence of alginate production.
 - `GO:0047643 alginate synthase activity` is added to Alg8 as the exact
   replacement molecular function.
 - Alg44 retains cyclic-di-GMP binding and is annotated as contributing to,
@@ -72,17 +74,21 @@ define the Alg8-to-AlgE polymer conduit.
 ## Grounding
 
 Every modeled role has an exact KT2440 UniProt exemplar and a reviewed
-Pseudomonas aeruginosa comparator. Family selection uses specific PANTHER or
-InterPro accessions; misleading broad-family labels are explicitly excluded.
+Pseudomonas aeruginosa comparator. Alg8 uses an ortholog selector anchored to
+reviewed Q52463 because the nominal PANTHER SF12 mixes Alg8, HasA, and NodC;
+other family selections use specific InterPro accessions, with misleading
+broad-family labels explicitly excluded.
 Molecular functions occur only on leaf annotons. No generic cytoplasm/cytosol
 term is asserted at module level.
 
 ## Research Status
 
 The OpenScientist report and artifacts are stored under
-`projects/P_PUTIDA/deep-research/`. Direct P. putida phenotypic evidence in the
-report supports an intact, conditionally deployed alginate system, while
-individual mechanistic assignments remain explicit ortholog transfers where
+`projects/P_PUTIDA/deep-research/`. Primary studies PMID:25968647,
+PMID:25817996, and PMID:23503314 ground the Alg8-Alg44 interaction, cytoplasmic
+c-di-GMP sensing, and envelope-spanning complex, respectively. Direct P. putida
+phenotypic evidence supports an intact, conditionally deployed alginate system,
+while mechanistic assignments remain explicit ortholog transfers where
 KT2440-specific biochemistry is unavailable.
 
 ## Validation
