@@ -10,6 +10,7 @@ merges when every mechanical guard passes:
 * a configured trusted reviewer approved the exact current head commit;
 * the PR was tested against the current base-branch tip;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
+* every changed file is under a conservative content-path allowlist;
 * every reported check is complete and non-failing, with at least one SUCCESS;
 * every optionally named required check has an explicit SUCCESS result.
 
@@ -64,11 +65,27 @@ LIST_FIELDS = (
     "mergeable,baseRefName,headRefName,labels,url"
 )
 VIEW_FIELDS = (
-    LIST_FIELDS + ",state,statusCheckRollup,headRefOid,baseRefOid,mergeStateStatus"
+    LIST_FIELDS
+    + ",state,statusCheckRollup,headRefOid,baseRefOid,mergeStateStatus,changedFiles"
 )
 
 DEFAULT_TRUSTED_REVIEWERS = ("ai4c-reviewer",)
 DEFAULT_EXCLUDED_HEAD_PREFIXES = ("auto/generate-",)
+DEFAULT_ALLOWED_PATH_PREFIXES = (
+    "genes/",
+    "genesets/",
+    "gocams/",
+    "interpro/",
+    "modules/",
+    "projects/",
+    "publications/",
+    "reactome/",
+    "rules/",
+    "terms/",
+    "families/",
+    "research/",
+)
+MAX_REST_CHANGED_FILES = 3_000
 PASSING_CONCLUSIONS = frozenset({"SUCCESS", "SKIPPED", "NEUTRAL"})
 PASSING_STATES = frozenset({"SUCCESS", "NEUTRAL"})
 
@@ -98,6 +115,14 @@ class Decision:
     code: str = ""
 
 
+@dataclass(frozen=True)
+class ChangedFileInventory:
+    """Complete paths returned by one paginated REST file-list read."""
+
+    filenames: tuple[str, ...]
+    previous_filenames: tuple[str, ...] = ()
+
+
 def non_negative_int(value: str) -> int:
     """Parse an age threshold and reject values that widen it by accident."""
     parsed = int(value)
@@ -106,6 +131,14 @@ def non_negative_int(value: str) -> int:
             f"must be zero or positive, got {parsed}; a negative threshold "
             "would merge PRs of any age"
         )
+    return parsed
+
+
+def positive_int(value: str) -> int:
+    """Parse a strictly positive scan bound."""
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"must be positive, got {parsed}")
     return parsed
 
 
@@ -127,11 +160,22 @@ def normalize_login(login: str) -> str:
     return normalized
 
 
+def trusted_reviewer_login(value: str) -> str:
+    """Parse a trusted Bot login and reject spellings that normalize empty."""
+    parsed = non_empty(value)
+    if not normalize_login(parsed):
+        raise argparse.ArgumentTypeError(
+            "must identify a Bot login after removing app/ and [bot] markers"
+        )
+    return parsed
+
+
 def _parse_ts(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
 def _review_author_login(review: dict) -> str:
+    # Invariant: load-bearing reviews come only from list_pr_reviews' REST data.
     user = review.get("user")
     if isinstance(user, dict):
         return str(user.get("login") or "")
@@ -279,6 +323,86 @@ def check_rollup_decision(
     return Decision(True, f"{successes} check(s) passing")
 
 
+def changed_files_decision(
+    changed_files: list[str] | None,
+    *,
+    expected_file_count: object,
+    previous_filenames: list[str] | None = None,
+    allowed_path_prefixes: Iterable[str] = (),
+) -> Decision:
+    """Require every changed file to stay within a conservative content scope."""
+    if (
+        isinstance(expected_file_count, bool)
+        or not isinstance(expected_file_count, int)
+        or expected_file_count <= 0
+    ):
+        return Decision(
+            False, "no valid total changed-file count in the PR API response"
+        )
+    if expected_file_count > MAX_REST_CHANGED_FILES:
+        return Decision(
+            False,
+            f"PR reports {expected_file_count} changed files, exceeding the REST "
+            f"completeness cap of {MAX_REST_CHANGED_FILES}",
+        )
+    if not changed_files:
+        return Decision(False, "no changed files in the REST API response")
+    previous_filenames = previous_filenames or []
+
+    prefixes = tuple(
+        dict.fromkeys(
+            (
+                *DEFAULT_ALLOWED_PATH_PREFIXES,
+                *(prefix.strip() for prefix in allowed_path_prefixes if prefix.strip()),
+            )
+        )
+    )
+    malformed = [
+        path
+        for path in (*changed_files, *previous_filenames)
+        if not isinstance(path, str) or not path.strip()
+    ]
+    if malformed:
+        return Decision(False, "malformed changed-file data in the REST API response")
+
+    non_normalized = [
+        path
+        for path in (*changed_files, *previous_filenames)
+        if path != path.strip()
+        or path.startswith("/")
+        or "\\" in path
+        or any(part in {"", ".", ".."} for part in path.split("/"))
+        or any(ord(character) < 32 or ord(character) == 127 for character in path)
+    ]
+    if non_normalized:
+        return Decision(
+            False,
+            "non-normalized changed-file path in the REST API response: "
+            + ", ".join(repr(path) for path in non_normalized),
+        )
+
+    if len(set(changed_files)) != len(changed_files):
+        return Decision(False, "duplicate filenames in the REST API response")
+    if len(changed_files) != expected_file_count:
+        return Decision(
+            False,
+            f"REST returned {len(changed_files)} changed file(s), but the PR API "
+            f"reports {expected_file_count}",
+        )
+
+    disallowed = sorted(
+        path
+        for path in (*changed_files, *previous_filenames)
+        if not any(path.startswith(prefix) for prefix in prefixes)
+    )
+    if disallowed:
+        return Decision(
+            False,
+            "changed files outside the allowed path scope: " + ", ".join(disallowed),
+        )
+    return Decision(True, f"{len(changed_files)} changed file(s) in allowed paths")
+
+
 def evaluate(
     pr: dict,
     *,
@@ -290,6 +414,7 @@ def evaluate(
     current_base_sha: str = "",
     hold_label: str = "shepherd:hold",
     excluded_head_prefixes: Iterable[str] = DEFAULT_EXCLUDED_HEAD_PREFIXES,
+    allowed_path_prefixes: Iterable[str] = (),
     final: bool = True,
 ) -> Decision:
     """Apply cheap list guards or the complete final merge predicate."""
@@ -355,6 +480,15 @@ def evaluate(
             False,
             f"PR base {base_sha} is stale; current base tip is {current_base_sha}",
         )
+
+    paths = changed_files_decision(
+        pr.get("changed_files"),
+        expected_file_count=pr.get("changedFiles"),
+        previous_filenames=pr.get("previous_changed_filenames"),
+        allowed_path_prefixes=allowed_path_prefixes,
+    )
+    if not paths.eligible:
+        return paths
 
     head_sha = str(pr.get("headRefOid") or "").strip()
     approval = trusted_head_approval_decision(
@@ -479,6 +613,50 @@ def list_pr_reviews(repo: str, number: int) -> list[dict]:
     return reviews
 
 
+def list_pr_files(repo: str, number: int) -> ChangedFileInventory:
+    """Fetch and strictly validate every changed filename from paginated REST."""
+    pages = json.loads(
+        _gh(
+            [
+                "api",
+                "--paginate",
+                "--slurp",
+                f"repos/{repo}/pulls/{number}/files?per_page=100",
+            ]
+        )
+    )
+    if not isinstance(pages, list) or not pages:
+        raise ValueError("file API did not return a non-empty list of pages")
+
+    filenames: list[str] = []
+    previous_filenames: list[str] = []
+    for page in pages:
+        if not isinstance(page, list):
+            raise ValueError("file API page was not a list")
+        if not page:
+            raise ValueError("file API page was empty")
+        for entry in page:
+            if not isinstance(entry, dict):
+                raise ValueError("file API entry was not an object")
+            filename = entry.get("filename")
+            if not isinstance(filename, str) or not filename.strip():
+                raise ValueError("file API entry had no valid filename")
+            filenames.append(filename)
+            previous_filename = entry.get("previous_filename")
+            if previous_filename is not None:
+                if (
+                    not isinstance(previous_filename, str)
+                    or not previous_filename.strip()
+                ):
+                    raise ValueError("file API entry had no valid previous filename")
+                previous_filenames.append(previous_filename)
+            elif str(entry.get("status") or "").casefold() == "renamed":
+                raise ValueError("renamed file API entry had no previous filename")
+    if not filenames:
+        raise ValueError("file API returned no changed files")
+    return ChangedFileInventory(tuple(filenames), tuple(previous_filenames))
+
+
 def view_base_tip(repo: str, base_branch: str) -> str:
     """Read the current base tip and fail closed on an empty response."""
     encoded_branch = quote(base_branch, safe="")
@@ -557,6 +735,15 @@ def render_summary(
     if merged:
         lines.append(f"**{verb} {len(merged)}:**")
         lines += [f"- #{row['number']} — {row['title']}" for row in merged]
+        if dry_run and len(merged) > 1:
+            lines.extend(
+                [
+                    "",
+                    "_Candidates are independently eligible at audit time. After the "
+                    "first merge advances `main`, later candidates normally require a "
+                    "branch refresh, new CI, and a new exact-head approval._",
+                ]
+            )
     else:
         lines.append(f"**{verb} 0** — nothing met every criterion.")
     lines.append("")
@@ -589,16 +776,29 @@ def main(argv: list[str] | None = None) -> int:
         help="only merge PRs targeting this branch (default: main)",
     )
     parser.add_argument(
-        "--limit", type=int, default=300, help="max open PRs to scan (default: 300)"
+        "--limit",
+        type=positive_int,
+        default=300,
+        help="max open PRs to scan (default: 300)",
     )
     parser.add_argument(
         "--trusted-reviewer",
         action="append",
-        type=non_empty,
+        type=trusted_reviewer_login,
         default=[],
         help=(
             "additional Bot reviewer login trusted to approve the exact head; "
             "repeatable (Bot accounts only; ai4c-reviewer is always trusted)"
+        ),
+    )
+    parser.add_argument(
+        "--allowed-path-prefix",
+        action="append",
+        type=non_empty,
+        default=[],
+        help=(
+            "additional changed-file path prefix allowed by the merge controller; "
+            "repeatable (the conservative defaults always remain enabled)"
         ),
     )
     parser.add_argument(
@@ -674,6 +874,7 @@ def main(argv: list[str] | None = None) -> int:
             required_checks=args.required_check,
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
+            allowed_path_prefixes=args.allowed_path_prefix,
             final=False,
         )
         if decision.eligible:
@@ -701,6 +902,9 @@ def main(argv: list[str] | None = None) -> int:
         try:
             fresh = view_pr(args.repo, number)
             fresh["reviews"] = list_pr_reviews(args.repo, number)
+            files = list_pr_files(args.repo, number)
+            fresh["changed_files"] = list(files.filenames)
+            fresh["previous_changed_filenames"] = list(files.previous_filenames)
             current_base_sha = view_base_tip(args.repo, args.base_branch)
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
@@ -727,6 +931,7 @@ def main(argv: list[str] | None = None) -> int:
             current_base_sha=current_base_sha,
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
+            allowed_path_prefixes=args.allowed_path_prefix,
         )
         if not decision.eligible:
             print(f"SKIP  #{number}: {decision.reason}")
@@ -754,13 +959,16 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             fresh = view_pr(args.repo, number)
             fresh["reviews"] = list_pr_reviews(args.repo, number)
+            files = list_pr_files(args.repo, number)
+            fresh["changed_files"] = list(files.filenames)
+            fresh["previous_changed_filenames"] = list(files.previous_filenames)
         except (subprocess.CalledProcessError, ValueError) as exc:
             detail = (
                 _gh_error(exc)
                 if isinstance(exc, subprocess.CalledProcessError)
                 else str(exc)
             )
-            reason = f"could not re-verify base tip: {detail}"
+            reason = f"could not perform final re-verification: {detail}"
             print(f"FAIL  #{number}: {reason}", file=sys.stderr)
             failed.append({"number": number, "reason": reason})
             continue
@@ -775,6 +983,7 @@ def main(argv: list[str] | None = None) -> int:
             current_base_sha=merge_base_sha,
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
+            allowed_path_prefixes=args.allowed_path_prefix,
         )
         if not final_decision.eligible:
             reason = f"state changed after verification: {final_decision.reason}"

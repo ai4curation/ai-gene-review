@@ -331,22 +331,45 @@ itself reject fork heads. Author login, head repository, and agent-style head
 prefixes are not trust signals for this pass; only `auto/generate-*` is excluded
 for its separate lifecycle. Automatic agentic review remains limited to
 same-repository PRs, so a fork can qualify only after an authorized manual run
-has supplied the trusted exact-head review. That review plus the
-protected-`main` contract are the authorization boundary. In particular, a
-human-authored PR can be merged after the age gate without a second, human-only
-approval. That is deliberate; changing the policy requires an explicit author
-or branch predicate rather than assuming the agentic job's narrower candidate
-rules also apply here.
+has supplied the trusted exact-head Bot review. "Trusted" means both an
+allowlisted login and a REST review author whose GitHub identity type is `Bot`;
+a human approval cannot substitute, even from a human account with the same
+name. That Bot review plus the protected-`main` contract are the authorization
+boundary. In particular, a human-authored PR can be merged after the age gate
+without a second, human-only approval. That is deliberate; changing the policy
+requires an explicit author or branch predicate rather than assuming the
+agentic job's narrower candidate rules also apply here.
+
+Broad author/head ingress does not mean broad file scope. The controller also
+requires every changed path to sit under one of these conservative curation and
+data prefixes by default: `genes/`, `genesets/`, `gocams/`, `interpro/`,
+`modules/`, `projects/`, `publications/`, `reactome/`, `rules/`, `terms/`,
+`families/`, or `research/`. A PR that mixes an allowed data change with even
+one path outside that set is ineligible. Repeatable CLI additions can expand
+the prefix set through `--allowed-path-prefix` for a deliberate one-off policy,
+but the production workflow passes none. Infrastructure and self-modifying
+automation changes — including `.github/`, `scripts/`, `src/`, `tests/`, and
+top-level build/configuration files — therefore require a manual merge.
 
 The controller requires all of these at fresh reads immediately before merge:
 
-- open, non-draft, unassigned, old enough, and targeting `main`;
+- open, non-draft, unassigned, old enough by PR creation time, and targeting
+  `main`;
 - no `shepherd:hold` label and no `auto/generate-*` head branch;
-- `APPROVED`, including an `ai4c-reviewer` approval anchored to the exact head;
+- `APPROVED`, including an allowlisted Bot review anchored to the exact head;
+- every changed file is inside the conservative path-prefix policy above;
 - the PR's tested base SHA equals the current `main` tip;
 - GitHub reports mergeable and clean;
 - all reported checks are complete/non-failing, and `test (3.12)` is explicitly
   successful.
+
+The age gate intentionally measures `createdAt`, not the latest push, approval,
+or branch update. It is a backlog-age threshold, not a soak period for the
+current content. Consequently, fresh commits pushed to an old PR can merge as
+soon as that exact new head receives the trusted Bot review, passes current-base
+CI, and meets the remaining guards. This keeps old approved work moving, but it
+also means operators must use draft state, assignment, or `shepherd:hold` when
+fresh content needs additional observation time.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
 (Contents write + pull-request write + Issues write) is supplied only to the
@@ -385,10 +408,16 @@ Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
 proves the commit contains derived artifacts only, always builds from the
 default branch, enables auto-merge only under the same feature flag, and obtains
 an ai4c-reviewer approval anchored to the exact generated commit. The general
-Shepherd controller and agent both exclude that lane. If the reviewer App is
-temporarily unavailable after a long render, the approval step emits a loud
-warning but does not discard the already-pushed artifacts or red-X the job;
-protected `main` leaves the PR open and unmerged until approval is retried.
+Shepherd controller and agent both exclude that lane. Before calling
+`gh pr merge --auto`, the generated lane also requires the repository default
+and literal PR base to both be `main`, then reads `branches/main` with its
+current ai4c-agent token and fails without arming if `.protected` is false or
+unreadable. Like the Shepherd preflight, this is only a protection-existence
+smoke check; the exact settings still require the manual checklist above. If
+the reviewer App is temporarily unavailable after a long render, the approval
+step emits a loud warning but does not discard the already-pushed artifacts or
+red-X the job; protected `main` leaves the PR open and unmerged until approval
+is retried.
 
 ## Recommended follow-up: append-only curation history
 

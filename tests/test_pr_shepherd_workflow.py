@@ -67,6 +67,7 @@ def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
     for step in (audit, execute):
         assert '--required-check "test (3.12)"' in step["run"]
         assert '--trusted-reviewer "ai4c-reviewer"' in step["run"]
+        assert "--allowed-path-prefix" not in step["run"]
 
 
 def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
@@ -97,16 +98,46 @@ def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
 
 def test_generated_pages_waits_for_ci_and_exact_head_approval():
     workflow = _workflow(GENERATE_PAGES)
-    job = next(iter(workflow["jobs"].values()))
+    job = workflow["jobs"]["generate-pages"]
     checkout = _step(job, "Checkout repository")
     create = _step(job, "Create or update regeneration PR")
     approve = _step(job, "Approve exact generated commit")
     warning = _step(job, "Warn when generated approval is unavailable")
+    create_script = create["run"]
 
     assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
-    assert "--auto" in create["run"]
-    assert "--match-head-commit" in create["run"]
-    assert "MERGE_ENABLED" in create["run"]
+    assert create["env"]["GH_TOKEN"] == "${{ steps.ai4c-token.outputs.token }}"
+    assert create["env"]["DEFAULT_BRANCH"] == (
+        "${{ github.event.repository.default_branch }}"
+    )
+    assert "--auto" in create_script
+    assert "--match-head-commit" in create_script
+    assert "MERGE_ENABLED" in create_script
+
+    flag_guard = create_script.index('if [ "$MERGE_ENABLED" != "true" ]')
+    branch_guard = create_script.index('if [ "$DEFAULT_BRANCH" != "main" ]')
+    pr_base_read = create_script.index("--json baseRefName")
+    pr_base_guard = create_script.index('if [ "$pr_base" != "main" ]')
+    protection_read = create_script.index('"repos/$GITHUB_REPOSITORY/branches/main"')
+    protection_guard = create_script.index('if [ "$protected" != "true" ]')
+    arm = create_script.index('echo "Arming auto-merge')
+    merge = create_script.index('gh pr merge "$PR_NUMBER"')
+    assert (
+        flag_guard
+        < branch_guard
+        < pr_base_read
+        < pr_base_guard
+        < protection_read
+        < protection_guard
+        < arm
+        < merge
+    )
+    assert "--base main" in create_script
+    assert 'if ! protected="$(gh api' in create_script
+    assert "Generated auto-merge base check failed" in create_script
+    assert "Generated auto-merge protection check failed" in create_script
+    assert "refusing to arm auto-merge" in create_script
+
     assert approve["id"] == "approve-generated"
     assert approve["continue-on-error"] is True
     assert approve["uses"] == "./.github/actions/approve-regen-pr"
@@ -130,7 +161,7 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
 
 def test_generated_artifact_allowlist_is_fully_anchored():
     workflow = _workflow(GENERATE_PAGES)
-    job = next(iter(workflow["jobs"].values()))
+    job = workflow["jobs"]["generate-pages"]
     create_script = _step(job, "Create or update regeneration PR")["run"]
     match = re.search(r"grep -vE '([^']+)'", create_script)
     assert match, "could not find the generated-artifact allowlist"

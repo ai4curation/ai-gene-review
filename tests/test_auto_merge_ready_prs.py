@@ -60,6 +60,9 @@ def make_pr(**overrides):
         "assignees": [],
         "reviewDecision": "APPROVED",
         "reviews": [approved_review()],
+        "changedFiles": 1,
+        "changed_files": ["genes/human/EXAMPLE/EXAMPLE-ai-review.yaml"],
+        "previous_changed_filenames": [],
         "mergeable": "MERGEABLE",
         "mergeStateStatus": "CLEAN",
         "createdAt": (NOW - timedelta(days=5)).isoformat().replace("+00:00", "Z"),
@@ -170,6 +173,17 @@ def test_non_negative_int_rejects_negative_values(value):
         auto_merge.non_negative_int(value)
 
 
+@pytest.mark.parametrize("value", ["1", "300"])
+def test_positive_int_accepts_valid_values(value):
+    assert auto_merge.positive_int(value) == int(value)
+
+
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_positive_int_rejects_nonpositive_values(value):
+    with pytest.raises(argparse.ArgumentTypeError, match="must be positive"):
+        auto_merge.positive_int(value)
+
+
 def test_non_empty_strips_and_rejects_empty_values():
     assert auto_merge.non_empty("  alice ") == "alice"
     with pytest.raises(argparse.ArgumentTypeError, match="must not be empty"):
@@ -190,6 +204,17 @@ def test_non_empty_strips_and_rejects_empty_values():
 )
 def test_login_normalization(spelling, expected):
     assert auto_merge.normalize_login(spelling) == expected
+
+
+@pytest.mark.parametrize("spelling", ["app/", "[bot]", "app/[bot]", " APP/[BOT] "])
+def test_trusted_reviewer_cli_rejects_spellings_that_normalize_empty(
+    monkeypatch, capsys, spelling
+):
+    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [])
+    with pytest.raises(SystemExit) as exc:
+        auto_merge.main(["--repo", "o/r", "--trusted-reviewer", spelling])
+    assert exc.value.code == 2
+    assert "must identify a Bot login" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(
@@ -334,6 +359,140 @@ def test_stale_pr_base_fails_closed():
 
 def test_base_sha_comparison_is_case_insensitive():
     assert decide(make_pr(baseRefOid="ABCDEF"), current_base_sha="abcdef").eligible
+
+
+# Changed-file path scope
+
+
+def test_default_allowed_path_prefixes_are_the_conservative_content_set():
+    assert auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES == (
+        "genes/",
+        "genesets/",
+        "gocams/",
+        "interpro/",
+        "modules/",
+        "projects/",
+        "publications/",
+        "reactome/",
+        "rules/",
+        "terms/",
+        "families/",
+        "research/",
+    )
+
+
+def test_allowed_path_canary_mix_is_eligible():
+    canaries = [
+        f"{prefix}path-canary.yaml"
+        for prefix in auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES
+    ]
+    assert decide(make_pr(changedFiles=len(canaries), changed_files=canaries)).eligible
+
+
+@pytest.mark.parametrize(
+    "disallowed",
+    [
+        ".github/workflows/main.yaml",
+        "scripts/release.py",
+        "src/ai_gene_review/cli.py",
+        "pyproject.toml",
+    ],
+)
+def test_one_disallowed_path_vetoes_otherwise_allowed_changes(disallowed):
+    decision = decide(
+        make_pr(
+            changedFiles=2,
+            changed_files=[
+                "genes/human/EXAMPLE/EXAMPLE-ai-review.yaml",
+                disallowed,
+            ],
+        )
+    )
+    assert not decision.eligible
+    assert "outside the allowed path scope" in decision.reason
+    assert disallowed in decision.reason
+
+
+@pytest.mark.parametrize("changed_files", [None, [], [None], [""], [{}]])
+def test_missing_empty_or_malformed_changed_files_fail_closed(changed_files):
+    decision = decide(make_pr(changed_files=changed_files))
+    assert not decision.eligible
+    assert "changed" in decision.reason
+    assert "file" in decision.reason
+
+
+def test_additional_path_prefix_expands_without_replacing_defaults():
+    pr = make_pr(
+        changedFiles=2,
+        changed_files=["genes/human/EXAMPLE/review.yaml", "docs/policy.md"],
+    )
+    assert not decide(pr).eligible
+    assert decide(pr, allowed_path_prefixes=["docs/"]).eligible
+
+
+@pytest.mark.parametrize("count", [None, True, 0, -1, "1"])
+def test_missing_or_invalid_total_changed_file_count_fails_closed(count):
+    decision = decide(make_pr(changedFiles=count))
+    assert not decision.eligible
+    assert "no valid total changed-file count" in decision.reason
+
+
+def test_rest_file_count_must_match_pr_total():
+    decision = decide(make_pr(changedFiles=2))
+    assert not decision.eligible
+    assert "REST returned 1" in decision.reason
+    assert "PR API reports 2" in decision.reason
+
+
+def test_pr_above_rest_file_cap_fails_closed_even_before_count_comparison():
+    decision = decide(make_pr(changedFiles=3_001))
+    assert not decision.eligible
+    assert "exceeding the REST completeness cap of 3000" in decision.reason
+
+
+def test_exact_rest_file_cap_can_be_proven_complete_by_matching_count():
+    files = [f"genes/bulk/file-{index}.yaml" for index in range(3_000)]
+    assert decide(make_pr(changedFiles=3_000, changed_files=files)).eligible
+
+
+def test_duplicate_rest_filenames_fail_closed():
+    decision = decide(
+        make_pr(changedFiles=2, changed_files=["genes/a.yaml", "genes/a.yaml"])
+    )
+    assert not decision.eligible
+    assert "duplicate filenames" in decision.reason
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "genes/../.github/workflows/main.yaml",
+        "genes//human/review.yaml",
+        "genes/./human/review.yaml",
+        "/genes/human/review.yaml",
+        "genes\\human\\review.yaml",
+        "genes/human/review.yaml\n.github/workflows/main.yaml",
+        " genes/human/review.yaml",
+    ],
+)
+def test_non_normalized_repo_paths_fail_closed(path):
+    decision = decide(make_pr(changed_files=[path]))
+    assert not decision.eligible
+    assert "non-normalized changed-file path" in decision.reason
+
+
+def test_rename_source_path_is_also_within_the_perimeter():
+    moved_from_infrastructure = make_pr(
+        changed_files=["genes/human/EXAMPLE/moved.yaml"],
+        previous_changed_filenames=[".github/workflows/main.yaml"],
+    )
+    assert not decide(moved_from_infrastructure).eligible
+    assert decide(
+        make_pr(
+            changed_files=["genes/human/EXAMPLE/new.yaml"],
+            previous_changed_filenames=["genes/human/EXAMPLE/old.yaml"],
+        )
+    ).eligible
 
 
 # Check rollup and named required checks
@@ -542,6 +701,63 @@ def test_list_pr_reviews_rejects_malformed_pages(monkeypatch, payload):
         auto_merge.list_pr_reviews("o/r", 7)
 
 
+def test_list_pr_files_flattens_and_validates_paginated_rest_response(monkeypatch):
+    pages = [
+        [{"filename": "genes/human/EXAMPLE/review.yaml"}],
+        [
+            {
+                "filename": "projects/EXAMPLE.md",
+                "status": "renamed",
+                "previous_filename": "projects/OLD-EXAMPLE.md",
+            }
+        ],
+    ]
+    calls = []
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda args: calls.append(args) or json.dumps(pages),
+    )
+    inventory = auto_merge.list_pr_files("o/r", 7)
+    assert inventory.filenames == (
+        "genes/human/EXAMPLE/review.yaml",
+        "projects/EXAMPLE.md",
+    )
+    assert inventory.previous_filenames == ("projects/OLD-EXAMPLE.md",)
+    assert calls[0][:3] == ["api", "--paginate", "--slurp"]
+    assert calls[0][-1].endswith("/pulls/7/files?per_page=100")
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        [],
+        [[]],
+        [[{"filename": "genes/example.yaml"}], {}],
+        [[], [{"filename": "genes/example.yaml"}]],
+        [[None]],
+        [[{}]],
+        [[{"filename": ""}]],
+        [[{"filename": "   "}]],
+        [[{"filename": "genes/new.yaml", "status": "renamed"}]],
+        [
+            [
+                {
+                    "filename": "genes/new.yaml",
+                    "status": "renamed",
+                    "previous_filename": "",
+                }
+            ]
+        ],
+    ],
+)
+def test_list_pr_files_rejects_missing_empty_or_malformed_data(monkeypatch, payload):
+    monkeypatch.setattr(auto_merge, "_gh", lambda _: json.dumps(payload))
+    with pytest.raises(ValueError, match="file API"):
+        auto_merge.list_pr_files("o/r", 7)
+
+
 def test_view_base_tip_encodes_branch_and_rejects_empty(monkeypatch):
     calls = []
     monkeypatch.setattr(
@@ -589,6 +805,14 @@ def _run_main(
         auto_merge,
         "list_pr_reviews",
         lambda _repo, _number: list(last_view["value"].get("reviews", [])),
+    )
+    monkeypatch.setattr(
+        auto_merge,
+        "list_pr_files",
+        lambda _repo, _number: auto_merge.ChangedFileInventory(
+            tuple(last_view["value"].get("changed_files", [])),
+            tuple(last_view["value"].get("previous_changed_filenames", [])),
+        ),
     )
 
     def fake_base_tip(_repo, _base):
@@ -670,6 +894,56 @@ def test_hold_added_after_verification_blocks_execute(monkeypatch, tmp_path):
     assert "state changed after verification: held by label" in summary
 
 
+def test_disallowed_path_added_on_second_read_blocks_execute(monkeypatch, tmp_path):
+    initial = make_pr(number=42)
+    changed = make_pr(number=42, changed_files=["scripts/new_release.py"])
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[initial, changed],
+        args=("--execute", "--required-check", REQUIRED_CHECK),
+    )
+    assert code == 0
+    assert merges == []
+    assert "state changed after verification" in summary
+    assert "scripts/new_release.py" in summary
+
+
+def test_changed_file_count_mismatch_on_second_read_blocks_execute(
+    monkeypatch, tmp_path
+):
+    initial = make_pr(number=42)
+    incomplete = make_pr(number=42, changedFiles=2)
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[initial, incomplete],
+        args=("--execute", "--required-check", REQUIRED_CHECK),
+    )
+    assert code == 0
+    assert merges == []
+    assert "state changed after verification" in summary
+    assert "REST returned 1" in summary
+    assert "PR API reports 2" in summary
+
+
+def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_path):
+    view = make_pr(
+        number=42,
+        changedFiles=2,
+        changed_files=["genes/human/EXAMPLE/review.yaml", "docs/policy.md"],
+    )
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        view=view,
+        args=("--dry-run", "--allowed-path-prefix", "docs/"),
+    )
+    assert code == 0
+    assert merges == []
+    assert "Would merge 1" in summary
+
+
 def test_execute_and_dry_run_are_mutually_exclusive(monkeypatch):
     monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [])
     with pytest.raises(SystemExit) as exc:
@@ -737,6 +1011,54 @@ def test_review_fetch_error_is_a_nonfatal_skip_in_audit_mode(monkeypatch, tmp_pa
 
 
 @pytest.mark.parametrize(
+    ("args", "error_kind", "expected_code", "expected_summary"),
+    [
+        (("--dry-run",), "malformed", 0, "Skipped 1 near-miss"),
+        (("--dry-run",), "api", 0, "Skipped 1 near-miss"),
+        (
+            ("--execute", "--required-check", REQUIRED_CHECK),
+            "malformed",
+            1,
+            "Failed to merge 1",
+        ),
+        (
+            ("--execute", "--required-check", REQUIRED_CHECK),
+            "api",
+            1,
+            "Failed to merge 1",
+        ),
+    ],
+)
+def test_file_fetch_error_is_fatal_only_in_execute_mode(
+    monkeypatch, tmp_path, args, error_kind, expected_code, expected_summary
+):
+    monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
+    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [make_pr(number=42)])
+    monkeypatch.setattr(auto_merge, "view_pr", lambda *_: make_pr(number=42))
+    monkeypatch.setattr(
+        auto_merge,
+        "list_pr_reviews",
+        lambda *_: [approved_review()],
+    )
+    error = (
+        ValueError("bad file payload")
+        if error_kind == "malformed"
+        else subprocess.CalledProcessError(1, "gh api", stderr="HTTP 502 file API")
+    )
+    monkeypatch.setattr(
+        auto_merge,
+        "list_pr_files",
+        lambda *_: (_ for _ in ()).throw(error),
+    )
+    summary = tmp_path / "summary.md"
+    code = auto_merge.main(["--repo", "o/r", "--summary-file", str(summary), *args])
+    assert code == expected_code
+    assert expected_summary in summary.read_text()
+    expected_detail = "bad file payload" if error_kind == "malformed" else "HTTP 502"
+    assert expected_detail in summary.read_text()
+
+
+@pytest.mark.parametrize(
     ("args", "expected_code", "expected_summary"),
     [
         (("--dry-run",), 0, "Skipped 1 near-miss"),
@@ -791,6 +1113,16 @@ def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
         "list_pr_reviews",
         lambda _repo, number: list(
             (older if number == 20 else newer).get("reviews", [])
+        ),
+    )
+    monkeypatch.setattr(
+        auto_merge,
+        "list_pr_files",
+        lambda _repo, number: auto_merge.ChangedFileInventory(
+            tuple((older if number == 20 else newer).get("changed_files", [])),
+            tuple(
+                (older if number == 20 else newer).get("previous_changed_filenames", [])
+            ),
         ),
     )
     monkeypatch.setattr(auto_merge, "view_base_tip", lambda *_: BASE_SHA)
@@ -891,3 +1223,17 @@ def test_dry_run_summary_never_claims_a_merge():
     assert "dry run" in report
     assert "**Merged" not in report
     assert "#2 — draft" in report
+
+
+def test_multi_candidate_dry_run_explains_serial_base_refresh():
+    report = auto_merge.render_summary(
+        merged=[
+            {"number": 1, "title": "curate: A"},
+            {"number": 2, "title": "curate: B"},
+        ],
+        skipped=[],
+        failed=[],
+        dry_run=True,
+    )
+    assert "independently eligible at audit time" in report
+    assert "branch refresh" in report
