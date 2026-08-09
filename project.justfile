@@ -626,12 +626,18 @@ assay-mine-supporting *args:
         --out-dir projects/ASSAY_TO_FUNCTION/reports/with_supporting \
         "$@"
 
-assay-flag *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
+[positional-arguments]
+assay-flag *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py "$@"
 
 # Consolidate the 60-class catalog + mined matches into summary TSV/MD + figure.
-assay-consolidate *args="":
-    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py {{args}}
+[positional-arguments]
+assay-consolidate *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py "$@"
 
 # Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
 # This writes committed prompt.md files and prints submit commands but NEVER
@@ -640,8 +646,11 @@ assay-consolidate *args="":
 # Examples:
 #   just assay-stage-hypotheses --discriminator indirect_ligand --max 5
 #   just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
-assay-stage-hypotheses *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py {{args}}
+[positional-arguments]
+assay-stage-hypotheses *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py "$@"
 
 # Term deep research (open-ended biological concepts)
 # Examples:
