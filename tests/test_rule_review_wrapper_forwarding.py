@@ -12,6 +12,11 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+RENDER_RULE_CODE = (
+    "import sys; from pathlib import Path; "
+    "from ai_gene_review.etl.rule_analysis import render_rule_review_html; "
+    "render_rule_review_html(sys.argv[1], Path(sys.argv[2]))"
+)
 
 
 def write_enriched_rule(cache_dir: Path, rule_id: str) -> Path:
@@ -166,6 +171,7 @@ def run_isolated_just(
     fake_bin: Path,
     log_path: Path,
     *args: str,
+    extra_env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.update(
@@ -176,6 +182,7 @@ def run_isolated_just(
             "JUST_WORKING_DIRECTORY": str(working_directory),
         }
     )
+    env.update(extra_env or {})
     return subprocess.run(
         [
             "just",
@@ -225,9 +232,16 @@ def test_rule_wrapper_analysis_dependency_uses_custom_cache(
     assert not any("examples/rule_analysis_demo.py" in argv for argv in invocations)
     assert not (working_directory / "rules" / "arba" / rule_id).exists()
     if recipe == "render-rule":
-        assert len(invocations) == 1
-        assert invocations[0][:3] == ["run", "python", "-c"]
-        assert "Path('custom cache')" in invocations[0][3]
+        assert invocations == [
+            [
+                "run",
+                "python",
+                "-c",
+                RENDER_RULE_CODE,
+                rule_id,
+                "custom cache",
+            ]
+        ]
     else:
         assert invocations == [
             [
@@ -291,4 +305,39 @@ def test_sync_rule_review_single_preserves_default_cache_argument(
             "rules-sync",
             f"rules/arba/{rule_id}/{rule_id}-review.yaml",
         ]
+    ]
+
+
+@pytest.mark.parametrize(
+    ("cache_name", "extra_env"),
+    [
+        ("rules/arba", {}),
+        ("custom $RULE_RENDER_CACHE_TOKEN", {"RULE_RENDER_CACHE_TOKEN": "expanded"}),
+    ],
+)
+def test_render_rule_passes_cache_as_opaque_argument(
+    tmp_path: Path,
+    cache_name: str,
+    extra_env: dict[str, str],
+) -> None:
+    rule_id = "ARBA00026249"
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    seed_analysis_outputs(working_directory / cache_name, rule_id)
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    recipe_args = ["render-rule", rule_id]
+    if cache_name != "rules/arba":
+        recipe_args.append(cache_name)
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        *recipe_args,
+        extra_env=extra_env,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert read_argv_log(log_path) == [
+        ["run", "python", "-c", RENDER_RULE_CODE, rule_id, cache_name]
     ]
