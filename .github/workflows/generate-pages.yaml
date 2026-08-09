@@ -212,7 +212,7 @@ jobs:
           # content. Allowed: gene-review HTML, everything under pages/, the
           # three browser-app files, and reports/.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/|app/(index\.html|data\.js|schema\.js)$|reports/)' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(index\.html|data\.js|schema\.js)|reports/[^[:space:]]+)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
@@ -342,7 +342,12 @@ jobs:
             || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
 
       - name: Approve exact generated commit
+        id: approve-generated
         if: steps.check-changes.outputs.has_changes == 'true'
+        # Approval is a fail-safe convenience after the expensive render and
+        # push. Protected main keeps the PR open when the reviewer App is
+        # unavailable, so preserve the artifacts and emit a loud warning below.
+        continue-on-error: true
         uses: ./.github/actions/approve-regen-pr
         with:
           pr-number: ${{ steps.regen-pr.outputs.pr_number }}
@@ -351,3 +356,14 @@ jobs:
           expected-author: app/ai4c-agent
           app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
           private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
+
+      - name: Warn when generated approval is unavailable
+        if: >-
+          ${{ always() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.approve-generated.outcome != 'success' }}
+        env:
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+        shell: bash
+        run: |
+          echo "::warning title=Generated PR approval unavailable::The exact-head approval for regeneration PR #${PR_NUMBER:-unknown} failed. Generated artifacts were already pushed; protected main will keep the PR open and unmerged. Retry the workflow or inspect the ai4c-reviewer App."

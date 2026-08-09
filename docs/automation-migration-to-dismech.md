@@ -321,7 +321,22 @@ Manual dispatch exposes two independent controls:
 Schedules audit by default. They execute only while the repository variable
 `PR_SHEPHERD_MERGE_ENABLED` is exactly `true`. Manual execute also requires that
 flag and must be dispatched from the default branch. The execute preflight
-checks that the default branch is protected before it mints a write token.
+checks that the default branch reports as protected before it mints a write
+token.
+
+The deterministic closing pass intentionally has a broader ingress and
+authorship scope than the agentic tending job. It considers an otherwise
+eligible PR regardless of whether a bot or a human authored it, and it does not
+itself reject fork heads. Author login, head repository, and agent-style head
+prefixes are not trust signals for this pass; only `auto/generate-*` is excluded
+for its separate lifecycle. Automatic agentic review remains limited to
+same-repository PRs, so a fork can qualify only after an authorized manual run
+has supplied the trusted exact-head review. That review plus the
+protected-`main` contract are the authorization boundary. In particular, a
+human-authored PR can be merged after the age gate without a second, human-only
+approval. That is deliberate; changing the policy requires an explicit author
+or branch predicate rather than assuming the agentic job's narrower candidate
+rules also apply here.
 
 The controller requires all of these at fresh reads immediately before merge:
 
@@ -334,21 +349,46 @@ The controller requires all of these at fresh reads immediately before merge:
   successful.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
-(Contents write + pull-request write) is supplied only to the head-pinned merge
-and courtesy-comment subprocesses. API uncertainty fails an execute run red.
+(Contents write + pull-request write + Issues write) is supplied only to the
+head-pinned merge and courtesy-comment subprocesses. API uncertainty fails an
+execute run red.
 
-The feature flag is not a substitute for protection. Before setting it true,
-`main` must require strict/up-to-date `test (3.12)` from GitHub Actions, one
-approval, stale-review dismissal, approval by someone other than the latest
-pusher, resolved conversations, enforced administrators, and no automation-App
-bypass. Create the `shepherd:hold` label before activation. If protection is
-weakened later, set the flag false and cancel any in-flight Shepherd run.
+The feature flag and execute preflight are not substitutes for protection. The
+preflight's `GET branches/main` / `.protected == true` read is deliberately only
+an existence smoke test available to the read-only workflow token; a weak rule
+also satisfies it. It does **not** verify any of the settings below. This rollout
+requires a classic branch-protection rule on the literal `main` branch. Classic
+protection is confirmed to make `.protected` true; a repository-ruleset-only
+configuration is not supported by this preflight and must not be substituted
+without a ruleset-aware implementation and tests.
+
+Before setting `PR_SHEPHERD_MERGE_ENABLED=true`, manually verify the classic
+rule in repository settings or with
+`GET /repos/ai4curation/ai-gene-review/branches/main/protection`:
+
+- required status checks are strict/up-to-date and contain exactly
+  `test (3.12)` from the GitHub Actions App (`app_id: 15368`);
+- one approving review is required, stale approvals are dismissed, and the
+  latest reviewable push must be approved by someone other than its pusher;
+- unresolved review conversations block merging and enforcement includes
+  administrators;
+- the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
+  while force pushes and branch deletion remain disabled;
+- `GET branches/main` returns `.protected: true`, the `shepherd:hold` label
+  exists, and the feature flag remains false until an audit and controlled
+  execute smoke test complete.
+
+If any setting is weakened later, set the flag false and cancel any in-flight
+Shepherd run.
 
 Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
 proves the commit contains derived artifacts only, always builds from the
 default branch, enables auto-merge only under the same feature flag, and obtains
 an ai4c-reviewer approval anchored to the exact generated commit. The general
-Shepherd controller and agent both exclude that lane.
+Shepherd controller and agent both exclude that lane. If the reviewer App is
+temporarily unavailable after a long render, the approval step emits a loud
+warning but does not discard the already-pushed artifacts or red-X the job;
+protected `main` leaves the PR open and unmerged until approval is retried.
 
 ## Recommended follow-up: append-only curation history
 

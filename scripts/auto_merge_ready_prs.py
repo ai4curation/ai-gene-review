@@ -27,7 +27,14 @@ mode behind a repository feature flag until those settings are installed.
 The default trusted identity is the ai4c-reviewer GitHub App. Additional
 reviewers can be explicitly allowlisted with repeatable --trusted-reviewer
 arguments. Logins are normalized for GraphQL/REST spellings such as
-ai4c-reviewer, ai4c-reviewer[bot], and app/ai4c-reviewer.
+ai4c-reviewer, ai4c-reviewer[bot], and app/ai4c-reviewer. Load-bearing REST
+reviews must also identify the reviewer as a Bot, so normalization cannot make
+a same-named human account trusted.
+
+The closing pass intentionally does not filter by PR author or head repository.
+An otherwise eligible human-authored PR, or a fork PR that received an explicit
+trusted exact-head review, is in scope. Automatic agentic review is narrower,
+but its author/branch ingress rules are not implicit merge-controller policy.
 
 The controller is report-only by default. Actual merging requires the explicit
 ``--execute`` flag and a separate ``GH_MERGE_TOKEN`` credential. Read operations
@@ -130,6 +137,16 @@ def _review_author_login(review: dict) -> str:
     return str(author or "")
 
 
+def _review_author_is_bot(review: dict) -> bool:
+    """Require REST review authors to carry GitHub's Bot identity type."""
+    if "user" not in review:
+        # `gh pr view --json reviews` uses the GraphQL `author` shape. The
+        # load-bearing review fetch uses REST and always supplies `user`.
+        return True
+    user = review.get("user")
+    return isinstance(user, dict) and str(user.get("type") or "").casefold() == "bot"
+
+
 def _review_commit_oid(review: dict) -> str:
     if review.get("commit_id"):
         return str(review["commit_id"])
@@ -157,6 +174,8 @@ def trusted_head_approval_decision(
     approvals_on_other_commits: set[str] = set()
     for review in reviews or []:
         if (review.get("state") or "").upper() != "APPROVED":
+            continue
+        if not _review_author_is_bot(review):
             continue
         login = normalize_login(_review_author_login(review))
         if login not in trusted:
@@ -422,7 +441,15 @@ def view_pr(repo: str, number: int, *, attempts: int = 3, delay: float = 2.0) ->
             return pr
         if attempt < attempts - 1:
             time.sleep(delay)
-    return pr
+    unresolved_fields = [
+        field
+        for field in ("mergeable", "mergeStateStatus")
+        if (pr.get(field) or "").upper() == "UNKNOWN"
+    ]
+    raise ValueError(
+        "mergeability remained UNKNOWN after "
+        f"{attempts} attempt(s): {', '.join(unresolved_fields)}"
+    )
 
 
 def list_pr_reviews(repo: str, number: int) -> list[dict]:
@@ -729,12 +756,8 @@ def main(argv: list[str] | None = None) -> int:
                 else str(exc)
             )
             reason = f"could not re-verify base tip: {detail}"
-            if dry_run:
-                print(f"SKIP  #{number}: {reason}", file=sys.stderr)
-                skipped.append({"number": number, "reason": reason})
-            else:
-                print(f"FAIL  #{number}: {reason}", file=sys.stderr)
-                failed.append({"number": number, "reason": reason})
+            print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+            failed.append({"number": number, "reason": reason})
             continue
 
         final_decision = evaluate(

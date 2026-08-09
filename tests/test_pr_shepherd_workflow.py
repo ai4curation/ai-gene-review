@@ -1,5 +1,7 @@
 """Security contracts for the deterministic PR Shepherd closing pass."""
 
+import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -19,12 +21,28 @@ def _step(job: dict, name: str) -> dict:
     return next(step for step in job["steps"] if step.get("name") == name)
 
 
-def test_merge_controller_has_a_fresh_runner_and_trusted_checkout():
+def _action_uses(job: dict) -> set[str]:
+    return {str(step["uses"]) for step in job["steps"] if "uses" in step}
+
+
+def test_merge_controller_is_a_separate_job_with_trusted_checkout():
     jobs = _workflow(SHEPHERD)["jobs"]
     assert {"shepherd", "merge-ready"} <= jobs.keys()
+    shepherd_job = jobs["shepherd"]
     merge_job = jobs["merge-ready"]
-    assert "needs" not in merge_job
-    assert "claude" not in str(merge_job).casefold()
+
+    # Separate jobs always receive separate runners; a future `needs` edge would
+    # only order them and must not be confused with runner/process sharing.
+    shepherd_actions = _action_uses(shepherd_job)
+    merge_actions = _action_uses(merge_job)
+    assert any(
+        action.startswith("anthropics/claude-code-action@")
+        for action in shepherd_actions
+    )
+    assert not any(
+        action.startswith("anthropics/claude-code-action@") for action in merge_actions
+    )
+    assert _step(merge_job, "Generate scoped merge token")
 
     checkout = _step(merge_job, "Checkout trusted default branch")
     assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
@@ -60,13 +78,20 @@ def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
     assert "refs/heads/$DEFAULT_BRANCH" in guard["run"]
     assert "branches/$DEFAULT_BRANCH" in guard["run"]
     assert 'if [ "$protected" != "true" ]' in guard["run"]
+    assert "::notice title=Protection smoke check passed::" in guard["run"]
+    assert "manual verification" in guard["run"]
 
     token = _step(merge_job, "Generate scoped merge token")
-    permissions = token["with"]
-    assert permissions["permission-contents"] == "write"
-    assert permissions["permission-pull-requests"] == "write"
-    assert "permission-checks" not in permissions
-    assert "permission-statuses" not in permissions
+    permissions = {
+        name: value
+        for name, value in token["with"].items()
+        if name.startswith("permission-")
+    }
+    assert permissions == {
+        "permission-contents": "write",
+        "permission-issues": "write",
+        "permission-pull-requests": "write",
+    }
     assert "|| github.token" not in str(token)
 
 
@@ -76,16 +101,22 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
     checkout = _step(job, "Checkout repository")
     create = _step(job, "Create or update regeneration PR")
     approve = _step(job, "Approve exact generated commit")
+    warning = _step(job, "Warn when generated approval is unavailable")
 
     assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
     assert "--auto" in create["run"]
     assert "--match-head-commit" in create["run"]
     assert "MERGE_ENABLED" in create["run"]
-    assert "merging generated artifacts directly" not in create["run"]
+    assert approve["id"] == "approve-generated"
+    assert approve["continue-on-error"] is True
     assert approve["uses"] == "./.github/actions/approve-regen-pr"
     assert approve["with"]["pr-number"] == "${{ steps.regen-pr.outputs.pr_number }}"
     assert approve["with"]["base-branch"] == "main"
     assert approve["with"]["expected-author"] == "app/ai4c-agent"
+    assert "always()" in warning["if"]
+    assert "steps.approve-generated.outcome != 'success'" in warning["if"]
+    assert "::warning title=Generated PR approval unavailable::" in warning["run"]
+    assert "protected main will keep the PR open and unmerged" in warning["run"]
 
     action = APPROVE_REGEN.read_text()
     assert 'gh pr view "$PR_NUMBER"' in action
@@ -94,3 +125,42 @@ def test_generated_pages_waits_for_ci_and_exact_head_approval():
     assert '-f commit_id="$built_sha"' in action
     assert "permission-pull-requests: write" in action
     assert "permission-contents: write" not in action
+
+
+def test_generated_artifact_allowlist_is_fully_anchored():
+    workflow = _workflow(GENERATE_PAGES)
+    job = next(iter(workflow["jobs"].values()))
+    create_script = _step(job, "Create or update regeneration PR")["run"]
+    match = re.search(r"grep -vE '([^']+)'", create_script)
+    assert match, "could not find the generated-artifact allowlist"
+    allowlist = match.group(1)
+
+    def allowed(path: str) -> bool:
+        result = subprocess.run(
+            ["grep", "-Eq", allowlist],
+            input=f"{path}\n",
+            text=True,
+            check=False,
+        )
+        return result.returncode == 0
+
+    for path in (
+        "genes/human/TP53/TP53-ai-review.html",
+        "pages/projects/index.html",
+        "pages/projects/nested/report.html",
+        "app/index.html",
+        "app/data.js",
+        "app/schema.js",
+        "reports/validation-all.tsv",
+    ):
+        assert allowed(path), path
+
+    for path in (
+        "genes/human/TP53/TP53-ai-review.yaml",
+        "genes/human/TP53/TP53-ai-review.html-notes.md",
+        "pages",
+        "app/extra.js",
+        "reports",
+        "src/ai_gene_review/render.py",
+    ):
+        assert not allowed(path), path

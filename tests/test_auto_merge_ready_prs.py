@@ -9,7 +9,7 @@ import importlib.util
 import json
 import subprocess
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -19,11 +19,13 @@ _SPEC = importlib.util.spec_from_file_location(
     "auto_merge_ready_prs",
     Path(__file__).resolve().parents[1] / "scripts" / "auto_merge_ready_prs.py",
 )
+assert _SPEC is not None
+assert _SPEC.loader is not None
 auto_merge = importlib.util.module_from_spec(_SPEC)
 sys.modules[_SPEC.name] = auto_merge
 _SPEC.loader.exec_module(auto_merge)
 
-NOW = datetime(2026, 8, 8, 12, 0, tzinfo=UTC)
+NOW = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
 HEAD_SHA = "cafe1234"
 BASE_SHA = "base1234"
 REQUIRED_CHECK = "test (3.12)"
@@ -34,9 +36,10 @@ def approved_review(
     login="ai4c-reviewer[bot]",
     commit_id=HEAD_SHA,
     state="APPROVED",
+    user_type="Bot",
 ):
     return {
-        "user": {"login": login},
+        "user": {"login": login, "type": user_type},
         "state": state,
         "commit_id": commit_id,
     }
@@ -198,6 +201,22 @@ def test_default_reviewer_spelling_is_trusted(login):
     assert decide(pr).eligible
 
 
+@pytest.mark.parametrize(
+    ("login", "user_type"),
+    [
+        ("ai4c-reviewer", "User"),
+        ("ai4c-reviewer[bot]", "User"),
+        ("app/ai4c-reviewer", "User"),
+        ("ai4c-reviewer", None),
+    ],
+)
+def test_same_named_non_bot_rest_reviewer_is_not_trusted(login, user_type):
+    pr = make_pr(reviews=[approved_review(login=login, user_type=user_type)])
+    decision = decide(pr)
+    assert not decision.eligible
+    assert "no trusted reviewer" in decision.reason
+
+
 def test_ai4c_agent_approval_intentionally_does_not_count():
     pr = make_pr(reviews=[approved_review(login="ai4c-agent[bot]")])
     decision = decide(pr)
@@ -231,7 +250,7 @@ def test_non_approval_on_current_head_does_not_count():
     [
         {"user": None, "state": "APPROVED", "commit_id": HEAD_SHA},
         {
-            "user": {"login": "ai4c-reviewer[bot]"},
+            "user": {"login": "ai4c-reviewer[bot]", "type": "Bot"},
             "state": "APPROVED",
             "commit_id": None,
         },
@@ -460,6 +479,20 @@ def test_view_pr_retries_until_mergeability_resolves(monkeypatch):
     assert len(calls) == 2
 
 
+def test_view_pr_raises_when_mergeability_stays_unknown(monkeypatch):
+    calls = []
+
+    def fake_gh(args):
+        calls.append(args)
+        return json.dumps({"mergeable": "UNKNOWN", "mergeStateStatus": "UNKNOWN"})
+
+    monkeypatch.setattr(auto_merge, "_gh", fake_gh)
+    monkeypatch.setattr(auto_merge.time, "sleep", lambda _: None)
+    with pytest.raises(ValueError, match="mergeability remained UNKNOWN"):
+        auto_merge.view_pr("o/r", 7)
+    assert len(calls) == 3
+
+
 def test_list_pr_reviews_flattens_paginated_rest_response(monkeypatch):
     pages = [[approved_review()], [approved_review(login="maintainer")]]
     calls = []
@@ -673,6 +706,36 @@ def test_review_fetch_error_is_a_nonfatal_skip_in_audit_mode(monkeypatch, tmp_pa
     )
     assert code == 0
     assert "Skipped 1 near-miss" in summary.read_text()
+
+
+@pytest.mark.parametrize(
+    ("args", "expected_code", "expected_summary"),
+    [
+        (("--dry-run",), 0, "Skipped 1 near-miss"),
+        (
+            ("--execute", "--required-check", REQUIRED_CHECK),
+            1,
+            "Failed to merge 1",
+        ),
+    ],
+)
+def test_exhausted_unknown_mergeability_is_fatal_only_in_execute_mode(
+    monkeypatch, tmp_path, args, expected_code, expected_summary
+):
+    monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
+    monkeypatch.setattr(auto_merge, "list_open_prs", lambda *_: [make_pr(number=42)])
+    monkeypatch.setattr(
+        auto_merge,
+        "view_pr",
+        lambda *_: (_ for _ in ()).throw(
+            ValueError("mergeability remained UNKNOWN after 3 attempt(s)")
+        ),
+    )
+    summary = tmp_path / "summary.md"
+    code = auto_merge.main(["--repo", "o/r", "--summary-file", str(summary), *args])
+    assert code == expected_code
+    assert expected_summary in summary.read_text()
+    assert "mergeability remained UNKNOWN" in summary.read_text()
 
 
 def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
