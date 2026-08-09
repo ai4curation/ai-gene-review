@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any, Callable
 
 import yaml
 
@@ -33,6 +34,15 @@ ORG_MAP = {
     'ECOLI': 'Escherichia coli (strain K12)',
 }
 
+GO_NAMESPACE_TO_ASPECT = {
+    "molecular_function": "MF",
+    "biological_process": "BP",
+    "cellular_component": "CC",
+}
+LOCAL_GO_ADAPTER = "sqlite:obo:go"
+AspectResolver = Callable[[str], str | None]
+
+
 def extract_sequence(uniprot_file):
     lines = uniprot_file.read_text().splitlines()
     in_seq = False
@@ -47,8 +57,101 @@ def extract_sequence(uniprot_file):
             seq.append(line.strip().replace(' ', ''))
     return ''.join(seq)
 
-def load_review_terms(review_file, goa_file):
-    """Load retained/replacement and core AIGR terms partitioned by GO aspect."""
+
+class GoAspectResolutionError(RuntimeError):
+    """Raised when a GO-valued NEW term cannot be assigned safely to an aspect."""
+
+
+class LocalGoAspectResolver:
+    """Resolve GO aspects once from the repository-standard local OAK snapshot."""
+
+    def __init__(self, adapter: Any | None = None):
+        self._adapter = adapter
+        self._cache: dict[str, str | None] = {}
+
+    def _get_adapter(self) -> Any:
+        if self._adapter is None:
+            from oaklib import get_adapter
+
+            self._adapter = get_adapter(LOCAL_GO_ADAPTER)
+        return self._adapter
+
+    def resolve(self, go_id: str) -> str:
+        """Return MF/BP/CC, following one authoritative obsolete replacement."""
+        if not go_id.startswith("GO:"):
+            raise GoAspectResolutionError(f"Not a GO identifier: {go_id}")
+        aspect = self._resolve(go_id, ())
+        if aspect is None:
+            raise GoAspectResolutionError(f"Unable to resolve GO aspect for {go_id}")
+        return aspect
+
+    def _resolve(self, go_id: str, path: tuple[str, ...]) -> str | None:
+        if go_id in self._cache:
+            return self._cache[go_id]
+        if go_id in path:
+            cycle = " -> ".join((*path, go_id))
+            raise GoAspectResolutionError(
+                f"GO replacement cycle while resolving aspect: {cycle}"
+            )
+
+        try:
+            statements = list(
+                self._get_adapter().entities_metadata_statements(
+                    [go_id],
+                    predicates=["oio:hasOBONamespace", "IAO:0100001"],
+                    include_nested_metadata=True,
+                )
+            )
+        except Exception as error:
+            raise GoAspectResolutionError(
+                f"Unable to query local GO metadata for {go_id}: {error}"
+            ) from error
+
+        namespaces: set[str] = set()
+        replacements: set[str] = set()
+        for subject, predicate, value, *_ in statements:
+            if subject != go_id:
+                continue
+            if predicate == "oio:hasOBONamespace":
+                namespaces.add(str(value))
+            elif predicate == "IAO:0100001" and str(value).startswith("GO:"):
+                replacements.add(str(value))
+
+        aspects = {
+            aspect
+            for namespace in namespaces
+            if (aspect := GO_NAMESPACE_TO_ASPECT.get(namespace))
+        }
+        if len(aspects) > 1:
+            raise GoAspectResolutionError(
+                f"Conflicting GO aspects found for {go_id}: {sorted(aspects)}"
+            )
+        if aspects:
+            aspect = next(iter(aspects))
+            self._cache[go_id] = aspect
+            return aspect
+
+        if len(replacements) > 1:
+            raise GoAspectResolutionError(
+                f"Multiple authoritative GO replacements found for {go_id}: "
+                f"{sorted(replacements)}"
+            )
+        if not replacements:
+            self._cache[go_id] = None
+            return None
+
+        replacement = next(iter(replacements))
+        aspect = self._resolve(replacement, (*path, go_id))
+        self._cache[go_id] = aspect
+        return aspect
+
+
+def load_review_terms(
+    review_file,
+    goa_file,
+    aspect_resolver: AspectResolver | None = None,
+):
+    """Load retained/replacement/new and core terms partitioned by GO aspect."""
     with open(review_file) as f:
         review = yaml.safe_load(f)
 
@@ -64,7 +167,7 @@ def load_review_terms(review_file, goa_file):
                 if aspect:
                     aspect_by_id[row.get("GO TERM", "")] = aspect
 
-    terms = {"MF": set(), "BP": set(), "CC": set()}
+    terms: dict[str, set[str]] = {"MF": set(), "BP": set(), "CC": set()}
     for ann in review.get('existing_annotations', []):
         if ann.get("negated") is True:
             continue
@@ -72,7 +175,23 @@ def load_review_terms(review_file, goa_file):
         go_id = t.get('id', '')
         aspect = aspect_by_id.get(go_id)
         action = (ann.get("review") or {}).get("action", "")
-        if action == "MODIFY" and aspect:
+        if action == "NEW" and go_id.startswith("GO:"):
+            if aspect_resolver is None:
+                aspect_resolver = LocalGoAspectResolver().resolve
+            try:
+                new_aspect = aspect_resolver(go_id)
+            except GoAspectResolutionError:
+                raise
+            except Exception as error:
+                raise GoAspectResolutionError(
+                    f"Unable to resolve GO aspect for NEW term {go_id}: {error}"
+                ) from error
+            if new_aspect not in terms:
+                raise GoAspectResolutionError(
+                    f"Unable to resolve GO aspect for NEW term {go_id}"
+                )
+            terms[new_aspect].add(go_id)
+        elif action == "MODIFY" and aspect:
             for replacement in (ann.get("review") or {}).get(
                 "proposed_replacement_terms", []
             ):
@@ -133,6 +252,7 @@ def main():
     print(f"Found {len(genes)} genes to process", flush=True)
     
     results = []
+    go_aspect_resolver = LocalGoAspectResolver()
     for i, (org, gene, uniprot, review_file) in enumerate(genes):
         try:
             seq = extract_sequence(uniprot)
@@ -152,7 +272,9 @@ def main():
                 preds = predictor.predict(sequence=seq, organism=org_name)
             
             review_terms = load_review_terms(
-                review_file, review_file.parent / f"{gene}-goa.tsv"
+                review_file,
+                review_file.parent / f"{gene}-goa.tsv",
+                aspect_resolver=go_aspect_resolver.resolve,
             )
             
             for aspect in ['MF', 'BP', 'CC']:
@@ -181,6 +303,8 @@ def main():
                     with open(out, 'w') as f:
                         json.dump(results, f, indent=2)
         
+        except GoAspectResolutionError:
+            raise
         except Exception as e:
             print(f"  ERROR {org}/{gene}: {e}", flush=True)
             if hasattr(torch.mps, 'empty_cache'):
