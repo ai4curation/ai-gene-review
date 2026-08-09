@@ -74,10 +74,11 @@ define the Alg8-to-AlgE polymer conduit.
 ## Grounding
 
 Every modeled role has an exact KT2440 UniProt exemplar and a reviewed
-Pseudomonas aeruginosa comparator. Alg8 uses an ortholog selector anchored to
-reviewed Q52463 because the nominal PANTHER SF12 mixes Alg8, HasA, and NodC;
-other family selections use specific InterPro accessions, with misleading
-broad-family labels explicitly excluded.
+Pseudomonas aeruginosa comparator. The Alg8 ortholog selector is anchored to
+reviewed KT2440 Q88NC5, with Q52463 retained as the characterized comparator,
+because the nominal PANTHER SF12 mixes Alg8, HasA, and NodC. Other family
+selections use specific InterPro accessions, with misleading broad-family labels
+explicitly excluded.
 Molecular functions occur only on leaf annotons. No generic cytoplasm/cytosol
 term is asserted at module level.
 
