@@ -256,12 +256,15 @@ routine event in the repo into a red X.
 
 ## Known gaps
 
-- **GitHub evaluates required-review authority at the `ai4c-reviewer` App
-  installation level.** Contents write is therefore needed there for its review
-  to count, even though every workflow that mints a token explicitly downscopes
-  that credential to pull-request write only. The broader installation grant is
-  never handed to the reviewer process, so the credential that approves a head
-  cannot push that head.
+- **Exact-head `ai4c-reviewer` approvals are currently excluded from GitHub's
+  required-review decision while its installation has Contents read.** We
+  attribute that observed symptom to the installation scope because the
+  equivalent DisMech installation counts with Contents write; activation must
+  accept the pending update and confirm the diagnosis empirically. Every
+  workflow-issued reviewer token remains explicitly downscoped to pull-request
+  write only, so the credential that approves a head cannot push it. The App key
+  remains a repository secret, while the Shepherd's default path perimeter
+  excludes `.github/` changes from deterministic merging.
 - **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
   account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
   nothing, but the entry should be removed — that is a settings click, not a
@@ -383,11 +386,11 @@ also means operators must use draft state, assignment, or `shepherd:hold` when
 fresh content needs additional observation time.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
-(Contents write + pull-request write + Issues write) is supplied only to the
-head-pinned merge and courtesy-comment subprocesses. API uncertainty fails an
-execute run red. A positively observed head/base movement is instead a benign
-skip: concurrent automation changed the candidate, so its new state must pass a
-later sweep. The separate ai4c-reviewer credential is explicitly scoped to
+(Contents write + pull-request write) is supplied only to the head-pinned merge
+and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
+run red. A positively observed head/base movement is instead a benign skip:
+concurrent automation changed the candidate, so its new state must pass a later
+sweep. The separate ai4c-reviewer credential is explicitly scoped to
 pull-request write only; it can record the approval but cannot push content.
 
 The feature flag and execute preflight are not substitutes for protection. The
@@ -411,6 +414,9 @@ rule in repository settings or with
   administrators;
 - the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
   while force pushes and branch deletion remain disabled;
+- on a current-base, green PR whose exact head has an `ai4c-reviewer` approval,
+  `gh pr view N --json reviewDecision,mergeStateStatus` reports
+  `APPROVED` and `CLEAN` rather than `REVIEW_REQUIRED` or `BLOCKED`;
 - `GET branches/main` returns `.protected: true`, the `shepherd:hold` label
   exists, and the feature flag remains false until an audit and controlled
   execute smoke test complete.
