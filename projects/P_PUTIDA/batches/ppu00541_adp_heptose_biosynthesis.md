@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Model HldD-dependent C-6 epimerization as lineage-dependent maturation.
 - [x] Integrate the OpenScientist report with local UniProt, GOA, PANTHER, and Rhea data.
 - [x] Validate and render the module, genes, and project page.
-- [ ] Open one PR for this module.
+- [x] Open one PR for this module.
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
@@ -44,6 +44,12 @@ pathway incomplete: it leaves the concrete activated-heptose stereochemistry
 unresolved. The reusable module therefore separates obligatory ADP-D,D-heptose
 production from optional HldD-dependent maturation.
 
+The inherited `gmhB` review is reconciled with this endpoint decision:
+GO:0097171 is now `UNDECIDED` there as well and is no longer a core process.
+GO:0009244 remains the endpoint-neutral LPS-core process anchor. Because GO
+lacks a D,D-heptose biosynthetic-process term, `hldE` records an ontology
+proposal beneath GO:0009226 rather than borrowing the L,D term.
+
 ## Annotation Decisions
 
 - Exact GmhA, HldE kinase, GmhB phosphatase, and HldE adenylyltransferase
@@ -58,6 +64,9 @@ production from optional HldD-dependent maturation.
 - The `hldE` GO:0097171 process row is left `UNDECIDED`: its L,D endpoint
   assumes terminal epimerization that has not been resolved in KT2440, while
   the two HldE molecular functions remain secure.
+- The inherited `gmhB` GO:0097171 row is likewise `UNDECIDED` and removed from
+  the core function, eliminating a contradictory endpoint assertion within the
+  same pathway batch.
 
 ## Boundary Decisions
 
