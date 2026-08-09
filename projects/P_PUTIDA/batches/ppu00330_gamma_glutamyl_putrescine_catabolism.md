@@ -30,12 +30,14 @@ autolink_gene_symbols: false
 
 | Order | Reaction | PSEPK implementation | UniProt | Decision |
 |---|---|---|---|---|
-| 1 | Putrescine gamma-glutamylation | `puuA-I`; `puuA-II` and broader Spu ligases | Q88KW1; Q88C84 | Covered by exact EC 6.3.1.11 assignments |
+| 1 | Putrescine gamma-glutamylation | `puuA-I`; `puuA-II` and broader Spu ligases | Q88KW1; Q88C84 | Covered by same-subfamily PuuA exemplar plus polyamine-locus context; family alone is mixed |
 | 2 | Gamma-glutamylputrescine oxidation | `puuB` | Q88K44 | Covered by exact PTHR13847:SF275 and reviewed P37906 exemplar |
 | 3 | Gamma-glutamyl aminoaldehyde oxidation | leading candidate `PP_2589` | Q88JR0 | Candidate-uncertain: K09472 and PuuC CDD support, but substrate untested |
 | 4 | Gamma-glutamyl-GABA hydrolysis | `PP_5298`; `spuA`; `PP_3598` | Q88C85; Q88KW0; Q88GW9 | Covered by exact EC 3.5.1.94 assignments |
 
-The reusable four-reaction route is complete. KT2440 has strong candidates for
+The reusable four-reaction route is complete. It represents the alternative
+gamma-glutamyl branch, not the major SpuC transaminase route described in
+Pseudomonas. KT2440 has strong candidates for
 all steps, but its PuuC locus remains a hypothesis rather than an accepted
 substrate-specific gene annotation. This is recorded as a locus-level knowledge
 gap, not hidden by the broad aldehyde-dehydrogenase family assignment.
@@ -44,14 +46,18 @@ gap, not hidden by the broad aldehyde-dehydrogenase family assignment.
 
 - The exact glutamate-putrescine ligase term is accepted for PuuA-I; generic
   catalytic/ligase terms are marked over-annotated and the erroneous glutamine
-  synthetase transfer is removed.
-- PuuB receives a new putrescine-catabolism process annotation, but no invented
-  GO molecular-function ID. A substrate-specific GO term is proposed instead.
+  synthetase transfer is removed using the characterized same-subfamily PuuA
+  exemplar and target-locus synteny rather than circular EC evidence.
+- PuuB is assigned the verified oxygen-acceptor parent GO:0016641 in its core
+  function; a substrate-specific gamma-glutamylputrescine oxidase term is
+  proposed because GO has no exact term.
 - PP_2589 is curated only to generic NAD(P)-linked aldehyde dehydrogenase
-  activity; its PuuC role remains an explicit candidate.
+  activity; its PuuC role remains an explicit candidate, and the missing exact
+  EC 1.2.1.99 term is proposed without assigning it to PP_2589.
 - The exact PuuD hydrolase term is accepted for PP_5298, while an erroneous
   L-glutamine-metabolism transfer is removed.
-- Putrescine catabolic process is added where direct pathway placement supports it.
+- Generic polyamine catabolism is replaced with putrescine catabolism where the
+  substrate-specific route is supported.
 
 ## Boundary Decisions
 
@@ -67,13 +73,19 @@ Each leaf has a concrete KT2440 UniProt protein and a reviewed E. coli reaction
 exemplar. Exact Rhea reactions define all four chemical transitions. PuuD is
 additionally grounded by PAINT node PTN000230196; no PTN is asserted for the
 other roles because the available node evidence did not support their exact
-molecular functions.
+molecular functions. The PuuA PANTHER selector is explicitly constrained by
+GO:0034024 and exemplars because PTHR43785:SF12 mixes PuuA and true glutamine
+synthetases.
 
 ## Research Status
 
 The OpenScientist report and artifacts are stored under
 `projects/P_PUTIDA/deep-research/`. Local UniProt, GOA, PANTHER, PAINT, CDD, and
 Rhea data were used to qualify the report's stronger satisfiability claim.
+Primary E. coli studies establish the Puu chemistry (PMID:18495664;
+PMID:15590624), while P. aeruginosa studies ground comparative operon structure
+and route weighting (PMID:12081945; PMID:18192388). None is treated as a direct
+KT2440 enzyme assay.
 
 ## Validation
 
