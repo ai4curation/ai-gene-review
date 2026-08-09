@@ -40,8 +40,12 @@ alginate acetylation state.
 
 ## Annotation Decisions
 
-- `GO:0051979 alginic acid acetylation` replaces the broad biosynthetic-process
-  annotation for AlgI, AlgJ, and AlgF and is added to AlgX.
+- `GO:0051979 alginic acid acetylation` is not a descendant of `GO:0042121
+  alginic acid biosynthetic process` in the current GO release. It is therefore
+  added as a separate exact annotation rather than used as a formal replacement.
+- The broad biosynthesis row is retained as non-core pathway context for AlgI
+  and AlgJ. It is accepted for AlgF because AlgF loss also impairs polymer
+  production, and it remains accepted for dual-role AlgX.
 - AlgI retains `GO:0016746 acyltransferase activity`; its immediate donor and
   acceptor are not defined precisely enough for a narrower term.
 - No molecular function is asserted for AlgJ or AlgF. Their essential relay and
@@ -49,8 +53,9 @@ alginate acetylation state.
   and role prose.
 - AlgX receives `GO:0016413 O-acetyltransferase activity`, with alginate
   substrate specificity captured by GO:0051979 and the core-function text.
-- AlgX retains a separate chain-protection core function because that role is
-  not reducible to O-acetyltransferase activity.
+- AlgX also receives `GO:0030247 polysaccharide binding` from direct
+  length-dependent polymannuronate-binding evidence and retains a separate
+  chain-protection core function.
 
 ## Boundary Decisions
 
@@ -71,9 +76,12 @@ module-level molecular-function or generic cytoplasm/cytosol assertion.
 ## Research Status
 
 The OpenScientist report and artifacts are stored under
-`projects/P_PUTIDA/deep-research/`. It found direct ortholog evidence for all
-four roles and a functional target-species alginate locus, while clearly
-identifying the absence of KT2440-specific acetylation biochemistry.
+`projects/P_PUTIDA/deep-research/`. Primary studies PMID:12003941 and
+PMID:8636017 establish the AlgI/J/F genetics, PMID:23779107 and PMID:25165982
+establish AlgX catalysis and polymer binding, and PMID:31900562 connects AlgF
+to the polymerization complex. The KT2440 AlgJ soluble domain itself was
+crystallized in PMID:25165982. The absence of KT2440-specific polymer
+acetylation measurements remains explicit.
 
 ## Validation
 
