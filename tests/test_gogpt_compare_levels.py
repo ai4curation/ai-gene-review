@@ -15,7 +15,9 @@ from scripts.gogpt_compare_levels import (
 from scripts.gogpt_batch import (
     GoAspectResolutionError,
     LocalGoAspectResolver,
+    load_go_adapter_spec,
     load_review_terms,
+    preflight_review_terms,
 )
 
 
@@ -297,6 +299,55 @@ def test_local_go_aspect_resolver_wraps_adapter_errors() -> None:
     ) as error:
         LocalGoAspectResolver(adapter).resolve("GO:0000060")
     assert isinstance(error.value.__cause__, OSError)
+
+
+def test_go_adapter_spec_comes_from_repository_config(tmp_path: Path) -> None:
+    config = tmp_path / "oak_config.yaml"
+    config.write_text("ontology_adapters:\n  GO: sqlite:custom-go\n")
+
+    assert load_go_adapter_spec(config) == "sqlite:custom-go"
+
+
+def test_preflight_review_terms_adds_gene_context_to_resolution_errors(
+    tmp_path: Path,
+) -> None:
+    review = tmp_path / "GENE-ai-review.yaml"
+    review.write_text(
+        """
+existing_annotations:
+  - term: {id: GO:0000010}
+    review: {action: NEW}
+"""
+    )
+    genes = [("TEST", "GENE", tmp_path / "GENE-uniprot.txt", review)]
+
+    with pytest.raises(
+        GoAspectResolutionError,
+        match=r"TEST/GENE .*Unable to resolve GO aspect.*GO:0000010",
+    ):
+        preflight_review_terms(genes, lambda _go_id: None)
+
+
+def test_preflight_review_terms_reports_and_skips_other_input_errors(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    review = tmp_path / "GENE-ai-review.yaml"
+    review.write_text("existing_annotations: [\n")
+    genes = [("TEST", "GENE", tmp_path / "GENE-uniprot.txt", review)]
+
+    assert preflight_review_terms(genes, lambda _go_id: "MF") == {}
+    assert "ERROR TEST/GENE" in capsys.readouterr().out
+
+
+@pytest.mark.integration
+@pytest.mark.vcr_skip
+def test_local_go_aspect_resolver_matches_real_configured_oak_snapshot() -> None:
+    resolver = LocalGoAspectResolver()
+
+    assert resolver.resolve("GO:0016020") == "CC"
+    assert resolver.resolve("GO:0003700") == "MF"
+    assert resolver.resolve("GO:0006355") == "BP"
 
 
 def test_batch_reference_loader_rejects_unresolved_new_go_term(

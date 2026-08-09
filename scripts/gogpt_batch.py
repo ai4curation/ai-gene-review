@@ -39,8 +39,9 @@ GO_NAMESPACE_TO_ASPECT = {
     "biological_process": "BP",
     "cellular_component": "CC",
 }
-LOCAL_GO_ADAPTER = "sqlite:obo:go"
 AspectResolver = Callable[[str], str | None]
+GeneInput = tuple[str, str, Path, Path]
+ReviewTerms = dict[str, set[str]]
 
 
 def extract_sequence(uniprot_file):
@@ -62,22 +63,51 @@ class GoAspectResolutionError(RuntimeError):
     """Raised when a GO-valued NEW term cannot be assigned safely to an aspect."""
 
 
+def load_go_adapter_spec(config_path: Path = REPO / "conf" / "oak_config.yaml") -> str:
+    """Return the repository-configured OAK adapter for GO."""
+    from ai_gene_review.validation.module_validator import load_oak_adapter_map
+
+    try:
+        adapter_spec = load_oak_adapter_map(config_path).get("GO")
+    except (OSError, yaml.YAMLError) as error:
+        raise GoAspectResolutionError(
+            f"Unable to load OAK configuration from {config_path}: {error}"
+        ) from error
+
+    if not isinstance(adapter_spec, str) or not adapter_spec.strip():
+        raise GoAspectResolutionError(
+            f"No GO adapter is configured in {config_path}"
+        )
+    return adapter_spec
+
+
 class LocalGoAspectResolver:
     """Resolve GO aspects once from the repository-standard local OAK snapshot."""
 
-    def __init__(self, adapter: Any | None = None):
+    def __init__(
+        self,
+        adapter: Any | None = None,
+        config_path: Path = REPO / "conf" / "oak_config.yaml",
+    ):
         self._adapter = adapter
+        self._config_path = config_path
         self._cache: dict[str, str | None] = {}
 
     def _get_adapter(self) -> Any:
         if self._adapter is None:
             from oaklib import get_adapter
 
-            self._adapter = get_adapter(LOCAL_GO_ADAPTER)
+            adapter_spec = load_go_adapter_spec(self._config_path)
+            try:
+                self._adapter = get_adapter(adapter_spec)
+            except Exception as error:
+                raise GoAspectResolutionError(
+                    f"Unable to load configured GO adapter {adapter_spec!r}: {error}"
+                ) from error
         return self._adapter
 
     def resolve(self, go_id: str) -> str:
-        """Return MF/BP/CC, following one authoritative obsolete replacement."""
+        """Return MF/BP/CC, following replacements only if namespace is absent."""
         if not go_id.startswith("GO:"):
             raise GoAspectResolutionError(f"Not a GO identifier: {go_id}")
         aspect = self._resolve(go_id, ())
@@ -102,6 +132,8 @@ class LocalGoAspectResolver:
                     include_nested_metadata=True,
                 )
             )
+        except GoAspectResolutionError:
+            raise
         except Exception as error:
             raise GoAspectResolutionError(
                 f"Unable to query local GO metadata for {go_id}: {error}"
@@ -127,6 +159,9 @@ class LocalGoAspectResolver:
                 f"Conflicting GO aspects found for {go_id}: {sorted(aspects)}"
             )
         if aspects:
+            # Prefer the term's own namespace even when it is obsolete: detached
+            # merged IDs cannot be classified by label/ancestor lookup, and some
+            # authoritative replacement edges cross GO aspects.
             aspect = next(iter(aspects))
             self._cache[go_id] = aspect
             return aspect
@@ -217,7 +252,49 @@ def load_review_terms(
                 terms["CC"].add(location["id"])
     return terms
 
+
+def preflight_review_terms(
+    genes: list[GeneInput],
+    aspect_resolver: AspectResolver,
+) -> dict[tuple[str, str], ReviewTerms]:
+    """Resolve every review's reference terms before loading the GO-GPT model."""
+    review_terms_by_gene: dict[tuple[str, str], ReviewTerms] = {}
+    for org, gene, _uniprot, review_file in genes:
+        try:
+            review_terms_by_gene[(org, gene)] = load_review_terms(
+                review_file,
+                review_file.parent / f"{gene}-goa.tsv",
+                aspect_resolver=aspect_resolver,
+            )
+        except GoAspectResolutionError as error:
+            raise GoAspectResolutionError(
+                f"{org}/{gene} ({review_file}): {error}"
+            ) from error
+        except Exception as error:
+            # Preserve the historical batch policy for unrelated per-gene input
+            # failures: report and skip, while still avoiding model startup first.
+            print(f"  ERROR {org}/{gene}: {error}", flush=True)
+    return review_terms_by_gene
+
+
 def main():
+    genes: list[GeneInput] = []
+    for review_file in sorted(REPO.glob('genes/**/*-ai-review.yaml')):
+        gene_dir = review_file.parent
+        gene = gene_dir.name
+        org = gene_dir.parent.name
+        uniprot = gene_dir / f'{gene}-uniprot.txt'
+        if uniprot.exists():
+            genes.append((org, gene, uniprot, review_file))
+
+    print(f"Found {len(genes)} genes to process", flush=True)
+    print("Preflighting GO aspects for review terms...", flush=True)
+    go_aspect_resolver = LocalGoAspectResolver()
+    review_terms_by_gene = preflight_review_terms(
+        genes,
+        go_aspect_resolver.resolve,
+    )
+
     import torch  # type: ignore[import-not-found]
     from gogpt.inference import (  # type: ignore[import-not-found]
         GOGPTPredictor,
@@ -240,21 +317,11 @@ def main():
     predictor._load_model(str(MODEL_DIR / 'model.ckpt'))
     print(f"Model loaded on {predictor.device}", flush=True)
     
-    genes = []
-    for review_file in sorted(REPO.glob('genes/**/*-ai-review.yaml')):
-        gene_dir = review_file.parent
-        gene = gene_dir.name
-        org = gene_dir.parent.name
-        uniprot = gene_dir / f'{gene}-uniprot.txt'
-        if uniprot.exists():
-            genes.append((org, gene, uniprot, review_file))
-    
-    print(f"Found {len(genes)} genes to process", flush=True)
-    
     results = []
-    go_aspect_resolver = LocalGoAspectResolver()
     for i, (org, gene, uniprot, review_file) in enumerate(genes):
         try:
+            if (org, gene) not in review_terms_by_gene:
+                continue
             seq = extract_sequence(uniprot)
             if not seq or len(seq) < 10:
                 continue
@@ -271,11 +338,7 @@ def main():
             with torch.no_grad():
                 preds = predictor.predict(sequence=seq, organism=org_name)
             
-            review_terms = load_review_terms(
-                review_file,
-                review_file.parent / f"{gene}-goa.tsv",
-                aspect_resolver=go_aspect_resolver.resolve,
-            )
+            review_terms = review_terms_by_gene[(org, gene)]
             
             for aspect in ['MF', 'BP', 'CC']:
                 pred_set = set(preds.get(aspect, [])) - GENERIC_TERMS

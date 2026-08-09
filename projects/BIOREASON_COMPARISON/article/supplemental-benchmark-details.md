@@ -124,7 +124,7 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes evidence-backed proposed annotations marked `NEW`, substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Five of the 11 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005737`, `GO:0005829`, and `GO:0005576`), so the 9.7% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
