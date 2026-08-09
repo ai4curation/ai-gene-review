@@ -2274,8 +2274,13 @@ clean-imodulondb-cache:
 #   just init-rule-review UR000000070 --cache-dir rules/unirule
 # If you get "Review file already exists" error:
 #   rm rules/arba/ARBA00026249/ARBA00026249-review.yaml  # Then re-run init-rule-review
-init-rule-review rule_id *args="":
-    uv run python -c "from ai_gene_review.etl.rule_review_init import init_rule_review; from pathlib import Path; init_rule_review('{{rule_id}}', cache_dir=Path('rules/arba'))"
+[positional-arguments]
+init-rule-review rule_id *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    shift
+    uv run ai-gene-review init-rule-review "$rule_id" "$@"
 
 # Sync ARBA rules with GO annotations from UniProt (stores in rules/arba/)
 # By default only syncs rules that have GO term annotations
