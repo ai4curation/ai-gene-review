@@ -1,6 +1,7 @@
 # Rule Review Workflow
 
-This document describes the complete workflow for reviewing ARBA and UniRule annotation rules.
+This document describes the complete post-enrichment workflow for reviewing ARBA annotation rules.
+Review initialization also supports UniRule rules, but the analysis-dependent steps do not yet do so.
 
 ## Overview
 
@@ -15,7 +16,7 @@ The rule review workflow consists of several distinct phases, each with specific
 
 ## Quick Start
 
-For a new rule, run these commands in order:
+For a new ARBA rule, run these commands in order:
 
 ```bash
 # 1. Initialize the review file
@@ -298,16 +299,12 @@ This automatically analyzes any rules that don't have analysis files yet.
 6. **Keep analysis and review files in sync** - if you re-analyze, re-sync
 7. **Use deep research output** to inform your manual review of TODO placeholders
 
-## Advanced: Custom Cache Directory
+## UniRule Analysis Limitation
 
-For UniRule reviews, use a different cache directory:
-
-```bash
-just init-rule-review UR000000070 --cache-dir rules/unirule
-just analyze-rule UR000000070 --cache-dir rules/unirule
-just sync-rule-review-single UR000000070 rules/unirule
-just render-rule UR000000070 rules/unirule
-```
+`just init-rule-review` supports UniRule IDs, but post-enrichment `analyze-rule`
+currently supports `ARBA########` IDs only. Analysis-dependent sync and render
+workflows must not be used for `UR...` IDs until a UniRule-specific analysis
+implementation is available.
 
 ## See Also
 

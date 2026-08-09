@@ -2387,7 +2387,17 @@ sync-ipr2go cache_dir="rules/arba":
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
-analyze-rule rule_id *args="":
+[positional-arguments]
+_validate-arba-analysis-id rule_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    if [[ ! "$rule_id" =~ ^ARBA[0-9]{8}$ ]]; then
+        printf "error: unsupported rule ID '%s'; post-enrichment analysis currently supports ARBA######## IDs only\n" "$rule_id" >&2
+        exit 2
+    fi
+
+analyze-rule rule_id *args="": (_validate-arba-analysis-id rule_id)
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
 
