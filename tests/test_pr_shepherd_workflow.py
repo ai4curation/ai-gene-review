@@ -10,6 +10,7 @@ import yaml
 ROOT = Path(__file__).parents[1]
 SHEPHERD = ROOT / ".github/workflows/pr-shepherd.yml"
 GENERATE_PAGES = ROOT / ".github/workflows/generate-pages.yaml"
+CLAUDE_REVIEW = ROOT / ".github/workflows/claude-code-review.yml"
 APPROVE_REGEN = ROOT / ".github/actions/approve-regen-pr/action.yml"
 
 
@@ -94,6 +95,17 @@ def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
         "permission-pull-requests": "write",
     }
     assert "|| github.token" not in str(token)
+
+
+def test_reviewer_app_token_cannot_write_pr_contents():
+    job = _workflow(CLAUDE_REVIEW)["jobs"]["claude-review"]
+    token = _step(job, "Generate ai4c-reviewer token")
+    permissions = {
+        name: value
+        for name, value in token["with"].items()
+        if name.startswith("permission-")
+    }
+    assert permissions == {"permission-pull-requests": "write"}
 
 
 def test_generated_pages_waits_for_ci_and_exact_head_approval():

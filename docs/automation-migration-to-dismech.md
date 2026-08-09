@@ -256,11 +256,12 @@ routine event in the repo into a red X.
 
 ## Known gaps
 
-- **`ai4c-reviewer` currently has Contents and pull-request write at the App
-  installation level.** The generated-page approval action downscopes its token
-  to pull-request write only. Once protected-main approval counting is proven in
-  production, re-test whether the installation's Contents permission can also be
-  reduced without making reviews non-counting.
+- **GitHub evaluates required-review authority at the `ai4c-reviewer` App
+  installation level.** Contents write is therefore needed there for its review
+  to count, even though every workflow that mints a token explicitly downscopes
+  that credential to pull-request write only. The broader installation grant is
+  never handed to the reviewer process, so the credential that approves a head
+  cannot push that head.
 - **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
   account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
   nothing, but the entry should be removed — that is a settings click, not a
@@ -386,7 +387,8 @@ Reads use the built-in read-only token. A separately scoped ai4c-agent token
 head-pinned merge and courtesy-comment subprocesses. API uncertainty fails an
 execute run red. A positively observed head/base movement is instead a benign
 skip: concurrent automation changed the candidate, so its new state must pass a
-later sweep.
+later sweep. The separate ai4c-reviewer credential is explicitly scoped to
+pull-request write only; it can record the approval but cannot push content.
 
 The feature flag and execute preflight are not substitutes for protection. The
 preflight's `GET branches/main` / `.protected == true` read is deliberately only
