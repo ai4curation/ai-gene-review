@@ -7,6 +7,7 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 
@@ -123,3 +124,143 @@ with open(os.environ["RULE_WRAPPER_ARGV_LOG"], "w") as handle:
         "init-rule-review",
         "ARBA00026249",
     ]
+
+
+def seed_analysis_outputs(cache_dir: Path, rule_id: str) -> None:
+    rule_dir = write_enriched_rule(cache_dir, rule_id)
+    (rule_dir / f"{rule_id}-analysis.yaml").write_text("analysis: present\n")
+    (rule_dir / f"{rule_id}-review.yaml").write_text(
+        f"id: {rule_id}\nrule_type: ARBA\nentries: []\n"
+    )
+
+
+def install_recording_uv(tmp_path: Path) -> tuple[Path, Path]:
+    fake_bin = tmp_path / "recording bin"
+    fake_bin.mkdir()
+    log_path = tmp_path / "uv argv.jsonl"
+    fake_uv = fake_bin / "uv"
+    fake_uv.write_text(
+        """#!/usr/bin/env python3
+import json
+import os
+import sys
+from pathlib import Path
+
+args = sys.argv[1:]
+with Path(os.environ["RULE_WRAPPER_ARGV_LOG"]).open("a") as handle:
+    handle.write(json.dumps(args) + "\\n")
+
+if "examples/rule_analysis_demo.py" in args and "--output-dir" in args:
+    rule_id = args[args.index("examples/rule_analysis_demo.py") + 1]
+    output_dir = Path(args[args.index("--output-dir") + 1])
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / f"{rule_id}-analysis.txt").write_text("fake report\\n")
+"""
+    )
+    fake_uv.chmod(0o755)
+    return fake_bin, log_path
+
+
+def run_isolated_just(
+    working_directory: Path,
+    fake_bin: Path,
+    log_path: Path,
+    *args: str,
+) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{fake_bin}{os.pathsep}{os.environ['PATH']}",
+            "RULE_WRAPPER_ARGV_LOG": str(log_path),
+            "JUST_JUSTFILE": str(REPO_ROOT / "justfile"),
+            "JUST_WORKING_DIRECTORY": str(working_directory),
+        }
+    )
+    return subprocess.run(
+        [
+            "just",
+            "--justfile",
+            str(REPO_ROOT / "justfile"),
+            "--working-directory",
+            str(working_directory),
+            *args,
+        ],
+        cwd=working_directory,
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        timeout=30,
+    )
+
+
+def read_argv_log(log_path: Path) -> list[list[str]]:
+    return [json.loads(line) for line in log_path.read_text().splitlines()]
+
+
+@pytest.mark.parametrize("recipe", ["render-rule", "sync-rule-review-single"])
+def test_rule_wrapper_analysis_dependency_uses_custom_cache(
+    tmp_path: Path,
+    recipe: str,
+) -> None:
+    rule_id = "ARBA00026249"
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    cache_dir = working_directory / "custom-cache"
+    seed_analysis_outputs(cache_dir, rule_id)
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        recipe,
+        rule_id,
+        "custom-cache",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "skipping expensive rebuild" in result.stdout
+    invocations = read_argv_log(log_path)
+    assert not any("examples/rule_analysis_demo.py" in argv for argv in invocations)
+    assert not (working_directory / "rules" / "arba" / rule_id).exists()
+    if recipe == "render-rule":
+        assert len(invocations) == 1
+        assert invocations[0][:3] == ["run", "python", "-c"]
+        assert "Path('custom-cache')" in invocations[0][3]
+    else:
+        assert invocations == [
+            [
+                "run",
+                "ai-gene-review",
+                "rules-sync",
+                f"custom-cache/{rule_id}/{rule_id}-review.yaml",
+            ]
+        ]
+
+
+def test_render_all_rules_analysis_dependency_uses_custom_cache(
+    tmp_path: Path,
+) -> None:
+    rule_id = "ARBA00026249"
+    working_directory = tmp_path / "isolated working directory"
+    working_directory.mkdir()
+    cache_dir = working_directory / "custom-cache"
+    seed_analysis_outputs(cache_dir, rule_id)
+    fake_bin, log_path = install_recording_uv(tmp_path)
+
+    result = run_isolated_just(
+        working_directory,
+        fake_bin,
+        log_path,
+        "render-all-rules",
+        "custom-cache",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Rendered 1 rule reviews" in result.stdout
+    invocations = read_argv_log(log_path)
+    assert not any("examples/rule_analysis_demo.py" in argv for argv in invocations)
+    render_invocations = [argv for argv in invocations if argv[:3] == ["run", "python", "-c"]]
+    assert len(render_invocations) == 1
+    assert not (working_directory / "rules" / "arba" / rule_id).exists()

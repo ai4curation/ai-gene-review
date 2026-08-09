@@ -1393,7 +1393,7 @@ render-module module:
 # CREATES:
 #   - {rule_id}-review.html
 # Example: just render-rule ARBA00026249
-render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id)
+render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
     uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
 
 # Render all rule reviews as HTML (automatically analyzes first if needed)
@@ -2334,7 +2334,7 @@ rules-validate *args="":
 #   - Requires {rule_id}-review.yaml to exist (create with init-rule-review first)
 #   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
 # Example: just sync-rule-review-single ARBA00027128
-sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id)
+sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
     uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
 
 # Sync rule review YAML files with analysis data (pairwise_overlap sections)
