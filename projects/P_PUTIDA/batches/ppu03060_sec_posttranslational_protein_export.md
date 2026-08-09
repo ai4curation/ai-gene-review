@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Assign ATPase activity only to SecA and transporter activity to the appropriate channel leaves.
 - [x] Add exact KT2440 implementations, reviewed E. coli exemplars, and relevant PAINT nodes.
 - [x] Validate and render the module, gene reviews, and project page.
-- [ ] Open one PR for this module.
+- [x] Open one PR for this module.
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
@@ -35,7 +35,7 @@ autolink_gene_symbols: false
 | 1 | Unfolded-precursor carriage and SecA delivery | `secB` | Q88CX7 | Covered |
 | 2 | ATP-driven protein-export motor | `secA` | Q88N69 | Covered |
 | 3 | SecYEG protein-conducting channel | `secY`, `secE`, `secG` | Q88QL5, Q88QP7, A0A140FWQ9 | Covered |
-| 4 | PMF-assisted SecDF-YajC completion complex | `secD`, `secF`, `yajC` | Q88PL5, Q88PL4, Q88PL6 | Covered |
+| 4 | PMF-assisted SecDF-YajC completion complex | `secD`, `secF`, `yajC` | Q88PL5, Q88PL4, Q88PL6 | Present; accessory |
 | 5 | Type I signal-peptide cleavage | `lepB` | Q88MY6 | Covered |
 
 The canonical Gram-negative post-translational Sec route is complete in KT2440.
@@ -50,13 +50,16 @@ not as an absolute requirement for every substrate.
 - SecY independently carries the channel activity, while SecE and SecG
   contribute to the assembled SecYEG transporter.
 - The protein-transporting ATPase annotations on SecG, SecD, and SecF are
-  corrected: these subunits do not hydrolyze ATP. SecDF is powered by proton
-  motive force, and SecG is a channel accessory.
-- YajC is retained as a noncatalytic SecDF-associated accessory subunit rather
-  than being assigned an invented independent activity.
-- LepB retains exact signal peptidase activity, and broad protein-maturation
-  context is narrowed to the live protein-processing term; obsolete
-  `GO:0006465` is not propagated.
+  corrected: these subunits do not hydrolyze ATP. SecD and SecF contribute to
+  `GO:0009977` proton-motive-force-dependent protein transmembrane transporter
+  activity; SecG contributes to `GO:0008320` protein transmembrane transporter
+  activity as a channel accessory. None independently enables those collective
+  transporter functions.
+- YajC is retained as a SecDF-associated complex subunit, but it receives no
+  individual MF or BP assertion because direct genetics does not establish one.
+- LepB retains exact signal peptidase activity, and broad `GO:0051604` protein
+  maturation is refined to live `GO:0016485` protein processing. Obsolete
+  `GO:0006465` from the stale UniProt InterPro cross-reference is not propagated.
 
 ## Boundary Decisions
 
@@ -72,6 +75,8 @@ not as an absolute requirement for every substrate.
   ppu03070.
 - Molecular functions occur only on leaf annotons. The module has no redundant
   module-level localization.
+- SecDF-YajC is an optional enhancer connected to SecYEG by positive regulation;
+  SecYEG connects directly to LepB, so the graph does not require SecDF for every substrate.
 
 ## Grounding
 
@@ -86,7 +91,8 @@ family rather than its misleading chloroplast-centered subfamily label.
 
 The OpenScientist report and artifacts are stored under
 `projects/P_PUTIDA/deep-research/`. Local UniProt, GOA, PANTHER, PAINT, and
-InterPro records were used to resolve exact identifiers and subunit-level
+InterPro records, primary Sec literature, and provenance-bearing notes for all
+nine reviewed genes were used to resolve exact identifiers and subunit-level
 annotation actions.
 
 ## Validation
