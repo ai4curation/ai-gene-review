@@ -42,8 +42,12 @@ because RuvC supplies the conserved required resolution activity.
 
 ## Annotation Decisions
 
-- RuvA retains four-way-junction DNA binding but loses imported ATP-binding and
-  helicase claims; those catalytic activities belong to RuvB.
+- RuvA independently enables four-way-junction DNA binding and contributes to
+  RuvAB helicase activity, but imported ATP binding and generic independent
+  helicase activity are removed because the ATPase motor is RuvB.
+- RuvB independently enables the branch-migration motor and contributes DNA
+  contacts within the RuvA-recognized junction; the imported `enables`
+  qualifier on four-way-junction binding is modified accordingly.
 - RuvB's duplicate core-function summaries are consolidated, and generic
   cytoplasmic localization is retained only as non-core context.
 - RuvC retains exact crossover-junction endonuclease activity; broad DNA
@@ -57,6 +61,8 @@ because RuvC supplies the conserved required resolution activity.
 - RecFOR gap repair, RecBCD end resection, and RecA strand exchange are upstream modules.
 - Replication restart and fork-reversal consequences remain outside this narrowly defined module.
 - RecG is parallel to RuvAB; it is not forced into the canonical RuvABC complex.
+- The RecG-to-RuvC connection is unverified because the downstream resolver of
+  RecG-generated junctions is taxon-dependent and has not been tested in KT2440.
 - No family selector uses the broad PTHR47964 assignment because that family conflates RecG and Mfd.
 - Molecular functions occur only on leaf annotons; no generic cytoplasmic locations appear at module level.
 
@@ -66,7 +72,9 @@ Every leaf has a concrete KT2440 UniProt implementation and a reviewed E. coli
 exemplar. PTN000349951 grounds RuvB four-way-junction helicase activity and
 recombinational repair. Ortholog-of selectors anchored to reviewed E. coli proteins
 ground RuvA and RecG where a PANTHER selector would be absent or misleading, and
-PTHR30194:SF3 grounds RuvC.
+PTHR30194:SF3 grounds RuvC. Primary studies PMID:9501105 and PMID:7923356 establish
+the canonical RuvA-RuvB-RuvC division of labor and RuvC catalytic architecture;
+PMID:18375550 supports RecG as a separate, taxon-sensitive migration route.
 
 ## Research Status
 
