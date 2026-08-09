@@ -438,9 +438,9 @@ def main() -> None:
             any_resolved = True
             cls, ft = det
             full_text = full_text or ft
-            for c in cls:
-                if c not in class_src:
-                    class_src[c] = (pm, role)
+            for name in catalog:
+                if name in cls and name not in class_src:
+                    class_src[name] = (pm, role)
         if not any_resolved:
             continue
         n_resolved += 1
@@ -452,8 +452,11 @@ def main() -> None:
         go_label = term.get("label", "") or ""
         aspect = aspect_map.get(go_id, "?")
 
-        for name, (pmid, role) in class_src.items():
-            spec = catalog[name]
+        for name, spec in catalog.items():
+            source = class_src.get(name)
+            if source is None:
+                continue
+            pmid, role = source
             aligned = bool(
                 go_id in spec["_overmapped"]
                 or (spec["_aligned"] and spec["_aligned"].search(go_label))
