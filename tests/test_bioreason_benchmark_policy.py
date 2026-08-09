@@ -301,6 +301,11 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['goa']['n_overlap']:,} | 11.7 |"
     ) in supplement
     assert (
+        f"| Retained/replacement AIGR annotations | "
+        f"{overlap['post_review']['n_reference_terms']:,} | "
+        f"{overlap['post_review']['n_overlap']:,} | 9.6 |"
+    ) in supplement
+    assert (
         f"| All GO-valued AIGR core-function slots | "
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | 3.9 |"
