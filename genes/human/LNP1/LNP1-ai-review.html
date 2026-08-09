@@ -1,0 +1,3184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LNP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LNP1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A1A4G5" target="_blank" class="term-link">
+                        A1A4G5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LNP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A1A4G5" data-a="DESCRIPTION: LNP1 (leukemia NUP98 fusion partner 1) is a small,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LNP1 (leukemia NUP98 fusion partner 1) is a small, highly charged and partly disordered human protein whose normal physiological role is not established. Interaction studies associate LNP1 with the LYN tyrosine kinase and repeatedly recover it with multiple 14-3-3 paralogs, consistent with a possible phosphoregulated interaction module, but the direct mechanism and cellular consequences remain unknown. Limited antibody imaging reports mainly vesicular staining with cell-line-dependent cytosolic and nuclear-speck signal. Chromosomal rearrangements can fuse LNP1 to NUP98 in rare leukemias; puncta formation and transforming activity demonstrated for NUP98::LNP1 are properties of the chimeric oncoprotein and do not establish a function for wild-type LNP1.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071889" target="_blank" class="term-link">
+                                    GO:0071889
+                                </a>
+                            </span>
+                            <span class="term-label">14-3-3 protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A1A4G5" data-a="GO:0071889" data-r="PMID:33961781" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LNP1 reproducibly co-associates with six human 14-3-3 paralogs in BioPlex AP-MS networks from both 293T and HCT116 cells; hu.MAP3.0 integrates this and other proteomic evidence into a family-level interaction model.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The repeated family-specific pattern supports the informative 14-3-3 protein binding term rather than generic protein binding. The source evidence is anti-tag AP-MS/co-immunoprecipitation association, not purified direct binding; stable complex membership and physiological consequences remain unestablished. The duplicate raw protein-group rows for P62258-2 and E7ESK7 are retained in the provenance artifact but not counted as additional gene-level partners. The proposed phosphosite mechanism is also unresolved because PMID:40425816 names Ser114 but prints a motif that places the phosphate on current Ser112.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather than direct binary binding.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In contrast, affinity-purification mass spectrometry (AP-MS) enables enrichment and detection of even low-abundance proteins, though exogenous expression of tagged baits is required, and extensive sample preparation has limited scalability while precluding recovery of transient interactions ( Gingras et al., 2007 ).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40425816" target="_blank" class="term-link">
+                                        PMID:40425816
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We also identify LNP1, an uncharacterized protein, as associated with members of the 14-3-3 complex (huMAP3_06971.1).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990782" target="_blank" class="term-link">
+                                    GO:1990782
+                                </a>
+                            </span>
+                            <span class="term-label">protein tyrosine kinase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23503679" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23503679
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction discovery using parallel analysis of tra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A1A4G5" data-a="GO:1990782" data-r="PMID:23503679" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GST-LYN affinity precipitation followed by anti-tag Western blotting validated tagged human LNP1 as a LYN-binding candidate in HEK293T lysate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Figure 2c labels LNP1 and shows a GST-LYN pulldown band without a GST-Pep control band, supporting the specific kinase-binding term. The assay used overexpressed tagged LNP1 and bacterially produced GST-LYN; it does not establish endogenous interaction, LNP1 phosphorylation, or downstream signaling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and classifies interaction 868526 as Affinity Capture-Western.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23503679" target="_blank" class="term-link">
+                                        PMID:23503679
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GSTLYN precipitation and western blot analysis confirmed binding for five of seven novel candidates tested (Figure 2c).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LNP1/LNP1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry A1A4G5 (LNP1_HUMAN), Leukemia NUP98 fusion partner 1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed human LNP1 record encodes a 178-residue protein and has no PAN-GO annotations based on evolutionary models.</div>
+
+                        <div class="finding-text">"DR   PAN-GO; A1A4G5; 0 GO annotations based on evolutionary models."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt restricts its disease statement to a chromosomal rearrangement with NUP98.</div>
+
+                        <div class="finding-text">"CC   -!- DISEASE: Note=A chromosomal aberration involving LNP1 is found in a CC       form of T-cell acute lymphoblastic leukemia (T-ALL). Translocation CC       t(3;11)(q12.2;p15.4) with NUP98. {ECO:0000269|PubMed:16467868}."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible LNP1 interaction and localization provenance audit</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Exact BioPlex source rows preserve accession-level YWHAB and YWHAE protein-group assignments.</div>
+
+                        <div class="finding-text">"Official BioPlex source rows identify P31946-2, not canonical P31946, as the YWHAB protein-group accession in both 293T and HCT116 LNP1 experiments."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Raw 293T output contains canonical and isoform-2 YWHAE protein-group rows.</div>
+
+                        <div class="finding-text">"Official BioPlex source output contains both P62258 and P62258-2 YWHAE protein-group rows in 293T cells, while HCT116 contains P62258."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The official phosphoproteome supplement records the mapped LNP1 Ser114 site.</div>
+
+                        <div class="finding-text">"Official PMID:31819260 Supplementary Table S2 records A1A4G5 Ser114 with localization probability 0.844585 and two spectral counts."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex interaction records are AP-MS associations rather than direct binary binding assays.</div>
+
+                        <div class="finding-text">"IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather than direct binary binding."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The targeted PLATO validation resolves specifically to LYN and LNP1.</div>
+
+                        <div class="finding-text">"BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and classifies interaction 868526 as Affinity Capture-Western."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HPA localization is based on one Approved antibody and varies by cell line.</div>
+
+                        <div class="finding-text">"Human Protein Atlas antibody HPA047926 has Approved reliability and reports vesicles in PC-3 and U2OS, with nuclear-speck and cytosolic signal only in PC-3."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 3.0 used human-cell AP-MS; official BioPlex and IntAct records identify LNP1 association with six 14-3-3 paralogs in both source networks.</div>
+
+                        <div class="finding-text">"In contrast, affinity-purification mass spectrometry (AP-MS) enables enrichment and detection of even low-abundance proteins, though exogenous expression of tagged baits is required, and extensive sample preparation has limited scalability while precluding recovery of transient interactions ( Gingras et al., 2007 )."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The two source networks were generated in 293T and HCT116 cells.</div>
+
+                        <div class="finding-text">"Second, performing AP-MS in 293T and HCT116 cells has enabled comparison of two context-specific, proteome-scale interaction networks."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23503679" target="_blank" class="term-link">
+                            PMID:23503679
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein interaction discovery using parallel analysis of translated ORFs (PLATO).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Figure 2c identifies LNP1 among candidates validated by GST-LYN affinity precipitation and anti-tag Western blotting.</div>
+
+                        <div class="finding-text">"GSTLYN precipitation and western blot analysis confirmed binding for five of seven novel candidates tested (Figure 2c)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The discovery screen used GST-LYN against a human ORFeome with GST controls.</div>
+
+                        <div class="finding-text">"After affinity enrichment of the human ORFeome using as bait GSTLYN, GST alone, or an irrelevant GST-fused protein (GST-Muted), we performed Illumina sequencing to identify proteins specifically precipitated with GST-LYN (Figure 2a, Supplementary Figure 3a)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40425816" target="_blank" class="term-link">
+                            PMID:40425816
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">hu.MAP3.0: atlas of human protein complexes by integration of &gt;25,000 proteomic experiments.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">hu.MAP3.0 places LNP1 with multiple 14-3-3 proteins.</div>
+
+                        <div class="finding-text">"We also identify LNP1, an uncharacterized protein, as associated with members of the 14-3-3 complex (huMAP3_06971.1)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors connect the association to a reported phosphoserine and candidate 14-3-3 motif.</div>
+
+                        <div class="finding-text">"LNP1 has a known phosphoserine site at Ser114 (Ochoa et al, 2020) in a motif reminiscent of 14-3-3 binding (KFpSESF vs RXY/FXpSXP (Yaffe et al, 1997))."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AlphaFold3 modeling provides computational corroboration for LNP1-YWHAE association.</div>
+
+                        <div class="finding-text">"This provides further evidence of LNP1’s association with the 14-3-3 complex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31819260" target="_blank" class="term-link">
+                            PMID:31819260
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The functional landscape of the human phosphoproteome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supplementary Table S2 maps A1A4G5 Ser114 above the study&#39;s Class-I localization threshold; this is site detection rather than functional validation.</div>
+
+                        <div class="finding-text">"Probabilities above 75% indicate highly confident localizations (Class I sites)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18603550" target="_blank" class="term-link">
+                            PMID:18603550
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">t(3;11)(q12;p15)/NUP98-LOC348801 fusion transcript in acute myeloid leukemia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The AML translocation joins NUP98 exon 13 in-frame to LOC348801/LNP1 exon 2.</div>
+
+                        <div class="finding-text">"3&#39;-RACE-PCR showed nucleotide 1718 (exon 13) of NUP98 was fused in-frame with nucleotide 1248 (exon 2) of LOC348801."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Both NUP98-LOC348801 and reciprocal LOC348801-NUP98 transcripts were cloned.</div>
+
+                        <div class="finding-text">"RT-PCR and cloning experiments detected two in-frame spliced NUP98-LOC348801 transcripts and the reciprocal LOC348801-NUP98."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34903620" target="_blank" class="term-link">
+                            PMID:34903620
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phase Separation Mediates NUP98 Fusion Oncoprotein Leukemic Transformation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NUP98-LNP1 fusion constructs form nuclear puncta and transform hematopoietic cells.</div>
+
+                        <div class="finding-text">"We also show that three additional leukemia-associated NUP98 FOs (NUP98-PRRX1, NUP98-KDM5A, and NUP98-LNP1) form nuclear puncta and transform hematopoietic cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The NUP98-LNP1 result included mouse lineage-negative hematopoietic stem/progenitor-cell transformation and induced myeloid differentiation.</div>
+
+                        <div class="finding-text">"Three additional NUP98 FOs, NUP98–PRRX1, NUP98–KDM5A, and NUP98–LNP1, also form nuclear puncta with apparent liquid-like features and transform and induce myeloid differentiation in mouse lin− HSPCs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16467868" target="_blank" class="term-link">
+                            PMID:16467868
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NUP98 rearrangements in hematopoietic malignancies: a study of the Groupe Francophone de Cytogénétique Hématologique.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The cohort identified a new chromosome-3 NUP98 breakpoint, but the cached abstract does not name LOC348801/LNP1.</div>
+
+                        <div class="finding-text">"Three new chromosomal breakpoints: 3q22.1, 7p15 (in a localization distinct from the HOXA locus) and Xq28 were detected in rearrangements with the NUP98 gene locus."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link">
+                            PMID:30021884
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry in Intact Cell Nuclei.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study generated an intact-human-nuclei XL-MS interactome.</div>
+
+                        <div class="finding-text">"Here we use crosslinking mass spectrometry (XL-MS) to chart the protein-protein interactions in intact human nuclei."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors caution that novel XL-MS interactions can be nonspecific and difficult to validate.</div>
+
+                        <div class="finding-text">"The major challenge is represented by the ability to identify and filter out nonspecific interactions and by challenges in validating novel observed PPIs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI reports a binary LNP1-GPRIN2 interaction, but its cellular function remains undetermined.</div>
+
+                        <div class="finding-text">"While HuRI displays highly significant overlap with known functional relationships, the cellular function of most individual PPIs remains to be elucidated."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The one-isoform-per-gene design limits isoform-specific interpretation.</div>
+
+                        <div class="finding-text">"Screening only one isoform per gene also misses interaction partners specific to alternative spliceforms50."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15489334" target="_blank" class="term-link">
+                            PMID:15489334
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The status, quality, and expansion of the NIH full-length cDNA project: the Mammalian Gene Collection (MGC).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This is sequence-resource provenance for a human ORF clone, not functional evidence for LNP1.</div>
+
+                        <div class="finding-text">"The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was designed to generate and sequence a publicly accessible cDNA resource containing a complete open reading frame (ORF) for every human and mouse gene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LNP1 bind multiple 14-3-3 paralogs directly, and is the interaction phosphoserine-dependent?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="Q: Does endogenous LNP1 bind multiple 14-3-3 paralogs..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Ser112 or Ser114 the relevant LNP1 phosphosite, and which kinase installs it?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="Q: Is Ser112 or Ser114 the relevant LNP1 phosphosite,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the LNP1-LYN interaction reproducible at endogenous abundance, and does LYN phosphorylate or regulate LNP1?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="Q: Is the LNP1-LYN interaction reproducible at endoge..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where does endogenous LNP1 localize, and is its vesicular distribution conserved across cell types?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="Q: Where does endogenous LNP1 localize, and is its ve..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What normal cellular phenotype follows LNP1 loss, independently of NUP98::LNP1 fusion biology?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="Q: What normal cellular phenotype follows LNP1 loss, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LNP1, compare reciprocal 14-3-3 co-immunoprecipitation before and after phosphatase treatment, map the site by targeted mass spectrometry, and test S112A, S114A, and double-mutant rescue constructs in purified and cellular binding assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LNP1 is a phosphoserine-dependent 14-3-3 ligand whose association is controlled by one of the adjacent Ser112/Ser114 residues.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction biochemistry and phosphoproteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="EXPERIMENT: Endogenously tag LNP1, compare reciprocal 14-3-3 c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Re-test the interaction by reciprocal endogenous co-immunoprecipitation and purified-protein binding, then compare wild-type and kinase-dead LYN in kinase assays and quantitative LNP1 phosphoproteomics.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LYN binds LNP1 directly and regulates it through phosphorylation.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: kinase and interaction assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="EXPERIMENT: Re-test the interaction by reciprocal endogenous c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Introduce a minimally disruptive endogenous tag in PC-3, U-2 OS, and additional LNP1-expressing models, and combine knockout-controlled microscopy, organelle-marker colocalization, live imaging, and biochemical fractionation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Wild-type LNP1 is a vesicle-associated protein in a restricted set of human cell types.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous localization and trafficking</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="EXPERIMENT: Introduce a minimally disruptive endogenous tag in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform CRISPR knockout with wild-type and interaction-defective rescue in retina- and testis-relevant human models, using unbiased transcriptomic, proteomic, trafficking, proliferation, and stress-response readouts to discover a causal process.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LNP1 loss produces a measurable phenotype that depends on its reported interaction module.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genome editing and multi-omics phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="EXPERIMENT: Perform CRISPR knockout with wild-type and interac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type LNP1, full NUP98::LNP1, and matched fusion constructs lacking or mutating the LNP1 segment for puncta formation, chromatin occupancy, transcriptional effects, and hematopoietic transformation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The LNP1 segment contributes a fusion-specific property to NUP98::LNP1 that is not shared by wild-type LNP1.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: fusion-domain dissection</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A1A4G5" data-a="EXPERIMENT: Compare wild-type LNP1, full NUP98::LNP1, and matc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The normal physiological process and cellular phenotype controlled by wild-type LNP1 are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LNP1 is a protein-level-supported 178-residue human gene product, but its reviewed UniProt record has no FUNCTION statement, no curated pathway, and no PAN-GO annotation; the defensible evidence currently stops at physical associations and provisional antibody localization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a causal phenotype or process, even reproducible interaction partners cannot be interpreted as the gene product&#39;s biological role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Identify a reproducible loss-of-function phenotype in an endogenously expressing human model and rescue it with wild-type LNP1 while mapping the responsible molecular interaction.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"DR   PAN-GO; A1A4G5; 0 GO annotations based on evolutionary models."</em> — file:human/LNP1/LNP1-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether LNP1 binds 14-3-3 proteins directly, which phosphosite controls the association, and what the association does in cells.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">NARROWING</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> BioPlex repeatedly recovers LNP1 with six human 14-3-3 paralogs in two cell lines, and hu.MAP3.0 integrates overlapping proteomic evidence into a phosphoserine-dependent LNP1-YWHAE model. Current-sequence inspection exposes an unresolved Ser112-versus-Ser114 discrepancy in the published motif description.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this would distinguish a regulated interaction module from repeated co-complex recovery and could provide the first mechanistic handle on LNP1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use site-resolved phosphoproteomics, S112A/S114A mutants, phosphatase treatment, reciprocal endogenous co-immunoprecipitation, and purified binding assays across representative 14-3-3 paralogs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather than direct binary binding."</em> — file:human/LNP1/LNP1-bioinformatics/RESULTS.md</li>
+
+                <li><em>"We also identify LNP1, an uncharacterized protein, as associated with members of the 14-3-3 complex (huMAP3_06971.1)."</em> — PMID:40425816</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological significance of the LNP1-LYN interaction and whether LYN phosphorylates LNP1 are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> A LYN affinity-capture screen followed by targeted Western validation supports physical association, but no endogenous context, catalytic consequence, or downstream pathway has been established for LNP1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> LYN could connect LNP1 to a defined signaling context, but merely binding a kinase does not show that LNP1 is its substrate or pathway component.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reproduce the interaction at endogenous abundance, test direct binding and phosphorylation with purified proteins and kinase-dead LYN, and measure the consequence of disrupting the interaction in a relevant human cell type.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and classifies interaction 868526 as Affinity Capture-Western."</em> — file:human/LNP1/LNP1-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous subcellular localization and trafficking behavior of LNP1 are unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Human Protein Atlas imaging with one approved antibody reports vesicles in two cell lines and cytosolic plus nuclear-speck signal in only one, while UniProt has no curated SUBCELLULAR LOCATION statement.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A validated compartment is required to judge which reported partners can meet LNP1 physiologically and to choose an appropriate model for functional studies.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LNP1 in multiple expressing human cell types and combine knockout-controlled imaging with biochemical fractionation and organelle-marker colocalization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Human Protein Atlas antibody HPA047926 has Approved reliability and reports vesicles in PC-3 and U2OS, with nuclear-speck and cytosolic signal only in PC-3."</em> — file:human/LNP1/LNP1-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LNP1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A1A4G5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lnp1-a1a4g5-review-notes">LNP1 (A1A4G5) review notes</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<ul>
+<li>The repository fetch was anchored explicitly to reviewed human UniProt A1A4G5 because<br />
+<code>LNP1</code> is also a historical alias of the unrelated ER-junction protein LNPK/Q9C0E8.</li>
+<li>Automated deep research was attempted on 2026-08-09. Falcon/Edison failed with HTTP<br />
+  402 (payment required), and Perplexity failed with HTTP 401 (insufficient quota). No<br />
+  provider-authored deep-research file was created; this journal records the manual<br />
+  primary-source review instead.</li>
+<li>Live QuickGO returned zero annotations for A1A4G5, and the fetched GOA TSV contains<br />
+  only its header. UniProt likewise reports <code>PAN-GO; A1A4G5; 0 GO annotations based on
+  evolutionary models.</code></li>
+</ul>
+<h2 id="identity-and-the-lnpk-collision">Identity and the LNPK collision</h2>
+<p>The review target is HGNC:28014, LNP1 (leukemia NUP98 fusion partner 1), UniProt<br />
+A1A4G5, GeneID 348801, historically also NP3 or LOC348801. It is a reviewed 178-aa<br />
+protein with no curated FUNCTION or SUBCELLULAR LOCATION statement. The sequence is<br />
+highly charged and contains three predicted disordered regions, but no signal peptide,<br />
+transmembrane helix, catalytic motif, or experimentally solved structure. UniProt<br />
+curates no alternative protein products.</p>
+<p>LNPK (HGNC:21610; UniProt Q9C0E8) has historically also been called LNP1/LNP and is the<br />
+ortholog of yeast Lnp1p and the mammalian lunapark ER-junction protein. None of that<br />
+ER-network morphology literature is evidence for A1A4G5. Every assertion below was<br />
+therefore checked against A1A4G5, GeneID 348801, NP3, LOC348801, or an interaction<br />
+record that resolves to that accession.</p>
+<h2 id="normal-protein-evidence">Normal-protein evidence</h2>
+<h3 id="repeated-association-with-14-3-3-proteins">Repeated association with 14-3-3 proteins</h3>
+<p>BioPlex 3.0 (PMID:33961781) reports LNP1 co-association with six 14-3-3 paralogs in<br />
+human-cell affinity-purification mass spectrometry. The exact bait/prey records and<br />
+accession mapping are captured reproducibly in <code>LNP1-bioinformatics/RESULTS.md</code>.<br />
+The raw prey output contains accession-level protein-group rows for YWHAB isoform 2<br />
+(P31946-2), both canonical and isoform-2 YWHAE (P62258 and P62258-2), and canonical<br />
+P63104 plus the unreviewed truncated YWHAZ fragment E7ESK7. These rows do not establish<br />
+isoform-specific detection, isoform-exclusive biology, or another 14-3-3 gene.<br />
+hu.MAP3.0 integrates BioPlex<br />
+with other proteomic inputs and states: [PMID:40425816, "We also identify LNP1, an<br />
+uncharacterized protein, as associated with members of the 14-3-3 complex<br />
+(huMAP3_06971.1)."]</p>
+<p>hu.MAP3.0 assigns LNP1-YWHAE a high integrated score and models a phosphoserine-bound<br />
+interface, but the paper frames its uncharacterized-protein analyses as testable<br />
+hypotheses rather than targeted biochemical validation. A 28-member predicted Complex<br />
+Portal cluster should not be interpreted as one stable stoichiometric complex.</p>
+<p>There is also a residue-numbering ambiguity that must remain unresolved. Current<br />
+A1A4G5 residues 110-115 are <code>KFSESF</code>, with serines at 112 and 114. The hu.MAP3.0 paper<br />
+says: [PMID:40425816, "LNP1 has a known phosphoserine site at Ser114 (Ochoa et al,<br />
+2020) in a motif reminiscent of 14-3-3 binding (KFpSESF vs RXY/FXpSXP (Yaffe et al,<br />
+1997))."] The written <code>KFpSESF</code> motif places the phosphate on current Ser112, not<br />
+Ser114. No site-specific mechanism should be asserted until the underlying<br />
+phosphoproteomic mapping is reconciled experimentally.</p>
+<h3 id="lyn-association">LYN association</h3>
+<p>PLATO screened a ribosome-displayed human ORFeome against GST-LYN and then tested<br />
+selected candidates in HEK293T lysates. The paper describes the relevant validation<br />
+strategy as follows: [PMID:23503679, "GSTLYN precipitation and western blot analysis<br />
+confirmed binding for five of seven novel candidates tested (Figure 2c)."] The<br />
+paper's Figure 2c visibly labels LNP1 and shows its GST-LYN pulldown validation, and<br />
+BioGRID interaction 868526 maps the prey to A1A4G5/NP3. The specific term GO:1990782<br />
+protein tyrosine kinase binding is therefore preferable to generic protein binding.<br />
+The result does not establish LYN-dependent phosphorylation or a physiological pathway<br />
+for LNP1.</p>
+<h3 id="other-large-scale-associations">Other large-scale associations</h3>
+<p>Crosslinking mass spectrometry in one detergent-insoluble U2OS nuclear fraction<br />
+(PMID:30021884) reports an LNP1 Lys124-GAPDH Lys145 crosslink, but a single crosslink<br />
+does not define a normal molecular function or establish nuclear-speck localization.<br />
+HuRI (PMID:32296183) reports one binary LNP1-GPRIN2 interaction: official supplements<br />
+map CCSB ORF 54500 to LNP1 and ORF 6830 to GPRIN2/O60269. The three IntAct records are<br />
+assay representations of that edge, not LNP1 self-binding or three partners. With no<br />
+physiological context, it still supplies no informative GO term beyond generic protein<br />
+binding and is not recommended as an annotation.</p>
+<h2 id="localization-evidence">Localization evidence</h2>
+<p>The Human Protein Atlas currently reports a mainly vesicular antibody pattern in PC-3<br />
+and U2OS cells, with nuclear-speck and cytosolic signal only in PC-3. All calls use one<br />
+antibody (HPA047926) and have reliability <code>Approved</code>, not an independently validated<br />
+status. This is useful for designing endogenous-localization experiments, but is too<br />
+provisional to make a core location or to infer where the reported interactions occur.</p>
+<h2 id="nup98-fusion-boundary">NUP98 fusion boundary</h2>
+<p>The best-established biology involving the name LNP1 concerns rare NUP98 fusions, not<br />
+the wild-type protein. The original molecular report states: [PMID:18603550, "In a case<br />
+of acute myeloid leukemia we report molecular cytogenetic findings of a<br />
+t(3;11)(q12;p15), characterized as a new NUP98 translocation rearranging with<br />
+LOC348801 at chromosome 3."] The current UniProt disease note also restricts the claim<br />
+to a chromosomal translocation with NUP98.</p>
+<p>A later mechanistic study found: [PMID:34903620, "We also show that three additional<br />
+leukemia-associated NUP98 FOs (NUP98-PRRX1, NUP98-KDM5A, and NUP98-LNP1) form nuclear<br />
+puncta and transform hematopoietic cells."] These are properties of NUP98::LNP1 fusion<br />
+oncoprotein constructs. They do not support annotations of wild-type LNP1 for nuclear<br />
+puncta, phase separation, transcriptional control, transformation, or leukemia.</p>
+<h2 id="curation-synthesis">Curation synthesis</h2>
+<ul>
+<li>Preserve the empty GOA source set exactly.</li>
+<li>Candidate NEW GO:0071889 <code>14-3-3 protein binding</code>, IPI from PMID:33961781, with the<br />
+  six verified human 14-3-3 partners. Keep non-core because evidence is high-throughput<br />
+  co-association plus integrative modeling, without targeted endogenous biochemistry.</li>
+<li>Candidate NEW GO:1990782 <code>protein tyrosine kinase binding</code>, IPI from PMID:23503679,<br />
+  with LYN/P07948; Figure 2c and BioGRID verify the A1A4G5 mapping.</li>
+<li>Do not add a generic protein-binding row, a stable-complex assertion, a biological<br />
+  process inferred from 14-3-3 membership, a phosphosite-specific mechanism, or any<br />
+  fusion-derived wild-type function.</li>
+<li>Leave <code>core_functions: []</code>: no normal molecular activity has yet been connected to a<br />
+  physiological process strongly enough to call it a settled core function.</li>
+<li>Leave <code>proposed_new_terms: []</code>: existing specific binding terms cover the defensible<br />
+  observations.</li>
+</ul>
+<h2 id="open-questions-and-decisive-experiments">Open questions and decisive experiments</h2>
+<ol>
+<li>Does endogenous LNP1 bind multiple 14-3-3 paralogs, and is binding direct and<br />
+   phosphoserine-dependent? Perform reciprocal endogenous co-IP/pulldown, phosphatase<br />
+   treatment, and purified binding assays.</li>
+<li>Is Ser112 or Ser114 the relevant phosphosite, which kinase installs it, and does<br />
+   site mutation alter 14-3-3 binding? Use site-resolved MS and S112A/S114A rescue.</li>
+<li>Is LYN binding reproducible at endogenous abundance, and does LYN phosphorylate<br />
+   LNP1? Use reciprocal co-IP, purified binding, kinase assays, and kinase-dead controls.</li>
+<li>Where does endogenous LNP1 localize? Endogenously tag A1A4G5 and quantify<br />
+   colocalization with vesicle and nuclear-speck markers across several expressing cell<br />
+   types, with knockout controls for antibody specificity.</li>
+<li>What normal phenotype follows LNP1 loss? Combine CRISPR knockout with wild-type<br />
+   rescue and unbiased transcriptomic, proteomic, trafficking, and stress-response<br />
+   readouts in retina- and testis-relevant human models.</li>
+<li>Which fusion phenotypes require the LNP1 segment rather than the NUP98 FG-rich<br />
+   region? Compare wild-type LNP1, NUP98::LNP1, and segment-deletion constructs without<br />
+   transferring fusion behavior to the normal protein.</li>
+</ol>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A1A4G5" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="reproducible-lnp1-interaction-and-localization-provenance-audit">Reproducible LNP1 interaction and localization provenance audit</h1>
+<h2 id="bottom-line">Bottom line</h2>
+<p>Human LNP1 is UniProtKB <strong>A1A4G5</strong> (178 aa; HGNC symbol <code>LNP1</code>; synonym<br />
+<code>NP3</code>). It is not lunapark/LNPK, UniProtKB <strong>Q9C0E8</strong> (428 aa; HGNC symbol<br />
+<code>LNPK</code>; historical synonym <code>LNP</code>). The accessions are independently resolved in<br />
+<a href="results/uniprot_identities.tsv"><code>results/uniprot_identities.tsv</code></a>.</p>
+<p>Two informative molecular-function annotations are defensible as non-core,<br />
+high-throughput/interaction-derived claims:</p>
+<ol>
+<li><code>GO:0071889</code> <strong>14-3-3 protein binding</strong>, IPI, PMID:33961781. BioPlex recovered<br />
+   six 14-3-3 genes with LNP1 in both 293T and HCT116 cells. The raw<br />
+   accession-level protein-group rows are <code>P27348</code> (YWHAQ), <code>P31946-2</code> (YWHAB), <code>P61981</code> (YWHAG),<br />
+<code>P62258</code> and <code>P62258-2</code> (YWHAE), <code>P63104</code> and the unreviewed truncated<br />
+   proteoform <code>E7ESK7</code> (YWHAZ), and <code>Q04917</code> (YWHAH). These identifiers record<br />
+   the source assignments; they do not establish isoform-specific detection or<br />
+   isoform-exclusive biology.</li>
+<li><code>GO:1990782</code> <strong>protein tyrosine kinase binding</strong>, IPI, PMID:23503679, with<br />
+<code>UniProtKB:P07948</code> (LYN). PLATO discovery was followed by a targeted<br />
+   GST-LYN pull-down/Western validation in which Figure 2c labels LNP1.</li>
+</ol>
+<p>Both annotations must retain an explicit limitation: the assays establish<br />
+physical co-association under the tested conditions, not an endogenous pathway,<br />
+substrate relationship, or purified-protein binding mechanism. AP-MS in<br />
+particular does not distinguish direct contact from a bridged/co-complex<br />
+association.</p>
+<p>No informative GO annotation follows from the HuRI LNP1-GPRIN2 pair or the<br />
+LNP1-GAPDH crosslink. A generic <code>protein binding</code> annotation would add no useful<br />
+function. Complex Portal CPX-12224 is explicitly machine-learning predicted and<br />
+must not be asserted as an experimentally isolated, stable 28-member complex.</p>
+<h2 id="evidence-audit">Evidence audit</h2>
+<h3 id="bioplex-30-pmid33961781">BioPlex 3.0 / PMID:33961781</h3>
+<p>The official December 2019 BioPlex no-filter bait-prey tables, not only a<br />
+canonicalized interaction export, were checked. Exact source rows are retained<br />
+in<br />
+<a href="results/bioplex_LNP1_14-3-3_source_rows.tsv"><code>results/bioplex_LNP1_14-3-3_source_rows.tsv</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Family gene</th>
+<th>293T prey accession(s)</th>
+<th>HCT116 prey accession(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YWHAQ</td>
+<td>P27348</td>
+<td>P27348</td>
+</tr>
+<tr>
+<td>YWHAB</td>
+<td>P31946-2</td>
+<td>P31946-2</td>
+</tr>
+<tr>
+<td>YWHAG</td>
+<td>P61981</td>
+<td>P61981</td>
+</tr>
+<tr>
+<td>YWHAE</td>
+<td>P62258, P62258-2</td>
+<td>P62258</td>
+</tr>
+<tr>
+<td>YWHAZ</td>
+<td>P63104</td>
+<td>P63104, E7ESK7</td>
+</tr>
+<tr>
+<td>YWHAH</td>
+<td>Q04917</td>
+<td>Q04917</td>
+</tr>
+</tbody>
+</table>
+<p>The source therefore contains six 14-3-3 genes, but eight distinct accession-level<br />
+protein-group strings across the two cell lines. <code>E7ESK7</code> is a current unreviewed, 137-aa<br />
+YWHAZ sequence; it is not a seventh 14-3-3 gene. IntAct collapses the YWHAB,<br />
+YWHAE, and YWHAZ source proteoforms to canonical gene-level accessions.</p>
+<p>The twelve IntAct records (six pairs in each cell line) use:</p>
+<ul>
+<li><code>MI:0007</code> anti tag coimmunoprecipitation;</li>
+<li><code>MI:0914</code> association, not <code>MI:0915</code> physical association;</li>
+<li><code>MI:1060</code> spoke expansion;</li>
+<li>LNP1 as bait (<code>MI:0496</code>) and each 14-3-3 protein as prey (<code>MI:0498</code>);</li>
+<li>IntAct miscore 0.35.</li>
+</ul>
+<p>This repeated family-selective AP-MS pattern supports an IPI annotation to<br />
+<code>14-3-3 protein binding</code> under normal GO interaction-evidence practice, but it<br />
+does not by itself prove direct binary binding. hu.MAP3 and AlphaFold3 add a<br />
+testable structural hypothesis, not independent direct experimental evidence.</p>
+<h3 id="plato-lyn-interaction-pmid23503679">PLATO LYN interaction / PMID:23503679</h3>
+<p>BioGRID records both stages with exact identities LYN/P07948 and LNP1/A1A4G5:</p>
+<ul>
+<li>interaction 868448: high-throughput <code>Affinity Capture-Luminescence</code> discovery;</li>
+<li>interaction 868526: low-throughput <code>Affinity Capture-Western</code> validation.</li>
+</ul>
+<p>The full paper's Figure 2c visibly labels LNP1, shows an LNP1 band in input and<br />
+GST-LYN pull-down, and no corresponding band in the GST-Pep control. The assay<br />
+used tagged LNP1 expressed in 293T lysate and bacterially produced GST-LYN; it<br />
+supports physical association but not endogenous interaction, LYN-dependent<br />
+phosphorylation, or a physiological LYN pathway.</p>
+<h3 id="humap3-pmid40425816">hu.MAP3 / PMID:40425816</h3>
+<p>The official hu.MAP3 page for <code>huMAP3_06971.1</code> labels the cluster <strong>Very High</strong><br />
+confidence and reports these LNP1 edges:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th style="text-align: right;">hu.MAP3 score</th>
+<th>ProteomeHD / interface-overlap shown for this pair</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LNP1-YWHAE</td>
+<td style="text-align: right;">0.986</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>YWHAZ-LNP1</td>
+<td style="text-align: right;">0.985</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>YWHAH-LNP1</td>
+<td style="text-align: right;">0.984</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>YWHAG-LNP1</td>
+<td style="text-align: right;">0.982</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>YWHAQ-LNP1</td>
+<td style="text-align: right;">0.981</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>LNP1-YWHAB</td>
+<td style="text-align: right;">0.980</td>
+<td>blank / blank</td>
+</tr>
+<tr>
+<td>SFN-LNP1</td>
+<td style="text-align: right;">0.964</td>
+<td>blank / blank</td>
+</tr>
+</tbody>
+</table>
+<p>hu.MAP3 is a machine-learning integration of AP-MS, co-fractionation MS,<br />
+proximity-labeling, and related features; BioPlex is among its inputs. Its score<br />
+is an estimated co-complex/interacting probability. The paper's LNP1-YWHAE<br />
+AlphaFold3 model is predictive (reported ipTM 0.73 and pTM 0.64), not an<br />
+experimental binding validation.</p>
+<p>There is also a residue-numbering warning. Current A1A4G5 residues 110-115 are<br />
+<code>KFSESF</code>. The paper states Ser114 but writes <code>KFpSESF</code>, which places the<br />
+phosphate on the first serine (current S112); correct S114 notation would be<br />
+<code>KFSEpSF</code>. The cited phosphoproteome source reports S114. Do not turn this<br />
+internally inconsistent motif typography or the AlphaFold model into a<br />
+residue-specific functional annotation.</p>
+<p>The exact official PMID:31819260 Supplementary Table S2 row is retained in<br />
+<a href="results/raw/pmid31819260_A1A4G5_S114_source_row.tsv"><code>results/raw/pmid31819260_A1A4G5_S114_source_row.tsv</code></a>.<br />
+It records A1A4G5 residue 114 as serine, localization probability 0.844585, and<br />
+two spectral counts. This substantiates site detection only; it does not assign<br />
+the kinase, demonstrate 14-3-3 binding, or resolve the motif-numbering conflict.</p>
+<h3 id="complex-portal-cpx-12224">Complex Portal CPX-12224</h3>
+<p>The official API returns:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">&quot;predictedComplex&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="nt">&quot;evidenceType&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;identifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ECO:0008004&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;machine-learning predicted complex&quot;</span><span class="p">}</span>
+</code></pre></div>
+
+<p>It cross-references <code>huMAP3_06971.1</code> as an identical object, lists 28<br />
+participants (including A1A4G5 and all seven human 14-3-3 genes), and gives null<br />
+stoichiometry for every participant. This is a predicted clustering result, not<br />
+primary IPI evidence and not a basis for an <code>in_complex: CPX-12224</code> assertion.</p>
+<h3 id="huri-pmid32296183">HuRI / PMID:32296183</h3>
+<p>The unresolved IntAct participant <code>ccsb orf id: 6830</code> is not LNP1 and is not an<br />
+unknown protein. Official Supplementary Table 2 maps it as follows:</p>
+<div class="codehilite"><pre><span></span><code>6830    ENST00000374317.1   ENSP00000363436.1   ENSG00000204175.5   GPRIN2
+54500   ENST00000383693.7   ENSP00000373191.3   ENSG00000206535.7   LNP1
+</code></pre></div>
+
+<p>Current UniProt maps GPRIN2 to reviewed accession <code>O60269</code>. Supplementary Table<br />
+9 contains exactly one GPRIN2-LNP1 pair, detected in screen 1 and assay v1:</p>
+<div class="codehilite"><pre><span></span><code>ENSG00000204175 ENSG00000206535 1   0   0   0   0   0   0   0   0   1   0   0
+</code></pre></div>
+
+<p>IntAct exposes three records for that one pair (<code>MI:1356</code> validated two hybrid,<br />
+<code>MI:1112</code> two hybrid prey pooling, and <code>MI:0397</code> two hybrid array), all typed<br />
+<code>MI:0915</code> physical association with miscore 0.56. This is credible binary Y2H<br />
+evidence, but no specific molecular function or biological process is known;<br />
+therefore it does not justify a useful GO annotation.</p>
+<h3 id="nuclear-xl-ms-pmid30021884">Nuclear XL-MS / PMID:30021884</h3>
+<p>Supplementary Table S2 contains one DSSO interlink in a TX100-insoluble U2OS<br />
+nuclear fraction. It assigns LNP1 leading residue Lys124 and GAPDH leading<br />
+residue Lys145 (the GAPDH peptide also maps to P04406-2 residue 103), score<br />
+95.05 and Q-value 0.02. IntAct represents it as A1A4G5-P04406, <code>MI:0030</code><br />
+cross-linking study, <code>MI:0915</code> physical association, miscore 0.40.</p>
+<p>This is residue-proximity evidence in an intact-nucleus preparation, but it is a<br />
+single high-throughput crosslink and does not establish a selective GAPDH-binding<br />
+function, normal nuclear-speck residence, or a physiological pathway. The paper<br />
+itself highlights difficulty filtering nonspecific contacts and validating novel<br />
+PPIs. Do not add a generic protein-binding row.</p>
+<h3 id="human-protein-atlas-cellular-component-boundary">Human Protein Atlas cellular-component boundary</h3>
+<p>The current HPA XML entry uses one antibody, <code>HPA047926</code>, with <strong>Approved</strong> (not<br />
+Enhanced/Supported) reliability. Exact cell-line calls are:</p>
+<table>
+<thead>
+<tr>
+<th>Cell line</th>
+<th>Calls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PC-3</td>
+<td>nuclear speckles; vesicles; cytosol</td>
+</tr>
+<tr>
+<td>U2OS</td>
+<td>vesicles</td>
+</tr>
+</tbody>
+</table>
+<p>Thus vesicular staining is shared across the two assayed lines, whereas nuclear<br />
+speckles and cytosol are PC-3-only calls. These data support a cautious,<br />
+cell-line-qualified description of vesicular staining, not constitutive nuclear<br />
+speck or cytosol localization. The XML labels the call <code>vesicles</code> while attaching<br />
+<code>GO:0043231</code>, whose current GO label is the broader <strong>intracellular<br />
+membrane-bounded organelle</strong>; do not silently treat that HPA identifier as a<br />
+precise current <code>vesicle</code> term. Given the single Approved antibody, none of these<br />
+locations should be promoted to a core function without orthogonal validation.</p>
+<h2 id="annotation-recommendations">Annotation recommendations</h2>
+<table>
+<thead>
+<tr>
+<th>Proposed action</th>
+<th>Evidence</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NEW <code>GO:0071889</code> 14-3-3 protein binding</td>
+<td>IPI, PMID:33961781</td>
+<td>Defensible as non-core. Use six gene-level supporting entities: <code>P27348</code>, <code>P31946-2</code>, <code>P61981</code>, <code>P62258</code>, <code>P63104</code>, <code>Q04917</code>. Retain duplicate raw protein-group rows <code>P62258-2</code> and <code>E7ESK7</code> here as provenance rather than inflating six gene interactions to eight WITH/FROM entries. State AP-MS/co-association limitation.</td>
+</tr>
+<tr>
+<td>NEW <code>GO:1990782</code> protein tyrosine kinase binding</td>
+<td>IPI, PMID:23503679</td>
+<td>Defensible as non-core with <code>UniProtKB:P07948</code>. State tagged pull-down limitation; do not infer phosphorylation/substrate activity.</td>
+</tr>
+<tr>
+<td>LNP1-GPRIN2</td>
+<td>HuRI Y2H, PMID:32296183</td>
+<td>Physical/binary evidence is real, but add no GO row because only generic protein binding follows.</td>
+</tr>
+<tr>
+<td>LNP1-GAPDH</td>
+<td>XL-MS, PMID:30021884</td>
+<td>Physical proximity evidence is real, but add no GO row; single crosslink has no specific functional interpretation.</td>
+</tr>
+<tr>
+<td>CPX-12224 membership</td>
+<td>ECO:0008004</td>
+<td>Do not assert <code>in_complex</code>; it is machine-learning predicted with unknown stoichiometry.</td>
+</tr>
+<tr>
+<td>S114-dependent 14-3-3 mechanism</td>
+<td>hu.MAP3/AlphaFold3</td>
+<td>Treat as a hypothesis. Do not annotate residue-specific mechanism until targeted experiments resolve S112 versus S114 and demonstrate dependence.</td>
+</tr>
+<tr>
+<td>HPA locations</td>
+<td>one Approved antibody</td>
+<td>Use only as contextual/non-core localization evidence; retain cell-line boundaries.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="validator-safe-verbatim-source-text">Validator-safe verbatim source text</h2>
+<p>The following strings are exact substrings of the indicated cached publication<br />
+files and can be copied without paraphrase into <code>supporting_text</code>.</p>
+<p><strong>PMID:23503679</strong></p>
+<blockquote>
+<p>GSTLYN precipitation and western blot analysis confirmed binding for five of seven novel candidates tested (Figure 2c).</p>
+</blockquote>
+<p><strong>PMID:33961781</strong></p>
+<blockquote>
+<p>In contrast, affinity-purification mass spectrometry (AP-MS) enables enrichment and detection of even low-abundance proteins, though exogenous expression of tagged baits is required, and extensive sample preparation has limited scalability while precluding recovery of transient interactions ( Gingras et al., 2007 ).</p>
+</blockquote>
+<p><strong>PMID:40425816</strong></p>
+<blockquote>
+<p>We also identify LNP1, an uncharacterized protein, as associated with members of the 14-3-3 complex (huMAP3_06971.1).</p>
+<p>LNP1 has a known phosphoserine site at Ser114 (Ochoa et al, 2020) in a motif reminiscent of 14-3-3 binding (KFpSESF vs RXY/FXpSXP (Yaffe et al, 1997)).</p>
+<p>Provided this, we used AlphaFold3 to model the interaction between LNP1 and YWHAE, a 14-3-3 subunit which had the highest hu.MAP3.0 score 0.986 to LNP1.</p>
+<p>This provides further evidence of LNP1’s association with the 14-3-3 complex.</p>
+</blockquote>
+<p><strong>PMID:32296183</strong></p>
+<blockquote>
+<p>To map the reference interactome, we performed nine screens of Space III, followed by pairwise verification by quadruplicate retesting and sequence confirmation.</p>
+<p>The dataset, versioned HI-III-20 (Human Interactome obtained from screening Space III, published in 2020), contains 52,569 verified PPIs involving 8,275 proteins (Supplementary Table 9).</p>
+</blockquote>
+<p><strong>PMID:30021884</strong></p>
+<blockquote>
+<p>Here we use crosslinking mass spectrometry (XL-MS) to chart the protein-protein interactions in intact human nuclei.</p>
+<p>The major challenge is represented by the ability to identify and filter out nonspecific interactions and by challenges in validating novel observed PPIs.</p>
+</blockquote>
+<p><strong>HPA XML exact text</strong></p>
+<blockquote>
+<p>Mainly localized to vesicles. In addition localized to the nuclear speckles and cytosol.</p>
+<p>Immunofluorescent staining of human cell line PC-3 shows localization to nuclear speckles, vesicles and cytosol.</p>
+</blockquote>
+<h2 id="exact-local-reference-title-and-reusable-snippets">Exact local-reference title and reusable snippets</h2>
+<p>Use this local reference identifier and title:</p>
+<ul>
+<li>id: <code>file:human/LNP1/LNP1-bioinformatics/RESULTS.md</code></li>
+<li>title: <code>Reproducible LNP1 interaction and localization provenance audit</code></li>
+</ul>
+<p>The following sentences occur verbatim in this file and are suitable as<br />
+file-backed supporting text:</p>
+<blockquote>
+<p>Official BioPlex source rows identify P31946-2, not canonical P31946, as the YWHAB protein-group accession in both 293T and HCT116 LNP1 experiments.</p>
+<p>Official BioPlex source output contains both P62258 and P62258-2 YWHAE protein-group rows in 293T cells, while HCT116 contains P62258.</p>
+<p>IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather than direct binary binding.</p>
+<p>BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and classifies interaction 868526 as Affinity Capture-Western.</p>
+<p>Official HuRI supplements map CCSB ORF 6830 to GPRIN2/O60269 and ORF 54500 to LNP1/A1A4G5, yielding one GPRIN2-LNP1 binary Y2H pair rather than self-binding.</p>
+<p>Complex Portal marks CPX-12224 as predictedComplex true with ECO:0008004 machine-learning predicted complex evidence and unknown participant stoichiometry.</p>
+<p>Human Protein Atlas antibody HPA047926 has Approved reliability and reports vesicles in PC-3 and U2OS, with nuclear-speck and cytosolic signal only in PC-3.</p>
+<p>Official PMID:31819260 Supplementary Table S2 records A1A4G5 Ser114 with localization probability 0.844585 and two spectral counts.</p>
+</blockquote>
+<h2 id="reproducibility-and-provenance">Reproducibility and provenance</h2>
+<p>Run:</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>genes/human/LNP1/LNP1-bioinformatics
+just<span class="w"> </span>check
+</code></pre></div>
+
+<p>The workflow uses Python's standard library, reads identifiers/URLs from<br />
+<code>config.json</code>, writes direct and filtered results under <code>results/</code>, records URL,<br />
+HTTP metadata, byte ranges, size, and SHA-256 for every retrieved source in<br />
+<a href="results/source_manifest.tsv"><code>results/source_manifest.tsv</code></a>, and fails when an<br />
+expected identity or edge changes.</p>
+<ul>
+<li>[x] Source inputs, URLs, target identifiers, and the output directory come<br />
+      from CLI arguments or <code>config.json</code>; report filenames are deliberately<br />
+      fixed for this gene-specific LNP1 audit.</li>
+<li>[x] Tested an explicit confounder/control input: Q9C0E8 resolves to LNPK, not<br />
+      LNP1.</li>
+<li>[x] All requested interaction, complex, and localization analyses completed.</li>
+<li>[x] Direct API/database results and exact supplement rows are retained under<br />
+<code>results/</code> and <code>results/raw/</code>.</li>
+<li>[x] Detailed source provenance and checksums are retained in the manifest.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A1A4G5
+gene_symbol: LNP1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LNP1 (leukemia NUP98 fusion partner 1) is a small, highly charged and partly
+  disordered human protein whose normal physiological role is not established.
+  Interaction studies associate LNP1 with the LYN tyrosine kinase and repeatedly
+  recover it with multiple 14-3-3 paralogs, consistent with a possible
+  phosphoregulated interaction module, but the direct mechanism and cellular
+  consequences remain unknown. Limited antibody imaging reports mainly vesicular
+  staining with cell-line-dependent cytosolic and nuclear-speck signal. Chromosomal
+  rearrangements can fuse LNP1 to NUP98 in rare leukemias; puncta formation and
+  transforming activity demonstrated for NUP98::LNP1 are properties of the chimeric
+  oncoprotein and do not establish a function for wild-type LNP1.
+references:
+- id: file:human/LNP1/LNP1-uniprot.txt
+  title: UniProtKB entry A1A4G5 (LNP1_HUMAN), Leukemia NUP98 fusion partner 1
+  findings:
+  - statement: &gt;-
+      The reviewed human LNP1 record encodes a 178-residue protein and has no PAN-GO
+      annotations based on evolutionary models.
+    supporting_text: DR   PAN-GO; A1A4G5; 0 GO annotations based on evolutionary models.
+  - statement: &gt;-
+      UniProt restricts its disease statement to a chromosomal rearrangement with
+      NUP98.
+    supporting_text: &gt;-
+      CC   -!- DISEASE: Note=A chromosomal aberration involving LNP1 is found in a
+      CC       form of T-cell acute lymphoblastic leukemia (T-ALL). Translocation
+      CC       t(3;11)(q12.2;p15.4) with NUP98. {ECO:0000269|PubMed:16467868}.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current reviewed UniProt record verified for identity, sequence, disordered
+      regions, interaction-database cross-references, and the narrowly scoped fusion
+      disease note. It contains no FUNCTION or SUBCELLULAR LOCATION statement and no
+      reviewed alternative protein products.
+- id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+  title: Reproducible LNP1 interaction and localization provenance audit
+  findings:
+  - statement: &gt;-
+      Exact BioPlex source rows preserve accession-level YWHAB and YWHAE protein-group
+      assignments.
+    supporting_text: &gt;-
+      Official BioPlex source rows identify P31946-2, not canonical P31946, as the
+      YWHAB protein-group accession in both 293T and HCT116 LNP1 experiments.
+  - statement: &gt;-
+      Raw 293T output contains canonical and isoform-2 YWHAE protein-group rows.
+    supporting_text: &gt;-
+      Official BioPlex source output contains both P62258 and P62258-2 YWHAE
+      protein-group rows in 293T cells, while HCT116 contains P62258.
+  - statement: &gt;-
+      The official phosphoproteome supplement records the mapped LNP1 Ser114 site.
+    supporting_text: &gt;-
+      Official PMID:31819260 Supplementary Table S2 records A1A4G5 Ser114 with
+      localization probability 0.844585 and two spectral counts.
+  - statement: &gt;-
+      BioPlex interaction records are AP-MS associations rather than direct binary
+      binding assays.
+    supporting_text: &gt;-
+      IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag
+      coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather
+      than direct binary binding.
+  - statement: &gt;-
+      The targeted PLATO validation resolves specifically to LYN and LNP1.
+    supporting_text: &gt;-
+      BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and
+      classifies interaction 868526 as Affinity Capture-Western.
+  - statement: &gt;-
+      HPA localization is based on one Approved antibody and varies by cell line.
+    supporting_text: &gt;-
+      Human Protein Atlas antibody HPA047926 has Approved reliability and reports
+      vesicles in PC-3 and U2OS, with nuclear-speck and cytosolic signal only in PC-3.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reproducible standard-library audit of official BioPlex, IntAct, BioGRID, HuRI,
+      hu.MAP3, Complex Portal, UniProt, HPA, and publication-supplement records. It
+      distinguishes exact source protein-group accessions and binary validation from AP-MS
+      co-association, predicted-complex membership, and isolated crosslinks.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings:
+  - statement: &gt;-
+      BioPlex 3.0 used human-cell AP-MS; official BioPlex and IntAct records identify
+      LNP1 association with six 14-3-3 paralogs in both source networks.
+    supporting_text: &gt;-
+      In contrast, affinity-purification mass spectrometry (AP-MS) enables enrichment
+      and detection of even low-abundance proteins, though exogenous expression of
+      tagged baits is required, and extensive sample preparation has limited
+      scalability while precluding recovery of transient interactions ( Gingras et
+      al., 2007 ).
+    reference_section_type: INTRODUCTION
+  - statement: The two source networks were generated in 293T and HCT116 cells.
+    supporting_text: &gt;-
+      Second, performing AP-MS in 293T and HCT116 cells has enabled comparison of two
+      context-specific, proteome-scale interaction networks.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/cache verified. LNP1 is not named in article prose; pair-level mappings
+      were verified in official BioPlex and IntAct records. All six 14-3-3 family
+      members recur in both cell lines. Anti-tag co-immunoprecipitation/AP-MS supports
+      association, not purified direct binding or a stable stoichiometric complex.
+- id: PMID:23503679
+  title: Protein interaction discovery using parallel analysis of translated ORFs (PLATO).
+  findings:
+  - statement: &gt;-
+      Figure 2c identifies LNP1 among candidates validated by GST-LYN affinity
+      precipitation and anti-tag Western blotting.
+    supporting_text: &gt;-
+      GSTLYN precipitation and western blot analysis confirmed binding for five of
+      seven novel candidates tested (Figure 2c).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      The discovery screen used GST-LYN against a human ORFeome with GST controls.
+    supporting_text: &gt;-
+      After affinity enrichment of the human ORFeome using as bait GSTLYN, GST alone,
+      or an irrelevant GST-fused protein (GST-Muted), we performed Illumina sequencing
+      to identify proteins specifically precipitated with GST-LYN (Figure 2a,
+      Supplementary Figure 3a).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/cache and Figure 2 verified. Panel 2c labels LNP1 and shows a GST-LYN
+      pulldown band with no GST-Pep control band. Validation used lysates of HEK293T
+      cells transiently overexpressing tagged candidates and bacterially produced
+      GST-LYN; it establishes physical binding in this assay, not LYN-dependent
+      phosphorylation or a physiological pathway.
+- id: PMID:40425816
+  title: &#39;hu.MAP3.0: atlas of human protein complexes by integration of &gt;25,000 proteomic experiments.&#39;
+  findings:
+  - statement: hu.MAP3.0 places LNP1 with multiple 14-3-3 proteins.
+    supporting_text: &gt;-
+      We also identify LNP1, an uncharacterized protein, as associated with members of
+      the 14-3-3 complex (huMAP3_06971.1).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      The authors connect the association to a reported phosphoserine and candidate
+      14-3-3 motif.
+    supporting_text: &gt;-
+      LNP1 has a known phosphoserine site at Ser114 (Ochoa et al, 2020) in a motif
+      reminiscent of 14-3-3 binding (KFpSESF vs RXY/FXpSXP (Yaffe et al, 1997)).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      AlphaFold3 modeling provides computational corroboration for LNP1-YWHAE
+      association.
+    supporting_text: This provides further evidence of LNP1’s association with the 14-3-3 complex.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The paper directly discusses A1A4G5/LNP1, but hu.MAP3.0 combines data integration
+      and AlphaFold3 and frames these results as testable hypotheses. It does not
+      establish one stable 28-member complex. Current residues 110-115 are KFSESF: the
+      paper says Ser114 but writes KFpSESF, which places the phosphate on Ser112, so
+      the site-specific mechanism remains unresolved.
+- id: PMID:31819260
+  title: The functional landscape of the human phosphoproteome.
+  findings:
+  - statement: &gt;-
+      Supplementary Table S2 maps A1A4G5 Ser114 above the study&#39;s Class-I localization
+      threshold; this is site detection rather than functional validation.
+    supporting_text: Probabilities above 75% indicate highly confident localizations (Class I sites).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/cache and official supplement verified; the exact A1A4G5 row is retained
+      in the reproducible local audit. Ser114 has localization probability 0.844585
+      and two spectral counts. This supports a mapped phosphosite only; it does not
+      prove 14-3-3 binding or resolve the Ser112/Ser114 motif inconsistency in
+      PMID:40425816.
+- id: PMID:18603550
+  title: t(3;11)(q12;p15)/NUP98-LOC348801 fusion transcript in acute myeloid leukemia.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The AML translocation joins NUP98 exon 13 in-frame to LOC348801/LNP1 exon 2.
+    supporting_text: &gt;-
+      3&#39;-RACE-PCR showed nucleotide 1718 (exon 13) of NUP98 was fused in-frame with
+      nucleotide 1248 (exon 2) of LOC348801.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Both NUP98-LOC348801 and reciprocal LOC348801-NUP98 transcripts were cloned.
+    supporting_text: &gt;-
+      RT-PCR and cloning experiments detected two in-frame spliced NUP98-LOC348801
+      transcripts and the reciprocal LOC348801-NUP98.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract and identifier verified. This is fusion architecture in one human AML
+      case, not evidence about normal LNP1 function.
+- id: PMID:34903620
+  title: Phase Separation Mediates NUP98 Fusion Oncoprotein Leukemic Transformation.
+  findings:
+  - statement: &gt;-
+      NUP98-LNP1 fusion constructs form nuclear puncta and transform hematopoietic
+      cells.
+    supporting_text: &gt;-
+      We also show that three additional leukemia-associated NUP98 FOs (NUP98-PRRX1,
+      NUP98-KDM5A, and NUP98-LNP1) form nuclear puncta and transform hematopoietic
+      cells.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The NUP98-LNP1 result included mouse lineage-negative hematopoietic
+      stem/progenitor-cell transformation and induced myeloid differentiation.
+    supporting_text: &gt;-
+      Three additional NUP98 FOs, NUP98–PRRX1, NUP98–KDM5A, and NUP98–LNP1, also form
+      nuclear puncta with apparent liquid-like features and transform and induce
+      myeloid differentiation in mouse lin− HSPCs.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text verified. These are NUP98::LNP1 fusion-oncoprotein properties; they do
+      not support wild-type LNP1 annotations for nuclear puncta, phase separation,
+      transcriptional regulation, transformation, leukemogenesis, or differentiation.
+- id: PMID:16467868
+  title: &#39;NUP98 rearrangements in hematopoietic malignancies: a study of the Groupe Francophone de Cytogénétique Hématologique.&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The cohort identified a new chromosome-3 NUP98 breakpoint, but the cached
+      abstract does not name LOC348801/LNP1.
+    supporting_text: &gt;-
+      Three new chromosomal breakpoints: 3q22.1, 7p15 (in a localization distinct from
+      the HOXA locus) and Xq28 were detected in rearrangements with the NUP98 gene
+      locus.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Identifier/title verified, but the cached abstract never names LNP1 or
+      LOC348801. UniProt cites it for a t(3;11) T-ALL rearrangement. In keeping with
+      curator deference under incomplete full-text access, the disease citation is
+      retained as unverified context and is not used for normal-protein function.
+- id: PMID:30021884
+  title: Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry in Intact Cell Nuclei.
+  findings:
+  - statement: The study generated an intact-human-nuclei XL-MS interactome.
+    supporting_text: &gt;-
+      Here we use crosslinking mass spectrometry (XL-MS) to chart the protein-protein
+      interactions in intact human nuclei.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The authors caution that novel XL-MS interactions can be nonspecific and
+      difficult to validate.
+    supporting_text: &gt;-
+      The major challenge is represented by the ability to identify and filter out
+      nonspecific interactions and by challenges in validating novel observed PPIs.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current IntAct maps one LNP1-GAPDH crosslinking-study physical-association record
+      to this paper, which does not name LNP1 in prose. One crosslink does not justify
+      GAPDH binding, nuclear-speck localization, or a normal biological process.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI reports a binary LNP1-GPRIN2 interaction, but its cellular function remains
+      undetermined.
+    supporting_text: &gt;-
+      While HuRI displays highly significant overlap with known functional
+      relationships, the cellular function of most individual PPIs remains to be
+      elucidated.
+    reference_section_type: DISCUSSION
+  - statement: The one-isoform-per-gene design limits isoform-specific interpretation.
+    supporting_text: &gt;-
+      Screening only one isoform per gene also misses interaction partners specific to
+      alternative spliceforms50.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Official HuRI supplements resolve CCSB ORF ID 6830 to human GPRIN2/O60269 and
+      LNP1 to ORF 54500. The three IntAct rows are assay representations of one binary
+      LNP1-GPRIN2 interaction, not three partners or self-binding. No physiological
+      context is established, so no generic binding or process annotation is proposed.
+- id: PMID:15489334
+  title: &#39;The status, quality, and expansion of the NIH full-length cDNA project: the Mammalian Gene Collection (MGC).&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      This is sequence-resource provenance for a human ORF clone, not functional
+      evidence for LNP1.
+    supporting_text: &gt;-
+      The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was
+      designed to generate and sequence a publicly accessible cDNA resource containing
+      a complete open reading frame (ORF) for every human and mouse gene.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title/identifier and UniProt sequence citation verified. The cached paper
+      is generic and does not name LNP1; use only for sequence provenance.
+existing_annotations:
+- term:
+    id: GO:0071889
+    label: 14-3-3 protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P27348
+  - UniProtKB:P31946-2
+  - UniProtKB:P61981
+  - UniProtKB:P62258
+  - UniProtKB:P63104
+  - UniProtKB:Q04917
+  review:
+    summary: &gt;-
+      LNP1 reproducibly co-associates with six human 14-3-3 paralogs in BioPlex
+      AP-MS networks from both 293T and HCT116 cells; hu.MAP3.0 integrates this and
+      other proteomic evidence into a family-level interaction model.
+    action: NEW
+    reason: &gt;-
+      The repeated family-specific pattern supports the informative 14-3-3 protein
+      binding term rather than generic protein binding. The source evidence is anti-tag
+      AP-MS/co-immunoprecipitation association, not purified direct binding; stable
+      complex membership and physiological consequences remain unestablished. The
+      duplicate raw protein-group rows for P62258-2 and E7ESK7 are retained in the
+      provenance artifact but not counted as additional gene-level partners. The
+      proposed phosphosite mechanism is also unresolved because PMID:40425816 names
+      Ser114 but prints a motif that places the phosphate on current Ser112.
+    additional_reference_ids:
+    - PMID:40425816
+    supported_by:
+    - reference_id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag
+        coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather
+        than direct binary binding.
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        In contrast, affinity-purification mass spectrometry (AP-MS) enables enrichment
+        and detection of even low-abundance proteins, though exogenous expression of
+        tagged baits is required, and extensive sample preparation has limited
+        scalability while precluding recovery of transient interactions ( Gingras et
+        al., 2007 ).
+      reference_section_type: INTRODUCTION
+    - reference_id: PMID:40425816
+      supporting_text: &gt;-
+        We also identify LNP1, an uncharacterized protein, as associated with members
+        of the 14-3-3 complex (huMAP3_06971.1).
+      reference_section_type: RESULTS
+- term:
+    id: GO:1990782
+    label: protein tyrosine kinase binding
+  evidence_type: IPI
+  original_reference_id: PMID:23503679
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P07948
+  review:
+    summary: &gt;-
+      GST-LYN affinity precipitation followed by anti-tag Western blotting validated
+      tagged human LNP1 as a LYN-binding candidate in HEK293T lysate.
+    action: NEW
+    reason: &gt;-
+      Figure 2c labels LNP1 and shows a GST-LYN pulldown band without a GST-Pep control
+      band, supporting the specific kinase-binding term. The assay used overexpressed
+      tagged LNP1 and bacterially produced GST-LYN; it does not establish endogenous
+      interaction, LNP1 phosphorylation, or downstream signaling.
+    supported_by:
+    - reference_id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and
+        classifies interaction 868526 as Affinity Capture-Western.
+    - reference_id: PMID:23503679
+      supporting_text: &gt;-
+        GSTLYN precipitation and western blot analysis confirmed binding for five of
+        seven novel candidates tested (Figure 2c).
+      reference_section_type: RESULTS
+knowledge_gaps:
+- gap_statement: &gt;-
+    The normal physiological process and cellular phenotype controlled by wild-type
+    LNP1 are unknown.
+  boundary: &gt;-
+    LNP1 is a protein-level-supported 178-residue human gene product, but its reviewed
+    UniProt record has no FUNCTION statement, no curated pathway, and no PAN-GO
+    annotation; the defensible evidence currently stops at physical associations and
+    provisional antibody localization.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a causal phenotype or process, even reproducible interaction partners
+    cannot be interpreted as the gene product&#39;s biological role.
+  resolution: &gt;-
+    Identify a reproducible loss-of-function phenotype in an endogenously expressing
+    human model and rescue it with wild-type LNP1 while mapping the responsible
+    molecular interaction.
+  provenance:
+  - reference_id: file:human/LNP1/LNP1-uniprot.txt
+    supporting_text: DR   PAN-GO; A1A4G5; 0 GO annotations based on evolutionary models.
+- gap_statement: &gt;-
+    It is unknown whether LNP1 binds 14-3-3 proteins directly, which phosphosite
+    controls the association, and what the association does in cells.
+  boundary: &gt;-
+    BioPlex repeatedly recovers LNP1 with six human 14-3-3 paralogs in two cell lines,
+    and hu.MAP3.0 integrates overlapping proteomic evidence into a
+    phosphoserine-dependent LNP1-YWHAE model. Current-sequence inspection exposes an
+    unresolved Ser112-versus-Ser114 discrepancy in the published motif description.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: NARROWING
+  significance: &gt;-
+    Resolving this would distinguish a regulated interaction module from repeated
+    co-complex recovery and could provide the first mechanistic handle on LNP1.
+  resolution: &gt;-
+    Use site-resolved phosphoproteomics, S112A/S114A mutants, phosphatase treatment,
+    reciprocal endogenous co-immunoprecipitation, and purified binding assays across
+    representative 14-3-3 paralogs.
+  provenance:
+  - reference_id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      IntAct classifies the BioPlex LNP1-14-3-3 records as MI:0007 anti tag
+      coimmunoprecipitation, MI:0914 association, and MI:1060 spoke expansion rather
+      than direct binary binding.
+  - reference_id: PMID:40425816
+    supporting_text: &gt;-
+      We also identify LNP1, an uncharacterized protein, as associated with members of
+      the 14-3-3 complex (huMAP3_06971.1).
+- gap_statement: &gt;-
+    The physiological significance of the LNP1-LYN interaction and whether LYN
+    phosphorylates LNP1 are unknown.
+  boundary: &gt;-
+    A LYN affinity-capture screen followed by targeted Western validation supports
+    physical association, but no endogenous context, catalytic consequence, or
+    downstream pathway has been established for LNP1.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    LYN could connect LNP1 to a defined signaling context, but merely binding a kinase
+    does not show that LNP1 is its substrate or pathway component.
+  resolution: &gt;-
+    Reproduce the interaction at endogenous abundance, test direct binding and
+    phosphorylation with purified proteins and kinase-dead LYN, and measure the
+    consequence of disrupting the interaction in a relevant human cell type.
+  provenance:
+  - reference_id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      BioGRID maps the validated PLATO pair to LYN/P07948 and LNP1/A1A4G5 and
+      classifies interaction 868526 as Affinity Capture-Western.
+- gap_statement: &gt;-
+    The endogenous subcellular localization and trafficking behavior of LNP1 are
+    unresolved.
+  boundary: &gt;-
+    Human Protein Atlas imaging with one approved antibody reports vesicles in two
+    cell lines and cytosolic plus nuclear-speck signal in only one, while UniProt has
+    no curated SUBCELLULAR LOCATION statement.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    A validated compartment is required to judge which reported partners can meet
+    LNP1 physiologically and to choose an appropriate model for functional studies.
+  resolution: &gt;-
+    Endogenously tag LNP1 in multiple expressing human cell types and combine
+    knockout-controlled imaging with biochemical fractionation and organelle-marker
+    colocalization.
+  provenance:
+  - reference_id: file:human/LNP1/LNP1-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      Human Protein Atlas antibody HPA047926 has Approved reliability and reports
+      vesicles in PC-3 and U2OS, with nuclear-speck and cytosolic signal only in PC-3.
+core_functions: []
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does endogenous LNP1 bind multiple 14-3-3 paralogs directly, and is the
+    interaction phosphoserine-dependent?
+- question: &gt;-
+    Is Ser112 or Ser114 the relevant LNP1 phosphosite, and which kinase installs it?
+- question: &gt;-
+    Is the LNP1-LYN interaction reproducible at endogenous abundance, and does LYN
+    phosphorylate or regulate LNP1?
+- question: &gt;-
+    Where does endogenous LNP1 localize, and is its vesicular distribution conserved
+    across cell types?
+- question: &gt;-
+    What normal cellular phenotype follows LNP1 loss, independently of NUP98::LNP1
+    fusion biology?
+suggested_experiments:
+- hypothesis: &gt;-
+    LNP1 is a phosphoserine-dependent 14-3-3 ligand whose association is controlled by
+    one of the adjacent Ser112/Ser114 residues.
+  description: &gt;-
+    Endogenously tag LNP1, compare reciprocal 14-3-3 co-immunoprecipitation before and
+    after phosphatase treatment, map the site by targeted mass spectrometry, and test
+    S112A, S114A, and double-mutant rescue constructs in purified and cellular binding
+    assays.
+  experiment_type: interaction biochemistry and phosphoproteomics
+- hypothesis: &gt;-
+    LYN binds LNP1 directly and regulates it through phosphorylation.
+  description: &gt;-
+    Re-test the interaction by reciprocal endogenous co-immunoprecipitation and
+    purified-protein binding, then compare wild-type and kinase-dead LYN in kinase
+    assays and quantitative LNP1 phosphoproteomics.
+  experiment_type: kinase and interaction assays
+- hypothesis: &gt;-
+    Wild-type LNP1 is a vesicle-associated protein in a restricted set of human cell
+    types.
+  description: &gt;-
+    Introduce a minimally disruptive endogenous tag in PC-3, U-2 OS, and additional
+    LNP1-expressing models, and combine knockout-controlled microscopy, organelle-marker
+    colocalization, live imaging, and biochemical fractionation.
+  experiment_type: endogenous localization and trafficking
+- hypothesis: &gt;-
+    LNP1 loss produces a measurable phenotype that depends on its reported interaction
+    module.
+  description: &gt;-
+    Perform CRISPR knockout with wild-type and interaction-defective rescue in
+    retina- and testis-relevant human models, using unbiased transcriptomic, proteomic,
+    trafficking, proliferation, and stress-response readouts to discover a causal
+    process.
+  experiment_type: genome editing and multi-omics phenotyping
+- hypothesis: &gt;-
+    The LNP1 segment contributes a fusion-specific property to NUP98::LNP1 that is not
+    shared by wild-type LNP1.
+  description: &gt;-
+    Compare wild-type LNP1, full NUP98::LNP1, and matched fusion constructs lacking or
+    mutating the LNP1 segment for puncta formation, chromatin occupancy, transcriptional
+    effects, and hematopoietic transformation.
+  experiment_type: fusion-domain dissection
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
