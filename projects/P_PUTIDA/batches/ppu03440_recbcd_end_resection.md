@@ -41,8 +41,9 @@ autolink_gene_symbols: false
 | 5 | RecA loading | `recB`, `recA` | Q88DZ5, Q88ME4 | Covered by conserved mechanism; target-strain detail inferred |
 
 The core RecBCD pathway is complete in KT2440. The unresolved item is regulatory
-signal identity, not a missing protein. Pseudomonas-group RecBCD does not
-recognize the E. coli Chi octamer.
+signal identity, not a missing protein. Primary P. aeruginosa and P. putida
+clone experiments show that their RecBCD-like enzymes do not activate the
+E. coli Chi octamer.
 
 ## Annotation Decisions
 
@@ -51,8 +52,8 @@ recognize the E. coli Chi octamer.
 - RecC and RecD no longer independently enable Exonuclease V activity; their
   core summaries use `contributes_to_molecular_function`, while RecB retains the
   catalytic GO:0008854 assignment.
-- RecD's exact 5-prime-to-3-prime DNA helicase activity is retained and broad
-  helicase parents are marked over-annotated.
+- RecD's exact 5-prime-to-3-prime DNA helicase activity is core; generic helicase
+  and single-stranded-DNA helicase terms are retained as true non-core views.
 - The existing RecB review is corrected to state that the E. coli Chi octamer
   is not recognized and that the KT2440 switching signal is unknown.
 
@@ -70,8 +71,11 @@ recognize the E. coli Chi octamer.
 
 The three subunit roles are grounded by concrete KT2440 UniProt proteins and
 reviewed E. coli exemplars. PTN000116141 supports the RecB directional helicase
-activity. PMID:20195537 supplies pseudomonad genetic context and a checkable
-statement that Pseudomonas-group enzymes do not recognize the E. coli Chi sequence.
+activity. PMID:20195537 supplies pseudomonad genetic context, including the
+unusual requirement for RecD in DNA-damage resistance. PMID:2559208 is the
+primary P. aeruginosa/P. putida source for failure to activate E. coli Chi.
+The RecD selector uses NCBIfam:TIGR01447 because the broader PTHR43788:SF6
+subfamily also contains standalone RecD2/HelB helicases.
 
 ## Research Status
 
