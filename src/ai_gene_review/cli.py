@@ -2674,6 +2674,27 @@ def rules_export(
     typer.echo(f"✓ GO summary written to {summary_path}")
 
 
+@app.command("init-rule-review")
+def init_rule_review_cli(
+    rule_id: Annotated[
+        str,
+        typer.Argument(help="ARBA or UniRule identifier"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option(
+            "--cache-dir",
+            "-d",
+            help="Family-specific rules cache directory",
+        ),
+    ] = Path("rules/arba"),
+) -> None:
+    """Create a rule-review YAML stub without overwriting an existing review."""
+    from ai_gene_review.etl.rule_review_init import init_rule_review
+
+    init_rule_review(rule_id, cache_dir=cache_dir)
+
+
 @app.command()
 def rules_validate(
     files: Annotated[
