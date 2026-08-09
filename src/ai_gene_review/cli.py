@@ -643,6 +643,45 @@ def _validate_gene_review_cli(
     return report
 
 
+def _validate_rule_review_cli(
+    yaml_file: Path,
+    schema_path: Path,
+) -> ValidationReport:
+    """Validate one rule review with the standard LinkML CLI tools."""
+    yaml_file = yaml_file.resolve()
+    schema_path = schema_path.resolve()
+    report = ValidationReport(file_path=yaml_file, is_valid=True)
+
+    if not yaml_file.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"File not found: {yaml_file}",
+            path=None,
+            validation_category="FileValidator",
+            check_type="file_exists",
+        )
+        return report
+
+    project_root = get_project_root()
+    _run_validation_command(
+        report,
+        "Schema validation",
+        [
+            *_tool_command("linkml-validate"),
+            "--schema",
+            str(schema_path),
+            "--target-class",
+            "RuleReview",
+            str(yaml_file),
+        ],
+        "SchemaValidator",
+        "linkml_validate",
+        cwd=project_root,
+    )
+
+    return report
+
+
 def _validate_multiple_files_cli(
     yaml_files: list[Path],
     schema_path: Path,
@@ -2716,9 +2755,7 @@ def rules_validate(
 ):
     """Validate rule review YAML files against the LinkML schema.
 
-    Validates RuleReview files including:
-    - Schema compliance (RuleReview class)
-    - PMID title verification (catches hallucinated references)
+    Validates RuleReview files for schema compliance with the RuleReview class.
 
     Examples:
         # Validate a specific review
@@ -2730,8 +2767,6 @@ def rules_validate(
         # Validate with verbose output
         ai-gene-review rules-validate --all -v
     """
-    from ai_gene_review.validation.validator import validate_rule_review
-
     # Collect files to validate
     all_files: list[Path] = []
 
@@ -2752,9 +2787,10 @@ def rules_validate(
     # Track results
     valid_count = 0
     invalid_count = 0
+    schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = validate_rule_review(yaml_file)
+        report = _validate_rule_review_cli(yaml_file, schema_path)
 
         if report.is_valid:
             valid_count += 1
