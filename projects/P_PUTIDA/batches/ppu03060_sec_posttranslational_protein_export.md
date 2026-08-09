@@ -58,8 +58,10 @@ not as an absolute requirement for every substrate.
 - YajC is retained as a SecDF-associated complex subunit, but it receives no
   individual MF or BP assertion because direct genetics does not establish one.
 - LepB retains exact signal peptidase activity, and broad `GO:0051604` protein
-  maturation is refined to live `GO:0016485` protein processing. Obsolete
-  `GO:0006465` from the stale UniProt InterPro cross-reference is not propagated.
+  maturation is refined to live `GO:0016485` protein processing. The authoritative
+  QuickGO API returned `isObsolete: true` for `GO:0006465` on 2026-08-08 and
+  recommends MF `GO:0009003`; the stale UniProt InterPro process cross-reference
+  is therefore not propagated.
 
 ## Boundary Decisions
 

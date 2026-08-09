@@ -10,12 +10,15 @@ and periplasmic proteins."].
 
 The local UniProt record still maps the S26 peptidase to GO:0006465
 [file:PSEPK/lepB/lepB-uniprot.txt "GO; GO:0006465; P:signal peptide processing;
-IEA:InterPro."]. Current GO marks that term obsolete [GO:0006465 "OBSOLETE. The
-proteolytic removal of a signal peptide from a protein during or after transport
-to a specific location in the cell."]. The fetched GOA row carries GO:0051604
-protein maturation, which is sound but broad; GO:0016485 protein processing is
-the live, more specific process for maturation by peptide-bond cleavage and is
-the better replacement for LepB-mediated signal-peptide cleavage.
+IEA:InterPro."]. The authoritative [QuickGO term endpoint](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A0006465),
+retrieved 2026-08-08, returns `isObsolete: true`, names the term `obsolete signal
+peptide processing`, and gives the definition "OBSOLETE. The proteolytic removal
+of a signal peptide from a protein during or after transport to a specific
+location in the cell." Its comment recommends the molecular-function term
+GO:0009003 signal peptidase activity. The fetched GOA row carries GO:0051604
+protein maturation, which is sound but broad; live GO:0016485 protein processing
+is the more specific process for maturation by peptide-bond cleavage and is the
+better replacement for LepB-mediated signal-peptide cleavage.
 
 ## Localization
 
