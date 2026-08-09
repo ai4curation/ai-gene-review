@@ -11,7 +11,7 @@
 - The physiological electron acceptor remains unresolved, so the incomplete
   EC 1.5.1.- assignment should not be sharpened to an NAD(P)-dependent reaction.
 - GO lacks a substrate-specific molecular-function term for this reaction.
-  GO:0016491 is therefore used only as the ontology handle for an exact
-  substrate-specific prose description; no exact MF annotation is proposed.
+  GO:0016645 is the closest valid donor-class parent, and a new
+  cis-4-hydroxy-D-proline dehydrogenase activity term is proposed beneath it.
 - The sole GOA row is cytoplasm. It is retained as non-core rather than used as
   module-level context.

@@ -12,3 +12,6 @@
 - The TreeGrafter DapA activity is removed as a paralog transfer within the
   shared DapA-like fold. The exact EC assignment and the PP_1255-proR locus
   distinguish the hydroxyproline deaminase role.
+- The InterPro-derived lyase annotation is also removed: EC 3.5.4.22 is a
+  hydrolytic deamination, and GO:0047425 belongs to the hydrolase/deaminase
+  branch rather than the lyase branch.
