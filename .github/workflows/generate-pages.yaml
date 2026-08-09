@@ -43,6 +43,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          # A manual dispatch may select any workflow ref. Generated artifacts
+          # must nevertheless always be built from the trusted default branch.
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -175,10 +178,12 @@ jobs:
           private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
 
       - name: Create or update regeneration PR
+        id: regen-pr
         if: steps.check-changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
           APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+          MERGE_ENABLED: ${{ vars.PR_SHEPHERD_MERGE_ENABLED }}
         shell: bash
         run: |
           # Commit as the ai4c-agent App bot and serve the short-lived token to git
@@ -274,7 +279,9 @@ jobs:
           PR_NUMBER="$(gh pr list \
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH_NAME" \
+            --base main \
             --state open \
+            --author app/ai4c-agent \
             --json number \
             --limit 1 \
             --jq '.[0].number // empty')"
@@ -297,7 +304,9 @@ jobs:
             PR_NUMBER="$(gh pr list \
               --repo "$GITHUB_REPOSITORY" \
               --head "$BRANCH_NAME" \
+              --base main \
               --state open \
+              --author app/ai4c-agent \
               --json number \
               --limit 1 \
               --jq '.[0].number // empty')"
@@ -310,26 +319,35 @@ jobs:
             echo "Created regeneration PR #$PR_NUMBER."
           fi
 
-          merge_state="$(gh pr view "$PR_NUMBER" \
-            --repo "$GITHUB_REPOSITORY" \
-            --json mergeStateStatus \
-            --jq '.mergeStateStatus')"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
-          if [ "$merge_state" = "CLEAN" ]; then
-            echo "Regeneration PR #$PR_NUMBER is clean; merging generated artifacts directly."
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --squash
-          else
-            # Publish automatically: enable auto-merge so the regeneration PR
-            # lands on main once required checks or reviews pass, instead of
-            # sitting unmerged. The PR only contains generated artifacts
-            # (enforced by the safety guard above), so merging it cannot clobber
-            # source files. Non-fatal if the repo does not allow auto-merge -- in
-            # that case the PR simply stays open for a maintainer to merge.
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --auto \
-              --squash \
-              || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+          # Until strict protected-main rules are installed, --auto can merge
+          # immediately instead of waiting for CI/review. Share the Shepherd
+          # rollout flag so this change can land safely before activation.
+          if [ "$MERGE_ENABLED" != "true" ]; then
+            echo "Auto-merge is rollout-disabled; PR #$PR_NUMBER remains open."
+            exit 0
           fi
+
+          # Never merge directly before CI finishes. Arm auto-merge, then let
+          # protected main wait for the exact-head reviewer approval below and
+          # the required test check. The staged-path allowlist above guarantees
+          # this lane contains generated artifacts only.
+          echo "Arming auto-merge for regeneration PR #$PR_NUMBER."
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --squash \
+            --match-head-commit "$(git rev-parse HEAD)" \
+            || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+
+      - name: Approve exact generated commit
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: ./.github/actions/approve-regen-pr
+        with:
+          pr-number: ${{ steps.regen-pr.outputs.pr_number }}
+          branch-name: auto/generate-pages
+          base-branch: main
+          expected-author: app/ai4c-agent
+          app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
+          private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
