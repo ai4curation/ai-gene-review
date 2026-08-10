@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>liuC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>liuC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FM3" target="_blank" class="term-link">
+                        Q88FM3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "liuC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FM3" data-a="DESCRIPTION: LiuC is a bacterial methylglutaconyl-CoA hydratase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LiuC is a bacterial methylglutaconyl-CoA hydratase that converts 3-methylglutaconyl-CoA to (S)-3-hydroxy-3-methylglutaryl-CoA in the distal L-leucine/isovalerate catabolic pathway.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FM3" data-a="GO:0003824" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is uninformative beside the exact hydratase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace the generic catalytic term with the substrate-specific hydratase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004490" target="_blank" class="term-link">
+                                    methylglutaconyl-CoA hydratase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004490" target="_blank" class="term-link">
+                                    GO:0004490
+                                </a>
+                            </span>
+                            <span class="term-label">methylglutaconyl-CoA hydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FM3" data-a="GO:0004490" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct enzyme-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact LiuC product assignment and EC 4.2.1.18 support this activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008300" target="_blank" class="term-link">
+                                    GO:0008300
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FM3" data-a="GO:0008300" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Isoprenoid catabolism is not supported for KT2440 despite related Liu chemistry in other pseudomonads.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> P. putida KT2440 lacks the acyclic-terpene utilization context and was experimentally unable to grow on acyclic terpenes, while retaining leucine and isovalerate utilization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" target="_blank" class="term-link">
+                                        PMID:16820476
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">P. fluorescens, but not P. putida, could grow on acyclic terpenes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006552" target="_blank" class="term-link">
+                                    GO:0006552
+                                </a>
+                            </span>
+                            <span class="term-label">L-leucine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16820476
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of genes and proteins necessary for catabolis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FM3" data-a="GO:0006552" data-r="PMID:16820476" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LiuC occupies the hydratase position between MCC and HMG-CoA lyase in the distal pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific pathway term is absent from GOA despite the enzyme assignment and conserved ivd-mccB-liuC-mccA cluster.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" target="_blank" class="term-link">
+                                        PMID:16820476
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">while both species were able to utilize leucine and isovalerate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/liuC/liuC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Methylglutaconyl-CoA hydratase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrates 3-methylglutaconyl-CoA to HMG-CoA in distal L-leucine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88FM3" data-a="FUNCTION: Hydrates 3-methylglutaconyl-CoA to HMG-CoA in dist..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004490" target="_blank" class="term-link">
+                            methylglutaconyl-CoA hydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006552" target="_blank" class="term-link">
+                                L-leucine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/liuC/liuC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Methylglutaconyl-CoA hydratase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/liuC/liuC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">**LiuC (PP_4066) is the soluble cytoplasmic 3-methylglutaconyl-CoA hydratase (EC 4.2.1.18)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" target="_blank" class="term-link">
+                                PMID:16820476
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">while both species were able to utilize leucine and isovalerate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/liuC/liuC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88FM3 for Pseudomonas putida KT2440 liuC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88FM3 as methylglutaconyl-CoA hydratase.</div>
+
+                        <div class="finding-text">"SubName: Full=Methylglutaconyl-CoA hydratase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" target="_blank" class="term-link">
+                            PMID:16820476
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of genes and proteins necessary for catabolism of acyclic terpenes and leucine/isovalerate in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Comparative genomics identified Liu candidates in KT2440, and growth tests supported leucine/isovalerate but not acyclic-terpene utilization by P. putida.</div>
+
+                        <div class="finding-text">"while both species were able to utilize leucine and isovalerate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27271456" target="_blank" class="term-link">
+                            PMID:27271456
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Structure of LiuC, a 3-Hydroxy-3-Methylglutaconyl CoA Dehydratase Involved in Isovaleryl-CoA Biosynthesis in Myxococcus xanthus, Reveals Insights into Specificity and Catalysis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A bacterial LiuC ortholog was structurally characterized as a methylglutaconyl-CoA hydratase-family enzyme.</div>
+
+                        <div class="finding-text">"LiuC, a member of the 3-methylglutaconyl CoA hydratases (MGCH)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/liuC/liuC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PSEPK liuC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report corroborates the methylglutaconyl-CoA hydratase assignment and distal leucine-pathway context while flagging the lack of a direct KT2440 assay.</div>
+
+                        <div class="finding-text">"No direct biochemical characterization of the *P. putida* LiuC protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure hydration of 3-methylglutaconyl-CoA by purified LiuC and test a liuC deletion on leucine, isovalerate, and terpene-derived substrates.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FM3" data-a="EXPERIMENT: Measure hydration of 3-methylglutaconyl-CoA by pur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(liuC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FM3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: LiuC (PP_4066) — 3-Methylglutaconyl-CoA Hydratase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T14:30:30.315061</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="liuC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="liuC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-liuc-pp_4066-3-methylglutaconyl-coa-hydratase-of-pseudomonas-putida-kt2440">Functional Annotation Report: LiuC (PP_4066) — 3-Methylglutaconyl-CoA Hydratase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88FM3 | <strong>Gene:</strong> <em>liuC</em> | <strong>Locus:</strong> PP_4066 | <strong>EC 4.2.1.18</strong> | <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>LiuC (PP_4066; UniProt Q88FM3) is a 3-methylglutaconyl-CoA hydratase (EC 4.2.1.18), a soluble cytoplasmic enzyme of the crotonase (enoyl-CoA hydratase/isomerase) superfamily.</strong> It catalyzes the reversible hydration of the α,β-unsaturated thioester <strong>(E)-3-methylglutaconyl-CoA</strong> to <strong>(S)-3-hydroxy-3-methylglutaryl-CoA (HMG-CoA)</strong>, adding water across the substrate's carbon-carbon double bond. This is the penultimate step of the <strong>leucine/isovalerate utilization (Liu) pathway</strong>, the conserved bacterial route by which the branched-chain amino acid leucine and the methyl-branched compound isovalerate are catabolized to the central-metabolism products acetyl-CoA and acetoacetate.</p>
+<p>The gene identity is unambiguous and well supported. The UniProt annotation ("Methylglutaconyl-CoA hydratase, EC 4.2.1.18," enoyl-CoA hydratase/isomerase/crotonase family) matches the biochemically and structurally characterized Liu pathway of <em>Pseudomonas</em>, and <em>liuC</em> sits in a <strong>syntenic leucine-catabolism gene cluster</strong> in the <em>P. putida</em> KT2440 genome (PP_4064 <em>ivd</em>/LiuA → PP_4065 <em>mccB</em>/LiuB → PP_4066 <em>liuC</em> → PP_4067 <em>mccA</em>/LiuD, with an adjacent Cro/CI-family regulator). The neighboring enzymes have been experimentally validated in the closely related <em>P. aeruginosa</em> — isovaleryl-CoA dehydrogenase (LiuA), 3-methylcrotonyl-CoA carboxylase (LiuB/LiuD), and HMG-CoA lyase (LiuE) — placing LiuC by both position and family as the 3-methylglutaconyl-CoA hydratase between the carboxylase and the lyase. The crystal structure of a LiuC ortholog from <em>Myxococcus xanthus</em> (solved to 1.1–2.05 Å) directly confirms the crotonase fold and defines catalytic glutamates and substrate-positioning residues.</p>
+<p>Functionally, LiuC acts in the <strong>cytoplasm</strong> as a soluble globular enzyme (no signal peptide, no transmembrane segment by sequence analysis, consistent with the crotonase superfamily and with the soluble mitochondrial-matrix localization of eukaryotic orthologs). Its pathway is induced by leucine and repressed on preferred carbon sources through the regulator <strong>LiuR</strong> and the <strong>CbrAB/Crc</strong> carbon catabolite repression system, and it is fed upstream by the <strong>bkd-encoded branched-chain 2-oxoacid dehydrogenase (BCKDH)</strong> that generates isovaleryl-CoA from leucine. The same pathway node (3-methylcrotonyl-CoA) links leucine catabolism to acyclic monoterpene (citronellol/geraniol) degradation via the Atu pathway in <em>Pseudomonas</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f1-liuc-is-3-methylglutaconyl-coa-hydratase-ec-42118-of-the-liu-pathway">F1. LiuC is 3-methylglutaconyl-CoA hydratase (EC 4.2.1.18) of the Liu pathway</h3>
+<p>The gene symbol <em>liuC</em> and the UniProt annotation of Q88FM3 (Methylglutaconyl-CoA hydratase, EC 4.2.1.18; enoyl-CoA hydratase/isomerase/crotonase family) match the biochemically characterized <strong>leucine/isovalerate utilization (Liu) pathway</strong> of <em>Pseudomonas</em>. In <em>P. aeruginosa</em> the <em>liuRABCDE</em> gene cluster encodes the leucine/isovalerate utilization enzymes; the individual enzymes have been experimentally assigned: LiuA = isovaleryl-CoA dehydrogenase, LiuB/LiuD = 3-methylcrotonyl-CoA carboxylase, and LiuE = HMG-CoA lyase. By its genomic position and its family membership, LiuC is the <strong>3-methylglutaconyl-CoA hydratase</strong> that catalyzes the step between methylcrotonyl-CoA carboxylase (LiuBD) and HMG-CoA lyase (LiuE).</p>
+<p>The direct textual evidence is decisive: the structural study of the <em>Myxococcus xanthus</em> ortholog states, <em>"The first step into this pathway is mediated by LiuC, a member of the 3-methylglutaconyl CoA hydratases (MGCH)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27271456/">PMID: 27271456</a>). The cluster organization is established in <em>P. aeruginosa</em>: <em>"The identified genes are part of two separate gene clusters [liuRABCDE (PA2011-PA2016) and atuABCDEFGH (PA2886-PA2893)]"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16272386/">PMID: 16272386</a>). Crucially for our target organism, genome analysis confirmed that <em>"other pseudomonads (P. putida KT2440 and P. fluorescens Pf-5) revealed candidate genes for Liu proteins for both species"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16820476/">PMID: 16820476</a>).</p>
+<p><strong>Reaction catalyzed:</strong></p>
+<div class="codehilite"><pre><span></span><code>(E)-3-methylglutaconyl-CoA  +  H2O   ⇌   (S)-3-hydroxy-3-methylglutaryl-CoA (HMG-CoA)
+</code></pre></div>
+
+<p>Substrate specificity: LiuC operates on the CoA-thioester 3-methylglutaconyl-CoA, hydrating the α,β double bond to give the β-hydroxy thioester HMG-CoA. This is the physiological forward direction in catabolism.</p>
+<h3 id="f2-liuc-is-a-crotonase-superfamily-enzyme-with-a-defined-fold-and-catalytic-mechanism">F2. LiuC is a crotonase-superfamily enzyme with a defined fold and catalytic mechanism</h3>
+<p>Q88FM3 is a <strong>271-amino-acid</strong> protein carrying Pfam ECH domains (PF00378) and the InterPro crotonase-like/ClpP domain signature (IPR029045), assigned to COG1024 (enoyl-CoA hydratase/isomerase) and KEGG ortholog <strong>K13766</strong>. The crystal structure of the LiuC ortholog from <em>Myxococcus xanthus</em> was solved at <strong>1.1–2.05 Å</strong> in both apo and CoA-bound forms, revealing the canonical crotonase fold and identifying the catalytic machinery: two glutamates (<strong>Glu112, Glu132</strong>) act as the acid/base pair, with <strong>Tyr231</strong> and <strong>Arg69</strong> positioning the substrate (<a href="https://pubmed.ncbi.nlm.nih.gov/27271456/">PMID: 27271456</a>).</p>
+<p>The mechanistic assignment is stated directly: <em>"The dehydration of 3-hydroxy-3-methylglutaconyl CoA to 3-methylglutaconyl CoA catalyzed by LiuC involves Glu112 and Glu132 and likely employs the typical crotonase acid-base mechanism"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27271456/">PMID: 27271456</a>). A striking evolutionary observation from the same work is that <em>"LiuC shows higher sequence and structural similarity to human MGCH than to bacterial forms, although they convert the same substrate"</em> — i.e., LiuC is more like the human enzyme AUH (3-methylglutaconyl-CoA hydratase) than to some other bacterial crotonases, while catalyzing the identical reaction.</p>
+<p>The broader superfamily context is provided by the authoritative crotonase review: <em>"CS enzymes possess a canonical fold formed from repeated betabetaalpha units that assemble into two approximately perpendicular beta-sheets surrounded by alpha-helices. CS enzymes often, although not exclusively, oligomerize as trimers or dimers of trimers. Two conserved backbone NH groups in CS active sites form an oxyanion 'hole' that can stabilize enolate/oxyanion intermediates"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18470480/">PMID: 18470480</a>). This oxyanion hole is the structural basis by which LiuC stabilizes the enolate/oxyanion intermediate during hydration.</p>
+<h3 id="f3-direct-genomic-confirmation-of-synteny-in-p-putida-kt2440">F3. Direct genomic confirmation of synteny in <em>P. putida</em> KT2440</h3>
+<p>KEGG annotation of the PP_4064–PP_4068 neighborhood in <em>P. putida</em> KT2440 shows a <strong>contiguous leucine/isovalerate-catabolism cluster</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Enzyme</th>
+<th>EC / KO</th>
+<th>Liu name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4064</td>
+<td><em>ivd</em></td>
+<td>Isovaleryl-CoA dehydrogenase</td>
+<td>EC 1.3.8.4 / K00253</td>
+<td>LiuA</td>
+</tr>
+<tr>
+<td>PP_4065</td>
+<td><em>mccB</em></td>
+<td>3-Methylcrotonyl-CoA carboxylase β-subunit</td>
+<td>EC 6.4.1.4 / K01969</td>
+<td>LiuB</td>
+</tr>
+<tr>
+<td><strong>PP_4066</strong></td>
+<td><strong>liuC</strong></td>
+<td><strong>Methylglutaconyl-CoA hydratase</strong></td>
+<td><strong>EC 4.2.1.18 / K13766</strong></td>
+<td><strong>LiuC</strong></td>
+</tr>
+<tr>
+<td>PP_4067</td>
+<td><em>mccA</em></td>
+<td>3-Methylcrotonyl-CoA carboxylase α-subunit</td>
+<td>EC 6.4.1.4 / K01968</td>
+<td>LiuD</td>
+</tr>
+<tr>
+<td>PP_4068</td>
+<td>—</td>
+<td>Cro/CI-family transcriptional regulator</td>
+<td>—</td>
+<td>LiuR ortholog</td>
+</tr>
+</tbody>
+</table>
+<p>The terminal HMG-CoA lyase step (EC 4.1.3.4 / K01640, LiuE) is encoded elsewhere in the genome (PP_3394 / PP_3540), not within this cluster. A pairwise global alignment of <em>P. putida</em> LiuC (271 aa) against the structurally characterized <em>M. xanthus</em> LiuC (PDB 5JBW/5JBX) gives <strong>~29% full-length identity</strong>, confirming clear homology within the crotonase superfamily. This positions PP_4066 unambiguously between the carboxylase and the (distally encoded) lyase — exactly the metabolic slot for a 3-methylglutaconyl-CoA hydratase.</p>
+<h3 id="f4-liuc-is-a-soluble-cytoplasmic-protein-localization">F4. LiuC is a soluble cytoplasmic protein (localization)</h3>
+<p>Sequence-based analysis of the 271-residue <em>P. putida</em> LiuC indicates a <strong>soluble, cytosolic</strong> protein. The N-terminus (MSDFSTLEVIRDPRGF…) is polar, carrying an Asp at position 3 and multiple charged residues within the first 30 aa (D3, E8, R11, D12, R14, R23, E24, D25, K26) — incompatible with a hydrophobic Sec/Tat signal peptide. A Kyte-Doolittle hydropathy scan (19-residue window) never sustains a membrane-spanning helix: the single maximum reaches only ~1.76 at an internal position (~residue 105), reflecting a buried core segment of the globular fold rather than a transmembrane helix. The protein is mildly acidic (33 Lys/Arg vs 38 Asp/Glu; net charge ~-5), typical of soluble cytosolic enzymes.</p>
+<p>This inference is consistent with (i) the crotonase superfamily being composed of soluble globular enzymes, and (ii) the mitochondrial-matrix (soluble) localization of eukaryotic orthologs. Indeed, the trypanosome ortholog <em>"3-MGCoA-H localizes in the mitochondrial matrix"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/28366667/">PMID: 28366667</a>), and the plant ortholog is targeted to mitochondria (<a href="https://pubmed.ncbi.nlm.nih.gov/29742810/">PMID: 29742810</a>) — the soluble compartment equivalent to the bacterial cytoplasm. Thus LiuC carries out its function <strong>in the cytoplasm</strong> of <em>P. putida</em>.</p>
+<h3 id="f5-pathway-context-regulation-and-metabolic-role">F5. Pathway context, regulation, and metabolic role</h3>
+<p>LiuC operates within the linear Liu pathway:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">Isovaleryl</span><span class="o">-</span><span class="nv">CoA</span>
+<span class="w">   </span>│<span class="w">  </span><span class="nv">LiuA</span><span class="w"> </span><span class="ss">(</span><span class="nv">isovaleryl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="nv">dehydrogenase</span>,<span class="w"> </span><span class="nv">EC</span><span class="w"> </span><span class="mi">1</span>.<span class="mi">3</span>.<span class="mi">8</span>.<span class="mi">4</span><span class="ss">)</span>
+<span class="w">   </span>▼
+<span class="mi">3</span><span class="o">-</span><span class="nv">Methylcrotonyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w">  </span>◄────<span class="w"> </span><span class="nv">entry</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nv">Atu</span><span class="w"> </span><span class="ss">(</span><span class="nv">acyclic</span><span class="w"> </span><span class="nv">monoterpene</span><span class="ss">)</span><span class="w"> </span><span class="nv">pathway</span>
+<span class="w">   </span>│<span class="w">  </span><span class="nv">LiuB</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nv">LiuD</span><span class="w"> </span><span class="ss">(</span><span class="mi">3</span><span class="o">-</span><span class="nv">methylcrotonyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="nv">carboxylase</span>,<span class="w"> </span><span class="nv">EC</span><span class="w"> </span><span class="mi">6</span>.<span class="mi">4</span>.<span class="mi">1</span>.<span class="mi">4</span><span class="ss">)</span><span class="w">  </span>[<span class="o">+</span><span class="nv">CO2</span>,<span class="w"> </span><span class="nv">ATP</span>]
+<span class="w">   </span>▼
+<span class="ss">(</span><span class="nv">E</span><span class="ss">)</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="nv">Methylglutaconyl</span><span class="o">-</span><span class="nv">CoA</span>
+<span class="w">   </span>│<span class="w">  </span>★<span class="w"> </span><span class="nv">LiuC</span><span class="w"> </span><span class="ss">(</span><span class="mi">3</span><span class="o">-</span><span class="nv">methylglutaconyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="nv">hydratase</span>,<span class="w"> </span><span class="nv">EC</span><span class="w"> </span><span class="mi">4</span>.<span class="mi">2</span>.<span class="mi">1</span>.<span class="mi">18</span><span class="ss">)</span><span class="w">  </span>[<span class="o">+</span><span class="nv">H2O</span>]
+<span class="w">   </span>▼
+<span class="ss">(</span><span class="nv">S</span><span class="ss">)</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="nv">Hydroxy</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="nv">methylglutaryl</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="ss">(</span><span class="nv">HMG</span><span class="o">-</span><span class="nv">CoA</span><span class="ss">)</span>
+<span class="w">   </span>│<span class="w">  </span><span class="nv">LiuE</span><span class="w"> </span><span class="ss">(</span><span class="nv">HMG</span><span class="o">-</span><span class="nv">CoA</span><span class="w"> </span><span class="nv">lyase</span>,<span class="w"> </span><span class="nv">EC</span><span class="w"> </span><span class="mi">4</span>.<span class="mi">1</span>.<span class="mi">3</span>.<span class="mi">4</span><span class="ss">)</span>
+<span class="w">   </span>▼
+<span class="nv">Acetyl</span><span class="o">-</span><span class="nv">CoA</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nv">Acetoacetate</span><span class="w">  </span>───►<span class="w">  </span><span class="nv">central</span><span class="w"> </span><span class="nv">carbon</span><span class="o">/</span><span class="nv">energy</span><span class="w"> </span><span class="nv">metabolism</span>
+</code></pre></div>
+
+<p>Each downstream/upstream step is experimentally supported: LiuA was purified and shown to have acyl-CoA dehydrogenase activity with isovaleryl-CoA (KM 2.3 µM) (<a href="https://pubmed.ncbi.nlm.nih.gov/18625020/">PMID: 18625020</a>); the carboxylases LiuB/LiuD were assigned to <em>liuB/liuD</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16272386/">PMID: 16272386</a>); and LiuE was purified and shown to be HMG-CoA lyase (KM 100 µM for HMG-CoA) (<a href="https://pubmed.ncbi.nlm.nih.gov/19459965/">PMID: 19459965</a>).</p>
+<p><strong>Regulation.</strong> The <em>liu</em> operon is induced by leucine and repressed on preferred carbon sources: <em>"expression of the liu operon is subjected to carbon catabolite repression control (CCR); protein LiuD was strongly expressed in the presence of leucine, but it was repressed in the presence of glucose or succinate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29787835/">PMID: 29787835</a>). Control is exerted by the transcriptional regulator <strong>LiuR</strong> and the <strong>CbrAB/Crc</strong> system: <em>"Pseudomonas aeruginosa metabolizes leucine through the leucine/isovalerate utilization pathway, whose enzymes are encoded in the liuRABCDE gene cluster (liu)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29787835/">PMID: 29787835</a>).</p>
+<p><strong>Metabolic convergence.</strong> The 3-methylcrotonyl-CoA node makes the Liu pathway the convergence point for both leucine/isovalerate catabolism and acyclic monoterpene degradation: <em>"Mutagenesis of the atu and liu clusters showed that both are involved in AMTC and leucine catabolism by encoding the enzymes related to the geranyl-CoA and the 3-methylcrotonyl-CoA pathways, respectively"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16517656/">PMID: 16517656</a>).</p>
+<h3 id="f6-upstream-connection-to-the-bkd-operon">F6. Upstream connection to the bkd operon</h3>
+<p>Upstream of the Liu pathway, leucine is converted to isovaleryl-CoA — the entry metabolite of the Liu pathway — by the <strong>branched-chain 2-oxoacid dehydrogenase (BCKDH)</strong> complex encoded by the <em>bkd</em> operon in <em>P. putida</em>. This operon is positively regulated by <strong>BkdR</strong> (an Lrp homolog): <em>"Chromosomal mutations affecting this gene, named bkdR, resulted in a loss of ability to use branched-chain amino acids as carbon and energy sources"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8320210/">PMID: 8320210</a>). The inducers are the branched-chain amino acids: <em>"the L-branched-chain amino acids and D-leucine are the inducers of the bkd operon"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10217783/">PMID: 10217783</a>). BkdR is a tetramer that binds cooperatively upstream of <em>bkdA1</em>, and the operon is subject to catabolite repression (<a href="https://pubmed.ncbi.nlm.nih.gov/7836297/">PMID: 7836297</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9068646/">PMID: 9068646</a>).</p>
+<p>The complete upstream route is therefore:</p>
+<div class="codehilite"><pre><span></span><code>L-Leucine → (transamination) → 2-oxoisocaproate → (BCKDH / bkd operon) → Isovaleryl-CoA → Liu pathway (LiuA→LiuB/D→LiuC→LiuE)
+</code></pre></div>
+
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>LiuC sits at the biochemical heart of the leucine/isovalerate utilization pathway, performing the <strong>hydration</strong> step that converts the α,β-unsaturated CoA-thioester 3-methylglutaconyl-CoA into the β-hydroxy thioester HMG-CoA. Mechanistically, this is a textbook crotonase-superfamily reaction:</p>
+<ol>
+<li>The substrate's thioester carbonyl is oriented into the <strong>oxyanion hole</strong> formed by two conserved backbone NH groups. This polarizes the carbonyl and stabilizes the developing enolate/oxyanion negative charge.</li>
+<li>One catalytic glutamate (Glu112/Glu132 in the ortholog numbering) acts as a <strong>general base</strong>, activating a water molecule for nucleophilic attack (in the hydration direction), while the partner glutamate acts as a <strong>general acid</strong>, protonating the α-carbon.</li>
+<li><strong>Tyr231 and Arg69</strong> position the dicarboxylic substrate correctly in the active site.</li>
+</ol>
+<p>Because the crotonase acid/base pair is reversible, LiuC can in principle run in either direction; physiologically in catabolism it runs toward HMG-CoA. Notably, the same reversibility underlies the pathophysiology of the human ortholog (AUH): in "primary" 3-methylglutaconic aciduria, hydratase deficiency causes accumulation of 3-methylglutaconate (<a href="https://pubmed.ncbi.nlm.nih.gov/24407466/">PMID: 24407466</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/23355087/">PMID: 23355087</a>) — a human counterpart that directly corroborates the enzyme's role in leucine catabolism.</p>
+<p>Placed in the whole-cell context, LiuC is one enzyme in a tightly coordinated, co-regulated cassette. The Liu operon behaves as a switchable catabolic module: turned <strong>on</strong> by leucine via LiuR and turned <strong>off</strong> in the presence of preferred carbon sources (glucose, succinate) via CbrAB/Crc. This ensures that <em>P. putida</em> only invests in the branched-chain catabolic machinery when leucine/isovalerate (or acyclic terpenes feeding into the same node) are available and preferred carbon is scarce. LiuC's activity is therefore both a metabolic bottleneck and a regulated node — its product HMG-CoA is committed to cleavage by LiuE into acetyl-CoA and acetoacetate, funneling branched-chain carbon into central metabolism and energy production.</p>
+<p><strong>Integrated pathway map:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">bkd</span><span class="w"> </span><span class="n">operon</span><span class="w"> </span><span class="p">(</span><span class="n">BkdR</span><span class="o">-</span><span class="n">regulated</span><span class="p">,</span><span class="w"> </span><span class="n">leucine</span><span class="o">-</span><span class="n">induced</span><span class="p">)</span>
+<span class="n">L</span><span class="o">-</span><span class="n">Leucine</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="mh">2</span><span class="o">-</span><span class="n">oxoisocaproate</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">Isovaleryl</span><span class="o">-</span><span class="n">CoA</span>
+<span class="w">                         </span><span class="err">│</span>
+<span class="err">┌──────────────</span><span class="w"> </span><span class="n">liuRABCDE</span><span class="w"> </span><span class="n">operon</span><span class="w"> </span><span class="p">(</span><span class="n">LiuR</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">CbrAB</span><span class="o">/</span><span class="n">Crc</span><span class="p">)</span><span class="w"> </span><span class="err">──────────────┐</span>
+<span class="err">│</span><span class="w">  </span><span class="n">LiuA</span><span class="w">        </span><span class="n">LiuB</span><span class="o">/</span><span class="n">LiuD</span><span class="w">             </span><span class="err">★</span><span class="n">LiuC</span><span class="err">★</span><span class="w">          </span><span class="n">LiuE</span><span class="w">          </span><span class="err">│</span>
+<span class="w">   </span><span class="n">Isovaleryl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="err">─►</span><span class="w"> </span><span class="mh">3</span><span class="o">-</span><span class="n">Me</span><span class="o">-</span><span class="n">crotonyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="err">─►</span><span class="w"> </span><span class="mh">3</span><span class="o">-</span><span class="n">Me</span><span class="o">-</span><span class="n">glutaconyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="err">─►</span><span class="w"> </span><span class="n">HMG</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="err">─►│─►</span><span class="w"> </span><span class="n">AcCoA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Acetoacetate</span>
+<span class="err">│</span><span class="w">                   </span><span class="err">▲</span><span class="w">                                              </span><span class="err">│</span>
+<span class="err">└───────────────────┼──────────────────────────────────────────────┘</span>
+<span class="w">            </span><span class="n">Atu</span><span class="w"> </span><span class="n">pathway</span><span class="w"> </span><span class="p">(</span><span class="n">acyclic</span><span class="w"> </span><span class="nl">monoterpenes:</span><span class="w"> </span><span class="n">citronellol</span><span class="o">/</span><span class="n">geraniol</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27271456/">27271456</a></td>
+<td><em>Structure of LiuC, a 3-hydroxy-3-methylglutaconyl-CoA dehydratase in M. xanthus</em></td>
+<td>Direct: identifies LiuC as an MGCH; solves crystal structure; defines Glu112/Glu132 catalytic residues and crotonase acid-base mechanism; notes similarity to human MGCH</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16272386/">16272386</a></td>
+<td><em>Methylcrotonyl-CoA &amp; geranyl-CoA carboxylases (liuB/liuD, atuC/atuF)</em></td>
+<td>Establishes the <em>liuRABCDE</em> cluster and the carboxylase step immediately upstream of LiuC</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16820476/">16820476</a></td>
+<td><em>Genes/proteins for acyclic terpene and leucine/isovalerate catabolism in P. aeruginosa</em></td>
+<td>Confirms <em>P. putida</em> KT2440 encodes orthologous Liu proteins, including LiuC</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18625020/">18625020</a></td>
+<td><em>Biochemical characterization of LiuA (isovaleryl-CoA dehydrogenase)</em></td>
+<td>Validates the upstream LiuA step; confirms importance of <em>liu</em> genes</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19459965/">19459965</a></td>
+<td><em>P. aeruginosa liuE encodes HMG-CoA lyase</em></td>
+<td>Validates the downstream LiuE step consuming LiuC's product HMG-CoA</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16517656/">16517656</a></td>
+<td><em>atu and liu clusters in monoterpene and leucine catabolism</em></td>
+<td>Shows the shared 3-methylcrotonyl-CoA node linking Liu and Atu</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29787835/">29787835</a></td>
+<td><em>liu gene expression controlled by LiuR and CbrAB/Crc</em></td>
+<td>Establishes regulation: leucine induction, CCR repression</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18470480/">18470480</a></td>
+<td><em>Mechanisms and structures of crotonase superfamily enzymes</em></td>
+<td>Authoritative description of the crotonase fold, oligomerization, and oxyanion hole underlying LiuC catalysis</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8320210/">8320210</a></td>
+<td><em>bkdR required for bkd operon expression</em></td>
+<td>Establishes the upstream BCKDH step producing isovaleryl-CoA</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10217783/">10217783</a></td>
+<td><em>In vitro transcription of bkd operon; BCAAs and D-leucine are inducers</em></td>
+<td>Shows leucine induces the upstream bkd operon</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9068646/">9068646</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7836297/">7836297</a></td>
+<td><em>BkdR transcriptional activation and DNA binding</em></td>
+<td>Mechanistic detail on upstream regulation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28366667/">28366667</a></td>
+<td><em>3-MGCoA hydratase in T. brucei</em></td>
+<td>Ortholog localizes to mitochondrial matrix (soluble compartment) — supports soluble localization inference</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29742810/">29742810</a></td>
+<td><em>Plant 3-methylglutaconyl-CoA hydratase</em></td>
+<td>Ortholog catalyzes the same dehydration; kinetics similar to prokaryotic homolog; mitochondrially targeted</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26162879/">26162879</a></td>
+<td><em>P. aeruginosa AtuE crotonase (isohexenyl-glutaconyl-CoA hydratase)</em></td>
+<td>Sister crotonase in the linked Atu pathway; corroborates crotonase active-site architecture (oxyanion hole from Gly NH groups)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24407466/">24407466</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/23355087/">23355087</a></td>
+<td><em>3-methylglutaconic aciduria reviews</em></td>
+<td>Human AUH deficiency confirms the enzyme's role in leucine catabolism</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on human/disease literature:</strong> Many retrieved papers concern the human ortholog AUH and 3-methylglutaconic aciduria. These are <em>not</em> the target gene, but they are legitimately informative as orthologs of the same enzyme catalyzing the identical reaction (EC 4.2.1.18). They corroborate substrate identity and reaction chemistry, but clinical phenotypes are specific to humans and do not describe <em>P. putida</em> biology.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the <em>P. putida</em> LiuC protein.</strong> The functional assignment for PP_4066 rests on (i) genomic synteny, (ii) family/domain membership, and (iii) experimental characterization of orthologs (notably <em>M. xanthus</em> LiuC and the neighboring <em>P. aeruginosa</em> Liu enzymes). No purified-enzyme kinetics (KM, kcat, substrate specificity), pH optimum, or oligomeric state have been reported <em>for the KT2440 protein specifically</em>.</p>
+</li>
+<li>
+<p><strong>Structure is inferred, not solved.</strong> The crotonase fold, catalytic residues, and oxyanion hole are assigned from the <em>M. xanthus</em> ortholog (~29% identity) and from superfamily conservation. No experimental <em>P. putida</em> LiuC structure exists; a homology/AlphaFold model would be inferential.</p>
+</li>
+<li>
+<p><strong>Localization is a sequence-based inference.</strong> The soluble cytoplasmic assignment is supported by absence of signal peptide/TM segments and by ortholog behavior, but no experimental fractionation or fluorescence-localization data exist for PP_4066.</p>
+</li>
+<li>
+<p><strong>Regulatory data are largely from <em>P. aeruginosa</em>.</strong> LiuR/CbrAB/Crc control of the <em>liu</em> operon and BkdR control of the <em>bkd</em> operon are best characterized in <em>P. aeruginosa</em> and <em>P. putida</em> respectively; the precise operon boundaries, promoter, and LiuR binding sites for the KT2440 <em>liuC</em>-containing cluster should be confirmed directly.</p>
+</li>
+<li>
+<p><strong>Directionality/reversibility in vivo.</strong> While the crotonase mechanism is reversible, the physiological flux direction and any kinetic asymmetry for <em>P. putida</em> LiuC are assumed from pathway logic, not measured.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and enzyme assay.</strong> Clone PP_4066, express His-tagged LiuC in <em>E. coli</em>, purify, and measure hydratase activity on 3-methylglutaconyl-CoA (forward) and HMG-CoA (reverse). Report KM, kcat, pH optimum, and test substrate specificity against related CoA-thioesters (e.g., glutaconyl-CoA, crotonyl-CoA) to define selectivity.</p>
+</li>
+<li>
+<p><strong>Gene knockout / complementation.</strong> Construct a <em>P. putida</em> KT2440 Δ<em>liuC</em> mutant and test growth on leucine and isovalerate as sole carbon sources; confirm loss of growth and restoration by <em>in trans</em> complementation. Measure accumulation of 3-methylglutaconyl-CoA/3-methylglutaconate as a diagnostic metabolite.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal structure of <em>P. putida</em> LiuC (or generate an AlphaFold model with confidence analysis) and confirm the predicted catalytic glutamates and oxyanion-hole geometry; compare with the <em>M. xanthus</em> ortholog and human AUH.</p>
+</li>
+<li>
+<p><strong>Subcellular localization.</strong> Verify cytoplasmic localization by cell fractionation and/or GFP fusion imaging.</p>
+</li>
+<li>
+<p><strong>Transcriptional regulation mapping.</strong> Define the <em>liuC</em>-containing operon transcript, map the promoter and LiuR binding site upstream of the cluster in KT2440, and test induction by leucine and CbrAB/Crc-mediated repression by glucose/succinate directly (RT-qPCR / reporter fusions).</p>
+</li>
+<li>
+<p><strong>Flux confirmation.</strong> Use ¹³C-leucine labeling and LC-MS to trace flux through 3-methylglutaconyl-CoA → HMG-CoA → acetyl-CoA + acetoacetate, confirming LiuC's in vivo role.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>All lines of evidence — UniProt/InterPro annotation, KEGG orthology (K13766), genomic synteny within the <em>P. putida</em> KT2440 leucine-catabolism cluster (PP_4064–PP_4068), the crystallographically defined <em>M. xanthus</em> ortholog, experimentally validated neighboring Liu enzymes, and orthologous enzymes across bacteria, plants, protozoa, and humans — converge on a single, well-supported conclusion: <strong>LiuC (PP_4066) is the soluble cytoplasmic 3-methylglutaconyl-CoA hydratase (EC 4.2.1.18) that catalyzes the penultimate, water-adding step of the leucine/isovalerate utilization pathway in <em>Pseudomonas putida</em> KT2440.</strong></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="liuC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="liuC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27271456</li>
+<li>PMID:16272386</li>
+<li>PMID:16820476</li>
+<li>PMID:18470480</li>
+<li>PMID:28366667</li>
+<li>PMID:29742810</li>
+<li>PMID:18625020</li>
+<li>PMID:19459965</li>
+<li>PMID:29787835</li>
+<li>PMID:16517656</li>
+<li>PMID:8320210</li>
+<li>PMID:10217783</li>
+<li>PMID:7836297</li>
+<li>PMID:9068646</li>
+<li>PMID:24407466</li>
+<li>PMID:23355087</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(liuC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FM3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="liuc-curation-notes">liuC curation notes</h1>
+<ul>
+<li>UniProt evidence: UniProt identifies Q88FM3 as methylglutaconyl-CoA hydratase. [file:PSEPK/liuC/liuC-uniprot.txt "SubName: Full=Methylglutaconyl-CoA hydratase"].</li>
+<li>A structurally characterized bacterial ortholog belongs to the 3-methylglutaconyl-CoA hydratase family, supporting the reaction-specific assignment beyond the broad crotonase fold. <a href="https://pubmed.ncbi.nlm.nih.gov/27271456" title="LiuC, a member of the 3-methylglutaconyl CoA hydratases (MGCH).">PMID:27271456</a>.</li>
+<li>Comparative growth evidence shows that P. putida uses leucine and isovalerate. <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" title="while both species were able to utilize leucine and isovalerate.">PMID:16820476</a>.</li>
+<li>The same study reports that P. putida does not grow on the tested acyclic terpenes, so the electronic isoprenoid-catabolic-process annotation is removed rather than transferred from bifunctional P. aeruginosa Liu machinery. <a href="https://pubmed.ncbi.nlm.nih.gov/16820476" title="P. fluorescens, but not P. putida, could grow on acyclic terpenes">PMID:16820476</a>.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FM3
+gene_symbol: liuC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: LiuC is a bacterial methylglutaconyl-CoA hydratase that converts 3-methylglutaconyl-CoA to
+  (S)-3-hydroxy-3-methylglutaryl-CoA in the distal L-leucine/isovalerate catabolic pathway.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Catalytic activity is uninformative beside the exact hydratase term.
+    action: MODIFY
+    reason: Replace the generic catalytic term with the substrate-specific hydratase activity.
+    proposed_replacement_terms:
+    - id: GO:0004490
+      label: methylglutaconyl-CoA hydratase activity
+- term:
+    id: GO:0004490
+    label: methylglutaconyl-CoA hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: Correct enzyme-specific molecular function.
+    action: ACCEPT
+    reason: The exact LiuC product assignment and EC 4.2.1.18 support this activity.
+- term:
+    id: GO:0008300
+    label: isoprenoid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Isoprenoid catabolism is not supported for KT2440 despite related Liu chemistry in other
+      pseudomonads.
+    action: REMOVE
+    reason: P. putida KT2440 lacks the acyclic-terpene utilization context and was experimentally unable
+      to grow on acyclic terpenes, while retaining leucine and isovalerate utilization.
+    supported_by:
+    - reference_id: PMID:16820476
+      supporting_text: P. fluorescens, but not P. putida, could grow on acyclic terpenes
+- term:
+    id: GO:0006552
+    label: L-leucine catabolic process
+  evidence_type: ISS
+  original_reference_id: PMID:16820476
+  qualifier: involved_in
+  review:
+    summary: LiuC occupies the hydratase position between MCC and HMG-CoA lyase
+      in the distal pathway.
+    action: NEW
+    reason: The specific pathway term is absent from GOA despite the enzyme
+      assignment and conserved ivd-mccB-liuC-mccA cluster.
+    supported_by:
+    - reference_id: PMID:16820476
+      supporting_text: while both species were able to utilize leucine and isovalerate.
+    - reference_id: file:PSEPK/liuC/liuC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Methylglutaconyl-CoA hydratase&#39;
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/liuC/liuC-uniprot.txt
+  title: UniProtKB entry Q88FM3 for Pseudomonas putida KT2440 liuC
+  findings:
+  - statement: UniProt identifies Q88FM3 as methylglutaconyl-CoA hydratase.
+    supporting_text: &#39;SubName: Full=Methylglutaconyl-CoA hydratase&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target accession and quoted feature in the fetched UniProt record.
+- id: PMID:16820476
+  title: Identification of genes and proteins necessary for catabolism of acyclic terpenes and leucine/isovalerate
+    in Pseudomonas aeruginosa.
+  full_text_unavailable: true
+  findings:
+  - statement: Comparative genomics identified Liu candidates in KT2440, and growth tests supported
+      leucine/isovalerate but not acyclic-terpene utilization by P. putida.
+    supporting_text: while both species were able to utilize leucine and isovalerate.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed abstract verified; it directly reports the P. putida growth phenotype and
+      candidate Liu genes, but not a biochemical assay of Q88FM3.
+- id: PMID:27271456
+  title: The Structure of LiuC, a 3-Hydroxy-3-Methylglutaconyl CoA Dehydratase Involved in Isovaleryl-CoA
+    Biosynthesis in Myxococcus xanthus, Reveals Insights into Specificity and Catalysis.
+  full_text_unavailable: true
+  findings:
+  - statement: A bacterial LiuC ortholog was structurally characterized as a methylglutaconyl-CoA
+      hydratase-family enzyme.
+    supporting_text: LiuC, a member of the 3-methylglutaconyl CoA hydratases (MGCH).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed abstract verified; this is direct ortholog structure/mechanism evidence, not
+      a KT2440 assay.
+- id: file:PSEPK/liuC/liuC-deep-research-openscientist.md
+  title: OpenScientist gene research for PSEPK liuC
+  findings:
+  - statement: The report corroborates the methylglutaconyl-CoA hydratase assignment and distal
+      leucine-pathway context while flagging the lack of a direct KT2440 assay.
+    supporting_text: No direct biochemical characterization of the *P. putida* LiuC protein.
+    reference_section_type: CONCLUSIONS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider synthesis retained as secondary context; its synteny, ortholog, structure,
+      localization, and regulation claims were not independently reproduced.
+core_functions:
+- description: Hydrates 3-methylglutaconyl-CoA to HMG-CoA in distal L-leucine catabolism.
+  molecular_function:
+    id: GO:0004490
+    label: methylglutaconyl-CoA hydratase activity
+  directly_involved_in:
+  - id: GO:0006552
+    label: L-leucine catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/liuC/liuC-uniprot.txt
+    supporting_text: &#39;SubName: Full=Methylglutaconyl-CoA hydratase&#39;
+  - reference_id: file:PSEPK/liuC/liuC-deep-research-openscientist.md
+    supporting_text: &#39;**LiuC (PP_4066) is the soluble cytoplasmic 3-methylglutaconyl-CoA hydratase
+      (EC 4.2.1.18)&#39;
+  - reference_id: PMID:16820476
+    supporting_text: while both species were able to utilize leucine and isovalerate.
+suggested_experiments:
+- description: Measure hydration of 3-methylglutaconyl-CoA by purified LiuC and test a liuC deletion on
+    leucine, isovalerate, and terpene-derived substrates.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
