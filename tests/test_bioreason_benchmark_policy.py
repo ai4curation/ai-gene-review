@@ -296,19 +296,24 @@ def test_publication_headlines_match_generated_metrics() -> None:
     overlap = metrics["supplement_gogpt_overlap_300"]
     assert overlap["n_genes"] == 299
     assert overlap["n_predictions"] == 8871
+    goa_percent = 100 * overlap["goa"]["n_overlap"] / overlap["n_predictions"]
+    post_review_percent = (
+        100 * overlap["post_review"]["n_overlap"] / overlap["n_predictions"]
+    )
+    core_percent = 100 * overlap["core"]["n_overlap"] / overlap["n_predictions"]
     assert (
         f"| Raw GOA | {overlap['goa']['n_reference_terms']:,} | "
-        f"{overlap['goa']['n_overlap']:,} | 11.7 |"
+        f"{overlap['goa']['n_overlap']:,} | {goa_percent:.1f} |"
     ) in supplement
     assert (
-        f"| Retained/replacement AIGR annotations | "
+        f"| Retained/replacement/proposed-new AIGR annotations | "
         f"{overlap['post_review']['n_reference_terms']:,} | "
-        f"{overlap['post_review']['n_overlap']:,} | 9.6 |"
+        f"{overlap['post_review']['n_overlap']:,} | {post_review_percent:.1f} |"
     ) in supplement
     assert (
         f"| All GO-valued AIGR core-function slots | "
         f"{overlap['core']['n_reference_terms']:,} | "
-        f"{overlap['core']['n_overlap']:,} | 3.9 |"
+        f"{overlap['core']['n_overlap']:,} | {core_percent:.1f} |"
     ) in supplement
     assert "**71.0% CNN**" in slides
     assert "**15.9% NPI/PLI/REP**" in slides

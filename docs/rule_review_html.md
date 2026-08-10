@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature provides HTML rendering for ARBA/UniRule reviews, similar to the existing gene review HTML rendering. The HTML output combines:
+This feature provides HTML rendering for ARBA reviews, similar to the existing gene review HTML rendering. The HTML output combines:
 
 - The rule review YAML (source of truth)
 - Quantitative analysis statistics
@@ -99,10 +99,6 @@ just render-rule ARBA00026249
 
 # Render all rules that have review YAML files
 just render-all-rules
-
-# Use a custom cache directory
-just render-rule ARBA00026249 rules/unirule
-just render-all-rules rules/unirule
 ```
 
 ### Basic Python API
@@ -181,7 +177,7 @@ Assessment badges:
 Located in `src/ai_gene_review/etl/rule_analysis.py`
 
 **Parameters:**
-- `rule_id`: ARBA/UniRule identifier
+- `rule_id`: ARBA identifier
 - `cache_dir`: Directory containing rule files
 - `output_path`: Optional custom output path
 - `template_path`: Optional custom template

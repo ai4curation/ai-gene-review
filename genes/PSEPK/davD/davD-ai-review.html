@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>davD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>davD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RC0" target="_blank" class="term-link">
+                        Q88RC0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "davD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RC0" data-a="DESCRIPTION: DavD is the glutarate-semialdehyde dehydrogenase o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DavD is the glutarate-semialdehyde dehydrogenase of the Dav pathway. It oxidizes 5-oxopentanoate to glutarate after the DavT reaction, completing conversion of L-lysine-derived 5-aminovalerate to glutarate. Orthology to Pseudomonas aeruginosa DavD supports NADP+ use, although Q88RC0 cofactor preference has not been measured directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004777" target="_blank" class="term-link">
+                                    GO:0004777
+                                </a>
+                            </span>
+                            <span class="term-label">succinate-semialdehyde dehydrogenase (NAD+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0004777" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect succinate-semialdehyde substrate assignment transferred from a broad family node.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DavD is assigned to oxidation of 5-oxopentanoate in the lysine-derived Dav pathway, whereas GO:0004777 specifies succinate semialdehyde. This substrate mismatch is independent of the unresolved NAD versus NADP preference of Q88RC0.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible cytosolic localization for this soluble metabolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DavD has no secretion or membrane features, and the electronic localization is consistent with its soluble metabolic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO; GO:0005829; C:cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009013" target="_blank" class="term-link">
+                                    GO:0009013
+                                </a>
+                            </span>
+                            <span class="term-label">succinate-semialdehyde dehydrogenase [NAD(P)+] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0009013" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect substrate-generalized succinate-semialdehyde activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family membership does not override the exact 5-oxopentanoate reaction assigned to DavD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009450" target="_blank" class="term-link">
+                                    GO:0009450
+                                </a>
+                            </span>
+                            <span class="term-label">GABA catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0009450" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-transferred GABA-catabolism role is unresolved for Q88RC0.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DavD is established in the 5-aminovalerate pathway, but the available evidence does not test whether Q88RC0 also accepts succinate semialdehyde or contributes to GABA catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                        PMID:31064836
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the conversion of 5-oxopentanoate (glutarate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformative oxidoreductase parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The substrate- and cofactor-specific activity GO:0102810 is available.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016620" target="_blank" class="term-link">
+                                    GO:0016620
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0016620" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mechanistically correct but less informative than the enzyme-specific activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0102810 captures the physiological substrate and NADP dependence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102810" target="_blank" class="term-link">
+                                    GO:0102810
+                                </a>
+                            </span>
+                            <span class="term-label">glutarate-semialdehyde dehydrogenase (NADP+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0102810" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct enzyme-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed exact record assigns the 5-oxopentanoate-to-glutarate reaction with NADP+, and KT2440 profiling places davD in 5AVA metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                        PMID:31064836
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102810" target="_blank" class="term-link">
+                                    GO:0102810
+                                </a>
+                            </span>
+                            <span class="term-label">glutarate-semialdehyde dehydrogenase (NADP+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0102810" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct enzyme-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed exact record assigns the 5-oxopentanoate-to-glutarate reaction with NADP+, and KT2440 profiling places davD in 5AVA metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davD/davD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                        PMID:31064836
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                    GO:0019477
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RC0" data-a="GO:0019477" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological-process assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> KT2440 fitness and expression data connect davD to the 5AVA segment of L-lysine catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                        PMID:31064836
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Oxidizes 5-oxopentanoate to glutarate in the terminal reaction of the four-step Dav pathway. Orthology supports NADP+ as the acceptor, but direct Q88RC0 cofactor measurements are unavailable.</h3>
+                <span class="vote-buttons" data-g="Q88RC0" data-a="FUNCTION: Oxidizes 5-oxopentanoate to glutarate in the termi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102810" target="_blank" class="term-link">
+                            glutarate-semialdehyde dehydrogenase (NADP+) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                L-lysine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/davD/davD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                PMID:31064836
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/davD/davD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">GO; GO:0005829; C:cytosol</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/davD/davD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RC0 for Pseudomonas putida KT2440 davD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record identifies DavD as glutarate-semialdehyde dehydrogenase.</div>
+
+                        <div class="finding-text">"RecName: Full=Glutarate-semialdehyde dehydrogenase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The assigned reaction uses 5-oxopentanoate and NADP+ to form glutarate.</div>
+
+                        <div class="finding-text">"Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                            PMID:31064836
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Massively Parallel Fitness Profiling Reveals Multiple Novel Enzymes in Pseudomonas putida Lysine Metabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fitness profiling connects davD to growth on both 5AVA and L-lysine.</div>
+
+                        <div class="finding-text">"Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DavD abundance responds most strongly to 5AVA.</div>
+
+                        <div class="finding-text">"As previously observed, DavT and DavD were most strongly upregulated on 5AVA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How strongly does KT2440 DavD discriminate 5-oxopentanoate from succinate semialdehyde and NADP+ from NAD+?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RC0" data-a="Q: How strongly does KT2440 DavD discriminate 5-oxope..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure DavD steady-state kinetics across glutarate semialdehyde and succinate semialdehyde with both nicotinamide cofactors, and test davD complementation during growth on 5AVA.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RC0" data-a="EXPERIMENT: Measure DavD steady-state kinetics across glutarat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(davD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RC0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **davD** (Q88RC0, PP_0213) — Glutarate-Semialdehyde Dehydrogenase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T15:44:49.344650</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="davD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="davD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-davd-q88rc0-pp_0213-glutarate-semialdehyde-dehydrogenase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <strong>davD</strong> (Q88RC0, PP_0213) — Glutarate-Semialdehyde Dehydrogenase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="identity-verification">Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UniProt</strong></td>
+<td>Q88RC0</td>
+</tr>
+<tr>
+<td><strong>Gene symbol</strong></td>
+<td>davD</td>
+</tr>
+<tr>
+<td><strong>Ordered locus</strong></td>
+<td>PP_0213</td>
+</tr>
+<tr>
+<td><strong>Organism</strong></td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td><strong>Protein family</strong></td>
+<td>Aldehyde dehydrogenase (ALDH) family</td>
+</tr>
+<tr>
+<td><strong>Key InterPro domains</strong></td>
+<td>Ald_DH_N (IPR016162), Ald_DH_C (IPR016163), Ald_DH/histidinol_DH (IPR016161), catalytic Cys signature (IPR016160), conserved Glu signature (IPR029510)</td>
+</tr>
+<tr>
+<td><strong>Assigned activity</strong></td>
+<td>Glutarate-semialdehyde dehydrogenase, EC 1.2.1.- (specifically EC 1.2.1.20)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <strong>davD is unambiguous</strong> and consistent across the literature: in <em>Pseudomonas putida</em> it denotes the glutarate-semialdehyde dehydrogenase of the L-lysine catabolic ("Dav") pathway. All literature retrieved for "davD" in <em>P. putida</em> refers to this same enzyme; no conflicting gene of the same symbol exists in this organism, and the ALDH protein family, organism, and locus all align with the UniProt record. <strong>Identity is confirmed — no ambiguity fallback was required.</strong></p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>davD</strong> (Q88RC0; PP_0213) encodes a <strong>soluble, cytoplasmic, NAD⁺-dependent glutarate-semialdehyde dehydrogenase</strong> (EC 1.2.1.20). Its primary molecular function is to catalyze the irreversible oxidation of <strong>glutarate semialdehyde (5-oxopentanoate) to glutarate</strong>, consuming NAD⁺ and water and generating NADH and a proton. This is the <strong>fourth and terminal oxidative step</strong> of the <strong>5-aminovalerate (AVA / "Dav") branch of L-lysine catabolism</strong> in <em>P. putida</em>, the pathway by which the organism mobilizes lysine as a carbon and nitrogen source. DavD acts immediately downstream of the DavT/GabT 5-aminovalerate aminotransferase (which produces the semialdehyde substrate) and commits the lysine-derived carbon skeleton to glutarate.</p>
+<p>The identity and reaction of DavD rest on three orthogonal lines of evidence: (i) direct biochemical assay of the closely related <em>P. aeruginosa</em> ortholog <strong>PA0265</strong> confirming the glutarate-semialdehyde dehydrogenase reaction (EC 1.2.1.20); (ii) heterologous functional reconstitution of the <em>davDT</em> / <em>gabTD</em> module in <em>E. coli</em> and <em>Corynebacterium glutamicum</em>, converting 5-aminovalerate to glutarate; and (iii) native ¹³C/¹⁵N isotope-tracing and mutant genetics in <em>P. putida</em> KT2440 that establish the Dav pathway and its convergence on glutarate.</p>
+<p>Biologically, DavD occupies a <strong>metabolic convergence node</strong>. The <strong>glutarate</strong> it produces is the shared endpoint of <em>both</em> of <em>P. putida</em>'s two interconnected lysine-degradation routes (the aminovalerate/Dav pathway and the aminoadipate pathway). Downstream, glutarate is further catabolized by two routes — the <strong>glutarate hydroxylation pathway</strong> and the <strong>glutaryl-CoA dehydrogenation pathway</strong> — feeding acetyl-CoA and the TCA cycle. Because glutarate is a valuable C5 dicarboxylic-acid platform chemical (nylon precursor), the <em>davDT</em> module has been repeatedly transplanted into industrial hosts for glutarate production.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-davd-is-the-nad-dependent-glutarate-semialdehyde-dehydrogenase-of-p-putida-lysine-catabolism">Finding 1 — DavD is the NAD⁺-dependent glutarate-semialdehyde dehydrogenase of <em>P. putida</em> lysine catabolism</h3>
+<p>The core molecular function of davD is the NAD⁺-dependent oxidation of glutarate semialdehyde to glutarate:</p>
+<div class="codehilite"><pre><span></span><code>glutarate semialdehyde + NAD⁺ + H₂O  →  glutarate + NADH + H⁺        (EC 1.2.1.20)
+</code></pre></div>
+
+<p>Multiple independent metabolic-engineering studies functionally assign <em>P. putida</em> KT2440 <strong>davD (PP_0213, Q88RC0)</strong> as glutarate semialdehyde dehydrogenase. Adkins et al. (2013) co-expressed the <em>davDT</em> module and demonstrated conversion of 5-aminovalerate to glutarate, reaching <strong>0.82 g/L glutarate</strong>, directly placing DavD as the dehydrogenase acting downstream of the aminotransferase (<a href="https://pubmed.ncbi.nlm.nih.gov/23296991/">PMID: 23296991</a>). Park et al. achieved glutarate production using the equivalent <em>gabTD</em> module in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23246520/">PMID: 23246520</a>). The enzymatic identity is anchored biochemically by the <em>P. aeruginosa</em> ortholog <strong>PA0265</strong>, assayed in a coupled reaction and shown to catalyze <strong>glutarate semialdehyde dehydrogenase (EC 1.2.1.20)</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17388807/">PMID: 17388807</a>). The explicit naming of <em>P. putida</em> davD as glutarate semialdehyde dehydrogenase is restated in the <em>C. glutamicum</em> engineering literature (<a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">PMID: 30144560</a>).</p>
+<blockquote>
+<p>"the additional co-expression of glutaric semialdehyde dehydrogenase and 5-aminovalerate aminotransferase (encoded by davDT) led to the production of 0.82 g/L glutarate" — Adkins et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/23296991/">PMID: 23296991</a>)</p>
+<p>"PA0265 as a putative glutarate semialdehyde dehydrogenase (EC 1.2.1.20)" — Yamanishi et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/17388807/">PMID: 17388807</a>)</p>
+<p>"Pseudomonas putida davT and davD genes encoding 5-aminovalerate transaminase and glutarate semialdehyde dehydrogenase, respectively" — Kim et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">PMID: 30144560</a>)</p>
+</blockquote>
+<p>The <strong>cofactor is NAD⁺</strong>, consistent with the catabolic direction (generating reducing equivalents) and with ALDH-family mechanism: an active-site cysteine nucleophile attacks the aldehyde carbonyl of glutarate semialdehyde to form a thiohemiacetal, hydride transfer to NAD⁺ yields a thioacyl-enzyme intermediate, and hydrolysis releases the carboxylic-acid product (glutarate). These catalytic Cys and Glu residues are exactly the features captured by InterPro IPR016160 (Ald_DH_CS_CYS) and IPR029510 (Ald_DH_CS_GLU) annotated for Q88RC0.</p>
+<h3 id="finding-2-davd-operates-within-the-cytoplasmic-dav-5-aminovalerate-pathway-of-l-lysine-catabolism">Finding 2 — DavD operates within the cytoplasmic Dav (5-aminovalerate) pathway of L-lysine catabolism</h3>
+<p>DavD is the terminal member of a four-enzyme <strong>soluble cytoplasmic module</strong> that converts L-lysine to glutarate:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Gene(s)</th>
+<th>Enzyme</th>
+<th>Reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>davB</strong></td>
+<td>Lysine 2-monooxygenase</td>
+<td>L-lysine → 5-aminovaleramide (δ-aminovaleramide)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>davA</strong></td>
+<td>δ-aminovaleramidase</td>
+<td>5-aminovaleramide → 5-aminovalerate (5-AVA)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>davT / gabT</strong> (PP_0214)</td>
+<td>5-aminovalerate aminotransferase</td>
+<td>5-AVA + α-ketoglutarate → glutarate semialdehyde + glutamate</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>davD</strong> (PP_0213)</td>
+<td><strong>Glutarate-semialdehyde dehydrogenase</strong></td>
+<td><strong>glutarate semialdehyde → glutarate</strong></td>
+</tr>
+</tbody>
+</table>
+<p>This four-gene set reconstitutes the complete L-lysine → 5-aminovaleramide → 5-aminovalerate → glutarate semialdehyde → glutarate route when transferred into heterologous hosts such as <em>E. coli</em> and <em>C. glutamicum</em> (Adkins 2013; Park 2013; Rohles 2016; Kim 2019) (<a href="https://pubmed.ncbi.nlm.nih.gov/23296991/">PMID: 23296991</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/27618862/">PMID: 27618862</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">PMID: 30144560</a>). The genes <strong>davD/davT (PP_0213/PP_0214) are chromosomally adjacent</strong> and are consistently co-transferred as <em>davDT</em> / <em>gabTD</em> modules, consistent with an operonic, soluble enzymatic unit acting in the cytoplasm.</p>
+<blockquote>
+<p>"endogenous genes coding for 5-aminovalerate transaminase (gabT) and glutarate semialdehyde dehydrogenase, 5-aminovalerate was partially converted to glutarate" — (<a href="https://pubmed.ncbi.nlm.nih.gov/27618862/">PMID: 27618862</a>)</p>
+<p>"It is a metabolite of l-lysine catabolism through the aminovalerate pathway in Pseudomonas putida" — (<a href="https://pubmed.ncbi.nlm.nih.gov/25012259/">PMID: 25012259</a>)</p>
+</blockquote>
+<p>The <strong>subcellular localization is cytoplasmic</strong>, inferred from the soluble nature of the pathway (no signal peptide or transmembrane segments), the intracellular origin of its substrate (delivered by the cytoplasmic DavT transaminase), and the enzyme's full activity as a soluble catalyst in heterologous cytoplasm.</p>
+<h3 id="finding-3-davd-produced-glutarate-is-the-convergence-node-of-both-lysine-pathways-and-feeds-glutaryl-coa-hydroxylation-catabolism">Finding 3 — DavD-produced glutarate is the convergence node of both lysine pathways and feeds glutaryl-CoA / hydroxylation catabolism</h3>
+<p>The product of DavD, <strong>glutarate</strong>, is metabolically pivotal. Revelles et al. (2005) used ¹³C/¹⁵N-lysine isotope labeling and pathway mutants to show that <em>P. putida</em> KT2440 degrades L-lysine through <strong>two interconnected routes</strong> — the aminovalerate (Dav) pathway (in which DavD acts) and the aminoadipate pathway — <strong>both converging on glutarate</strong>; this study also assigned the <em>davB</em> and <em>davA</em> gene functions of the upper pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>).</p>
+<blockquote>
+<p>"New genes were identified in both pathways, including the davB and davA genes that encode the enzymes involved in the oxidation of L-lysine to delta-aminovaleramide and the hydrolysis of the latter to delta-aminovalerate" — Revelles et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>)</p>
+<p>"there is yet another interconnection at the lower end of the pathways in which aminoadipate is channeled to yield glutarate" — Revelles et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>)</p>
+</blockquote>
+<p>Downstream of DavD, Zhang et al. (2019) showed glutarate is further catabolized by <strong>two routes</strong> — the <strong>glutarate hydroxylation pathway</strong> and the <strong>glutaryl-CoA dehydrogenation pathway</strong> — under the transcriptional control of the GntR-family regulator <strong>CsiR</strong> and the LysR-family regulator <strong>GcdR</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/31363033/">PMID: 31363033</a>).</p>
+<blockquote>
+<p>"can be catabolized through both the glutarate hydroxylation pathway and the glutaryl-coenzyme A (glutaryl-CoA) dehydrogenation pathway" — Zhang et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/31363033/">PMID: 31363033</a>)</p>
+</blockquote>
+<p>DavD is therefore the enzymatic gateway that converts the lysine-derived semialdehyde into the branch-point metabolite glutarate, committing lysine carbon to central metabolism.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>DavD is best understood as the <strong>committed oxidative terminus of the lysine→glutarate conduit</strong> in <em>P. putida</em>:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">    </span><span class="n">L</span><span class="o">-</span><span class="n">LYSINE</span>
+<span class="w">       </span><span class="err">│</span>
+<span class="w">      </span><span class="n">davB</span><span class="w"> </span><span class="p">(</span><span class="n">lysine</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="n">monooxygenase</span><span class="p">)</span>
+<span class="w">       </span><span class="err">▼</span>
+<span class="w">      </span><span class="mi">5</span><span class="o">-</span><span class="n">aminovaleramide</span><span class="w"> </span><span class="p">(</span><span class="n">δ</span><span class="o">-</span><span class="n">valeramide</span><span class="p">)</span>
+<span class="w">       </span><span class="err">│</span>
+<span class="w">      </span><span class="n">davA</span><span class="w"> </span><span class="p">(</span><span class="n">δ</span><span class="o">-</span><span class="n">aminovaleramidase</span><span class="p">)</span>
+<span class="w">       </span><span class="err">▼</span>
+<span class="w">      </span><span class="mi">5</span><span class="o">-</span><span class="n">AMINOVALERATE</span><span class="w"> </span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="n">AVA</span><span class="p">)</span><span class="w">  </span><span class="err">◄───</span><span class="w"> </span><span class="n">C5</span><span class="w"> </span><span class="n">platform</span><span class="w"> </span><span class="n">chemical</span><span class="w"> </span><span class="p">(</span><span class="n">nylon</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="w">       </span><span class="err">│</span>
+<span class="w">      </span><span class="n">davT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">gabT</span><span class="w"> </span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="n">AVA</span><span class="w"> </span><span class="n">aminotransferase</span><span class="p">;</span><span class="w"> </span><span class="o">+</span><span class="n">α</span><span class="o">-</span><span class="n">KG</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">Glu</span><span class="p">)</span>
+<span class="w">       </span><span class="err">▼</span>
+<span class="w">      </span><span class="n">GLUTARATE</span><span class="w"> </span><span class="n">SEMIALDEHYDE</span><span class="w"> </span><span class="p">(</span><span class="mi">5</span><span class="o">-</span><span class="n">oxopentanoate</span><span class="p">)</span>
+<span class="w">       </span><span class="err">│</span>
+<span class="w"> </span><span class="err">►►►</span><span class="w">  </span><span class="n">davD</span><span class="w">  </span><span class="p">(</span><span class="n">GLUTARATE</span><span class="o">-</span><span class="n">SEMIALDEHYDE</span><span class="w"> </span><span class="n">DEHYDROGENASE</span><span class="p">)</span><span class="w">  </span><span class="err">◄◄◄</span>
+<span class="w">      </span><span class="n">NAD</span><span class="err">⁺</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H₂O</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">NADH</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H</span><span class="err">⁺</span>
+<span class="w">       </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">GLUTARATE</span><span class="w">  </span><span class="err">◄────</span><span class="w"> </span><span class="n">also</span><span class="w"> </span><span class="n">produced</span><span class="w"> </span><span class="k">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">AMINOADIPATE</span><span class="w"> </span><span class="n">pathway</span>
+<span class="w">       </span><span class="err">│</span><span class="w">              </span><span class="p">(</span><span class="n">two</span><span class="w"> </span><span class="n">lysine</span><span class="w"> </span><span class="n">routes</span><span class="w"> </span><span class="n">converge</span><span class="w"> </span><span class="n">here</span><span class="p">)</span>
+<span class="err">┌──────────────┴───────────────┐</span>
+<span class="err">▼</span><span class="w">                              </span><span class="err">▼</span>
+<span class="w"> </span><span class="n">glutarate</span><span class="w"> </span><span class="n">hydroxylation</span><span class="w">       </span><span class="n">glutaryl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="n">dehydrogenation</span>
+<span class="w">     </span><span class="n">pathway</span><span class="w"> </span><span class="p">(</span><span class="n">CsiD</span><span class="o">/</span><span class="n">LhgO</span><span class="p">)</span><span class="w">             </span><span class="n">pathway</span><span class="w"> </span><span class="p">(</span><span class="n">GcdH</span><span class="p">)</span>
+<span class="err">│</span><span class="w">                              </span><span class="err">│</span>
+<span class="err">└──────────────┬───────────────┘</span>
+<span class="w">       </span><span class="err">▼</span>
+<span class="n">central</span><span class="w"> </span><span class="n">carbon</span><span class="w"> </span><span class="n">metabolism</span><span class="w"> </span><span class="p">(</span><span class="n">acetyl</span><span class="o">-</span><span class="n">CoA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="n">oxoglutarate</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">TCA</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="n">downstream</span><span class="w"> </span><span class="n">glutarate</span><span class="w"> </span><span class="n">catabolism</span><span class="w"> </span><span class="n">regulated</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="n">CsiR</span><span class="w"> </span><span class="o">[</span><span class="n">GntR</span><span class="o">]</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">GcdR</span><span class="w"> </span><span class="o">[</span><span class="n">LysR</span><span class="o">]</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Reaction and mechanism.</strong> DavD is a Rossmann-fold, NAD⁺-utilizing aldehyde dehydrogenase. The conserved catalytic Cys/Glu pair (InterPro IPR016160/IPR029510) executes the canonical ALDH mechanism, and the reaction is effectively irreversible under physiological conditions, making DavD a metabolically committed, flux-controlling step.</p>
+<p><strong>Localization.</strong> All evidence indicates a <strong>cytoplasmic</strong> location: soluble protein, no secretion/membrane signals, participates in a soluble catabolic module, and remains fully active as a soluble enzyme in heterologous cytoplasm.</p>
+<p><strong>Physiological role.</strong> The Dav pathway lets <em>P. putida</em> use L-lysine as <strong>both a carbon and nitrogen source</strong>: nitrogen is released during the upstream oxygenase and transaminase steps, while DavD funnels the remaining C5 dicarboxylic backbone (glutarate) into energy and carbon metabolism. Because glutarate is the shared endpoint of both lysine catabolic routes, DavD is central to lysine utilization even though a parallel (aminoadipate) route exists.</p>
+<p><strong>Biotechnological significance.</strong> Because DavD generates glutarate — a five-carbon dicarboxylic-acid platform chemical and nylon precursor — the <em>davDT</em> / <em>gabTD</em> module has been transplanted into <em>E. coli</em> and <em>C. glutamicum</em> to convert lysine (or 5-AVA) into glutarate. This applied use is itself strong functional evidence: the module only works because DavD reliably performs the glutarate-semialdehyde → glutarate oxidation.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (short)</th>
+<th>Contribution to davD annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">16237033</a></td>
+<td><em>Multiple and interconnected pathways for L-lysine catabolism in P. putida KT2440</em> (Revelles et al. 2005)</td>
+<td><strong>Primary genetic/isotopic study.</strong> Defined the Dav and aminoadipate pathways in KT2440; assigned davB/davA; established that both routes converge on glutarate — the DavD product.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17388807/">17388807</a></td>
+<td><em>Prediction of missing enzyme genes… lysine degradation of P. aeruginosa</em> (Yamanishi et al. 2007)</td>
+<td><strong>Biochemical anchor.</strong> Ortholog PA0265 assayed as glutarate semialdehyde dehydrogenase (EC 1.2.1.20) in a coupled assay — defines the reaction/EC number for the family.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23296991/">23296991</a></td>
+<td><em>Engineering E. coli for 5-AVA and glutarate</em> (Adkins et al. 2013)</td>
+<td>Co-expression of <em>davDT</em> converted 5-AVA to glutarate (0.82 g/L); directly names davD as glutaric semialdehyde dehydrogenase.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23246520/">23246520</a></td>
+<td><em>Metabolic engineering of E. coli for C5 chemicals</em> (Park et al. 2013)</td>
+<td>Expression of P. putida <em>gabTD</em> (aminotransferase + glutarate semialdehyde dehydrogenase) converted 5-AVA to glutarate (1.7 g/L).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27618862/">27618862</a></td>
+<td><em>Systems metabolic engineering of C. glutamicum for 5-AVA/glutarate</em> (Rohles et al. 2016)</td>
+<td>Places glutarate semialdehyde dehydrogenase immediately downstream of the transaminase; confirms 5-AVA → glutarate step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">30144560</a></td>
+<td><em>Metabolic engineering of C. glutamicum for glutaric acid</em> (Kim et al. 2019)</td>
+<td>Explicitly identifies P. putida <strong>davD</strong> as glutarate semialdehyde dehydrogenase (and davT as 5-AVA transaminase).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31363033/">31363033</a></td>
+<td><em>Regulation of glutarate catabolism by CsiR and GcdR in KT2440</em> (Zhang et al. 2019)</td>
+<td>Defines the downstream fate of DavD's product: glutarate hydroxylation and glutaryl-CoA dehydrogenation pathways and their regulators.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25012259/">25012259</a></td>
+<td><em>Enzymatic production of 5-AVA from L-lysine</em></td>
+<td>Confirms the aminovalerate pathway is the L-lysine catabolic route in P. putida.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting/context literature</strong> (5-AVA production, transporters, pathway engineering): <a href="https://pubmed.ncbi.nlm.nih.gov/25124937/">PMID: 25124937</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/27510748/">PMID: 27510748</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/35917915/">PMID: 35917915</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/31720214/">PMID: 31720214</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41629971/">PMID: 41629971</a>. These reinforce the surrounding pathway (davB/davA/davT function, 5-AVA export/import) but do not individually characterize DavD.</p>
+<p><strong>Consistency of the evidence.</strong> The annotation is high-confidence because it rests on <strong>three orthogonal pillars</strong>: (i) direct biochemical assay of the ortholog (PA0265; EC 1.2.1.20); (ii) heterologous functional reconstitution of the <em>davDT</em> / <em>gabTD</em> module in two different hosts producing glutarate; and (iii) native isotope-tracing genetics in <em>P. putida</em> KT2440 that positions glutarate as the pathway convergence point. No literature described a conflicting function for davD/PP_0213, and the gene symbol, organism, and ALDH protein family all align with the UniProt record — the identity is not ambiguous.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> DavD is a cytoplasmic NAD⁺-dependent glutarate-semialdehyde dehydrogenase catalyzing glutarate semialdehyde → glutarate (EC 1.2.1.20) as the terminal step of the 5-aminovalerate branch of L-lysine catabolism.</li>
+<li><strong>Not supported / refuted:</strong> No evidence for a transporter, structural, or signaling role; DavD is a soluble metabolic enzyme, not a membrane, adapter, or regulatory protein.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ul>
+<li><strong>No direct enzymology on Q88RC0 itself.</strong> The reaction and EC number are anchored on the <em>P. aeruginosa</em> ortholog <strong>PA0265</strong> (biochemically assayed) and on heterologous reconstitution of the <em>P. putida</em> module. Purified-protein kinetics (Km, kcat, cofactor preference) for the exact PP_0213 gene product were not located.</li>
+<li><strong>Substrate specificity not experimentally mapped.</strong> Whether DavD is strictly specific for glutarate semialdehyde or accepts related ω-aldehyde acids (e.g., succinic or adipic semialdehyde) has not been quantified for this enzyme.</li>
+<li><strong>Cofactor confirmed by inference.</strong> NAD⁺ dependence is expected for the catabolic direction and consistent with family membership, but the strict NAD⁺-vs-NADP⁺ preference of PP_0213 has not been directly measured in the reviewed papers.</li>
+<li><strong>No experimental structure.</strong> No crystal structure of DavD was found; residue-level mechanistic claims rest on InterPro domain conservation.</li>
+<li><strong>davD-specific regulation not characterized.</strong> The reviewed regulatory work (CsiR/GcdR) concerns <em>downstream</em> glutarate catabolism, not davD transcription per se.</li>
+</ul>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Purify recombinant PP_0213 (Q88RC0)</strong> and measure steady-state kinetics on glutarate semialdehyde with NAD⁺ and NADP⁺ to establish cofactor preference and catalytic efficiency directly for this ortholog.</li>
+<li><strong>Substrate-specificity panel:</strong> assay purified DavD against a series of ω-aldehyde carboxylic acids (succinic semialdehyde, adipate semialdehyde, glutarate semialdehyde) to define specificity and any promiscuity relevant to metabolic engineering.</li>
+<li><strong>Structural determination</strong> (crystallography or AlphaFold-guided mutagenesis) to confirm the active-site Cys/Glu catalytic pair and the NAD-binding Rossmann fold predicted by the InterPro domains.</li>
+<li><strong>Clean deletion of davD (PP_0213) in KT2440</strong> with growth phenotyping on L-lysine, 5-aminovalerate, and glutarate as sole carbon/nitrogen sources to test the metabolic requirement and any redundancy with paralogous ALDHs.</li>
+<li><strong>In vivo localization confirmation</strong> (fluorescent fusion or cell fractionation) to formally verify cytoplasmic localization.</li>
+<li><strong>Transcriptional analysis of the davDT operon</strong> under lysine induction to determine whether davD expression is co-regulated with upstream dav genes.</li>
+</ol>
+<hr />
+<p><em>Report generated from a 3-iteration autonomous literature investigation (13 papers reviewed, 3 high-confidence findings). Gene identity verified: symbol davD, organism P. putida KT2440, protein family aldehyde dehydrogenase — all consistent with UniProt Q88RC0. No ambiguity fallback required.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="davD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="davD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:23296991</li>
+<li>PMID:23246520</li>
+<li>PMID:17388807</li>
+<li>PMID:30144560</li>
+<li>PMID:27618862</li>
+<li>PMID:25012259</li>
+<li>PMID:16237033</li>
+<li>PMID:31363033</li>
+<li>PMID:25124937</li>
+<li>PMID:27510748</li>
+<li>PMID:35917915</li>
+<li>PMID:31720214</li>
+<li>PMID:41629971</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(davD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RC0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="davd-curation-notes">davD curation notes</h1>
+<ul>
+<li>Reviewed UniProtKB assigns Q88RC0 by similarity to oxidation of<br />
+  5-oxopentanoate with NADP+<br />
+  [file:PSEPK/davD/davD-uniprot.txt, "Reaction=5-oxopentanoate + NADP(+) + H2O<br />
+  = glutarate + NADPH + 2 H(+)"].</li>
+<li>KT2440 fitness profiling connects <code>davD</code> to the 5AVA branch<br />
+  [PMID:31064836, "Only 3 genes shared fitness defects between 5AVA and<br />
+  l-lysine (davT, davD, and lghO)"].</li>
+<li>Succinate-semialdehyde dehydrogenase activity is removed because it specifies<br />
+  the wrong aldehyde substrate. The broader GABA-catabolism claim remains<br />
+  undecided because Q88RC0 has not been tested with succinate semialdehyde.</li>
+<li>The OpenScientist report generalized an NAD-dependent ortholog while the<br />
+  exact record assigns NADP dependence by similarity. Direct Q88RC0 cofactor<br />
+  preference has not been measured, so neither source establishes strict<br />
+  NAD-versus-NADP specificity.</li>
+<li>Purified-enzyme substrate and cofactor panels would quantify discrimination<br />
+  against succinate semialdehyde and NAD+.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RC0
+gene_symbol: davD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  DavD is the glutarate-semialdehyde dehydrogenase of the Dav pathway. It
+  oxidizes 5-oxopentanoate to glutarate after the DavT reaction, completing
+  conversion of L-lysine-derived 5-aminovalerate to glutarate. Orthology to
+  Pseudomonas aeruginosa DavD supports NADP+ use, although Q88RC0 cofactor
+  preference has not been measured directly.
+existing_annotations:
+- term:
+    id: GO:0004777
+    label: succinate-semialdehyde dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Incorrect succinate-semialdehyde substrate assignment transferred from a broad family node.
+    action: REMOVE
+    reason: &gt;-
+      DavD is assigned to oxidation of 5-oxopentanoate in the lysine-derived
+      Dav pathway, whereas GO:0004777 specifies succinate semialdehyde. This
+      substrate mismatch is independent of the unresolved NAD versus NADP
+      preference of Q88RC0.
+    supported_by:
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Plausible cytosolic localization for this soluble metabolic enzyme.
+    action: ACCEPT
+    reason: DavD has no secretion or membrane features, and the electronic localization is consistent
+      with its soluble metabolic role.
+    supported_by:
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: &#39;GO; GO:0005829; C:cytosol&#39;
+- term:
+    id: GO:0009013
+    label: succinate-semialdehyde dehydrogenase [NAD(P)+] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Incorrect substrate-generalized succinate-semialdehyde activity.
+    action: REMOVE
+    reason: Family membership does not override the exact 5-oxopentanoate reaction assigned to DavD.
+    supported_by:
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+- term:
+    id: GO:0009450
+    label: GABA catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Family-transferred GABA-catabolism role is unresolved for Q88RC0.
+    action: UNDECIDED
+    reason: &gt;-
+      DavD is established in the 5-aminovalerate pathway, but the available
+      evidence does not test whether Q88RC0 also accepts succinate semialdehyde
+      or contributes to GABA catabolism.
+    supported_by:
+    - reference_id: PMID:31064836
+      supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and
+        lghO), and all three have been previously implicated in 5AVA metabolism
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: Catalyzes the conversion of 5-oxopentanoate (glutarate
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but uninformative oxidoreductase parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The substrate- and cofactor-specific activity GO:0102810 is available.
+- term:
+    id: GO:0016620
+    label: oxidoreductase activity, acting on the aldehyde or oxo group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Mechanistically correct but less informative than the enzyme-specific activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0102810 captures the physiological substrate and NADP dependence.
+- term:
+    id: GO:0102810
+    label: glutarate-semialdehyde dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Correct enzyme-specific molecular function.
+    action: ACCEPT
+    reason: The reviewed exact record assigns the 5-oxopentanoate-to-glutarate reaction with NADP+, and
+      KT2440 profiling places davD in 5AVA metabolism.
+    supported_by:
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+    - reference_id: PMID:31064836
+      supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and
+        lghO), and all three have been previously implicated in 5AVA metabolism
+- term:
+    id: GO:0102810
+    label: glutarate-semialdehyde dehydrogenase (NADP+) activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: Correct enzyme-specific molecular function.
+    action: ACCEPT
+    reason: The reviewed exact record assigns the 5-oxopentanoate-to-glutarate reaction with NADP+, and
+      KT2440 profiling places davD in 5AVA metabolism.
+    supported_by:
+    - reference_id: file:PSEPK/davD/davD-uniprot.txt
+      supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+    - reference_id: PMID:31064836
+      supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and
+        lghO), and all three have been previously implicated in 5AVA metabolism
+- term:
+    id: GO:0019477
+    label: L-lysine catabolic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Correct biological-process assignment.
+    action: ACCEPT
+    reason: KT2440 fitness and expression data connect davD to the 5AVA segment of L-lysine catabolism.
+    supported_by:
+    - reference_id: PMID:31064836
+      supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and
+        lghO), and all three have been previously implicated in 5AVA metabolism
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/davD/davD-uniprot.txt
+  title: UniProtKB entry Q88RC0 for Pseudomonas putida KT2440 davD
+  findings:
+  - statement: The reviewed record identifies DavD as glutarate-semialdehyde dehydrogenase.
+    supporting_text: &#39;RecName: Full=Glutarate-semialdehyde dehydrogenase&#39;
+    reference_section_type: RESULTS
+  - statement: The assigned reaction uses 5-oxopentanoate and NADP+ to form glutarate.
+    supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact reviewed UniProtKB accession and Rhea-linked reaction verified.
+      The 5-oxopentanoate/NADP reaction itself is assigned by similarity to
+      UniProtKB:Q9I6M5, not measured directly for Q88RC0.
+- id: PMID:31064836
+  title: Massively Parallel Fitness Profiling Reveals Multiple Novel Enzymes in Pseudomonas putida Lysine
+    Metabolism.
+  findings:
+  - statement: Fitness profiling connects davD to growth on both 5AVA and L-lysine.
+    supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO),
+      and all three have been previously implicated in 5AVA metabolism
+    reference_section_type: RESULTS
+  - statement: DavD abundance responds most strongly to 5AVA.
+    supporting_text: As previously observed, DavT and DavD were most strongly upregulated on 5AVA
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text KT2440 fitness and proteomics study; identifier and quoted claims verified.
+core_functions:
+- description: &gt;-
+    Oxidizes 5-oxopentanoate to glutarate in the terminal reaction of the
+    four-step Dav pathway. Orthology supports NADP+ as the acceptor, but direct
+    Q88RC0 cofactor measurements are unavailable.
+  molecular_function:
+    id: GO:0102810
+    label: glutarate-semialdehyde dehydrogenase (NADP+) activity
+  directly_involved_in:
+  - id: GO:0019477
+    label: L-lysine catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/davD/davD-uniprot.txt
+    supporting_text: Reaction=5-oxopentanoate + NADP(+) + H2O = glutarate + NADPH + 2 H(+)
+  - reference_id: PMID:31064836
+    supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO),
+      and all three have been previously implicated in 5AVA metabolism
+  - reference_id: file:PSEPK/davD/davD-uniprot.txt
+    supporting_text: &#39;GO; GO:0005829; C:cytosol&#39;
+suggested_questions:
+- question: How strongly does KT2440 DavD discriminate 5-oxopentanoate from succinate semialdehyde and
+    NADP+ from NAD+?
+suggested_experiments:
+- description: Measure DavD steady-state kinetics across glutarate semialdehyde and succinate semialdehyde
+    with both nicotinamide cofactors, and test davD complementation during growth on 5AVA.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

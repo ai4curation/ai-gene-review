@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0860 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0860</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PJ0" target="_blank" class="term-link">
+                        Q88PJ0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0860";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PJ0" data-a="DESCRIPTION: PP_0860 is a large predicted membrane-associated f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0860 is a large predicted membrane-associated flavoprotein with flavodoxin-like, FAD/NAD-binding, and PepSY-associated transmembrane features. Its deposited product name suggests a sulfite-reductase flavoprotein component, but its architecture and PANTHER assignment are atypical for a canonical soluble CysJ. Its physiological electron acceptor and relationship, if any, to sulfur metabolism remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010181" target="_blank" class="term-link">
+                                    GO:0010181
+                                </a>
+                            </span>
+                            <span class="term-label">FMN binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PJ0" data-a="GO:0010181" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible cofactor-binding property supported by flavodoxin-like domains.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein contains conserved flavodoxin-like regions that support FMN binding independently of its unresolved physiological role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0860/PP_0860-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0010181; F:FMN binding; IEA:InterPro.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PJ0" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible broad activity for the flavoprotein architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Multiple redox-cofactor-binding domains support an oxidoreductase role, but no exact substrate or physiological reaction is established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016655" target="_blank" class="term-link">
+                                    GO:0016655
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on NAD(P)H, quinone or similar compound as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PJ0" data-a="GO:0016655" data-r="GO_REF:0000117" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The specific electron-acceptor class is not established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This ARBA machine-learning assignment is not backed by an exact catalytic reaction, and the unusual membrane architecture leaves the physiological acceptor unresolved.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0860/PP_0860-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88PJ0 for Pseudomonas putida KT2440 PP_0860</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The deposited product name proposes a sulfite reductase flavoprotein component.</div>
+
+                        <div class="finding-text">"Sulfite reductase, flavoprotein component"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88PJ0 contains a flavodoxin-like domain.</div>
+
+                        <div class="finding-text">"InterPro; IPR001094; Flavdoxin-like."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro supplies the imported FMN-binding annotation.</div>
+
+                        <div class="finding-text">"DR   GO; GO:0010181; F:FMN binding; IEA:InterPro."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The exact PANTHER placement is an iron-regulated inner-membrane-protein-related family.</div>
+
+                        <div class="finding-text">"PTHR34219; IRON-REGULATED INNER MEMBRANE PROTEIN-RELATED"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23794620" target="_blank" class="term-link">
+                            PMID:23794620
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role for ferredoxin:NAD(P)H oxidoreductase (FprA) in sulfate assimilation and siderophore biosynthesis in Pseudomonads.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonas sulfate assimilation uses sulfite-reduction enzymology distinct from E. coli CysJI.</div>
+
+                        <div class="finding-text">"pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What physiological electron acceptor and membrane-associated process does PP_0860 serve, and does it make any measurable contribution to sulfate assimilation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PJ0" data-a="Q: What physiological electron acceptor and membrane-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the soluble domains bind both FMN and FAD, and would direct FAD-binding evidence justify adding GO:0050660?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PJ0" data-a="Q: Do the soluble domains bind both FMN and FAD, and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare sulfate-, sulfite-, and cysteine-supported growth of a clean PP_0860 deletion with fpr-I and cysI mutants, then assay purified soluble domains against candidate flavin and quinone electron acceptors.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted genetics and biochemical substrate screen</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PJ0" data-a="EXPERIMENT: Compare sulfate-, sulfite-, and cysteine-supported..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0860-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PJ0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_0860 (UniProt Q88PJ0) of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T16:43:42.670205</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0860-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0860-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_0860-uniprot-q88pj0-of-pseudomonas-putida-kt2440">Functional Annotation Report: PP_0860 (UniProt Q88PJ0) of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440) — proteome PSEPK<br />
+<strong>Gene / locus:</strong> PP_0860 (ordered locus name); EMBL AAN66485.1<br />
+<strong>Protein length / mass:</strong> 849 aa / 93.7 kDa<br />
+<strong>Database annotation (automated):</strong> "Sulfite reductase, flavoprotein component"; KEGG K00380; EC 1.8.1.2</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>PP_0860</strong> (UniProt <strong>Q88PJ0</strong>) of <em>Pseudomonas putida</em> KT2440 encodes an <strong>849-amino-acid (~93.7 kDa) integral inner-membrane, iron-regulated diflavin NADPH oxidoreductase</strong>. Its C-terminal cytoplasmic module is a <strong>CysJ / NADPH-cytochrome-P450-reductase-type diflavin reductase</strong> that binds one <strong>FAD</strong> and one <strong>FMN</strong> and catalyzes electron transfer from the two-electron donor <strong>NADPH</strong> to a one-electron acceptor via the canonical relay <strong>NADPH → FAD → FMN → acceptor</strong>. This catalytic module is fused to an N-terminal <strong>polytopic PepSY-associated transmembrane domain (~4 predicted TM helices)</strong> that anchors the protein in the cytoplasmic (inner) membrane.</p>
+<p>Although UniProt/EMBL and KEGG label the protein a "sulfite reductase flavoprotein" (EC 1.8.1.2 / K00380), the investigation concludes that this is an <strong>automated homology transfer</strong> derived from the reductase module's sequence similarity to CysJ, not a validated functional assignment. The protein is markedly larger than a canonical soluble <em>E. coli</em> CysJ (~600 aa), carries a membrane anchor that CysJ lacks, belongs to the PANTHER "iron-regulated inner-membrane protein" family, and lies immediately adjacent to a TonB-dependent siderophore receptor. The dedicated sulfite-reductase hemoprotein partner (<em>cysI</em>) is encoded at a separate, unlinked locus, and a second paralog also carries the K00380 tag — hallmarks of homology-driven annotation rather than genuine pathway membership.</p>
+<p>Integrating domain architecture, membrane topology, protein-family clustering, and genomic synteny, the most parsimonious model is that <strong>PP_0860 is a membrane-associated iron-related redox enzyme — most plausibly a ferric-siderophore/partner reductase — that uses NADPH-derived reducing equivalents to reduce an iron-containing acceptor at the cytoplasmic membrane, contributing to iron acquisition/utilization rather than bulk assimilatory sulfite reduction.</strong> The domain architecture, cofactor identity, and localization are high-confidence bioinformatic conclusions; the precise physiological electron acceptor is an evidence-based inference that has <strong>not been experimentally validated</strong> for this specific protein.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_0860-is-a-membrane-anchored-diflavin-fmn-fad-nadph-oxidoreductase-not-a-canonical-soluble-cysj">Finding 1 — PP_0860 is a membrane-anchored diflavin (FMN + FAD) NADPH oxidoreductase, not a canonical soluble CysJ</h3>
+<p>Analysis of the 849-residue sequence (UniProt, InterPro, Pfam, CDD, PANTHER, CATH) reveals a <strong>two-module fusion protein</strong>. The <strong>N-terminal module (~residues 1–370)</strong> is a <em>PepSY-associated transmembrane region</em> (InterPro <strong>IPR005625</strong> / Pfam <strong>PF03929</strong>; eggNOG <strong>COG3182</strong>, "iron-regulated membrane protein"). The <strong>C-terminal module</strong> is a diflavin reductase comprising a flavodoxin-like FMN-binding domain (IPR001094 / PF00258) and a ferredoxin-NADP-reductase-like FAD/NAD(P)H-binding domain (IPR017927, IPR001709 / PF00175).</p>
+<p>A Kyte–Doolittle hydropathy analysis (window = 19) identified <strong>four hydrophobic, membrane-spanning segments</strong> within residues ~1–370, with hydropathy peaks of 1.9–2.0 at approximately aa 5–35, 139–162, 184–213 and 342–369 — the signature of a <strong>polytopic N-terminal inner-membrane anchor</strong> that is entirely absent from bona fide cytoplasmic CysJ. The conserved diflavin catalytic motifs are present in the C-terminal module in the expected order:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Approx. residue</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flavodoxin FMN loop <code>ASQSGFAEQ</code></td>
+<td>~398–406</td>
+<td>FMN cofactor binding</td>
+</tr>
+<tr>
+<td>FAD/isoalloxazine motif <code>GSGWLTE</code></td>
+<td>~683</td>
+<td>FAD binding</td>
+</tr>
+<tr>
+<td>FNR pyrophosphate/NAD(P) motif <code>GNGTGLAGL</code></td>
+<td>~719–727</td>
+<td>NAD(P)H binding</td>
+</tr>
+</tbody>
+</table>
+<p>At <strong>849 aa / 93.7 kDa</strong>, PP_0860 is substantially larger than the ~600-aa soluble <em>E. coli</em> CysJ, the extra mass being accounted for by the N-terminal membrane domain. The joint presence of FMN- and FAD-binding modules plus an NADPH-binding motif places PP_0860 firmly in the <strong>diflavin reductase superfamily</strong>, whose members "tightly bind two flavin cofactors, FAD and FMN, and catalyze transfer of the reducing equivalents from the two-electron donor NADPH to a variety of one-electron acceptors" (<a href="https://pubmed.ncbi.nlm.nih.gov/15063311/">PMID: 15063311</a>). The canonical mechanism — "FAD accepts a hydride ion from NADPH, and reduced FAD donates electrons to FMN, which in turn transfers electrons to the heme center of cytochrome P450 or NOS oxygenase domain" (<a href="https://pubmed.ncbi.nlm.nih.gov/22982532/">PMID: 22982532</a>) — is the electron relay that PP_0860's C-terminal module is expected to perform.</p>
+<h3 id="finding-2-genomic-context-and-paralogy-indicate-the-sulfite-reductase-flavoprotein-annotation-is-automated-homology-transfer">Finding 2 — Genomic context and paralogy indicate the "sulfite reductase flavoprotein" annotation is automated homology transfer</h3>
+<p>The KEGG orthology group <strong>K00380</strong> (sulfite reductase NADPH flavoprotein alpha subunit, <em>cysJ</em>; EC 1.8.1.2) is assigned to <strong>two</strong> loci in <em>P. putida</em> KT2440: <strong>PP_0860 and PP_1703</strong>. Critically, the cognate sulfite-reductase hemoprotein beta subunit <em>cysI</em> (K00381) is encoded at a <strong>separate, unlinked locus, PP_2371</strong>. A functional assimilatory sulfite reductase requires the physical partnership of the CysJ flavoprotein with the CysI hemoprotein; PP_0860 is not co-localized with any <em>cysI</em> partner.</p>
+<p>The immediate genomic neighborhood of PP_0860 is dominated by <strong>iron-acquisition functions</strong>, not sulfur assimilation:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0858 / PP_0859</td>
+<td>Amino-acid metabolism</td>
+</tr>
+<tr>
+<td><strong>PP_0860</strong></td>
+<td><strong>Target — membrane diflavin oxidoreductase</strong></td>
+</tr>
+<tr>
+<td>PP_0861</td>
+<td>TonB-dependent outer-membrane catecholate siderophore receptor (K16090)</td>
+</tr>
+<tr>
+<td>PP_0862</td>
+<td>PKHD-type Fe(II)/2-oxoglutarate-dependent hydroxylase</td>
+</tr>
+</tbody>
+</table>
+<p>By contrast, the true CysJ-like paralog PP_1703 is flanked by unrelated genes (a leucine-rich-repeat protein and a hypothetical protein), and the CysI hemoprotein PP_2371 is not in a sulfur-assimilation operon with either flavoprotein. The N-terminal membrane PepSY domain (COG3182, "iron-regulated membrane protein") of PP_0860 is absent from genuine cytoplasmic CysJ proteins. Together, the membrane topology, the iron-themed genomic context, and the absence of a co-localized hemoprotein partner argue strongly that the "sulfite reductase flavoprotein" label is an artifact of automated annotation propagated from the diflavin domain's homology to CysJ. Notably, sulfite-reductase-type diflavin flavoproteins possess a promiscuous reductase side-activity: "the flavin reductase activity may function during activation of ribonucleotide reductase or during ferrisiderophore reduction" (<a href="https://pubmed.ncbi.nlm.nih.gov/7657631/">PMID: 7657631</a>) — an activity directly relevant to PP_0860's iron-acquisition neighborhood.</p>
+<h3 id="finding-3-pp_0860-belongs-to-the-panther-iron-regulated-inner-membrane-protein-family-its-reductase-module-is-cysj-like-sir_like1">Finding 3 — PP_0860 belongs to the PANTHER "iron-regulated inner-membrane protein" family; its reductase module is CysJ-like (SiR_like1)</h3>
+<p>The InterPro entry set for Q88PJ0 includes the PANTHER family <strong>PTHR34219 "IRON-REGULATED INNER MEMBRANE PROTEIN-RELATED"</strong> together with the InterPro family <strong>IPR005625 "PepSY-associated TM protein"</strong> (Pfam PF03929). The reductase module maps to CDD <strong>cd06200 "SiR_like1"</strong> (sulfite-reductase-flavoprotein-like) and to CATH superfamilies <strong>3.40.50.360</strong> (flavodoxin/FMN-binding) and <strong>3.40.50.80</strong> (FNR nucleotide-binding), and it carries the PRINTS signatures <strong>FLAVODOXIN (PR00369)</strong> and <strong>FPNCR (PR00371)</strong>.</p>
+<p>This composite classification confirms two things simultaneously: (i) PP_0860 is placed by family clustering into an <em>iron-regulated inner-membrane</em> group, and (ii) its catalytic module is of the CysJ/sulfite-reductase-flavoprotein structural type. These are not contradictory — the SiR-type diflavin fold is a versatile electron-transfer scaffold that appears in "naturally occurring flavocytochrome fusion enzymes like nitric oxide synthases (NOS) and the fatty acid hydroxylase from <em>Bacillus megaterium</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/15063311/">PMID: 15063311</a>); i.e., the same fold is repeatedly recruited into fusion proteins with distinct physiological roles.</p>
+<p>The comparison with the other K00380 locus, PP_1703, further undermines any textbook-CysJ interpretation of either <em>P. putida</em> locus. PP_1703 is a very different, 1341-aa <strong>cytoplasmic</strong> protein (0 predicted TM helices) whose N-terminus (<code>MANSEVRSVCPYCGVGCGIV...</code>) carries a <strong>CxxCxxxC [4Fe-4S] / Mo-bis-MGD cysteine motif</strong> characteristic of assimilatory nitrate/nitrite reductase catalytic subunits — a molybdoenzyme. Thus <em>neither</em> K00380-annotated locus in KT2440 is a conventional ~600-aa soluble CysJ: PP_0860 is a membrane-anchored diflavin fusion, and PP_1703 is a large cytoplasmic molybdoenzyme.</p>
+<h3 id="finding-4-independent-literature-precedent-supports-an-ironferric-siderophore-reductase-role">Finding 4 — Independent literature precedent supports an iron/ferric-siderophore reductase role</h3>
+<p>Multiple experimentally characterized bacterial systems establish the physiological niche inferred for PP_0860 — reduction of Fe³⁺ to release iron from internalized siderophores. Three precedents are especially relevant:</p>
+<ol>
+<li>
+<p><strong>Integral inner-membrane siderophore reductases.</strong> A structurally defined "novel family of integral membrane siderophore reductases" in Gram-negative bacteria has been described (<a href="https://pubmed.ncbi.nlm.nih.gov/34417315/">PMID: 34417315</a>), providing direct precedent for an integral-membrane protein performing ferric-siderophore reduction — the topology PP_0860 exhibits.</p>
+</li>
+<li>
+<p><strong>Dedicated reductases are obligatory for iron release.</strong> Ferric-siderophore reductases (FSR, e.g. FhuF) and siderophore-interacting proteins (SIP) are required because "once inside the cell, iron removal does not occur spontaneously, instead this process is mediated by siderophore-interacting proteins (SIP) and/or by ferric-siderophore reductases (FSR)" (<a href="https://pubmed.ncbi.nlm.nih.gov/33559753/">PMID: 33559753</a>).</p>
+</li>
+<li>
+<p><strong>Membrane/periplasm-associated ferric-siderophore reduction in <em>Pseudomonas</em>.</strong> In the closely related <em>P. aeruginosa</em> pyoverdine pathway, ferric-siderophore reduction near the periplasm/membrane releases iron from internalized PVDI-Fe (<a href="https://pubmed.ncbi.nlm.nih.gov/31924850/">PMID: 31924850</a>).</p>
+</li>
+</ol>
+<p>PP_0860 unites the salient features of these systems: it is an integral inner-membrane, iron-regulated protein (PANTHER PTHR34219), physically adjacent to a TonB-dependent catecholate-siderophore receptor (PP_0861), and its diflavin module has the documented flavin/ferrisiderophore-reductase capability of SiR-flavoproteins (<a href="https://pubmed.ncbi.nlm.nih.gov/7657631/">PMID: 7657631</a>). PP_0860 would, however, use a <strong>distinct NADPH→FAD→FMN diflavin mechanism</strong> rather than the fold of the FpvG-type integral-membrane reductase family — i.e., it is a candidate NADPH-dependent membrane iron/ferric-siderophore reductase.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>PP_0860 is best described as a <strong>modular membrane oxidoreductase</strong> whose two domains carry out complementary tasks: the N-terminal PepSY_TM domain provides inner-membrane localization (and likely a substrate/partner-interaction surface), while the C-terminal diflavin module performs the electron transfer using cytoplasmic NADPH.</p>
+<div class="codehilite"><pre><span></span><code>          OUTER MEMBRANE
+   Fe3+-siderophore  →  [ PP_0861 TonB-dependent receptor ]  → import
+          |
+          v  (periplasm / inner membrane)
+   ================================ INNER MEMBRANE ================================
+[ PepSY_TM anchor ~4 TM helices ]  ← PP_0860 N-terminal domain
+          |  (fusion)
+          v
+   CYTOPLASM     [ Flavodoxin FMN | FNR-FAD/NAD(P)H ]  ← PP_0860 diflavin module
+          ^
+          |
+NADPH → FAD → FMN → [ one-electron acceptor: Fe3+-siderophore / redox partner ]
+                                        |
+                                        v
+                               Fe2+ released  → cytoplasmic iron pool
+</code></pre></div>
+
+<p><strong>Electron flow.</strong> The diflavin module operates by the canonical superfamily mechanism: NADPH delivers a hydride to FAD; reduced FAD passes electrons one at a time to FMN; and FMN delivers single electrons to an external acceptor (<a href="https://pubmed.ncbi.nlm.nih.gov/15063311/">PMID: 15063311</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/22982532/">PMID: 22982532</a>). In canonical diflavin enzymes the terminal acceptor is a heme (cytochrome P450, NOS) or the CysI siroheme. In PP_0860, the genomic and family context points instead to an <strong>iron-containing acceptor</strong> — a ferric-siderophore complex or intermediary redox partner — with reduction of Fe³⁺ to Fe²⁺ weakening iron–siderophore affinity and releasing iron into the cytoplasm.</p>
+<p><strong>Why not sulfite reduction?</strong> A functional assimilatory sulfite reductase (EC 1.8.1.2) is an α₈β₄ hemoflavoprotein requiring tight association of the CysJ flavoprotein with the CysI siroheme-[4Fe-4S] hemoprotein. In KT2440, CysI (PP_2371) is genetically unlinked to PP_0860, and PP_0860 additionally carries a membrane anchor incompatible with the soluble cytoplasmic CysJ role. The "sulfite reductase flavoprotein" annotation is therefore best read as <strong>"has a CysJ-like diflavin fold"</strong> rather than a validated catalytic assignment.</p>
+<p><strong>Localization.</strong> All evidence converges on the <strong>cytoplasmic (inner) membrane</strong>: four predicted TM helices, the PepSY-associated TM domain, and PANTHER classification as an "iron-regulated inner-membrane protein." The catalytic diflavin module faces the <strong>cytoplasm</strong>, where it can access NADPH, while the membrane anchor positions the enzyme to interact with imported iron-siderophore substrates or membrane redox partners.</p>
+<p><strong>Confidence.</strong> This model is built on domain architecture, hydropathy, protein-family clustering, genomic synteny, and analogy to characterized systems. It is well-supported bioinformatically but <strong>not yet experimentally validated</strong> for PP_0860 specifically.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15063311/">15063311</a></td>
+<td><em>Electron transfer by diflavin reductases</em></td>
+<td>Defines the diflavin superfamily (FAD+FMN, NADPH→one-electron acceptor); notes SiR-flavoprotein folds occur in fusion flavoenzymes. <strong>Supports</strong> Findings 1 &amp; 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22982532/">22982532</a></td>
+<td><em>NADPH-cytochrome P450 oxidoreductase: prototypic diflavin reductase</em></td>
+<td>Describes the NADPH→FAD→FMN→acceptor mechanism PP_0860's module is expected to use. <strong>Supports</strong> Finding 1.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7657631/">7657631</a></td>
+<td><em>Flavin reductase activity of the flavoprotein component of E. coli sulfite reductase</em></td>
+<td>Documents that SiR-type diflavin flavoproteins possess flavin/<strong>ferrisiderophore reductase</strong> side-activity. <strong>Supports</strong> Findings 2 &amp; 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33559753/">33559753</a></td>
+<td><em>FhuF, a ferric siderophore reductase from E. coli</em></td>
+<td>Establishes that iron release from internalized siderophores is non-spontaneous and requires dedicated FSR/SIP reductases. <strong>Supports</strong> Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34417315/">34417315</a></td>
+<td><em>Integral membrane siderophore reductases (structural insights)</em></td>
+<td>Precedent for an <strong>integral inner-membrane</strong> siderophore reductase family in Gram-negatives, matching PP_0860's topology. <strong>Supports</strong> Finding 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31924850/">31924850</a></td>
+<td><em>Iron acquisition by pyoverdine in P. aeruginosa</em></td>
+<td>Shows membrane/periplasm-associated ferric-siderophore reduction releases iron in a close relative of <em>P. putida</em>. <strong>Supports</strong> Finding 4.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Contextual literature also reviewed:</strong> ferredoxin-NADP⁺ reductase isoform roles (<a href="https://pubmed.ncbi.nlm.nih.gov/36358515/">PMID: 36358515</a>); flavin-dependent N-monooxygenases in siderophore biosynthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/39155115/">PMID: 39155115</a>); hydroxamate xenosiderophore transport (<a href="https://pubmed.ncbi.nlm.nih.gov/38189440/">PMID: 38189440</a>); and the NtrYX two-component system linking iron and denitrification (<a href="https://pubmed.ncbi.nlm.nih.gov/36012437/">PMID: 36012437</a>).</p>
+<p><strong>Challenges / caveats.</strong> No reviewed paper characterizes PP_0860 directly. The ferric-siderophore-reductase role is an analogy supported by the convergence of topology, iron-regulated family, and genomic synteny — but the characterized reductase precedents (FhuF, the FpvG-type integral-membrane family) are not themselves diflavin PepSY-fusion proteins, so PP_0860 may be a distinct mechanistic variant. The alternative — that PP_0860 acts as a general NADPH-dependent membrane electron donor to an as-yet-unidentified partner — cannot be excluded.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported (strong bioinformatic support):</strong> PP_0860 is a diflavin (FAD+FMN) NADPH oxidoreductase of the CysJ/CPR/NOS superfamily.</li>
+<li><strong>Supported (strong):</strong> PP_0860 is an integral <strong>inner-membrane, iron-regulated</strong> protein via its N-terminal PepSY-associated TM domain.</li>
+<li><strong>Refuted / disfavoured:</strong> PP_0860 is the organism's canonical cytoplasmic assimilatory sulfite-reductase α-subunit (CysJ). Its membrane topology, size, iron-regulated family, non-<em>cys</em> genomic context, separate CysI locus, and paralog redundancy argue against this.</li>
+<li><strong>Open (leading hypothesis):</strong> PP_0860 functions in <strong>iron acquisition/utilization</strong> as a membrane electron-transfer flavoprotein, possibly a ferric-siderophore reductase or the reductase partner of an iron-handling membrane system.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental data on PP_0860.</strong> Every functional conclusion is an inference from sequence, structure prediction, family membership, and genomic context. No enzyme assays, knockout phenotypes, or localization experiments for PP_0860 itself were found in the literature.</li>
+<li><strong>Substrate identity unproven.</strong> The proposed acceptor (ferric-siderophore or membrane redox partner) is inferred from adjacency to PP_0861 and family analogy; the actual physiological electron acceptor and iron-substrate specificity remain unknown.</li>
+<li><strong>Membrane topology is predicted, not solved.</strong> The four TM helices come from Kyte–Doolittle hydropathy; precise topology and the disposition of the diflavin module relative to the membrane are experimentally undetermined.</li>
+<li><strong>Annotation ambiguity persists in databases.</strong> UniProt/EMBL and KEGG still label PP_0860 a sulfite-reductase flavoprotein. This report argues that label is an automated artifact, but a non-canonical sulfur-redox role cannot be formally excluded without experiments.</li>
+<li><strong>Cofactor occupancy unverified.</strong> Although FAD and FMN binding motifs are present, actual cofactor loading and stoichiometry have not been measured for the recombinant protein.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant expression and cofactor analysis.</strong> Express PP_0860 (full-length and the soluble C-terminal diflavin module); confirm FAD/FMN content by UV-visible spectroscopy and HPLC; measure NADPH-oxidase / cytochrome-<em>c</em> / ferricyanide reductase activity to confirm diflavin electron-transfer function.</li>
+<li><strong>Ferric-siderophore reductase assay.</strong> Test whether the diflavin module reduces Fe³⁺-siderophore complexes (e.g., the catecholate siderophore recognized by PP_0861, or model ferric substrates) with NADPH as electron donor; quantify Fe²⁺ release (ferrozine assay) and kinetic parameters.</li>
+<li><strong>Membrane topology and localization.</strong> Use cell fractionation plus topology mapping (LacZ/PhoA fusions or protease-accessibility) to confirm inner-membrane localization and the cytoplasmic orientation of the catalytic module.</li>
+<li><strong>Genetics and phenotyping.</strong> Construct a PP_0860 deletion mutant in KT2440; assay growth under iron limitation, siderophore-dependent iron uptake, and ⁵⁵Fe accumulation; test genetic interaction with PP_0861.</li>
+<li><strong>Regulation.</strong> Determine whether PP_0860 is Fur-regulated / iron-repressed (qRT-PCR under iron-replete vs. iron-limited conditions; Fur-box search in the promoter) to test the "iron-regulated" family prediction.</li>
+<li><strong>Structural biology.</strong> Pursue a cryo-EM or crystal structure of the full-length membrane protein, or AlphaFold-guided model validation, to define the PepSY_TM–diflavin interface and candidate substrate-binding sites.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_0860 (Q88PJ0) of <em>Pseudomonas putida</em> KT2440 is an <strong>integral inner-membrane, iron-regulated diflavin (FAD+FMN) NADPH oxidoreductase</strong>, not the canonical cytoplasmic sulfite-reductase flavoprotein its automated annotation states. Its N-terminal PepSY-associated transmembrane domain anchors it in the cytoplasmic membrane while its C-terminal CysJ/cytochrome-P450-reductase-type module oxidizes NADPH and relays electrons (NADPH → FAD → FMN → acceptor) to a one-electron acceptor facing the cytoplasm. The convergence of membrane topology, iron-regulated protein-family classification, genomic linkage to a TonB-dependent siderophore receptor, and the existence of separate CysJ-like (PP_1703) and CysI hemoprotein (PP_2371) loci points to a <strong>membrane-associated iron-related redox function — most plausibly ferric-siderophore/partner reduction for iron release — rather than bulk assimilatory sulfite reduction</strong>. This is a well-reasoned bioinformatic inference awaiting direct experimental confirmation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0860-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0860-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15063311</li>
+<li>PMID:22982532</li>
+<li>PMID:7657631</li>
+<li>PMID:34417315</li>
+<li>PMID:33559753</li>
+<li>PMID:31924850</li>
+<li>PMID:36358515</li>
+<li>PMID:39155115</li>
+<li>PMID:38189440</li>
+<li>PMID:36012437</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0860-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PJ0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_0860-curation-notes">PP_0860 curation notes</h1>
+<h2 id="first-pass-synthesis">First-pass synthesis</h2>
+<ul>
+<li>The unreviewed Q88PJ0 record calls PP_0860 a sulfite-reductase flavoprotein<br />
+  component, but supplies no EC number or catalytic reaction<br />
+  [UniProtKB:Q88PJ0, "Sulfite reductase, flavoprotein component"].</li>
+<li>Its 849-residue architecture includes flavodoxin-like, FAD/NAD-binding, and<br />
+  PepSY-associated transmembrane features. PANTHER places it in an<br />
+  iron-regulated inner-membrane-protein-related family, not a specific CysJ<br />
+  subfamily.</li>
+<li>Pseudomonas evidence supports an FprA-fed CysI pathway and explicitly<br />
+  distinguishes it from E. coli CysJI [PMID:23794620, "pseudomonads utilize<br />
+  sulfite reduction enzymology distinct from that of E. coli"].</li>
+</ul>
+<h2 id="curation-decision">Curation decision</h2>
+<p>PP_0860 remains an unresolved membrane flavoprotein. FMN binding is retained as<br />
+a plausible non-core property, the exact ARBA electron-acceptor assignment is<br />
+undecided, and the protein is not used to satisfy the core sulfate-reduction<br />
+module. Its FAD-binding-domain architecture motivates direct cofactor testing<br />
+before proposing GO:0050660.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PJ0
+gene_symbol: PP_0860
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_0860 is a large predicted membrane-associated flavoprotein with
+  flavodoxin-like, FAD/NAD-binding, and PepSY-associated transmembrane features.
+  Its deposited product name suggests a sulfite-reductase flavoprotein
+  component, but its architecture and PANTHER assignment are atypical for a
+  canonical soluble CysJ. Its physiological electron acceptor and relationship,
+  if any, to sulfur metabolism remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0010181
+    label: FMN binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Plausible cofactor-binding property supported by flavodoxin-like domains.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The protein contains conserved flavodoxin-like regions that support FMN
+      binding independently of its unresolved physiological role.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0860/PP_0860-uniprot.txt
+      supporting_text: &#39;DR   GO; GO:0010181; F:FMN binding; IEA:InterPro.&#39;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Plausible broad activity for the flavoprotein architecture.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Multiple redox-cofactor-binding domains support an oxidoreductase role,
+      but no exact substrate or physiological reaction is established.
+- term:
+    id: GO:0016655
+    label: oxidoreductase activity, acting on NAD(P)H, quinone or similar compound
+      as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: The specific electron-acceptor class is not established.
+    action: UNDECIDED
+    reason: &gt;-
+      This ARBA machine-learning assignment is not backed by an exact catalytic
+      reaction, and the unusual membrane architecture leaves the physiological
+      acceptor unresolved.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_0860/PP_0860-uniprot.txt
+  title: UniProtKB entry Q88PJ0 for Pseudomonas putida KT2440 PP_0860
+  findings:
+  - statement: The deposited product name proposes a sulfite reductase flavoprotein component.
+    supporting_text: Sulfite reductase, flavoprotein component
+    reference_section_type: RESULTS
+  - statement: Q88PJ0 contains a flavodoxin-like domain.
+    supporting_text: InterPro; IPR001094; Flavdoxin-like.
+    reference_section_type: RESULTS
+  - statement: InterPro supplies the imported FMN-binding annotation.
+    supporting_text: &#39;DR   GO; GO:0010181; F:FMN binding; IEA:InterPro.&#39;
+    reference_section_type: RESULTS
+  - statement: The exact PANTHER placement is an iron-regulated inner-membrane-protein-related family.
+    supporting_text: PTHR34219; IRON-REGULATED INNER MEMBRANE PROTEIN-RELATED
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession, product, GO, domain, and PANTHER lines verified.
+      The record is unreviewed, lacks a catalytic
+      reaction, and contains domain/family evidence that does not resolve the
+      deposited sulfite-reductase component name.
+- id: PMID:23794620
+  title: Role for ferredoxin:NAD(P)H oxidoreductase (FprA) in sulfate assimilation and siderophore biosynthesis in Pseudomonads.
+  findings:
+  - statement: Pseudomonas sulfate assimilation uses sulfite-reduction enzymology distinct from E. coli CysJI.
+    supporting_text: pseudomonads utilize sulfite reduction enzymology distinct from that of E. coli
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract verified. This is evidence against forcing a
+      CysJ-like candidate into the core Pseudomonas sulfate-assimilation module.
+suggested_questions:
+- question: &gt;-
+    What physiological electron acceptor and membrane-associated process does
+    PP_0860 serve, and does it make any measurable contribution to sulfate assimilation?
+- question: &gt;-
+    Do the soluble domains bind both FMN and FAD, and would direct FAD-binding
+    evidence justify adding GO:0050660?
+suggested_experiments:
+- description: &gt;-
+    Compare sulfate-, sulfite-, and cysteine-supported growth of a clean
+    PP_0860 deletion with fpr-I and cysI mutants, then assay purified soluble
+    domains against candidate flavin and quinone electron acceptors.
+  experiment_type: targeted genetics and biochemical substrate screen
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

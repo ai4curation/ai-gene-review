@@ -1,4 +1,4 @@
-"""Post-enrichment analysis for ARBA and UniRule rules.
+"""Post-enrichment analysis for ARBA rules.
 
 This module provides deterministic analysis of UniProt rules including:
 - Fetching InterPro2GO mappings from GO Consortium
@@ -1056,7 +1056,9 @@ def analyze_rule_post_enrichment(
         Complete analysis dict suitable for adding to enriched JSON
 
     Raises:
-        ValueError: If rule has more than max_condition_sets condition sets
+        TypeError: If rule is not an ARBARule instance
+        ValueError: If rule does not have an ARBA######## identifier, or has more than
+            max_condition_sets condition sets
 
     Example:
         >>> from ai_gene_review.etl.arba import ARBAClient # doctest: +SKIP
@@ -1067,6 +1069,19 @@ def analyze_rule_post_enrichment(
         >>> "rule_id" in analysis and "ipr2go_redundancy" in analysis # doctest: +SKIP
         True
     """
+    if not isinstance(rule, ARBARule):
+        raise TypeError(
+            "analyze_rule_post_enrichment() requires an ARBARule instance; "
+            f"got {type(rule).__name__}"
+        )
+
+    rule_id = rule.uni_rule_id
+    if not isinstance(rule_id, str) or re.fullmatch(r"ARBA[0-9]{8}", rule_id) is None:
+        raise ValueError(
+            f"unsupported rule ID {rule_id!r}; post-enrichment analysis "
+            "currently supports ARBA######## IDs only"
+        )
+
     # Check condition set limit
     num_condition_sets = len(rule.condition_sets)
     if num_condition_sets > max_condition_sets:

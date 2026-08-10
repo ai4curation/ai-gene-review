@@ -272,108 +272,216 @@ deep-research-interpro-family interpro_id provider="falcon" *args="":
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
-fetch-research-artifacts trajectory_id research_file *args="":
-    uv run python scripts/fetch_edison_artifacts.py {{trajectory_id}} {{research_file}} {{args}}
+[positional-arguments]
+fetch-research-artifacts trajectory_id research_file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trajectory_id="$1"
+    research_file="$2"
+    shift 2
+    uv run python scripts/fetch_edison_artifacts.py "$trajectory_id" "$research_file" "$@"
 
 # Index Edison/Falcon artifacts recorded in deep research report frontmatter
 # Examples:
 #   just index-research-artifacts
 #   just index-research-artifacts --check
-index-research-artifacts *args="":
-    uv run python scripts/index_research_artifacts.py {{args}}
+[positional-arguments]
+index-research-artifacts *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python scripts/index_research_artifacts.py "$@"
 
 # List focused hypothesis research candidates for one gene
 # Examples:
 #   just gene-hypothesis-list human TP53
 #   just gene-hypothesis-list human TP53 --missing-provider openscientist
-gene-hypothesis-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-hypothesis-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list "$organism" "$gene" "$@"
 
 # Run focused deep research for one gene-level curation hypothesis
 # Dry-run is recommended while selecting a source record.
 # Examples:
 #   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
 #   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
-gene-hypothesis-research provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider"
+    fi
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
 # Examples:
 #   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-all-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-all-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider"
+    fi
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-combined-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-combined-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider"
+    fi
 
 # Find independent literature support for a gene-function hypothesis via deep research
 # Recall-tuned (expect false positives an agent then sifts); general-purpose,
@@ -383,19 +491,49 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
 #   just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor" --dry-run
 #   just gene-function-support asta human TP53 --annotation-term-id GO:0003700
 #   just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
-gene-function-support provider organism gene *args="":
+[positional-arguments]
+gene-function-support provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-function-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider"
+    fi
 
 # List IBA annotations that are candidates for support-finding research
 # By default only IBAs lacking independent PMID/DOI support are listed.
@@ -403,8 +541,14 @@ gene-function-support provider organism gene *args="":
 #   just gene-iba-support-list human CFAP300
 #   just gene-iba-support-list human CFAP300 --missing-provider asta
 #   just gene-iba-support-list human CFAP300 --include-supported
-gene-iba-support-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-iba-support-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list-iba "$organism" "$gene" "$@"
 
 # Find independent literature support for a gene's IBA annotations via deep research
 # Thin wrapper over gene-function-support: feeds each IBA annotation in as a
@@ -415,35 +559,85 @@ gene-iba-support-list organism gene *args="":
 #   just gene-iba-support-research asta human CFAP300 --dry-run
 #   just gene-iba-support-research asta human CFAP300 --annotation-term-id GO:0005737
 #   just gene-iba-support-research asta human CFAP300 --include-supported
-gene-iba-support-research provider organism gene *args="":
+[positional-arguments]
+gene-iba-support-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider"
+    fi
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 
 # Mine review prose and the publications corpus for assay/readout usage, then
 # QC + flag re-review candidates. Always inspect reports/*matched_string_counts*
 # for substring false positives before trusting a class total.
-assay-mine *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py {{args}}
-    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py {{args}}
+[positional-arguments]
+assay-mine *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py "$@"
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py "$@"
 
-assay-flag *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
+# Broader, paper-only join across primary and supporting references. Keep its
+# outputs separate from the canonical primary-reference reports by default.
+[positional-arguments]
+assay-mine-supporting *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py \
+        --include-supporting \
+        --out-dir projects/ASSAY_TO_FUNCTION/reports/with_supporting \
+        "$@"
+
+[positional-arguments]
+assay-flag *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py "$@"
 
 # Consolidate the 60-class catalog + mined matches into summary TSV/MD + figure.
-assay-consolidate *args="":
-    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py {{args}}
+[positional-arguments]
+assay-consolidate *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py "$@"
 
 # Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
 # This writes committed prompt.md files and prints submit commands but NEVER
@@ -452,8 +646,11 @@ assay-consolidate *args="":
 # Examples:
 #   just assay-stage-hypotheses --discriminator indirect_ligand --max 5
 #   just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
-assay-stage-hypotheses *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py {{args}}
+[positional-arguments]
+assay-stage-hypotheses *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py "$@"
 
 # Term deep research (open-ended biological concepts)
 # Examples:
@@ -1196,20 +1393,28 @@ render-module module:
 # CREATES:
 #   - {rule_id}-review.html
 # Example: just render-rule ARBA00026249
-render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id)
-    uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
+[positional-arguments]
+render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run python -c 'import sys; from pathlib import Path; from ai_gene_review.etl.rule_analysis import render_rule_review_html; render_rule_review_html(sys.argv[1], Path(sys.argv[2]))' "$rule_id" "$cache_dir"
 
 # Render all rule reviews as HTML (automatically analyzes first if needed)
+[positional-arguments]
 render-all-rules cache_dir="rules/arba":
     #!/usr/bin/env bash
-    echo "Rendering all rule reviews in {{cache_dir}}..."
+    set -euo pipefail
+    cache_dir="$1"
+    echo "Rendering all rule reviews in $cache_dir..."
     count=0
-    for review_yaml in {{cache_dir}}/*/*-review.yaml; do
+    for review_yaml in "$cache_dir"/*/*-review.yaml; do
         if [ -f "$review_yaml" ]; then
             rule_id=$(basename "$review_yaml" | sed 's/-review.yaml$//')
             echo "  Processing $rule_id..."
             # Use just to call render-rule which has analyze-rule as dependency
-            just render-rule "$rule_id" "{{cache_dir}}"
+            just render-rule "$rule_id" "$cache_dir"
             count=$((count + 1))
         fi
     done
@@ -2066,19 +2271,26 @@ clean-imodulondb-cache:
 # This creates:
 #   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields (WILL NOT OVERWRITE)
 #   - {cache_dir}/{rule_id}/{rule_id}.enriched.json (if missing)
-# Then run these commands in order:
+# For ARBA rules, then run these commands in order:
 #   1. just analyze-rule {rule_id}      # Generate analysis files
 #   2. just sync-rule-review-single {rule_id}  # Populate entries field
 #   3. just rules-deep-research-perplexity {rule_id}  # Research literature
 #   4. Edit the review YAML to fill in TODO placeholders
 #   5. just render-rule {rule_id}       # Generate HTML
+# For UniRule, continue with deep research and manual editing only;
+# post-enrichment analysis-dependent workflows currently support ARBA IDs only.
 # Examples:
 #   just init-rule-review ARBA00026249
 #   just init-rule-review UR000000070 --cache-dir rules/unirule
 # If you get "Review file already exists" error:
 #   rm rules/arba/ARBA00026249/ARBA00026249-review.yaml  # Then re-run init-rule-review
-init-rule-review rule_id *args="":
-    uv run python -c "from ai_gene_review.etl.rule_review_init import init_rule_review; from pathlib import Path; init_rule_review('{{rule_id}}', cache_dir=Path('rules/arba'))"
+[positional-arguments]
+init-rule-review rule_id *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    shift
+    uv run ai-gene-review init-rule-review "$rule_id" "$@"
 
 # Sync ARBA rules with GO annotations from UniProt (stores in rules/arba/)
 # By default only syncs rules that have GO term annotations
@@ -2130,8 +2342,13 @@ rules-validate *args="":
 #   - Requires {rule_id}-review.yaml to exist (create with init-rule-review first)
 #   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
 # Example: just sync-rule-review-single ARBA00027128
-sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id)
-    uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
+[positional-arguments]
+sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run ai-gene-review rules-sync "$cache_dir/$rule_id/$rule_id-review.yaml"
 
 # Sync rule review YAML files with analysis data (pairwise_overlap sections)
 # Examples:
@@ -2173,6 +2390,16 @@ sync-ipr2go cache_dir="rules/arba":
     @echo "Syncing InterPro2GO mappings to {{cache_dir}}..."
     uv run python -c "from ai_gene_review.etl.rule_analysis import fetch_interpro2go_mappings; from pathlib import Path; mappings = fetch_interpro2go_mappings(Path('{{cache_dir}}')); print(f'✓ Cached {len(mappings)} InterPro → GO mappings')"
 
+[positional-arguments]
+_validate-arba-analysis-id rule_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    if [[ ! "$rule_id" =~ ^ARBA[0-9]{8}$ ]]; then
+        printf "error: unsupported rule ID '%s'; post-enrichment analysis currently supports ARBA######## IDs only\n" "$rule_id" >&2
+        exit 2
+    fi
+
 # Analyze an ARBA rule for InterPro overlap and ipr2go redundancy
 # Outputs YAML, JSON, and text formats
 # DEPENDENCIES:
@@ -2185,54 +2412,76 @@ sync-ipr2go cache_dir="rules/arba":
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
-analyze-rule rule_id *args="":
+[positional-arguments]
+analyze-rule rule_id *args: (_validate-arba-analysis-id rule_id)
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
 
-    cache_dir="rules/arba"
-    if [[ "{{args}}" == *"--cache-dir"* ]]; then
-        cache_dir=$(echo "{{args}}" | sed -n 's/.*--cache-dir \([^ ]*\).*/\1/p')
-    fi
+    rule_id="$1"
+    shift
 
-    # Extract rule type from ID
-    if [[ "{{rule_id}}" == ARBA* ]]; then
-        rule_dir="$cache_dir/{{rule_id}}"
-    else
-        rule_dir="$cache_dir/{{rule_id}}"
-    fi
+    cache_dir="rules/arba"
+    force=false
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cache-dir)
+                if [[ $# -lt 2 ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                if [[ -z "$2" || "$2" == --* ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                cache_dir="$2"
+                shift 2
+                ;;
+            --force)
+                force=true
+                shift
+                ;;
+            *)
+                printf "error: unsupported analyze-rule argument '%s'\n" "$1" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    rule_dir="$cache_dir/$rule_id"
 
     mkdir -p "$rule_dir"
 
     # Check if analysis files already exist (lazy evaluation)
-    enriched_file="$rule_dir/{{rule_id}}.enriched.json"
-    analysis_yaml="$rule_dir/{{rule_id}}-analysis.yaml"
+    enriched_file="$rule_dir/$rule_id.enriched.json"
+    analysis_yaml="$rule_dir/$rule_id-analysis.yaml"
 
-    if [ -f "$enriched_file" ] && [ -f "$analysis_yaml" ]; then
-        echo "✓ Analysis files already exist for {{rule_id}}, skipping expensive rebuild"
+    if [[ "$force" == false && -f "$enriched_file" && -f "$analysis_yaml" ]]; then
+        echo "✓ Analysis files already exist for $rule_id, skipping expensive rebuild"
         echo "  - $enriched_file"
         echo "  - $analysis_yaml"
         echo "  Use --force to rebuild (add to args)"
         exit 0
     fi
 
-    echo "Analyzing {{rule_id}}..."
+    echo "Analyzing $rule_id..."
 
     # Run analysis once and save all formats (efficient)
-    uv run python examples/rule_analysis_demo.py {{rule_id}} \
+    uv run python examples/rule_analysis_demo.py "$rule_id" \
         --cache-dir "$cache_dir" \
         --output-dir "$rule_dir" \
         --no-report
 
     echo ""
     echo "✓ Analysis complete. Files created:"
-    echo "  - $rule_dir/{{rule_id}}-analysis.yaml"
-    echo "  - $rule_dir/{{rule_id}}-analysis.json"
-    echo "  - $rule_dir/{{rule_id}}-analysis.txt"
-    echo "  - $rule_dir/{{rule_id}}-heatmap.png"
+    echo "  - $rule_dir/$rule_id-analysis.yaml"
+    echo "  - $rule_dir/$rule_id-analysis.json"
+    echo "  - $rule_dir/$rule_id-analysis.txt"
+    echo "  - $rule_dir/$rule_id-heatmap.png"
     echo ""
     echo "Text report:"
     echo "----------------------------------------"
-    cat "$rule_dir/{{rule_id}}-analysis.txt"
+    cat "$rule_dir/$rule_id-analysis.txt"
 
 # ============== AI4CUI Dashboard ==============
 
