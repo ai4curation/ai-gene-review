@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>recJ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>recJ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MU1" target="_blank" class="term-link">
+                        Q88MU1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "recJ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MU1" data-a="DESCRIPTION: RecJ is a single-stranded-DNA-specific 5&#39;-to-3&#39; ex..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RecJ is a single-stranded-DNA-specific 5&#39;-to-3&#39; exonuclease of the conserved DHH/DHHA1 family. It degrades exposed single-stranded DNA during DNA repair and recombination and is a candidate nuclease for mismatch-excision tracts requiring 5&#39;-to-3&#39; degradation. Its exact contribution relative to Exonuclease VII and Exonuclease I in KT2440 mismatch repair remains unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MU1" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too broad relative to the directional exonuclease function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0045145 specifies both single-stranded DNA and 5&#39;-to-3&#39; directionality.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MU1" data-a="GO:0006281" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept as a conserved biological role of RecJ-family ssDNA exonucleases.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the RecJ-specific domain architecture and directional DNA-processing activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006310" target="_blank" class="term-link">
+                                    GO:0006310
+                                </a>
+                            </span>
+                            <span class="term-label">DNA recombination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MU1" data-a="GO:0006310" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept as a conserved RecJ pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RecJ-mediated ssDNA processing contributes to recombination intermediates.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008409" target="_blank" class="term-link">
+                                    GO:0008409
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; exonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MU1" data-a="GO:0008409" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct directional parent, but it should be refined to the single-stranded-DNA-specific RecJ activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88MU1 is explicitly a single-stranded-DNA-specific RecJ exonuclease; GO:0045145 captures the substrate and 5&#39;-to-3&#39; direction, whereas GO:0008409 does not identify DNA or single-strand specificity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045145" target="_blank" class="term-link">
+                                    single-stranded DNA 5&#39;-3&#39; DNA exonuclease activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/recJ/recJ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Single-stranded-DNA-specific exonuclease RecJ</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/recJ/recJ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PTHR30255:SF2; SINGLE-STRANDED-DNA-SPECIFIC EXONUCLEASE RECJ</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RecJ degrades single-stranded DNA in the 5&#39;-to-3&#39; direction during DNA repair and recombination and may supply one orientation of mismatch excision.</h3>
+                <span class="vote-buttons" data-g="Q88MU1" data-a="FUNCTION: RecJ degrades single-stranded DNA in the 5&#39;-to-3&#39; ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045145" target="_blank" class="term-link">
+                            single-stranded DNA 5&#39;-3&#39; DNA exonuclease activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                DNA repair
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006310" target="_blank" class="term-link">
+                                DNA recombination
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/recJ/recJ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the RecJ family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/recJ/recJ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Single-stranded-DNA-specific exonuclease RecJ</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/recJ/recJ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK RecJ (Q88MU1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Belongs to the RecJ family."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0008409"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PTHR30255:SF2"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"RecName: Full=Single-stranded-DNA-specific exonuclease RecJ"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PTHR30255:SF2; SINGLE-STRANDED-DNA-SPECIFIC EXONUCLEASE RECJ"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does RecJ provide the 5&#39;-to-3&#39; mismatch-excision activity in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MU1" data-a="Q: Does RecJ provide the 5&#39;-to-3&#39; mismatch-excision a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure mismatch correction and excision-tract formation in recJ and xseA/xseB single and combined mutants using strand-oriented reporter substrates.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RecJ and Exonuclease VII are partially redundant for 5&#39;-directed mismatch excision.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: directional repair genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88MU1" data-a="EXPERIMENT: Measure mismatch correction and excision-tract for..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(recJ-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MU1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">RecJ (Q88MU1 / PP_1477): Single-Stranded-DNA-Specific 5&#39;→3&#39; Exonuclease of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T18:32:45.111338</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="recJ-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="recJ-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="recj-q88mu1-pp_1477-single-stranded-dna-specific-53-exonuclease-of-pseudomonas-putida-kt2440">RecJ (Q88MU1 / PP_1477): Single-Stranded-DNA-Specific 5'→3' Exonuclease of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>RecJ (UniProt Q88MU1, locus PP_1477) of <em>Pseudomonas putida</em> KT2440 is a metal-dependent, single-stranded-DNA-specific 5'→3' exonuclease.</strong> It processively degrades single-stranded DNA (ssDNA) from a free 5' end, releasing 5'-mononucleotide products, and belongs to the DHH/DHHA1 phosphoesterase superfamily. Catalysis proceeds through a two-metal-ion (Mg²⁺/Mn²⁺) mechanism organized around a conserved DHH catalytic motif, while strict single-strand specificity is imposed by a dedicated oligonucleotide/oligosaccharide-binding (OB) fold domain that binds ssDNA but not double-stranded DNA. The enzyme carries out its function in the <strong>cytoplasm</strong>, acting directly on chromosomal DNA and DNA-repair intermediates.</p>
+<p>Functionally, RecJ is the dedicated <strong>5'→3' resection nuclease of the RecF homologous-recombination pathway</strong>. Working together with the RecQ helicase, the RecFOR mediator complex, and single-stranded DNA-binding protein (SSB), it resects the 5'-terminated strand at DNA gaps and ends to generate the 3'-single-stranded overhangs on which RecA nucleoprotein filaments assemble. Beyond recombination, RecJ contributes the excision step of methyl-directed <strong>mismatch repair</strong>, participates in <strong>base-excision repair (BER)</strong> in some bacteria, and provides overlapping, sometimes essential, nuclease activity for the repair of stalled or broken <strong>replication forks</strong>.</p>
+<p>No experimental study has yet characterized the <em>P. putida</em> enzyme directly. However, the functional assignment is strongly supported by comparative evidence: Q88MU1 shares <strong>59% amino-acid identity</strong> with the biochemically-characterized <em>Escherichia coli</em> RecJ, retains a fully intact DHH catalytic motif and the complete four-domain RecJ architecture, and the <em>P. putida</em> KT2440 genome encodes the <strong>complete set of RecJ's pathway partners</strong> (RecQ, RecFOR, RecA, SSB, MutS/MutL, UvrD, and the RecBCD complex). This report synthesizes the identity verification, structural/mechanistic basis, pathway context, and comparative-genomic evidence into a coherent functional annotation.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before proceeding, the target identity was verified against the mandatory checklist:</p>
+<ul>
+<li><strong>UniProt accession:</strong> Q88MU1</li>
+<li><strong>Protein:</strong> Single-stranded-DNA-specific exonuclease RecJ</li>
+<li><strong>Gene / locus:</strong> <em>recJ</em> / PP_1477</li>
+<li><strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950), taxon 160488</li>
+<li><strong>Family:</strong> RecJ family (DHH phosphoesterase superfamily)</li>
+<li><strong>Domains:</strong> DDH_dom (IPR001667); DHH_sf (IPR038763); DHHA1 (IPR003156); RecJ (IPR004610); RecJ_OB (IPR041122)</li>
+</ul>
+<p>The gene symbol <em>recJ</em>, the "single-stranded-DNA-specific exonuclease" description, and the DHH/DHHA1/OB-fold domain complement are fully mutually consistent and match the RecJ family. The literature retrieved describes RecJ enzymes of the correct family and function. <strong>This is not a case of gene-symbol ambiguity</strong> — the annotation is coherent and the comparative evidence (below) confirms the assignment.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-recj-q88mu1-pp_1477-is-a-single-stranded-dna-specific-53-exonuclease">Finding 1: RecJ (Q88MU1, PP_1477) is a single-stranded-DNA-specific 5'→3' exonuclease</h3>
+<p>The gene/protein identity is unambiguously confirmed. UniProt entry Q88MU1 is annotated as "Single-stranded-DNA-specific exonuclease RecJ," corresponding to gene <em>recJ</em> / OrderedLocusName <strong>PP_1477</strong> in <em>Pseudomonas putida</em> KT2440. The protein is a member of the RecJ/DHH family and carries the diagnostic DDH domain (IPR001667), the DHH superfamily fold (IPR038763), the DHHA1 domain (IPR003156), and the RecJ OB-fold domain (IPR041122).</p>
+<p>The enzymatic activity of this protein family is defined by detailed biochemical work on the <em>E. coli</em> ortholog. RecJ degrades ssDNA strictly in the <strong>5'→3' direction</strong>, releasing <strong>mononucleotide products</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a>). It is a <strong>processive</strong> enzyme, degrading approximately <strong>1,000 nucleotides after a single binding event</strong> to single-stranded DNA. The substrate specificity is well defined: RecJ requires a <strong>single-stranded 5' tail of ≥7 nucleotides</strong> for robust binding, and is poorly active on tails of ≤6 nucleotides. Critically, the enzyme is <strong>equally potent on 5'-phosphorylated and unphosphorylated ends</strong>, showing that end chemistry does not gate substrate engagement. It can degrade a ssDNA tail up to a double-strand junction with only limited penetration into duplex DNA.</p>
+<blockquote>
+<p><em>"The RecJ exonuclease from Escherichia coli degrades single-stranded DNA (ssDNA) in the 5'-3' direction and participates in homologous recombination and mismatch repair."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a></p>
+<p><em>"RecJ is a processive exonuclease, degrading approximately 1000 nt after a single binding event to single-strand DNA, and releases mononucleotide products."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a></p>
+<p><em>"RecJ required single-stranded tails of 7 nt or greater for robust binding."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a></p>
+</blockquote>
+<p>These properties establish the core biochemical identity of the protein: a directional, processive, single-strand-specific exonuclease that produces mononucleotides.</p>
+<h3 id="finding-2-specificity-arises-from-a-four-domain-architecture-with-a-dhh-catalytic-core-an-ob-fold-ssdna-binding-domain-and-a-two-metal-ion-mechanism">Finding 2: Specificity arises from a four-domain architecture with a DHH catalytic core, an OB-fold ssDNA-binding domain, and a two-metal-ion mechanism</h3>
+<p>The structural basis of RecJ's activity and specificity was resolved by X-ray crystallography of the <em>Thermus thermophilus</em> enzyme in ligand-free and metal-bound (Mn²⁺/Mg²⁺) states. RecJ consists of <strong>four domains that assemble into a molecule with an "O-like" ring structure</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a>). A newly identified <strong>OB-fold domain</strong> within this architecture binds ssDNA (but not dsDNA), and this domain alone is sufficient for DNA binding — establishing it as a novel member of the OB-fold superfamily. Truncated RecJ containing only the catalytic core has markedly lower ssDNA affinity than the intact enzyme, demonstrating that the OB-fold domain is the primary determinant of single-strand recognition and high-affinity engagement.</p>
+<p>The catalytic mechanism is a <strong>two-metal-ion mechanism</strong>: the structure of the RecJ–Mn²⁺ complex indicates that phosphodiester-bond hydrolysis proceeds through coordination of two divalent metal ions in the active site.</p>
+<blockquote>
+<p><em>"The entire RecJ consists of four domains that form a molecule with an O-like structure."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a></p>
+<p><em>"The OB fold domain alone could bind to DNA, indicating that this domain is a novel member of the OB fold superfamily."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a></p>
+<p><em>"the structure of the RecJ-Mn(2+) complex suggests that the hydrolysis reaction catalyzed by RecJ proceeds through a two-metal ion mechanism."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a></p>
+</blockquote>
+<p>RecJ belongs to the broader <strong>DHH phosphoesterase superfamily</strong>, which includes family-2 inorganic pyrophosphatases, the PPX1 exopolyphosphatase, the cyclic AMPase prune, and the replication factor Cdc45. These enzymes share a common two-metal-ion strategy for hydrolyzing phosphodiester or phosphoanhydride bonds (<a href="https://pubmed.ncbi.nlm.nih.gov/22147708/">PMID: 22147708</a>). Q88MU1 carries all of the corresponding domain signatures (DDH_dom, DHH_sf, DHHA1, RecJ_OB), placing the <em>P. putida</em> protein squarely within this mechanistic framework.</p>
+<blockquote>
+<p><em>"the DHH family, including inorganic pyrophosphatases and RecJ ssDNA exonucleases. These enzymes catalyze the hydrolysis of phosphodiester bonds via a mechanism involving two Mn(2+) ions."</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/22147708/">PMID: 22147708</a></p>
+</blockquote>
+<h3 id="finding-3-recj-is-the-53-exonuclease-of-the-recf-recombination-pathway-and-functions-in-mismatch-and-base-excision-repair">Finding 3: RecJ is the 5'→3' exonuclease of the RecF recombination pathway and functions in mismatch and base-excision repair</h3>
+<p>RecJ's cellular role is defined by its position within the RecF recombination pathway. In <em>E. coli</em>, the RecF recombination machinery consists of <strong>RecQ (helicase), RecJ (5'→3' exonuclease), and RecFOR (RecA–ssDNA filament formation)</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">PMID: 15687199</a>). Genetic analysis of nuclease-deficient <em>recB recD</em> mutants shows that <strong>conjugational recombination and DNA repair after UV and gamma irradiation are highly dependent on <em>recJ</em></strong>. In this genetic context, RecJ substitutes for the missing 5'→3' exonuclease activity normally provided by the RecBCD enzyme, resecting the 5'-terminated strand to expose 3'-ssDNA for RecA loading.</p>
+<blockquote>
+<p><em>"the recombination machinery of the RecF pathway consists of RecQ (helicase), RecJ (5'--&gt;3' exonuclease), and RecFOR (RecA-single-stranded DNA filament formation)"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">PMID: 15687199</a></p>
+<p><em>"conjugational recombination and DNA repair after UV and gamma irradiation in this mutant are highly dependent on recJ"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">PMID: 15687199</a></p>
+</blockquote>
+<p>RecJ's activity is functionally coupled to <strong>SSB (single-stranded DNA-binding protein)</strong>. DNA binding and nuclease activity of RecJ are specifically enhanced by pre-addition of SSB, and this interaction is proposed to aid recruitment of RecJ to its substrate (<a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a>). This coupling integrates RecJ into the SSB-coated ssDNA landscape that characterizes repair and recombination intermediates.</p>
+<blockquote>
+<p><em>"DNA binding and nuclease activity of RecJ was specifically enhanced by the pre-addition of ssDNA-binding protein and we propose that this specific interaction may aid recruitment of RecJ"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a></p>
+</blockquote>
+<p>Beyond recombination, RecJ contributes to two additional repair pathways:</p>
+<ul>
+<li><strong>Mismatch repair (MMR):</strong> RecJ is one of the redundant single-strand exonucleases (alongside ExoI, ExoVII, and ExoX) that carry out the excision step of methyl-directed mismatch repair in concert with the UvrD helicase.</li>
+<li><strong>Base-excision repair (BER):</strong> In <em>Deinococcus radiodurans</em>, deletion of <em>drRecJ</em> causes extreme sensitivity to hydrogen peroxide and methyl-methanesulphonate, an elevated spontaneous mutation rate, and accumulation of unrepaired abasic sites in vivo — direct evidence of RecJ participation in BER, where it favors the long-patch pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/32870272/">PMID: 32870272</a>).</li>
+</ul>
+<blockquote>
+<p><em>"the Deinococcus radiodurans RecJ (drRecJ) deletion strain exhibited extreme sensitivity to hydrogen peroxide and methyl-methanesulphonate, as well as a high spontaneous mutation rate and an accumulation of unrepaired abasic sites in vivo, indicating the involvement of drRecJ in the BER pathway"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/32870272/">PMID: 32870272</a></p>
+</blockquote>
+<p>RecJ also participates in the repair of stalled or broken replication forks. In <em>Acinetobacter baylyi</em>, the double mutants <em>recJ recBCD</em> and <em>recJ recD</em> are <strong>non-viable</strong>, indicating that the RecJ and RecBCD nucleases provide overlapping, essential resection activity for the recombinational repair of spontaneously inactivated replication forks — if one nuclease is absent, the other becomes essential (<a href="https://pubmed.ncbi.nlm.nih.gov/17600070/">PMID: 17600070</a>).</p>
+<blockquote>
+<p><em>"double mutants recJ recBCD and recJ recD were non-viable, suggesting that the RecJ DNase or the RecBCD DNase (presumably absent in recD) becomes essential for the recombinational repair of spontaneously inactivated replication forks if the other DNase is absent"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/17600070/">PMID: 17600070</a></p>
+</blockquote>
+<h3 id="finding-4-p-putida-recj-q88mu1-shares-59-sequence-identity-with-the-characterized-e-coli-recj-and-retains-an-intact-dhh-catalytic-motif">Finding 4: <em>P. putida</em> RecJ (Q88MU1) shares 59% sequence identity with the characterized <em>E. coli</em> RecJ and retains an intact DHH catalytic motif</h3>
+<p>To validate the transfer of functional annotation from the biochemically-characterized <em>E. coli</em> enzyme to the <em>P. putida</em> protein, the two sequences were aligned directly. Q88MU1 (<em>P. putida</em> RecJ) is <strong>569 amino acids</strong>. A Smith-Waterman local alignment against <em>E. coli</em> RecJ (UniProt P21893, 577 aa — the enzyme whose ssDNA 5'→3' exonuclease activity is directly characterized) yields <strong>327/552 = 59.2% amino-acid identity</strong> over a 552-residue alignment.</p>
+<p>Most importantly, the <strong>diagnostic DHH catalytic tripeptide is conserved</strong>, occurring at residue 156 of Q88MU1, and the active-site block is nearly identical between the two orthologs:</p>
+<table>
+<thead>
+<tr>
+<th>Ortholog</th>
+<th>Active-site sequence block</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> RecJ (Q88MU1)</td>
+<td>…VT<strong>DHH</strong>LPGEQLP…</td>
+</tr>
+<tr>
+<td><em>E. coli</em> RecJ (P21893)</td>
+<td>…VT<strong>DHH</strong>LPGDTLP…</td>
+</tr>
+</tbody>
+</table>
+<p>This preserves the DHH-superfamily metal-coordinating catalytic core. The amino-acid composition (38 Asp, 36 Glu, 16 His) is consistent with the acidic, metal-binding active site expected of DHH phosphoesterases. At 59% identity across the full length and with an intact catalytic motif, functional transfer from <em>E. coli</em> RecJ to <em>P. putida</em> RecJ is on very firm ground.</p>
+<blockquote>
+<p><em>"the structure of the RecJ-Mn(2+) complex suggests that the hydrolysis reaction catalyzed by RecJ proceeds through a two-metal ion mechanism"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a> — the conserved DHH motif identified in Q88MU1 corresponds to the metal-coordinating catalytic core defined structurally in RecJ.</p>
+</blockquote>
+<h3 id="finding-5-the-p-putida-kt2440-genome-encodes-a-complete-recf-pathway-and-mismatch-repair-machinery-providing-the-functional-context-for-recj">Finding 5: The <em>P. putida</em> KT2440 genome encodes a complete RecF-pathway and mismatch-repair machinery, providing the functional context for RecJ</h3>
+<p>A protein cannot carry out a pathway function in isolation; its partners must be present. UniProt gene queries against <em>P. putida</em> KT2440 (taxon 160488) confirm that the genome encodes the <strong>complete set of partners</strong> that RecJ requires for its annotated pathways:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Locus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ssDNA 5'→3' exonuclease</td>
+<td><em>recJ</em></td>
+<td>Q88MU1</td>
+<td>PP_1477</td>
+</tr>
+<tr>
+<td>RecQ helicase</td>
+<td><em>recQ</em></td>
+<td>Q88EE9</td>
+<td>PP_4516</td>
+</tr>
+<tr>
+<td>RecF mediator</td>
+<td><em>recF</em></td>
+<td>Q88RW7</td>
+<td>PP_0012</td>
+</tr>
+<tr>
+<td>RecO mediator</td>
+<td><em>recO</em></td>
+<td>Q88MY3</td>
+<td>PP_1435</td>
+</tr>
+<tr>
+<td>RecR mediator</td>
+<td><em>recR</em></td>
+<td>Q88F32</td>
+<td>PP_4267</td>
+</tr>
+<tr>
+<td>Recombinase</td>
+<td><em>recA</em></td>
+<td>Q88ME4</td>
+<td>PP_1629</td>
+</tr>
+<tr>
+<td>ssDNA-binding protein</td>
+<td><em>ssb</em></td>
+<td>Q88QK5</td>
+<td>PP_0485</td>
+</tr>
+<tr>
+<td>Mismatch recognition</td>
+<td><em>mutS</em></td>
+<td>Q88ME7</td>
+<td>PP_1626</td>
+</tr>
+<tr>
+<td>MMR endonuclease/coordinator</td>
+<td><em>mutL</em></td>
+<td>Q88DD1</td>
+<td>PP_4896</td>
+</tr>
+<tr>
+<td>Helicase II (MMR/recomb.)</td>
+<td><em>uvrD</em></td>
+<td>Q88C31</td>
+<td>PP_5352</td>
+</tr>
+<tr>
+<td>RecBCD complex</td>
+<td><em>recB/recC/recD</em></td>
+<td>—</td>
+<td>PP_4673/4674/4672</td>
+</tr>
+</tbody>
+</table>
+<p>Notably, <em>recJ</em> (PP_1477) is located adjacent to <em>recO</em> (PP_1435) in the genome. The presence of the full RecQ–RecFOR–RecA–SSB machinery, the complete MutS/MutL/UvrD mismatch-repair set, and the RecBCD complex confirms that <em>P. putida</em> possesses the exact molecular context in which RecJ is known to operate in other bacteria.</p>
+<blockquote>
+<p><em>"the recombination machinery of the RecF pathway consists of RecQ (helicase), RecJ (5'--&gt;3' exonuclease), and RecFOR (RecA-single-stranded DNA filament formation)"</em> — <a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">PMID: 15687199</a> — defines the exact partner set confirmed present in the <em>P. putida</em> genome alongside <em>recJ</em>.</p>
+</blockquote>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-enzyme">The enzyme</h3>
+<p>RecJ is a <strong>cytoplasmic, Mg²⁺/Mn²⁺-dependent, processive single-strand exonuclease</strong> that hydrolyzes phosphodiester bonds one at a time from a free 5' terminus, moving 5'→3' and liberating 5'-mononucleotides. Two features work together to define its substrate:</p>
+<ol>
+<li><strong>The OB-fold domain</strong> binds ssDNA with high affinity and does not engage dsDNA — this is the molecular gatekeeper that makes RecJ single-strand specific and enforces the ≥7-nt tail requirement.</li>
+<li><strong>The DHH/DHHA1 catalytic core</strong> positions two divalent metal ions to activate a water nucleophile and stabilize the transition state during phosphodiester hydrolysis.</li>
+</ol>
+<p>The four domains assemble into an O-shaped ring; ssDNA is threaded through the ring so that the OB-fold grips the strand while the catalytic center cleaves it, accounting for both processivity (~1,000 nt/binding event) and directionality.</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">5</span><span class="err">&#39;</span><span class="o">-</span><span class="n">P</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="err">–</span><span class="n">N</span><span class="w"> </span><span class="mf">...</span><span class="w"> </span><span class="n">ssDNA</span><span class="w"> </span><span class="mf">3</span><span class="err">&#39;</span>
+<span class="w">     </span><span class="err">│</span>
+<span class="w">    </span><span class="err">┌────────┴─────────┐</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">OB</span><span class="o">-</span><span class="n">fold</span><span class="w"> </span><span class="n">domain</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">ssDNA</span><span class="w"> </span><span class="p">(</span><span class="ow">not</span><span class="w"> </span><span class="n">dsDNA</span><span class="p">);</span><span class="w"> </span><span class="n">requires</span><span class="w"> </span><span class="err">≥</span><span class="mf">7</span><span class="o">-</span><span class="n">nt</span><span class="w"> </span><span class="mf">5</span><span class="err">&#39;</span><span class="w"> </span><span class="n">tail</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">specificity</span><span class="p">)</span><span class="w">   </span><span class="err">│</span>
+<span class="w">    </span><span class="err">├──────────────────┤</span>
+<span class="w">    </span><span class="err">│</span><span class="w"> </span><span class="n">DHH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">DHHA1</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">two</span><span class="o">-</span><span class="n">metal</span><span class="o">-</span><span class="n">ion</span><span class="w"> </span><span class="p">(</span><span class="n">Mg²</span><span class="err">⁺</span><span class="o">/</span><span class="n">Mn²</span><span class="err">⁺</span><span class="p">)</span><span class="w"> </span><span class="n">hydrolysis</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">catalysis</span><span class="p">)</span><span class="w">     </span><span class="err">│</span><span class="w">     </span><span class="n">DHH</span><span class="w"> </span><span class="n">motif</span><span class="w"> </span><span class="err">@</span><span class="w"> </span><span class="n">residue</span><span class="w"> </span><span class="mf">156</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">Q88MU1</span>
+<span class="w">    </span><span class="err">└────────┬─────────┘</span>
+<span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="n">releases</span><span class="w"> </span><span class="mf">5</span><span class="err">&#39;</span><span class="o">-</span><span class="n">mononucleotides</span><span class="p">,</span><span class="w"> </span><span class="kr">on</span><span class="n">e</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="mf">5</span><span class="err">&#39;→</span><span class="mf">3</span><span class="err">&#39;</span>
+<span class="w">     </span><span class="err">▼</span>
+<span class="n">pN</span><span class="w">  </span><span class="n">pN</span><span class="w">  </span><span class="n">pN</span><span class="w"> </span><span class="mf">...</span><span class="w">  </span><span class="p">(</span><span class="n">mononucleotide</span><span class="w"> </span><span class="n">products</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="the-pathway-role">The pathway role</h3>
+<p>RecJ's principal job is <strong>5' end resection</strong> to create the 3'-ssDNA substrate for RecA. The RecF pathway operates on single-strand gaps and DNA ends generated during replication, repair, and recombination:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">RecQ</span><span class="w"> </span><span class="n">helicase</span><span class="w"> </span><span class="n">unwinds</span><span class="w"> </span><span class="n">duplex</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">══════════╗</span>
+<span class="w">   </span><span class="mi">5</span><span class="s1">&#39;────────╫──────── 3&#39;</span><span class="w">    </span><span class="n">duplex</span><span class="o">/</span><span class="n">gap</span>
+<span class="w">   </span><span class="mi">3</span><span class="s1">&#39;────────╫──────── 5&#39;</span>
+<span class="w">    </span><span class="err">║</span>
+<span class="w">   </span><span class="n">RecJ</span><span class="w"> </span><span class="n">resects</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="mi">5</span><span class="s1">&#39;-strand ─────►  (removes 5&#39;</span><span class="w"> </span><span class="n">ssDNA</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="s1">&#39;→3&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">══════════</span>
+<span class="w">   </span><span class="err">────────</span><span class="w">  </span><span class="mi">3</span><span class="s1">&#39;-OH ssDNA overhang, coated by SSB</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">   </span><span class="n">RecFOR</span><span class="w"> </span><span class="n">loads</span><span class="w"> </span><span class="n">RecA</span><span class="w"> </span><span class="n">onto</span><span class="w"> </span><span class="n">ssDNA</span><span class="w"> </span><span class="p">(</span><span class="n">displacing</span><span class="w"> </span><span class="n">SSB</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">RecA</span><span class="w"> </span><span class="n">nucleoprotein</span><span class="w"> </span><span class="n">filament</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">strand</span><span class="w"> </span><span class="n">invasion</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">repair</span>
+</code></pre></div>
+
+<p>SSB both coats the resulting ssDNA and stimulates RecJ's recruitment and nuclease activity, integrating the exonuclease into the ordered assembly of the recombination machine. When RecBCD is inactivated (as in <em>recB recD</em> backgrounds), RecJ becomes the sole 5'→3' resection nuclease and is genetically essential for recombination and radiation resistance.</p>
+<h3 id="the-same-enzyme-three-pathways">The same enzyme, three pathways</h3>
+<table>
+<thead>
+<tr>
+<th>Pathway</th>
+<th>RecJ's specific task</th>
+<th>Key partners</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>RecF homologous recombination</strong></td>
+<td>5'→3' resection to expose 3'-ssDNA for RecA loading</td>
+<td>RecQ, RecFOR, SSB, RecA</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">PMID: 15687199</a></td>
+</tr>
+<tr>
+<td><strong>Methyl-directed mismatch repair</strong></td>
+<td>Excision of the error-containing strand (redundant with ExoI/ExoVII/ExoX)</td>
+<td>MutS, MutL, UvrD</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a></td>
+</tr>
+<tr>
+<td><strong>Base-excision repair</strong></td>
+<td>Removal of ssDNA/abasic intermediates; favors long-patch BER</td>
+<td>glycosylases, AP endonuclease, Pol I</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32870272/">PMID: 32870272</a></td>
+</tr>
+<tr>
+<td><strong>Replication-fork repair</strong></td>
+<td>Resection of stalled/broken forks (overlaps RecBCD; essential when RecBCD absent)</td>
+<td>RecBCD, RecFOR</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17600070/">PMID: 17600070</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="confidence-in-the-p-putida-assignment">Confidence in the <em>P. putida</em> assignment</h3>
+<p>The assignment for Q88MU1 rests on three independent, mutually reinforcing lines of evidence:</p>
+<ol>
+<li><strong>Sequence homology</strong> — 59% identity to the characterized <em>E. coli</em> enzyme, well above the ~30–40% threshold generally accepted for reliable functional transfer of enzymatic activity.</li>
+<li><strong>Motif and domain integrity</strong> — the DHH catalytic tripeptide and all four diagnostic domains (DDH, DHH_sf, DHHA1, RecJ_OB) are intact, indicating an active enzyme rather than a degenerate pseudo-nuclease.</li>
+<li><strong>Genomic context</strong> — the full complement of RecF-pathway, MMR, and RecBCD partners is present, confirming that the cellular machinery RecJ operates within exists in <em>P. putida</em>.</li>
+</ol>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Paper (abbreviated)</th>
+<th>Contribution to this annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">16488881</a></td>
+<td><em>RecJ exonuclease: substrates, products and interaction with SSB</em></td>
+<td>Defines the core biochemistry: 5'→3' direction, mononucleotide products, ~1,000-nt processivity, ≥7-nt tail requirement, phosphorylation independence, SSB stimulation. The primary functional reference.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">20129927</a></td>
+<td><em>Structure of RecJ exonuclease defines its specificity for single-stranded DNA</em></td>
+<td>Provides the structural basis: four-domain O-like architecture, the OB-fold ssDNA-binding domain, and the two-metal-ion catalytic mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22147708/">22147708</a></td>
+<td><em>Structural and functional insights into...Cdc45...DHH family of phosphoesterases</em></td>
+<td>Places RecJ within the DHH superfamily and confirms the shared two-metal-ion phosphodiester hydrolysis mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15687199/">15687199</a></td>
+<td><em>Effects of recJ, recQ, and recFOR mutations...in recB recD double mutants of E. coli</em></td>
+<td>Establishes RecJ as the 5'→3' exonuclease of the RecF pathway and shows genetic dependence of recombination/repair on <em>recJ</em>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32870272/">32870272</a></td>
+<td><em>Participation of RecJ in the base excision repair pathway of Deinococcus radiodurans</em></td>
+<td>Demonstrates RecJ involvement in BER via deletion phenotypes (H₂O₂/MMS sensitivity, abasic-site accumulation, elevated mutation rate).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17600070/">17600070</a></td>
+<td><em>Deletions of recBCD or recD...lethal together with a recJ deletion in Acinetobacter baylyi</em></td>
+<td>Shows RecJ and RecBCD provide overlapping, essential resection for replication-fork repair.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16085468/">16085468</a></td>
+<td><em>The mechanism of base excision repair in Chlamydiophila pneumoniae</em></td>
+<td>Corroborates that RecJ (as a single-strand-specific exonuclease) is a component of bacterial BER in some organisms.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17599355/">17599355</a></td>
+<td><em>Crystal structure of the cytosolic exopolyphosphatase (PPX1)...</em></td>
+<td>Illustrates the DHH-family fold and active-site architecture shared with RecJ, reinforcing the mechanistic classification.</td>
+</tr>
+</tbody>
+</table>
+<p>Several additional papers (<a href="https://pubmed.ncbi.nlm.nih.gov/18567657/">PMID: 18567657</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20138014/">PMID: 20138014</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20018207/">PMID: 20018207</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21705756/">PMID: 21705756</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/7498761/">PMID: 7498761</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/22617484/">PMID: 22617484</a>) collectively situate RecJ within the RecQ–RecFOR–UvrD–MMR network, reinforcing its role as a resection nuclease that acts on recombination and replication-fork intermediates. Notably, <a href="https://pubmed.ncbi.nlm.nih.gov/14599740/">PMID: 14599740</a> documents that RecJ, ExoI, ExoVII, and ExoX provide redundant single-strand exonuclease functions required for mismatch repair, UV resistance, and homologous recombination — clarifying that RecJ operates within a partially redundant nuclease group rather than as an isolated activity.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> enzyme.</strong> All enzymatic and structural evidence derives from orthologs (<em>E. coli</em>, <em>T. thermophilus</em>, <em>D. radiodurans</em>, <em>A. baylyi</em>). The functional assignment for Q88MU1 is inferential — albeit very strongly supported by 59% identity, intact catalytic motifs, and complete genomic pathway context. Direct biochemistry (purified Q88MU1 assayed on defined ssDNA substrates) has not been performed.</p>
+</li>
+<li>
+<p><strong>No structure of the <em>P. putida</em> protein was analyzed.</strong> The four-domain architecture and OB-fold specificity are inferred from <em>T. thermophilus</em> and homology; no experimental or AlphaFold structure of Q88MU1 was examined in this investigation.</p>
+</li>
+<li>
+<p><strong>Metal-cofactor and kinetic parameters are unmeasured</strong> for the <em>P. putida</em> enzyme. Whether it prefers Mg²⁺ or Mn²⁺ in vivo, and its precise processivity/tail-length requirements, are assumed from the <em>E. coli</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Pathway partitioning in <em>P. putida</em> is untested.</strong> The relative contribution of RecJ versus RecBCD to recombination, MMR, and fork repair may differ from <em>E. coli</em>, and <em>Pseudomonas</em>-specific phenotypes (e.g., under oxidative or solvent stress relevant to <em>P. putida</em>'s environmental niche) are unknown.</p>
+</li>
+<li>
+<p><strong>Regulation and expression</strong> of PP_1477 (promoter, SOS-inducibility, stress responsiveness) were not examined.</p>
+</li>
+<li>
+<p><strong>Protein–protein interactions</strong> (e.g., a direct RecJ–SSB physical interface, RecJ–RecQ coupling) are inferred functionally and have not been mapped for the <em>P. putida</em> protein.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and in vitro nuclease assay.</strong> Purify tagged Q88MU1 and assay on 5'-labeled ssDNA oligonucleotides of varying tail length (5–15 nt) to confirm 5'→3' processive degradation, mononucleotide product release, and the ≥7-nt tail requirement. Test Mg²⁺ vs Mn²⁺ dependence.</p>
+</li>
+<li>
+<p><strong>Structural determination / prediction.</strong> Generate an AlphaFold model of Q88MU1 (with PAE/pLDDT confidence) and superpose it onto the <em>T. thermophilus</em> RecJ structure (from <a href="https://pubmed.ncbi.nlm.nih.gov/20129927/">PMID: 20129927</a>) to verify the O-like ring, OB-fold positioning, and active-site geometry. Confirm the DHH metal-coordinating residues.</p>
+</li>
+<li>
+<p><strong>Gene knockout phenotyping in KT2440.</strong> Construct a Δ<em>recJ</em> (ΔPP_1477) strain and assess sensitivity to UV, γ-irradiation, H₂O₂, and MMS; measure spontaneous mutation rate and abasic-site accumulation to test recombination, BER, and MMR contributions in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Synthetic-lethality/epistasis screens.</strong> Construct Δ<em>recJ</em> Δ<em>recBCD</em> and Δ<em>recJ</em> Δ<em>recD</em> double mutants to test whether the overlapping essential resection role seen in <em>A. baylyi</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17600070/">PMID: 17600070</a>) holds in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>SSB-stimulation assay.</strong> Test whether <em>P. putida</em> SSB (PP_0485) stimulates Q88MU1 nuclease/binding activity, as reported for the <em>E. coli</em> pair (<a href="https://pubmed.ncbi.nlm.nih.gov/16488881/">PMID: 16488881</a>).</p>
+</li>
+<li>
+<p><strong>Subcellular localization confirmation.</strong> Fluorescent-fusion imaging to confirm cytoplasmic localization and potential relocalization to DNA-repair foci after damage.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>RecJ (Q88MU1 / PP_1477) of <em>Pseudomonas putida</em> KT2440 is confidently annotated as a <strong>cytoplasmic, single-stranded-DNA-specific, processive 5'→3' exonuclease</strong> of the DHH/DHHA1 phosphoesterase superfamily. It hydrolyzes ssDNA from a free 5' end to mononucleotides via a two-metal-ion mechanism, with single-strand specificity enforced by an OB-fold domain. Its primary cellular function is <strong>5' end resection in the RecF homologous-recombination pathway</strong>, generating 3'-ssDNA overhangs for RecA loading in cooperation with RecQ, RecFOR, and SSB; it also serves the excision steps of mismatch repair and base-excision repair, and provides overlapping resection for replication-fork repair. Although no direct study of the <em>P. putida</em> enzyme exists, the assignment is robustly supported by 59% identity to the characterized <em>E. coli</em> RecJ, a fully conserved DHH catalytic motif and complete domain architecture, and the presence of RecJ's entire set of pathway partners in the <em>P. putida</em> genome.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="recJ-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="recJ-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:16488881</li>
+<li>PMID:20129927</li>
+<li>PMID:22147708</li>
+<li>PMID:15687199</li>
+<li>PMID:32870272</li>
+<li>PMID:17600070</li>
+<li>PMID:18567657</li>
+<li>PMID:20138014</li>
+<li>PMID:20018207</li>
+<li>PMID:21705756</li>
+<li>PMID:7498761</li>
+<li>PMID:22617484</li>
+<li>PMID:14599740</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(recJ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MU1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="recj-curation-notes">recJ curation notes</h1>
+<p>Q88MU1 has the DHH, DHHA1, and OB-domain architecture of a RecJ<br />
+single-stranded-DNA exonuclease. The imported GO:0008409 directional parent is<br />
+refined to GO:0045145, which captures both single-stranded DNA and 5'-to-3'<br />
+directionality. DNA repair and recombination were accepted as conserved RecJ<br />
+roles. Its MMR-specific role is kept as a testable module candidate because no<br />
+direct KT2440 evidence was found.</p>
+<h2 id="openscientist-adjudication">OpenScientist adjudication</h2>
+<p>The OpenScientist report corroborated the DHH/DHHA1/OB-domain architecture,<br />
+5'-to-3' single-stranded-DNA exonuclease activity, and conserved repair and<br />
+recombination roles. Its mismatch-repair assignment remains orthology-based.<br />
+The report also incorrectly describes <code>recJ</code> (<code>PP_1477</code>) as adjacent to <code>recO</code><br />
+(<code>PP_1435</code>); this genomic-context claim was rejected and is not used in the<br />
+review or module.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MU1
+gene_symbol: recJ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  RecJ is a single-stranded-DNA-specific 5&#39;-to-3&#39; exonuclease of the conserved
+  DHH/DHHA1 family. It degrades exposed single-stranded DNA during DNA repair
+  and recombination and is a candidate nuclease for mismatch-excision tracts
+  requiring 5&#39;-to-3&#39; degradation. Its exact contribution relative to
+  Exonuclease VII and Exonuclease I in KT2440 mismatch repair remains
+  unresolved.
+existing_annotations:
+  - term:
+      id: GO:0003676
+      label: nucleic acid binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Too broad relative to the directional exonuclease function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: GO:0045145 specifies both single-stranded DNA and 5&#39;-to-3&#39; directionality.
+  - term:
+      id: GO:0006281
+      label: DNA repair
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Accept as a conserved biological role of RecJ-family ssDNA exonucleases.
+      action: ACCEPT
+      reason: Supported by the RecJ-specific domain architecture and directional DNA-processing activity.
+  - term:
+      id: GO:0006310
+      label: DNA recombination
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Accept as a conserved RecJ pathway role.
+      action: ACCEPT
+      reason: RecJ-mediated ssDNA processing contributes to recombination intermediates.
+  - term:
+      id: GO:0008409
+      label: 5&#39;-3&#39; exonuclease activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Correct directional parent, but it should be refined to the
+        single-stranded-DNA-specific RecJ activity.
+      action: MODIFY
+      reason: &gt;-
+        Q88MU1 is explicitly a single-stranded-DNA-specific RecJ exonuclease;
+        GO:0045145 captures the substrate and 5&#39;-to-3&#39; direction, whereas
+        GO:0008409 does not identify DNA or single-strand specificity.
+      proposed_replacement_terms:
+        - id: GO:0045145
+          label: single-stranded DNA 5&#39;-3&#39; DNA exonuclease activity
+      supported_by:
+        - reference_id: file:PSEPK/recJ/recJ-uniprot.txt
+          supporting_text: &#34;RecName: Full=Single-stranded-DNA-specific exonuclease RecJ&#34;
+        - reference_id: file:PSEPK/recJ/recJ-uniprot.txt
+          supporting_text: &#34;PTHR30255:SF2; SINGLE-STRANDED-DNA-SPECIFIC EXONUCLEASE RECJ&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: file:PSEPK/recJ/recJ-uniprot.txt
+    title: UniProtKB entry for PSEPK RecJ (Q88MU1)
+    findings:
+      - supporting_text: &#34;Belongs to the RecJ family.&#34;
+      - supporting_text: &#34;GO:0008409&#34;
+      - supporting_text: &#34;PTHR30255:SF2&#34;
+      - supporting_text: &#34;RecName: Full=Single-stranded-DNA-specific exonuclease RecJ&#34;
+      - supporting_text: &#34;PTHR30255:SF2; SINGLE-STRANDED-DNA-SPECIFIC EXONUCLEASE RECJ&#34;
+core_functions:
+  - description: &gt;-
+      RecJ degrades single-stranded DNA in the 5&#39;-to-3&#39; direction during DNA
+      repair and recombination and may supply one orientation of mismatch
+      excision.
+    molecular_function:
+      id: GO:0045145
+      label: single-stranded DNA 5&#39;-3&#39; DNA exonuclease activity
+    directly_involved_in:
+      - id: GO:0006281
+        label: DNA repair
+      - id: GO:0006310
+        label: DNA recombination
+    supported_by:
+      - reference_id: file:PSEPK/recJ/recJ-uniprot.txt
+        supporting_text: &#34;Belongs to the RecJ family.&#34;
+      - reference_id: file:PSEPK/recJ/recJ-uniprot.txt
+        supporting_text: &#34;RecName: Full=Single-stranded-DNA-specific exonuclease RecJ&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: Does RecJ provide the 5&#39;-to-3&#39; mismatch-excision activity in KT2440?
+suggested_experiments:
+  - hypothesis: RecJ and Exonuclease VII are partially redundant for 5&#39;-directed mismatch excision.
+    description: &gt;-
+      Measure mismatch correction and excision-tract formation in recJ and
+      xseA/xseB single and combined mutants using strand-oriented reporter
+      substrates.
+    experiment_type: directional repair genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

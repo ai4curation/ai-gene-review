@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xseA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>xseA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P26" target="_blank" class="term-link">
+                        Q88P26
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "xseA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P26" data-a="DESCRIPTION: XseA is the large subunit of the cytosolic exodeox..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>XseA is the large subunit of the cytosolic exodeoxyribonuclease VII complex. Together with XseB it forms a bidirectional single-stranded DNA exonuclease that degrades DNA in either the 5&#39;-to-3&#39; or 3&#39;-to-5&#39; direction to nucleoside 5&#39;-phosphates. This chemistry can support excision tracts in DNA repair, but a specific requirement for XseA in KT2440 mismatch repair has not been demonstrated directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P26" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but broad relative to the complex&#39;s single-stranded DNA exonuclease activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The catalytic and complex terms are more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P26" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent location, but cytosol is the nonredundant leaf location shared with the obligate XseB partner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88P26 is the large subunit of an obligate soluble XseA/XseB complex, and the partner Q88QG5 carries the more specific cytosol annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/xseA/xseA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Heterooligomer composed of large and small subunits.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/xseB/xseB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005829</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006308" target="_blank" class="term-link">
+                                    GO:0006308
+                                </a>
+                            </span>
+                            <span class="term-label">DNA catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P26" data-a="GO:0006308" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept. Exonuclease VII degrades single-stranded DNA to smaller products.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct biological output of EC 3.1.11.6.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008855" target="_blank" class="term-link">
+                                    GO:0008855
+                                </a>
+                            </span>
+                            <span class="term-label">exodeoxyribonuclease VII activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P26" data-a="GO:0008855" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept as the complex-level catalytic activity to which the XseA large subunit contributes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact EC 3.1.11.6 family assignment in a reviewed UniProt record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/xseA/xseA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=3.1.11.6</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009318" target="_blank" class="term-link">
+                                    GO:0009318
+                                </a>
+                            </span>
+                            <span class="term-label">exodeoxyribonuclease VII complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P26" data-a="GO:0009318" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept. XseA is the large subunit of the XseA/XseB heterooligomer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the reviewed subunit annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/xseA/xseA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Heterooligomer composed of large and small subunits.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XseA is the large subunit of exodeoxyribonuclease VII and contributes to bidirectional degradation of single-stranded DNA with XseB.</h3>
+                <span class="vote-buttons" data-g="Q88P26" data-a="FUNCTION: XseA is the large subunit of exodeoxyribonuclease ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006308" target="_blank" class="term-link">
+                                DNA catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009318" target="_blank" class="term-link">
+                            exodeoxyribonuclease VII complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/xseA/xseA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Heterooligomer composed of large and small subunits.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/xseA/xseA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=3.1.11.6</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/xseA/xseA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK XseA (Q88P26)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Bidirectionally degrades single-stranded DNA"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"EC=3.1.11.6"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Heterooligomer composed of large and small subunits."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/xseB/xseB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for the PSEPK Exonuclease VII partner XseB (Q88QG5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0005829"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the XseA/XseB complex execute either orientation of KT2440 mismatch-excision tracts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P26" data-a="Q: Does the XseA/XseB complex execute either orientat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure mutation rates and repair-tract products in xseA, xseB, recJ, and sbcB single and combined mutants, with matched protein-expression controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Exonuclease VII provides a partially redundant mismatch-excision nuclease in KT2440.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: combinatorial repair genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P26" data-a="EXPERIMENT: Measure mutation rates and repair-tract products i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(xseA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P26" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *xseA* (Q88P26) — Exodeoxyribonuclease VII Large Subunit in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T18:19:43.787569</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="xseA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="xseA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-xsea-q88p26-exodeoxyribonuclease-vii-large-subunit-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>xseA</em> (Q88P26) — Exodeoxyribonuclease VII Large Subunit in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>xseA</strong> (ordered locus <strong>PP_1027</strong>; UniProt <strong>Q88P26</strong>) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>large, catalytic subunit of Exodeoxyribonuclease VII (Exonuclease VII, ExoVII; EC 3.1.11.6)</strong>, a single-strand-specific DNA exonuclease that participates in bacterial genome maintenance. The 459-amino-acid protein belongs to the <strong>XseA family</strong> (HAMAP rule MF_00378) and carries the diagnostic Exonuc_VII_L (PF02601) catalytic domain together with an N-terminal OB-fold nucleic-acid-binding domain. All family and domain assignments are consistent with the UniProt identity provided, and bioinformatic analysis confirms that the four catalytic residues defined experimentally in the <em>Escherichia coli</em> enzyme are strictly conserved in the <em>P. putida</em> ortholog. The gene symbol is unambiguous: "xseA" universally denotes the exonuclease VII large subunit across bacteria, and no conflicting gene of the same symbol was encountered.</p>
+<p>Functionally, ExoVII is an obligate heterooligomer of the large subunit <strong>XseA</strong> (encoded here) and a small subunit <strong>XseB</strong> (xseB). The holoenzyme processively degrades <strong>single-stranded DNA from both the 5′ and 3′ termini</strong>, releasing short oligonucleotide products (predominantly 4–12 nucleotides), and — unusually among nucleases — requires <strong>no divalent metal cofactor</strong>. A 2024 cryo-EM structure of the <em>E. coli</em> enzyme revealed a strikingly large, elongated <strong>XseA₄·XseB₂₄ holo-complex</strong> whose catalytic sites are buried in the interior and accessible only through narrow pores, providing an elegant structural explanation for the enzyme's strict single-strand specificity: only flexible ssDNA can thread into the active sites. XseA itself contributes the OB-fold DNA-binding module, the metal-independent catalytic center (a fold related to 3-dehydroquinate dehydratase), and the extended α-helical/coiled-coil segment that scaffolds multiple XseB copies and drives oligomerization.</p>
+<p>Biologically, ExoVII acts in the <strong>cytoplasm</strong> on chromosomal DNA as one of several redundant single-strand exonucleases (alongside RecJ, ExoI, and ExoX). It contributes to <strong>methyl-directed mismatch-repair excision</strong>, <strong>UV and recombinational DNA repair</strong>, <strong>mutation avoidance</strong> (suppressing frameshifts and quasipalindrome-associated mutagenesis), <strong>processing of multicopy single-stranded DNA (msDNA)</strong>, <strong>removal of 3′ single-stranded flaps</strong> to prevent aberrant re-replication, and — as newly established — <strong>repair of covalent DNA–protein crosslinks (DPCs)</strong>. It is important to note that <strong>no direct experimental study of the <em>P. putida</em> protein exists</strong>; the functional annotation is inferred with high confidence from well-characterized orthologs in <em>E. coli</em> and <em>Thermotoga maritima</em> combined with strong sequence and structural conservation.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting the functional findings, the mandatory identity checks were completed:</p>
+<table>
+<thead>
+<tr>
+<th>Verification step</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol matches protein description</td>
+<td>✅ "xseA" is the universal symbol for the exonuclease VII <strong>large subunit</strong>; matches "Exodeoxyribonuclease VII large subunit"</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125), locus PP_1027</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ XseA family (MF_00378); Exonuc_VII_L (PF02601), OB-fold — all consistent with characterized ExoVII large subunits</td>
+</tr>
+<tr>
+<td>Symbol ambiguity / conflicting literature</td>
+<td>✅ None. "xseA" is not shared with an unrelated gene; literature is unambiguous</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> The gene symbol is unambiguous and the domain architecture matches the exonuclease VII large-subunit family precisely. Research proceeded with confidence, drawing mechanistic detail from <em>E. coli</em> and <em>T. maritima</em> orthologs and mapping it to Q88P26 by sequence/structure conservation.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-xsea-is-the-catalytic-large-subunit-of-a-single-strand-specific-dna-exonuclease-ec-31116">Finding 1 — XseA is the catalytic large subunit of a single-strand-specific DNA exonuclease (EC 3.1.11.6)</h3>
+<p><em>Pseudomonas putida</em> XseA (Q88P26, PP_1027) belongs to the XseA family (HAMAP MF_00378) and contains the Exonuc_VII_L (PF02601) catalytic domain and an OB-fold nucleic-acid-binding domain. The catalytic activity of the enzyme it forms — Exodeoxyribonuclease VII — was defined biochemically in the classic <em>E. coli</em> studies of Chase and Richardson. The canonical enzyme is <strong>"specific for single-stranded DNA and can initiate hydrolysis at both 5′ and 3′ termini... The limit products of the reaction are oligonucleotides, predominantly in the range of tetramers to dodecamers. DNA is hydrolyzed by the enzyme in a processive fashion"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/1103829/">PMID: 1103829</a>). This establishes the enzyme's four defining biochemical properties: <strong>(i)</strong> single-stranded DNA substrate specificity, <strong>(ii)</strong> bidirectional (5′→3′ <em>and</em> 3′→5′) initiation, <strong>(iii)</strong> processivity, and <strong>(iv)</strong> oligonucleotide (≈4–12 nt) end products. ExoVII additionally requires no divalent cations, distinguishing it from most nucleases.</p>
+<p>Bioinformatic mapping strongly supports transfer of this activity to the <em>P. putida</em> protein. The four <em>E. coli</em> catalytic residues (D155, R205, H238, D241) are <strong>strictly conserved</strong> in Q88P26 as <strong>D161, R210, H243, D246</strong> (≈46% global identity by Needleman–Wunsch alignment), including the diagnostic <strong>GGGSLEDLW</strong> and <strong>GHETDV</strong> signature motifs. The two-subunit composition is likewise conserved: ExoVII "is comprised of two subunits (XseA and XseB) that are highly conserved and present in most sequenced prokaryotic genomes" (<a href="https://pubmed.ncbi.nlm.nih.gov/18812402/">PMID: 18812402</a>), confirming that the <em>P. putida</em> XseA is a canonical member of a broadly distributed family.</p>
+<h3 id="finding-2-exovii-is-an-obligate-heterooligomer-with-a-defined-domain-function-architecture">Finding 2 — ExoVII is an obligate heterooligomer with a defined domain-function architecture</h3>
+<p>ExoVII activity requires <strong>both</strong> subunits. Genetic work in <em>E. coli</em> showed that xseB is a structural gene, because "Exonuclease VII purified from KLC835 (xseA⁺ xseB3) is more heat labile than enzyme purified from the parent strain... showing that xseB is a structural gene for exonuclease VII" (<a href="https://pubmed.ncbi.nlm.nih.gov/6350262/">PMID: 6350262</a>). Independent reconstitution work confirmed that "both subunits were required for enzyme activity" (<a href="https://pubmed.ncbi.nlm.nih.gov/26626352/">PMID: 26626352</a>).</p>
+<p>Domain dissection of XseA established a clear division of labor within the large subunit: <strong>"the OB-fold domain is responsible for DNA binding, the coiled-coil domain is involved in binding multiple copies of the XseB subunit and residues D155, R205, H238 and D241 of the middle domain are important for the catalytic activity but not for DNA binding"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/22718974/">PMID: 22718974</a>). The 459-residue <em>P. putida</em> XseA reproduces this three-part architecture:</p>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Location in XseA</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N-terminal OB-fold</td>
+<td>N-terminus</td>
+<td>Single-stranded DNA binding</td>
+</tr>
+<tr>
+<td>Middle catalytic domain</td>
+<td>Central</td>
+<td>Phosphodiester hydrolysis (conserved D161/R210/H243/D246)</td>
+</tr>
+<tr>
+<td>C-terminal coiled-coil / α-helical segment</td>
+<td>C-terminus</td>
+<td>Scaffolds multiple XseB copies; drives oligomerization</td>
+</tr>
+</tbody>
+</table>
+<p>The catalytic residues are essential for nuclease chemistry but not for substrate binding, mirroring the conserved residues identified in the <em>P. putida</em> sequence.</p>
+<h3 id="finding-3-exovii-functions-in-the-cytoplasm-in-dna-repair-mismatch-repair-excision-and-mutation-avoidance">Finding 3 — ExoVII functions in the cytoplasm in DNA repair, mismatch-repair excision, and mutation avoidance</h3>
+<p>ExoVII is one of a set of <strong>redundant single-strand-specific exonucleases</strong> — with RecJ, ExoI, and ExoX — that carry out the excision step of methyl-directed mismatch repair: mismatch correction depends on "three redundant single-strand DNA-specific exonucleases (RecJ, ExoI, and ExoVII)" (<a href="https://pubmed.ncbi.nlm.nih.gov/11418610/">PMID: 11418610</a>). This redundancy extends to general DNA repair: while no single exonuclease mutant is markedly UV-sensitive, "the RecJ⁻ ExoVII⁻ double mutant was extremely sensitive. The addition of an ExoI⁻ mutation augmented this sensitivity, suggesting that all three exonucleases play partially redundant roles in DNA repair" (<a href="https://pubmed.ncbi.nlm.nih.gov/9584082/">PMID: 9584082</a>).</p>
+<p>ExoVII also protects the genome by removing 3′ single-stranded DNA that would otherwise trigger aberrant replication restart: "cells must have either RecG or a 3′ single-stranded DNA (ssDNA) exonuclease, which can be exonuclease I, exonuclease VII, or SbcCD" (<a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">PMID: 20647503</a>). Its excision activity is regulated by mismatch-repair machinery — MutS and UvrD stimulate ExoVII action on duplex substrates in an ATP-dependent manner while paradoxically protecting ssDNA targets, implying a "destabilized duplex" intermediate in exonuclease-mediated strand repair (<a href="https://pubmed.ncbi.nlm.nih.gov/19618961/">PMID: 19618961</a>). Loss of ExoI/ExoVII also elevates frameshift mutation and stimulates quasipalindrome-associated mutagenesis (<a href="https://pubmed.ncbi.nlm.nih.gov/16547019/">PMID: 16547019</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/10986118/">PMID: 10986118</a>), underscoring a <strong>mutation-avoidance</strong> role. The enzyme acts on <strong>cytoplasmic chromosomal DNA</strong>; it possesses no signal or localization sequence and is a soluble, cation-independent protein.</p>
+<h3 id="finding-4-exovii-is-a-large-xsea4xseb24-holo-complex-with-buried-catalytic-sites-gated-by-steric-access-cryo-em-2024">Finding 4 — ExoVII is a large XseA₄·XseB₂₄ holo-complex with buried catalytic sites gated by steric access (cryo-EM, 2024)</h3>
+<p>A 2024 cryo-EM structure (Liu, Hauk, Yan &amp; Berger, <em>PNAS</em>) provided the first high-resolution architecture of ExoVII and transformed understanding of its specificity. The <em>E. coli</em> enzyme is <strong>"a highly elongated XseA₄·XseB₂₄ holo-complex. Each XseA subunit dimerizes through a central extended α-helical segment decorated by six XseB subunits and a C-terminal, domain-swapped β-barrel element; two XseA₂·XseB₁₂ subcomplexes further associate using N-terminal OB folds and catalytic domains to form a spindle-shaped, catenated octaicosamer"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">PMID: 38271335</a>).</p>
+<p>Two mechanistic insights follow. First, the catalytic domain "adopt[s] a nuclease fold related to 3-dehydroquinate dehydratases," and the active sites "are sequestered in the center of the complex and accessible only through large pores formed between XseA tetramers." Second, <strong>"substrate selectivity is controlled by steric access to its nuclease elements and... tetramer dissociation results from substrate DNA binding"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">PMID: 38271335</a>). In other words, the enzyme's single-strand specificity is not chemically imposed at the active site but <strong>sterically imposed by the architecture</strong>: only thin, flexible ssDNA can reach the buried catalytic centers, while rigid duplex DNA is excluded. Substrate binding triggers a conformational change (tetramer dissociation) that couples recognition to catalysis. The 459-aa <em>P. putida</em> XseA preserves all elements required for this assembly — the OB-fold, the DHQase-like catalytic domain (D161/R210/H243/D246), and the long central α-helical/coiled-coil segment.</p>
+<h3 id="finding-5-exovii-participates-in-dnaprotein-crosslink-dpc-repair-paralleling-mre11-rad50sbccd-by-convergent-evolution">Finding 5 — ExoVII participates in DNA–protein crosslink (DPC) repair, paralleling Mre11-Rad50/SbcCD by convergent evolution</h3>
+<p>The same 2024 study extended ExoVII's functional repertoire beyond classical ssDNA trimming. It reported that <strong>"ExoVII participates in multiple nucleic acid-dependent pathways including the processing of multicopy single-stranded DNA and the repair of covalent DNA-protein crosslinks (DPCs)"</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">PMID: 38271335</a>). The role in msDNA processing is corroborated by in vivo work showing that multicopy single-stranded DNAs Ec83 and Ec78 are natural ExoVII substrates, cleaved between the fourth and fifth nucleotide from the 5′ end (<a href="https://pubmed.ncbi.nlm.nih.gov/26626352/">PMID: 26626352</a>).</p>
+<p>Structurally, ExoVII shows a remarkable case of convergent evolution: "Despite a lack of sequence and fold homology, the physical organization of ExoVII is reminiscent of Mre11·Rad50/SbcCD ATP-dependent nucleases used in the repair of double-stranded DNA breaks, including those formed by DPCs through aberrant topoisomerase activity, suggesting that there may have been convergent evolutionary pressure to contend with such damage events" (<a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">PMID: 38271335</a>). This positions ExoVII within the cell's toolkit for resolving protein-blocked DNA ends — a role of potential relevance to <em>P. putida</em>, an organism prized for its metabolic robustness and stress tolerance.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the five findings yields a coherent picture of XseA's role in <em>P. putida</em>:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="nt">Exodeoxyribonuclease</span><span class="w"> </span><span class="nt">VII</span><span class="w"> </span><span class="o">(</span><span class="nt">ExoVII</span><span class="o">)</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="nt">EC</span><span class="w"> </span><span class="nt">3</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">11</span><span class="p">.</span><span class="nc">6</span>
+<span class="w"> </span><span class="o">=================================================</span>
+<span class="w">   </span><span class="nt">Composition</span><span class="o">:</span><span class="w">  </span><span class="nt">XseA</span><span class="w"> </span><span class="o">(</span><span class="nt">large</span><span class="o">,</span><span class="w"> </span><span class="nt">catalytic</span><span class="o">;</span><span class="w"> </span><span class="nt">PP_1027</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">Q88P26</span><span class="o">)</span><span class="w">  </span><span class="nt">x4</span>
+<span class="w"> </span><span class="nt">XseB</span><span class="w"> </span><span class="o">(</span><span class="nt">small</span><span class="o">,</span><span class="w"> </span><span class="nt">structural</span><span class="o">;</span><span class="w"> </span><span class="nt">xseB</span><span class="o">)</span><span class="w">              </span><span class="nt">x24</span>
+<span class="w"> </span><span class="nt">--</span><span class="o">&gt;</span><span class="w"> </span><span class="nt">XseA4</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nt">XseB24</span><span class="w"> </span><span class="nt">elongated</span><span class="w"> </span><span class="nt">holo-complex</span>
+
+<span class="w">   </span><span class="nt">XseA</span><span class="w"> </span><span class="nt">domain</span><span class="w"> </span><span class="nt">map</span><span class="w"> </span><span class="o">(</span><span class="nt">459</span><span class="w"> </span><span class="nt">aa</span><span class="o">):</span>
+<span class="w">   </span><span class="o">+</span><span class="nt">-------------</span><span class="o">+</span><span class="nt">----------------------</span><span class="o">+</span><span class="nt">---------------------------</span><span class="o">+</span>
+<span class="w">   </span><span class="o">|</span><span class="w">  </span><span class="nt">OB-fold</span><span class="w">    </span><span class="o">|</span><span class="w">  </span><span class="nt">Catalytic</span><span class="w"> </span><span class="o">(</span><span class="nt">middle</span><span class="o">)</span><span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="nt">a-helical</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">coiled-coil</span><span class="w">  </span><span class="o">|</span>
+<span class="w">   </span><span class="o">|</span><span class="w">  </span><span class="nt">ssDNA</span><span class="w"> </span><span class="nt">bind</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="nt">D161</span><span class="w"> </span><span class="nt">R210</span><span class="w"> </span><span class="nt">H243</span><span class="w"> </span><span class="nt">D246</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="nt">binds</span><span class="w"> </span><span class="nt">XseB</span><span class="o">,</span><span class="w"> </span><span class="nt">oligomerizes</span><span class="w"> </span><span class="o">|</span>
+<span class="w">   </span><span class="o">+</span><span class="nt">-------------</span><span class="o">+</span><span class="nt">----------------------</span><span class="o">+</span><span class="nt">---------------------------</span><span class="o">+</span>
+<span class="w"> </span><span class="nt">DHQase-like</span><span class="w"> </span><span class="nt">nuclease</span><span class="w"> </span><span class="nt">fold</span><span class="o">;</span><span class="w"> </span><span class="nt">metal-INDEPENDENT</span>
+
+<span class="w">   </span><span class="nt">Reaction</span><span class="o">:</span><span class="w">     </span><span class="nt">ssDNA</span><span class="w">  </span><span class="nt">--</span><span class="o">(</span><span class="nt">processive</span><span class="o">,</span><span class="w"> </span><span class="nt">from</span><span class="w"> </span><span class="nt">BOTH</span><span class="w"> </span><span class="nt">5</span><span class="s1">&#39; and 3&#39;</span><span class="w"> </span><span class="nt">ends</span><span class="o">)</span><span class="nt">--</span><span class="o">&gt;</span>
+<span class="w"> </span><span class="nt">oligonucleotides</span><span class="w"> </span><span class="o">(~</span><span class="nt">4-12</span><span class="w"> </span><span class="nt">nt</span><span class="o">),</span><span class="w"> </span><span class="nt">no</span><span class="w"> </span><span class="nt">Mg2</span><span class="o">+/</span><span class="nt">Mn2</span><span class="o">+</span><span class="w"> </span><span class="nt">required</span>
+
+<span class="w">   </span><span class="nt">Specificity</span><span class="o">:</span><span class="w">  </span><span class="nt">Active</span><span class="w"> </span><span class="nt">sites</span><span class="w"> </span><span class="nt">BURIED</span><span class="w"> </span><span class="nt">inside</span><span class="w"> </span><span class="nt">complex</span><span class="o">;</span><span class="w"> </span><span class="nt">reachable</span><span class="w"> </span><span class="nt">only</span>
+<span class="w"> </span><span class="nt">through</span><span class="w"> </span><span class="nt">narrow</span><span class="w"> </span><span class="nt">pores</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="nt">only</span><span class="w"> </span><span class="nt">flexible</span><span class="w"> </span><span class="nt">ssDNA</span><span class="w"> </span><span class="nt">fits</span><span class="o">.</span>
+<span class="w"> </span><span class="nt">Substrate</span><span class="w"> </span><span class="nt">binding</span><span class="w"> </span><span class="nt">-</span><span class="o">&gt;</span><span class="w"> </span><span class="nt">tetramer</span><span class="w"> </span><span class="nt">dissociation</span><span class="w"> </span><span class="o">(</span><span class="nt">gating</span><span class="o">).</span>
+
+<span class="w">   </span><span class="nt">Localization</span><span class="o">:</span><span class="w"> </span><span class="nt">CYTOPLASM</span><span class="o">,</span><span class="w"> </span><span class="nt">acting</span><span class="w"> </span><span class="nt">on</span><span class="w"> </span><span class="nt">chromosomal</span><span class="w"> </span><span class="nt">DNA</span>
+</code></pre></div>
+
+<p><strong>Primary function.</strong> XseA is the catalytic engine of a single-strand-specific DNA exonuclease. It hydrolyzes phosphodiester bonds in ssDNA, initiating at either terminus and moving processively to yield short oligonucleotides. The metal-independent chemistry (a DHQase-like fold) and steric gating together produce the enzyme's defining substrate preference for single-stranded over double-stranded DNA.</p>
+<p><strong>Substrate specificity.</strong> The substrate is single-stranded DNA — including displaced/nascent strands at replication forks, excision intermediates in mismatch repair, 3′ ssDNA flaps, and multicopy single-stranded DNA (msDNA). Duplex DNA is excluded by architecture, not by chemistry.</p>
+<p><strong>Cellular location.</strong> The enzyme operates in the <strong>cytoplasm</strong> on the bacterial chromosome. It carries no export/localization signal and is a soluble, cation-independent complex.</p>
+<p><strong>Pathways.</strong> ExoVII is embedded in a redundant network of ssDNA exonucleases (RecJ, ExoI, ExoX) supporting:<br />
+- Methyl-directed <strong>mismatch-repair excision</strong> (stimulated by MutS/UvrD);<br />
+- <strong>UV / recombinational DNA repair</strong> (redundant with RecJ, ExoI);<br />
+- <strong>Mutation avoidance</strong> (suppressing frameshifts and hairpin/quasipalindrome-templated mutagenesis, and preventing SOS-driven, DinB/PolIV-dependent mutagenesis);<br />
+- <strong>3′ ssDNA flap removal</strong> to avert PriA-mediated aberrant re-replication (redundant with RecG, SbcCD);<br />
+- <strong>msDNA processing</strong>; and<br />
+- <strong>DNA–protein crosslink (DPC) repair</strong>, echoing the Mre11-Rad50/SbcCD machinery through convergent evolution.</p>
+<p>For <em>P. putida</em> specifically, this predicts that XseA contributes to genome stability and stress resilience, though redundancy with RecJ/ExoI likely renders a single xseA deletion phenotypically mild under standard conditions — consistent with the redundancy observed in <em>E. coli</em>.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study focus</th>
+<th>Contribution to this annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1103829/">1103829</a></td>
+<td><em>Exonuclease VII of E. coli</em> (Chase &amp; Richardson)</td>
+<td>Defines ssDNA specificity, bidirectional initiation, processivity, and 4–12 nt oligonucleotide products (Finding 1)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18812402/">18812402</a></td>
+<td>Thermophilic ExoVII in <em>T. maritima</em></td>
+<td>Confirms two-subunit (XseA/XseB) composition and broad conservation; identifies conserved catalytic aspartates (Findings 1, 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22718974/">22718974</a></td>
+<td>Structural domains of ExoVII (Poleszak et al.)</td>
+<td>Maps OB-fold→DNA binding, coiled-coil→XseB binding, and D155/R205/H238/D241→catalysis (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6350262/">6350262</a></td>
+<td>E. coli ExoVII mutants</td>
+<td>Establishes XseB as a structural subunit; holoenzyme requires both subunits (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26626352/">26626352</a></td>
+<td>Cell death mediated by XseA</td>
+<td>Identifies msDNA (Ec83, Ec78) as in vivo substrates; both subunits required for activity (Findings 2, 5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11418610/">11418610</a></td>
+<td>Redundant exonucleases in MMR</td>
+<td>Places ExoVII among three redundant ssDNA exonucleases in mismatch-repair excision (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9584082/">9584082</a></td>
+<td>ssDNA exonucleases in repair/mutation avoidance</td>
+<td>Demonstrates redundant UV-repair role with RecJ and ExoI (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">20647503</a></td>
+<td>RecG and ssDNA exonucleases vs PriA lethality</td>
+<td>Shows ExoVII removes 3′ ssDNA to prevent aberrant re-replication (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19618961/">19618961</a></td>
+<td>MutS/UvrD stimulate exonuclease action</td>
+<td>Links ExoVII to regulated MMR excision via a "destabilized duplex" intermediate (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16547019/">16547019</a></td>
+<td>ExoI/ExoVII and frameshift mutagenesis</td>
+<td>Supports mutation-avoidance role; loss elevates SOS/PolIV-dependent frameshifts (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10986118/">10986118</a></td>
+<td>Quasipalindrome mutational hotspot</td>
+<td>ExoI/ExoVII loss stimulates hairpin-templated mutagenesis; ExoVII aborts replicative misalignment (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">38271335</a></td>
+<td>Cryo-EM structure of ExoVII (2024)</td>
+<td>Defines XseA₄·XseB₂₄ architecture, steric-gated specificity, DPC/msDNA roles, convergence with Mre11-Rad50/SbcCD (Findings 4, 5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10080932/">10080932</a></td>
+<td>ssDNA backbone recognition by nucleases</td>
+<td>Suggests ExoVII recognizes sequence-dependent ssDNA backbone conformation (supporting context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10049912/">10049912</a></td>
+<td>RNase T suppresses exonuclease-deficiency UV sensitivity</td>
+<td>Reinforces redundant ssDNA-exonuclease network in UV repair (supporting context)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence converges.</strong> The biochemical foundation (Chase &amp; Richardson, <a href="https://pubmed.ncbi.nlm.nih.gov/1103829/">PMID: 1103829</a>) defines the reaction; the genetic and domain studies (<a href="https://pubmed.ncbi.nlm.nih.gov/6350262/">PMID: 6350262</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/22718974/">PMID: 22718974</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/18812402/">PMID: 18812402</a>) define the subunit and domain architecture; the pathway studies (<a href="https://pubmed.ncbi.nlm.nih.gov/11418610/">PMID: 11418610</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9584082/">PMID: 9584082</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/20647503/">PMID: 20647503</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/19618961/">PMID: 19618961</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16547019/">PMID: 16547019</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/10986118/">PMID: 10986118</a>) place the enzyme in mismatch repair, UV repair, and mutation avoidance; and the 2024 cryo-EM study (<a href="https://pubmed.ncbi.nlm.nih.gov/38271335/">PMID: 38271335</a>) unifies these into a mechanistic model and adds DPC repair. Strict conservation of the catalytic residues (D161/R210/H243/D246) and domain architecture in Q88P26 licenses transfer of this knowledge to <em>P. putida</em>.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct study of the <em>P. putida</em> protein.</strong> Every mechanistic and functional claim is inferred from orthologs — chiefly <em>E. coli</em>, with structural fold information from <em>T. maritima</em>. There is no published biochemical, genetic, or structural characterization of Q88P26/PP_1027 itself. The annotation is a high-confidence <em>inference</em> by homology, not a direct measurement.</p>
+</li>
+<li>
+<p><strong>Homology-based residue mapping.</strong> The identification of catalytic residues D161/R210/H243/D246 rests on pairwise alignment (~46% global identity) to <em>E. coli</em> XseA. While alignment quality is strong and the signature motifs (GGGSLEDLW, GHETDV) are present, the catalytic assignment has not been experimentally verified in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Stoichiometry generalization.</strong> The XseA₄·XseB₂₄ architecture was determined for the <em>E. coli</em> enzyme. Although the assembly elements are conserved in Q88P26, the precise oligomeric state of the <em>P. putida</em> enzyme has not been measured and could differ.</p>
+</li>
+<li>
+<p><strong>Physiological role in <em>P. putida</em> is uncharacterized.</strong> The contributions of xseA to mismatch repair, UV resistance, mutation rate, msDNA metabolism (if <em>P. putida</em> produces msDNA), and DPC repair have not been tested in this organism. Redundancy with RecJ/ExoI likely masks single-mutant phenotypes, complicating functional assignment.</p>
+</li>
+<li>
+<p><strong>Metal independence assumed.</strong> The cation-independence of ExoVII was established in <em>E. coli</em>; it is presumed but not verified for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>The XseA-mediated cell-death phenomenon</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/26626352/">PMID: 26626352</a>) — in which overexpressed XseA without XseB triggers an apoptosis-like death via a putative caspase cleavage — is an <em>E. coli</em> observation of uncertain physiological significance and unknown relevance to <em>P. putida</em>; it is noted but not incorporated as a core function.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Experimental confirmation of enzymatic activity.</strong> Recombinantly express <em>P. putida</em> XseA (PP_1027) together with its cognate XseB and assay nuclease activity on defined ssDNA substrates. Confirm bidirectional initiation, processivity, oligonucleotide product size, and metal independence to validate the EC 3.1.11.6 assignment directly.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of predicted catalytic residues.</strong> Mutate D161, R210, H243, and D246 individually to alanine and test loss of nuclease activity while retaining ssDNA binding — directly testing the homology-based catalytic assignment.</p>
+</li>
+<li>
+<p><strong>Determine the oligomeric state.</strong> Use size-exclusion chromatography with multi-angle light scattering (SEC-MALS), native mass spectrometry, or cryo-EM to test whether the <em>P. putida</em> enzyme forms the XseA₄·XseB₂₄ assembly seen in <em>E. coli</em>.</p>
+</li>
+<li>
+<p><strong>Genetic phenotyping in <em>P. putida</em>.</strong> Construct a clean ΔxseA deletion (and ΔxseA ΔrecJ / ΔxseA Δsbccd double mutants) and measure UV/MMS sensitivity, spontaneous mutation and frameshift rates, and mismatch-repair proficiency to reveal the in vivo, redundancy-masked role.</p>
+</li>
+<li>
+<p><strong>Test the DPC-repair role.</strong> Challenge wild-type and ΔxseA <em>P. putida</em> with topoisomerase poisons or formaldehyde (DPC-inducing agents) and assess survival and DPC-clearance kinetics to evaluate the newly proposed crosslink-repair function in this organism.</p>
+</li>
+<li>
+<p><strong>Structural modeling and validation.</strong> Generate an AlphaFold model of <em>P. putida</em> XseA(+XseB), verify the OB-fold, DHQase-like catalytic domain, and coiled-coil scaffold, and superpose against the <em>E. coli</em> cryo-EM structure to confirm conservation of the steric-gating architecture.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <strong>xseA</strong> (Q88P26; PP_1027) of <em>Pseudomonas putida</em> KT2440 encodes the <strong>large, catalytic subunit of Exodeoxyribonuclease VII (EC 3.1.11.6)</strong>, a metal-independent, single-strand-specific DNA exonuclease. Together with the small subunit XseB, it forms a large, elongated XseA₄·XseB₂₄ holo-complex that processively degrades single-stranded DNA from both ends into short oligonucleotides, with specificity enforced by steric gating of buried active sites. XseA supplies the OB-fold DNA-binding module, the DHQase-like catalytic center (conserved D161/R210/H243/D246), and the oligomerization scaffold. Operating in the <strong>cytoplasm</strong> on chromosomal DNA within a redundant network of ssDNA exonucleases, the enzyme supports mismatch-repair excision, UV/recombinational repair, mutation avoidance, msDNA processing, 3′-flap removal, and DNA–protein-crosslink repair. All mechanistic detail is inferred from well-characterized <em>E. coli</em> and <em>T. maritima</em> orthologs plus strong sequence/structure conservation, as no direct study of the <em>P. putida</em> protein currently exists.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="xseA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="xseA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:1103829</li>
+<li>PMID:18812402</li>
+<li>PMID:6350262</li>
+<li>PMID:26626352</li>
+<li>PMID:22718974</li>
+<li>PMID:11418610</li>
+<li>PMID:9584082</li>
+<li>PMID:20647503</li>
+<li>PMID:19618961</li>
+<li>PMID:16547019</li>
+<li>PMID:10986118</li>
+<li>PMID:38271335</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(xseA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P26" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="xsea-curation-notes">xseA curation notes</h1>
+<p>Q88P26 is a reviewed Exonuclease VII large subunit with EC 3.1.11.6 and an<br />
+explicit XseA/XseB heterooligomer assignment. The gene review accepts the<br />
+complex activity and DNA-catabolic process. Its cytoplasm annotation is refined<br />
+to cytosol, matching the more specific location on the obligate XseB partner<br />
+without retaining redundant parent and child locations. KEGG places XseA in<br />
+mismatch repair, but no direct KT2440 experiment was found, so mismatch repair<br />
+is modeled as a candidate module role rather than added as a gene-level GO<br />
+claim.</p>
+<h2 id="openscientist-adjudication">OpenScientist adjudication</h2>
+<p>The OpenScientist report corroborated the XseA catalytic-subunit assignment,<br />
+bidirectional single-stranded-DNA exonuclease chemistry, and XseA/XseB complex<br />
+architecture using characterized orthologs. Its additional mismatch-repair,<br />
+DNA-protein-crosslink-repair, and exact-stoichiometry claims are not supported<br />
+by a direct Q88P26 experiment, so they were retained as research context rather<br />
+than promoted to target-specific GO assertions.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P26
+gene_symbol: xseA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  XseA is the large subunit of the cytosolic exodeoxyribonuclease VII
+  complex. Together with XseB it forms a bidirectional single-stranded DNA
+  exonuclease that degrades DNA in either the 5&#39;-to-3&#39; or 3&#39;-to-5&#39; direction
+  to nucleoside 5&#39;-phosphates. This chemistry can support excision tracts in
+  DNA repair, but a specific requirement for XseA in KT2440 mismatch repair
+  has not been demonstrated directly.
+existing_annotations:
+  - term:
+      id: GO:0003676
+      label: nucleic acid binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: True but broad relative to the complex&#39;s single-stranded DNA exonuclease activity.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: The catalytic and complex terms are more informative.
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Correct parent location, but cytosol is the nonredundant leaf location
+        shared with the obligate XseB partner.
+      action: MODIFY
+      reason: &gt;-
+        Q88P26 is the large subunit of an obligate soluble XseA/XseB complex,
+        and the partner Q88QG5 carries the more specific cytosol annotation.
+      proposed_replacement_terms:
+        - id: GO:0005829
+          label: cytosol
+      supported_by:
+        - reference_id: file:PSEPK/xseA/xseA-uniprot.txt
+          supporting_text: &#34;Heterooligomer composed of large and small subunits.&#34;
+        - reference_id: file:PSEPK/xseB/xseB-uniprot.txt
+          supporting_text: &#34;GO:0005829&#34;
+  - term:
+      id: GO:0006308
+      label: DNA catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Accept. Exonuclease VII degrades single-stranded DNA to smaller products.
+      action: ACCEPT
+      reason: Direct biological output of EC 3.1.11.6.
+  - term:
+      id: GO:0008855
+      label: exodeoxyribonuclease VII activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Accept as the complex-level catalytic activity to which the XseA large
+        subunit contributes.
+      action: ACCEPT
+      reason: Exact EC 3.1.11.6 family assignment in a reviewed UniProt record.
+      supported_by:
+        - reference_id: file:PSEPK/xseA/xseA-uniprot.txt
+          supporting_text: &#34;EC=3.1.11.6&#34;
+  - term:
+      id: GO:0009318
+      label: exodeoxyribonuclease VII complex
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: part_of
+    review:
+      summary: Accept. XseA is the large subunit of the XseA/XseB heterooligomer.
+      action: ACCEPT
+      reason: Directly supported by the reviewed subunit annotation.
+      supported_by:
+        - reference_id: file:PSEPK/xseA/xseA-uniprot.txt
+          supporting_text: &#34;Heterooligomer composed of large and small subunits.&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/xseA/xseA-uniprot.txt
+    title: UniProtKB entry for PSEPK XseA (Q88P26)
+    findings:
+      - supporting_text: &#34;Bidirectionally degrades single-stranded DNA&#34;
+      - supporting_text: &#34;EC=3.1.11.6&#34;
+      - supporting_text: &#34;Heterooligomer composed of large and small subunits.&#34;
+  - id: file:PSEPK/xseB/xseB-uniprot.txt
+    title: UniProtKB entry for the PSEPK Exonuclease VII partner XseB (Q88QG5)
+    findings:
+      - supporting_text: &#34;GO:0005829&#34;
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Exact partner accession and cytosol line verified; used to harmonize
+        the location of the obligate XseA/XseB complex.
+core_functions:
+  - description: &gt;-
+      XseA is the large subunit of exodeoxyribonuclease VII and contributes to
+      bidirectional degradation of single-stranded DNA with XseB.
+    contributes_to_molecular_function:
+      id: GO:0008855
+      label: exodeoxyribonuclease VII activity
+    directly_involved_in:
+      - id: GO:0006308
+        label: DNA catabolic process
+    in_complex:
+      id: GO:0009318
+      label: exodeoxyribonuclease VII complex
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: file:PSEPK/xseA/xseA-uniprot.txt
+        supporting_text: &#34;Heterooligomer composed of large and small subunits.&#34;
+      - reference_id: file:PSEPK/xseA/xseA-uniprot.txt
+        supporting_text: &#34;EC=3.1.11.6&#34;
+proposed_new_terms: []
+suggested_questions:
+  - question: Does the XseA/XseB complex execute either orientation of KT2440 mismatch-excision tracts?
+suggested_experiments:
+  - hypothesis: Exonuclease VII provides a partially redundant mismatch-excision nuclease in KT2440.
+    description: &gt;-
+      Measure mutation rates and repair-tract products in xseA, xseB, recJ,
+      and sbcB single and combined mutants, with matched protein-expression
+      controls.
+    experiment_type: combinatorial repair genetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
