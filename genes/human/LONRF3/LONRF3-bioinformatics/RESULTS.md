@@ -26,6 +26,8 @@ Q496Y0 also contains an InterPro Lon protease N-terminal domain (IPR003111; resi
 
 This is a domain-conservation analysis, not a biochemical assay. InterPro calls integrate computational signatures, and the ligand-pattern calculation describes residues within those calls rather than independently predicting a fold. The sequence evidence strongly disfavors degeneration of either RING region across the human–mouse comparison, but it cannot prove zinc occupancy or ligase activity. Likewise, absence of the complete Lon catalytic architecture strongly argues against inferring Lon peptidase activity from the N-terminal domain alone, but does not test every conceivable unrelated catalytic activity.
 
+Reported pairwise identities use aligned non-gap residue pairs as the denominator; this can overstate similarity when compared regions differ in length, so length-mismatched values should be interpreted with that limitation.
+
 ## Reproducibility checklist
 
 - [x] Scripts do not use hardcoded input accessions or output paths; inputs and paths are command-line parameters and the accession set is in `inputs/proteins.tsv`.
