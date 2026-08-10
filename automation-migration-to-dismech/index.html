@@ -411,6 +411,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#deterministic-pr-shepherd-closing-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deterministic PR Shepherd closing pass
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-follow-up-append-only-curation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommended follow-up: append-only curation history
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -512,6 +530,24 @@
   <a href="#not-adopted" class="md-nav__link">
     <span class="md-ellipsis">
       Not adopted
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deterministic-pr-shepherd-closing-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deterministic PR Shepherd closing pass
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-follow-up-append-only-curation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommended follow-up: append-only curation history
     </span>
   </a>
   
@@ -834,13 +870,15 @@ routine event in the repo into a red X.</p>
 <hr />
 <h2 id="known-gaps">Known gaps</h2>
 <ul>
-<li><strong><code>ai4c-reviewer</code> has <code>Contents: read</code>.</strong> GitHub ties "this approval counts
-  toward branch protection" to <em>write</em> access, which for an App is governed by
-  the Contents permission — so its approvals render as <em>"approved with read-only
-  permissions."</em> <code>main</code> has no branch protection today, so nothing is blocked.
-  If required-approval rules are ever enabled, raise the App to
-  <code>Contents: write</code> first (an App-settings change plus accepting the permission
-  bump on the org installation).</li>
+<li><strong>Exact-head <code>ai4c-reviewer</code> approvals are currently excluded from GitHub's
+  required-review decision while its installation has Contents read.</strong> We
+  attribute that observed symptom to the installation scope because the
+  equivalent DisMech installation counts with Contents write; activation must
+  accept the pending update and confirm the diagnosis empirically. Every
+  workflow-issued reviewer token remains explicitly downscoped to pull-request
+  write only, so the credential that approves a head cannot push it. The App key
+  remains a repository secret, while the Shepherd's default path perimeter
+  excludes <code>.github/</code> changes from deterministic merging.</li>
 <li><strong>A stale <code>dragon-ai-agent</code> collaborator entry remains</strong> on the repo. The
   account itself is deleted (<code>GET /users/dragon-ai-agent</code> 404s) so it grants
   nothing, but the entry should be removed — that is a settings click, not a
@@ -884,6 +922,157 @@ less literature mining and more scanning of GO repositories, which its own
 <code>go-annotation-scanner</code>, <code>arba-issue-monitor</code> and <code>litscan-module-member</code> cover.
 <code>post-review-agent</code> (turns human review comments into suggested changes) and
 <code>auto-merge-compliance</code> are still open candidates.</p>
+<h2 id="deterministic-pr-shepherd-closing-pass">Deterministic PR Shepherd closing pass</h2>
+<p>The Shepherd's closing decision is code, not an LLM judgment. The agentic job
+may update a branch or repair review feedback, but it cannot approve, merge, or
+enable auto-merge. A separate <code>merge-ready</code> job starts on a fresh runner and
+re-reads GitHub state before it will squash-merge anything.</p>
+<p>Manual dispatch exposes two independent controls:</p>
+<ul>
+<li><code>run_agent=false</code> skips the LLM job, which permits a deterministic-only run;</li>
+<li><code>merge_mode=audit|execute|off</code> selects the closing pass.</li>
+</ul>
+<p>Schedules audit by default. They execute only while the repository variable
+<code>PR_SHEPHERD_MERGE_ENABLED</code> is exactly <code>true</code>. Manual execute also requires that
+flag and must be dispatched from the default branch. The execute preflight
+checks that the default branch reports as protected before it mints a write
+token.</p>
+<p>The deterministic closing pass intentionally has a broader ingress and
+authorship scope than the agentic tending job. It considers an otherwise
+eligible PR regardless of whether a bot or a human authored it, and it does not
+itself reject fork heads. Author login, head repository, and agent-style head
+prefixes are not trust signals for this pass; only <code>auto/generate-*</code> is excluded
+for its separate lifecycle. Automatic agentic review remains limited to
+same-repository PRs, so a fork can qualify only after an authorized manual run
+has supplied the trusted exact-head Bot review. "Trusted" means both an
+allowlisted login and a REST review author whose GitHub identity type is <code>Bot</code>;
+a human approval cannot substitute, even from a human account with the same
+name. That Bot review plus the protected-<code>main</code> contract are the authorization
+boundary. In particular, a human-authored PR can be merged after the age gate
+without a second, human-only approval. That is deliberate; changing the policy
+requires an explicit author or branch predicate rather than assuming the
+agentic job's narrower candidate rules also apply here.</p>
+<p>Broad author/head ingress does not mean broad file scope. The controller also
+requires every changed path to sit under one of these conservative curation and
+data prefixes by default: <code>genes/</code>, <code>genesets/</code>, <code>gocams/</code>, <code>interpro/</code>,
+<code>modules/</code>, <code>projects/</code>, <code>publications/</code>, <code>reactome/</code>, <code>rules/</code>, <code>terms/</code>,
+<code>families/</code>, or <code>research/</code>. A PR that mixes an allowed data change with even
+one path outside that set is ineligible. Repeatable CLI additions can expand
+the prefix set through <code>--allowed-path-prefix</code> for a deliberate one-off policy;
+each addition must be a normalized directory prefix ending in <code>/</code>, so <code>src/</code>
+cannot accidentally authorize a sibling such as <code>src_generated/</code>. The
+production workflow passes none. Every path outside the twelve listed prefixes
+is therefore out of scope and requires a manual merge. Examples include
+infrastructure and self-modifying automation under <code>.github/</code>, <code>scripts/</code>,
+<code>src/</code>, and <code>tests/</code>, as well as <code>docs/</code>, <code>reports/</code>, <code>pages/</code>, and top-level
+build/configuration files.</p>
+<p>The controller requires all of these at fresh reads immediately before merge:</p>
+<ul>
+<li>open, non-draft, unassigned, old enough by PR creation time, and targeting
+  <code>main</code>;</li>
+<li>no <code>shepherd:hold</code> label and no <code>auto/generate-*</code> head branch;</li>
+<li><code>APPROVED</code>, including an allowlisted Bot review anchored to the exact head;</li>
+<li>every changed file is inside the conservative path-prefix policy above;</li>
+<li>the PR's tested base SHA equals the current <code>main</code> tip;</li>
+<li>GitHub reports mergeable and clean;</li>
+<li>all reported checks are complete/non-failing, and <code>test (3.12)</code> is explicitly
+  successful.</li>
+</ul>
+<p>The path inventory is fetched from the paginated REST endpoint on both fresh
+verification passes, matched against the PR API's total <code>changedFiles</code> count,
+and rejected above GitHub's 3,000-file REST completeness cap. Rename source
+paths are checked as well as destinations. The controller re-reads the head
+after each file inventory, and the final merge remains pinned to that head.</p>
+<p>The age gate intentionally measures <code>createdAt</code>, not the latest push, approval,
+or branch update. It is a backlog-age threshold, not a soak period for the
+current content. Consequently, fresh commits pushed to an old PR can merge as
+soon as that exact new head receives the trusted Bot review, passes current-base
+CI, and meets the remaining guards. This keeps old approved work moving, but it
+also means operators must use draft state, assignment, or <code>shepherd:hold</code> when
+fresh content needs additional observation time.</p>
+<p>Reads use the built-in read-only token. A separately scoped ai4c-agent token
+(Contents write + pull-request write) is supplied only to the head-pinned merge
+and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
+run red. A positively observed head/base movement is instead a benign skip:
+concurrent automation changed the candidate, so its new state must pass a later
+sweep. The separate ai4c-reviewer credential is explicitly scoped to
+pull-request write only; it can record the approval but cannot push content.</p>
+<p>The feature flag and execute preflight are not substitutes for protection. The
+preflight's <code>GET branches/main</code> / <code>.protected == true</code> read is deliberately only
+an existence smoke test available to the read-only workflow token; a weak rule
+also satisfies it. It does <strong>not</strong> verify any of the settings below. This rollout
+requires a classic branch-protection rule on the literal <code>main</code> branch. Classic
+protection is confirmed to make <code>.protected</code> true; a repository-ruleset-only
+configuration is not supported by this preflight and must not be substituted
+without a ruleset-aware implementation and tests.</p>
+<p>Before setting <code>PR_SHEPHERD_MERGE_ENABLED=true</code>, manually verify the classic
+rule in repository settings or with
+<code>GET /repos/ai4curation/ai-gene-review/branches/main/protection</code>:</p>
+<ul>
+<li>required status checks are strict/up-to-date and contain exactly
+  <code>test (3.12)</code> from the GitHub Actions App (<code>app_id: 15368</code>);</li>
+<li>one approving review is required, stale approvals are dismissed, and the
+  latest reviewable push must be approved by someone other than its pusher;</li>
+<li>unresolved review conversations block merging and enforcement includes
+  administrators;</li>
+<li>the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
+  while force pushes and branch deletion remain disabled;</li>
+<li>on a current-base, green PR whose exact head has an <code>ai4c-reviewer</code> approval,
+  <code>gh pr view N --json reviewDecision,mergeStateStatus</code> reports
+  <code>APPROVED</code> and <code>CLEAN</code> rather than <code>REVIEW_REQUIRED</code> or <code>BLOCKED</code>;</li>
+<li><code>GET branches/main</code> returns <code>.protected: true</code>, the <code>shepherd:hold</code> label
+  exists, and the feature flag remains false until an audit and controlled
+  execute smoke test complete.</li>
+</ul>
+<p>If any setting is weakened later, set the flag false and cancel any in-flight
+Shepherd run.</p>
+<p>Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
+proves the commit contains derived artifacts only and always builds from the
+default branch. After pushing, it first asks ai4c-reviewer for an approval
+anchored to the exact generated commit; rollout or protection-check failures
+therefore cannot suppress the independent review. A later step enables
+auto-merge only under the shared feature flag, only when that approval step
+succeeded, and only with the exact generated head pin. The general Shepherd
+controller and agent both exclude this lane. Before calling
+<code>gh pr merge --auto</code>, the generated lane also requires the repository default
+and literal PR base to both be <code>main</code>, then reads <code>branches/main</code> with its
+current ai4c-agent token and fails without arming if <code>.protected</code> is false or
+unreadable. Like the Shepherd preflight, this is only a protection-existence
+smoke check; the exact settings still require the manual checklist above. If
+the reviewer App is temporarily unavailable after a long render, the approval
+step emits a loud warning but does not discard the already-pushed artifacts or
+red-X the job; the later step refuses to arm auto-merge until approval is
+retried.</p>
+<h2 id="recommended-follow-up-append-only-curation-history">Recommended follow-up: append-only curation history</h2>
+<p>DisMech's <code>history/</code> system is worth reusing, but its target model should be
+adapted rather than copied literally. It stores one schema-validated,
+append-only YAML record per curation/review/audit session, outside the curated
+object; provides a <code>just new-history</code> scaffolder; validates records in CI; and
+gives an advisory warning when a curated object changes without a matching new
+record. This is useful provenance and is intentionally distinct from GitHub's
+commit/PR history and from workflow run summaries.</p>
+<p>The ai-gene-review version should use a standalone history schema (not add
+workflow metadata to <code>gene_review.yaml</code>) and a species-aware layout so symbols
+that occur in more than one organism cannot collide:</p>
+<pre><code class="language-text">history/genes/&lt;organism&gt;/&lt;gene&gt;/&lt;timestamp&gt;-&lt;actor&gt;-&lt;shortid&gt;.yaml
+history/projects/&lt;project&gt;/&lt;timestamp&gt;-&lt;actor&gt;-&lt;shortid&gt;.yaml
+history/modules/&lt;module&gt;/&lt;timestamp&gt;-&lt;actor&gt;-&lt;shortid&gt;.yaml
+history/schema/&lt;target&gt;/&lt;timestamp&gt;-&lt;actor&gt;-&lt;shortid&gt;.yaml
+</code></pre>
+<p>The target should record <code>kind</code>, repository-relative <code>path</code>, and—for gene
+targets—both <code>organism</code> and <code>gene_symbol</code>. Preserve DisMech's session actors,
+model/tool/version, issue/PR links, event vocabulary
+(<code>CREATE|EDIT|REVIEW|AUDIT|GENERAL</code>), outcome, sections, summary, details, and
+supersession mechanism. Add <code>gene_review</code>, <code>prediction_review</code>, <code>project</code>,
+<code>module</code>, <code>schema</code>, and <code>other</code> target kinds.</p>
+<p>Adopt it as a separate PR after the Shepherd cutover: add the schema,
+scaffolder, <code>just</code> recipes, layout/schema tests, documentation and AGENTS/agent
+instructions, then an advisory-only CI coverage check for changed
+<code>*-ai-review.yaml</code> and <code>*-predictions-review.yaml</code> files. Do not backfill a
+synthetic record for every existing review, and do not make history coverage a
+merge requirement until normal human and agent curation paths reliably emit
+records. Rendering per-gene history on the site can follow once real records
+exist.</p>
 
 
 
