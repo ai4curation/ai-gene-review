@@ -870,15 +870,12 @@ routine event in the repo into a red X.</p>
 <hr />
 <h2 id="known-gaps">Known gaps</h2>
 <ul>
-<li><strong>Exact-head <code>ai4c-reviewer</code> approvals are currently excluded from GitHub's
-  required-review decision while its installation has Contents read.</strong> We
-  attribute that observed symptom to the installation scope because the
-  equivalent DisMech installation counts with Contents write; activation must
-  accept the pending update and confirm the diagnosis empirically. Every
-  workflow-issued reviewer token remains explicitly downscoped to pull-request
-  write only, so the credential that approves a head cannot push it. The App key
-  remains a repository secret, while the Shepherd's default path perimeter
-  excludes <code>.github/</code> changes from deterministic merging.</li>
+<li><strong><code>ai4c-reviewer</code> approvals are currently excluded from GitHub's required-
+  review decision while its installation has Contents read.</strong> The deterministic
+  Shepherd follows DisMech's aggregate <code>APPROVED</code> policy rather than requiring
+  that identity, so this does not block ordinary closing passes. It still
+  affects the generated-page lane, whose independent approval is deliberately
+  tied to <code>ai4c-reviewer</code>.</li>
 <li><strong>A stale <code>dragon-ai-agent</code> collaborator entry remains</strong> on the repo. The
   account itself is deleted (<code>GET /users/dragon-ai-agent</code> 404s) so it grants
   nothing, but the entry should be removed — that is a settings click, not a
@@ -943,37 +940,36 @@ eligible PR regardless of whether a bot or a human authored it, and it does not
 itself reject fork heads. Author login, head repository, and agent-style head
 prefixes are not trust signals for this pass; only <code>auto/generate-*</code> is excluded
 for its separate lifecycle. Automatic agentic review remains limited to
-same-repository PRs, so a fork can qualify only after an authorized manual run
-has supplied the trusted exact-head Bot review. "Trusted" means both an
-allowlisted login and a REST review author whose GitHub identity type is <code>Bot</code>;
-a human approval cannot substitute, even from a human account with the same
-name. That Bot review plus the protected-<code>main</code> contract are the authorization
-boundary. In particular, a human-authored PR can be merged after the age gate
-without a second, human-only approval. That is deliberate; changing the policy
-requires an explicit author or branch predicate rather than assuming the
-agentic job's narrower candidate rules also apply here.</p>
+same-repository PRs, but the closing pass uses GitHub's aggregate <code>APPROVED</code>
+decision just as DisMech does. With stale-review dismissal enabled, a head push
+invalidates that approval; unrelated movement on <code>main</code> does not. An optional
+Bot-identity allowlist remains available to manual controller invocations
+through <code>--trusted-reviewer</code>, but the production workflow does not enable it.
+The exact-head binding itself is always enforced: at least one approval must
+refer to the precise PR commit that the controller is about to merge.</p>
 <p>Broad author/head ingress does not mean broad file scope. The controller also
 requires every changed path to sit under one of these conservative curation and
 data prefixes by default: <code>genes/</code>, <code>genesets/</code>, <code>gocams/</code>, <code>interpro/</code>,
-<code>modules/</code>, <code>projects/</code>, <code>publications/</code>, <code>reactome/</code>, <code>rules/</code>, <code>terms/</code>,
-<code>families/</code>, or <code>research/</code>. A PR that mixes an allowed data change with even
-one path outside that set is ineligible. Repeatable CLI additions can expand
-the prefix set through <code>--allowed-path-prefix</code> for a deliberate one-off policy;
-each addition must be a normalized directory prefix ending in <code>/</code>, so <code>src/</code>
-cannot accidentally authorize a sibling such as <code>src_generated/</code>. The
-production workflow passes none. Every path outside the twelve listed prefixes
-is therefore out of scope and requires a manual merge. Examples include
+<code>modules/</code>, <code>pages/</code>, <code>projects/</code>, <code>publications/</code>, <code>reactome/</code>, <code>rules/</code>,
+<code>terms/</code>, <code>families/</code>, or <code>research/</code>. A PR that mixes an allowed data change
+with even one path outside that set is ineligible. Repeatable CLI additions can
+expand the prefix set through <code>--allowed-path-prefix</code> for a deliberate one-off
+policy; each addition must be a normalized directory prefix ending in <code>/</code>, so
+<code>src/</code> cannot accidentally authorize a sibling such as <code>src_generated/</code>. The
+production workflow passes none. Every path outside the thirteen listed
+prefixes is therefore out of scope and requires a manual merge. Examples
+include
 infrastructure and self-modifying automation under <code>.github/</code>, <code>scripts/</code>,
-<code>src/</code>, and <code>tests/</code>, as well as <code>docs/</code>, <code>reports/</code>, <code>pages/</code>, and top-level
+<code>src/</code>, and <code>tests/</code>, as well as <code>docs/</code>, <code>reports/</code>, and top-level
 build/configuration files.</p>
 <p>The controller requires all of these at fresh reads immediately before merge:</p>
 <ul>
 <li>open, non-draft, unassigned, old enough by PR creation time, and targeting
   <code>main</code>;</li>
 <li>no <code>shepherd:hold</code> label and no <code>auto/generate-*</code> head branch;</li>
-<li><code>APPROVED</code>, including an allowlisted Bot review anchored to the exact head;</li>
+<li>GitHub's aggregate review decision is <code>APPROVED</code>;</li>
+<li>at least one approval is bound to the exact current PR head;</li>
 <li>every changed file is inside the conservative path-prefix policy above;</li>
-<li>the PR's tested base SHA equals the current <code>main</code> tip;</li>
 <li>GitHub reports mergeable and clean;</li>
 <li>all reported checks are complete/non-failing, and <code>test (3.12)</code> is explicitly
   successful.</li>
@@ -986,14 +982,16 @@ after each file inventory, and the final merge remains pinned to that head.</p>
 <p>The age gate intentionally measures <code>createdAt</code>, not the latest push, approval,
 or branch update. It is a backlog-age threshold, not a soak period for the
 current content. Consequently, fresh commits pushed to an old PR can merge as
-soon as that exact new head receives the trusted Bot review, passes current-base
-CI, and meets the remaining guards. This keeps old approved work moving, but it
-also means operators must use draft state, assignment, or <code>shepherd:hold</code> when
-fresh content needs additional observation time.</p>
+soon as that exact new head receives approval, passes CI, and meets the
+remaining guards. Unrelated changes on <code>main</code> do not force a rebase,
+CI rerun, or new review; GitHub still rejects current conflicts. This keeps old
+approved work moving, but it also means operators must use draft state,
+assignment, or <code>shepherd:hold</code> when fresh content needs additional observation
+time.</p>
 <p>Reads use the built-in read-only token. A separately scoped ai4c-agent token
 (Contents write + pull-request write) is supplied only to the head-pinned merge
 and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
-run red. A positively observed head/base movement is instead a benign skip:
+run red. A positively observed head movement is instead a benign skip:
 concurrent automation changed the candidate, so its new state must pass a later
 sweep. The separate ai4c-reviewer credential is explicitly scoped to
 pull-request write only; it can record the approval but cannot push content.</p>
@@ -1009,17 +1007,17 @@ without a ruleset-aware implementation and tests.</p>
 rule in repository settings or with
 <code>GET /repos/ai4curation/ai-gene-review/branches/main/protection</code>:</p>
 <ul>
-<li>required status checks are strict/up-to-date and contain exactly
-  <code>test (3.12)</code> from the GitHub Actions App (<code>app_id: 15368</code>);</li>
-<li>one approving review is required, stale approvals are dismissed, and the
-  latest reviewable push must be approved by someone other than its pusher;</li>
-<li>unresolved review conversations block merging and enforcement includes
-  administrators;</li>
+<li>required status checks are non-strict (a PR need not be rebased after
+  unrelated <code>main</code> changes) and contain exactly <code>test (3.12)</code> from the GitHub
+  Actions App (<code>app_id: 15368</code>);</li>
+<li>one approving review is required and stale approvals are dismissed; requiring
+  a separate approval for the latest push is disabled, matching DisMech;</li>
+<li>unresolved review conversations block merging;</li>
 <li>the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
   while force pushes and branch deletion remain disabled;</li>
-<li>on a current-base, green PR whose exact head has an <code>ai4c-reviewer</code> approval,
-  <code>gh pr view N --json reviewDecision,mergeStateStatus</code> reports
-  <code>APPROVED</code> and <code>CLEAN</code> rather than <code>REVIEW_REQUIRED</code> or <code>BLOCKED</code>;</li>
+<li>on a green, conflict-free PR whose recorded base is older than <code>main</code>,
+  <code>gh pr view N --json reviewDecision,mergeStateStatus</code> reports <code>APPROVED</code> and
+  <code>CLEAN</code> rather than <code>REVIEW_REQUIRED</code>, <code>BEHIND</code>, or <code>BLOCKED</code>;</li>
 <li><code>GET branches/main</code> returns <code>.protected: true</code>, the <code>shepherd:hold</code> label
   exists, and the feature flag remains false until an audit and controlled
   execute smoke test complete.</li>
