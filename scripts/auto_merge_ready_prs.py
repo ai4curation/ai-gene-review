@@ -5,7 +5,8 @@ This is intended as the non-agentic closing step of the PR Shepherd. It never
 judges a change. It re-reads GitHub state immediately before merging and only
 merges when every mechanical guard passes:
 
-* the PR is open, non-draft, unassigned, and targets the configured base;
+* the PR is open, unassigned, targets the configured base, and is non-draft
+  unless a manual run explicitly opts approved drafts into the pass;
 * the aggregate review decision is APPROVED;
 * at least one approval is bound to the exact current PR head;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
@@ -42,8 +43,10 @@ The controller is report-only by default. Actual merging requires the explicit
 ``--execute`` flag and a separate ``GH_MERGE_TOKEN`` credential. Read operations
 continue to use the read-only ``GH_TOKEN``; the writer credential is injected
 only into the merge and courtesy-comment subprocesses. ``--dry-run`` is retained
-as a visible workflow guard. The ``shepherd:hold`` label, assignment, draft
-state, and the separate ``auto/generate-*`` lane all veto this controller.
+as a visible workflow guard. The ``shepherd:hold`` label, assignment, and the
+separate ``auto/generate-*`` lane always veto this controller. Draft state also
+vetoes by default; ``--include-drafts`` makes an eligible draft auditable and,
+in execute mode, marks it ready before the final full re-read and merge.
 """
 
 from __future__ import annotations
@@ -443,6 +446,7 @@ def evaluate(
     hold_label: str = "shepherd:hold",
     excluded_head_prefixes: Iterable[str] = DEFAULT_EXCLUDED_HEAD_PREFIXES,
     allowed_path_prefixes: Iterable[str] = (),
+    include_drafts: bool = False,
     final: bool = True,
 ) -> Decision:
     """Apply cheap list guards or the complete final merge predicate."""
@@ -451,7 +455,7 @@ def evaluate(
         return Decision(False, "no state in the API response")
     if state and state != "OPEN":
         return Decision(False, f"not open (state={state.lower()})")
-    if pr.get("isDraft"):
+    if pr.get("isDraft") and not include_drafts:
         return Decision(False, "draft")
     if pr.get("baseRefName") != base_branch:
         return Decision(
@@ -764,6 +768,16 @@ def merge_pr(
         )
 
 
+def mark_pr_ready(repo: str, number: int, write_token: str) -> None:
+    """Convert a verified draft to ready immediately before its final re-read."""
+    write_token = write_token.strip()
+    if not write_token:
+        raise ValueError(
+            "refusing to mark a draft ready without a dedicated write token"
+        )
+    _gh(["pr", "ready", str(number), "--repo", repo], token=write_token)
+
+
 def render_summary(
     merged: list[dict],
     skipped: list[dict],
@@ -824,6 +838,14 @@ def main(argv: list[str] | None = None) -> int:
         type=positive_int,
         default=300,
         help="max open PRs to scan (default: 300)",
+    )
+    parser.add_argument(
+        "--include-drafts",
+        action="store_true",
+        help=(
+            "consider approved drafts; execute marks an otherwise eligible draft "
+            "ready immediately before final verification (default: exclude drafts)"
+        ),
     )
     parser.add_argument(
         "--trusted-reviewer",
@@ -919,6 +941,7 @@ def main(argv: list[str] | None = None) -> int:
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
+            include_drafts=args.include_drafts,
             final=False,
         )
         if decision.eligible:
@@ -980,17 +1003,33 @@ def main(argv: list[str] | None = None) -> int:
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
+            include_drafts=args.include_drafts,
         )
         if not decision.eligible:
             print(f"SKIP  #{number}: {decision.reason}")
             skipped.append({"number": number, "reason": decision.reason})
             continue
         if dry_run:
+            action = "mark ready and merge" if fresh.get("isDraft") else "merge"
             print(
-                f"DRY-RUN would merge #{number}: {fresh['title']} — {decision.reason}"
+                f"DRY-RUN would {action} #{number}: {fresh['title']} — "
+                f"{decision.reason}"
             )
             merged.append({"number": number, "title": fresh["title"]})
             continue
+        if fresh.get("isDraft"):
+            try:
+                mark_pr_ready(args.repo, number, write_token)
+            except (subprocess.CalledProcessError, ValueError) as exc:
+                detail = (
+                    _gh_error(exc)
+                    if isinstance(exc, subprocess.CalledProcessError)
+                    else str(exc)
+                )
+                reason = f"could not mark verified draft ready: {detail}"
+                print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+                failed.append({"number": number, "reason": reason})
+                continue
         # Re-read every load-bearing field immediately before the write. This
         # catches a newly added hold/assignee, review or check change, and head
         # movement. The exact reviewed/tested head remains pinned at merge time.
@@ -1029,6 +1068,10 @@ def main(argv: list[str] | None = None) -> int:
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
+            # If the first verified view was a draft, execute mode has just
+            # marked it ready. Require that transition to be visible before
+            # writing; also catch a non-draft PR changed back to draft here.
+            include_drafts=False,
         )
         if not final_decision.eligible:
             reason = f"state changed after verification: {final_decision.reason}"

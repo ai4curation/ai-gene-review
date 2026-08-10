@@ -314,10 +314,13 @@ may update a branch or repair review feedback, but it cannot approve, merge, or
 enable auto-merge. A separate `merge-ready` job starts on a fresh runner and
 re-reads GitHub state before it will squash-merge anything.
 
-Manual dispatch exposes two independent controls:
+Manual dispatch exposes three independent controls:
 
 - `run_agent=false` skips the LLM job, which permits a deterministic-only run;
 - `merge_mode=audit|execute|off` selects the closing pass.
+- `include_drafts=true` includes otherwise eligible approved drafts. Audit mode
+  only reports them; execute mode marks each verified draft ready, re-reads all
+  merge guards, and only then performs the head-pinned merge.
 
 Schedules audit by default. They execute only while the repository variable
 `PR_SHEPHERD_MERGE_ENABLED` is exactly `true`. Manual execute also requires that
@@ -357,8 +360,8 @@ build/configuration files.
 
 The controller requires all of these at fresh reads immediately before merge:
 
-- open, non-draft, unassigned, old enough by PR creation time, and targeting
-  `main`;
+- open, unassigned, old enough by PR creation time, and targeting `main`;
+- non-draft unless a manual run explicitly sets `include_drafts=true`;
 - no `shepherd:hold` label and no `auto/generate-*` head branch;
 - GitHub's aggregate review decision is `APPROVED`;
 - at least one approval is bound to the exact current PR head;

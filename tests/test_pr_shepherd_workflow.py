@@ -52,7 +52,12 @@ def test_merge_controller_is_a_separate_job_with_trusted_checkout():
 
 
 def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
-    merge_job = _workflow(SHEPHERD)["jobs"]["merge-ready"]
+    workflow = _workflow(SHEPHERD)
+    # PyYAML 1.1 parses the unquoted workflow key `on` as boolean true.
+    include_drafts = workflow[True]["workflow_dispatch"]["inputs"]["include_drafts"]
+    assert include_drafts["type"] == "boolean"
+    assert include_drafts["default"] is False
+    merge_job = workflow["jobs"]["merge-ready"]
     audit = _step(merge_job, "Audit merge-ready PRs (deterministic)")
     execute = _step(merge_job, "Merge ready PRs (deterministic)")
 
@@ -69,6 +74,8 @@ def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
         assert '--required-check "test (3.12)"' in step["run"]
         assert "--trusted-reviewer" not in step["run"]
         assert "--allowed-path-prefix" not in step["run"]
+        assert "draft_args+=(--include-drafts)" in step["run"]
+        assert '"${draft_args[@]}"' in step["run"]
 
 
 def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
