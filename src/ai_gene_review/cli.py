@@ -2796,6 +2796,8 @@ def rules_validate(
             valid_count += 1
             if verbose:
                 typer.echo(f"✓ {yaml_file}")
+                for issue in report.issues:
+                    _print_issue(issue)
         else:
             invalid_count += 1
             typer.echo(f"✗ {yaml_file}", err=True)
