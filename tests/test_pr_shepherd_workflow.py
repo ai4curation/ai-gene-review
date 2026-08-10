@@ -67,7 +67,7 @@ def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
     assert "--dry-run" not in execute["run"]
     for step in (audit, execute):
         assert '--required-check "test (3.12)"' in step["run"]
-        assert '--trusted-reviewer "ai4c-reviewer"' in step["run"]
+        assert "--trusted-reviewer" not in step["run"]
         assert "--allowed-path-prefix" not in step["run"]
 
 
