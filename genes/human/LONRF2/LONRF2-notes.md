@@ -24,8 +24,14 @@
 - LONRF2 has a Lon N-terminal substrate-binding domain but lacks the AAA+ ATPase
   and protease catalytic domains of Lon proteases. The historical alias
   "neuroblastoma apoptosis-related protease" must not be used to infer peptidase
-  activity. The cached PANTHER prose is explicitly unchecked LLM-generated text
-  and is not evidence.
+  activity. A reproducible domain analysis confirms the absence of the targeted
+  Lon catalytic architecture while finding that the N-terminal RING-like call is
+  substantially less well supported than the conserved C-terminal RING
+  [file:human/LONRF2/LONRF2-bioinformatics/RESULTS.md, "More decisively, the targeted
+  presence matrix finds no AAA+ ATPase domain/core (IPR003593/IPR003959), Lon protease
+  family call (IPR004815), peptidase S16 active site (IPR008268), or Lon proteolytic
+  domain (IPR008269) in LONRF2."]. The cached PANTHER prose is explicitly unchecked
+  LLM-generated text and is not evidence.
 - Direct LONRF2 evidence must not be conflated with LONRF1. PMID:36888978 studies
   Lonrf1 expression and treats LONRF2's neuronal protein-quality-control activity
   as a contrast; it does not demonstrate that LONRF1 shares LONRF2 substrates or
@@ -36,6 +42,8 @@
 - LONRF2 binds and ubiquitylates abnormally structured TDP-43 and hnRNP M1 and
   artificial misfolded proteins [PMID:37474791, "LONRF2 binds and ubiquitylates
   abnormally structured TDP-43 and hnRNP M1 and artificially misfolded proteins."]
+  The paper's hnRNP M1 name is mapped gene-centrically to human HNRNPM/P52272; the
+  cached abstract does not identify a tested UniProt isoform.
 - Under unperturbed conditions LONRF2 is predominantly neuronal; loss in mice
   causes age-dependent motor-neuron degeneration and cerebellar ataxia. Mouse
   iPSC-derived motor neurons lacking LONRF2 have reduced survival, shortened neurites
