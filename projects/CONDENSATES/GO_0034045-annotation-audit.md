@@ -13,15 +13,18 @@ Supporting page for [Biomolecular Condensates](../CONDENSATES.md), and the first
 re-adjudication of every `GO:0034045`, `GO:0097632` and `GO:0097629` annotation held in this
 repository, carried out against the analysis in GO issue
 [#29437](https://github.com/geneontology/go-ontology/issues/29437). It is a small slice —
-31 assertions across 14 gene folders, against ~2,151 direct annotations on GO:0034045 — but
+59 assertions across 21 gene folders, against ~2,151 direct annotations on GO:0034045 — but
 it is a slice where every assertion has a written review attached, so it can say something
 the annotation counts cannot. (`GO:0097629` was added to the scope late; see the R4 gap below.)
 
 ## Headline: we reproduced the failure mode
 
-**All 23 previously reviewed assertions were `ACCEPT`.** Not one had been questioned.
-After re-review, **all 31 have moved** — 26 to `MODIFY` and 5 to
-`MARK_AS_OVER_ANNOTATED` with the missing terms proposed. Nothing is left at `ACCEPT`.
+The audit ran in two passes. The **first pass** reached genes through the term itself:
+**all 23 previously reviewed assertions were `ACCEPT`.** Not one had been questioned. After
+re-review, **all 31 have moved** — 26 to `MODIFY` and 5 to `MARK_AS_OVER_ANNOTATED` with the
+missing terms proposed. Nothing is left at `ACCEPT`. The **second pass**, described below,
+reached seven more genes through the issue's §5.4 triage table and reviewed each in full,
+adding 28 assertions on the same footing.
 
 That is the strongest corroboration this corpus can offer for the mechanism described in
 §2 of the issue analysis: a reviewer meeting this term sees a plausible label and a
@@ -43,8 +46,9 @@ annotations there originally.
 
 ## Changes made
 
-**All 31 assertions, across 14 genes, have moved off `ACCEPT`** — 26 to `MODIFY`, 5 to
-`MARK_AS_OVER_ANNOTATED` with new terms proposed. All files revalidate clean.
+**All 31 first-pass assertions, across 14 genes, have moved off `ACCEPT`** — 26 to `MODIFY`,
+5 to `MARK_AS_OVER_ANNOTATED` with new terms proposed. All files revalidate clean. The
+second-pass genes are tabulated separately further down.
 
 | species | gene | term | evidence | reference | n | destination |
 |---|---|---|---|---|---|---|
@@ -202,6 +206,113 @@ phagophore membrane because their cited evidence is punctum colocalization, whic
 distinguish the two — the sheet-versus-system decision does not arise on that evidence, so
 there is nothing to propose.
 
+## Second pass: seven §5.4 genes reviewed in full
+
+The genes above were reached through the term. The seven below were reached through the
+issue's §5.4 triage table and reviewed **in full** — every annotation on each gene, not only
+the `GO:0034045` ones — which is a different and more demanding exercise: 496 annotations
+across seven genes, of which 28 are `GO:0034045`.
+
+| gene | annotations | GO:0034045 | destination |
+|---|---|---|---|
+| human ULK1 | 139 | 4 | GO:0061908 phagophore |
+| human RAB1B | 75 | 2 | **GO:0000407** — see below |
+| human ATG16L1 | 71 | 4 | GO:0061908 phagophore |
+| human ATG9A | 68 | 5 | GO:0061908 phagophore |
+| human ATG12 | 55 | 4 | GO:0061908 phagophore |
+| human WIPI2 | 45 | 7 | GO:0061908 phagophore |
+| human STBD1 | 43 | 2 | *none* — `MARK_AS_OVER_ANNOTATED` |
+
+That brings the audit to **59 assertions across 21 gene folders**, none at `ACCEPT`.
+`phagophore membrane` is proposed on ATG9A, WIPI2, ATG16L1 and ATG12, joining ATG14, ATG2A,
+ATG2B and worm atg-18.
+
+WIPI2 alone carries seven assertions from four evidence routes — EXP ×4, IDA, IBA, and an IEA
+carrying `UniProtKB-SubCell:SL-0221` — which makes it the heaviest single-gene load in the
+audit and a good illustration of how the ambiguity compounds without anyone re-deciding it.
+
+### Two genes that do not fit the pattern
+
+**RAB1B** is the one gene whose assertions do *not* go to `GO:0061908`. ATG9A, WIPI2, ATG16L1
+and ATG12 are phagophore-membrane proteins. RAB1B is a secretory-pathway GTPase, and
+PMID:20545908 locates its requirement upstream — at ER exit sites, with "the autophagic and
+secretory pathways intersect at a level preceding the brefeldin A blockage". A membrane term
+of any kind overstates that; the site-level `GO:0000407` is the right destination, and the
+functional claim is already carried by `GO:2000785`. This matters for the migration plan: a
+blanket rewrite of `GO:0034045` → phagophore membrane would put RAB1B on a bilayer it was
+never shown to be on.
+
+**STBD1** confirms the triage table's *"no evident support — review for removal"* reading,
+which is the opposite outcome to the Rab7 correction above. The primary text places STBD1 at
+"enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal
+marker LAMP1 and the autophagy protein GABARAPL1" (PMID:20810658) — and `GO:0048471` and
+`GO:0005789` already carry that. There is nothing left for a phagophore term to record, so
+both assertions are `MARK_AS_OVER_ANNOTATED` with **no replacement proposed**. Not every
+defective annotation needs a destination.
+
+**ULK1** is the strongest case in the whole audit for the condensate reading over the membrane
+one, and it is worth stating separately because it cuts against the R3 proposal. ULK1 has no
+membrane-binding domain; it is a soluble kinase whose concentration at the site is part of what
+*defines* the site; and it already carries `GO:0000407` for the structure and `GO:1903349`
+omegasome membrane — the more precise membrane term — from the same study that supplies one of
+its `GO:0034045` assertions. For soluble PAS residents of this kind, the site term may simply be
+correct and no membrane term needed.
+
+### An unremarked feature of the PAINT records: self-referential WITH/FROM
+
+Five of the seven genes have at least one IBA whose `WITH/FROM` column lists **the annotation
+target itself**: WIPI2 (`UniProtKB:Q9Y4P8` on GO:0034045), ATG16L1 (`UniProtKB:Q676U5` on
+GO:0034045), ATG12 (`UniProtKB:O94817` on GO:0034045), ULK1 (`UniProtKB:O75385` on GO:0034045
+and on GO:0005737), and STBD1 (`UniProtKB:O95210` on GO:0016020). This was not looked for; it
+turned up once and then kept turning up.
+
+It is not a GO:0034045 problem — it is a property of how these PAINT records list node
+members — but it inflates the apparent evidence for exactly the annotations this audit is
+questioning. A reader counting donor genes to judge how well-supported a propagated
+annotation is will count the target among its own sources. Worth a separate check across the
+IBA corpus; the `propagation_review` blocks on these five reviews record it as
+`CIRCULAR_OR_REDUNDANT` so the cases are findable.
+
+### Three further missing-term cases, from full review rather than from the term
+
+Reviewing whole genes rather than single terms surfaced three more instances of the same
+underlying pattern — a curator reaching for the nearest wrong term because the right one does
+not exist. None of them involve `GO:0034045`.
+
+| gene | annotation | what the evidence shows | term proposed |
+|---|---|---|---|
+| ATG16L1 | `GO:0120095` vacuole-isolation membrane contact site (IDA, PMID:28890335) | ER–isolation membrane contacts in mammalian and *C. elegans* cells; mammals have no vacuole | endoplasmic reticulum-phagophore membrane contact site |
+| ATG16L1 | `GO:0016237` microautophagy (IDA ×2) | ATG8 conjugation to single endolysosomal membranes (CASM); no invagination, no cargo uptake | protein lipidation at single membranes |
+| RAB1B | `GO:0090557` establishment of endothelial **intestinal** barrier (IMP NOT) | intestinal **epithelial** tight junctions | establishment of intestinal epithelial barrier |
+
+The ATG16L1 contact-site case is the same gap already proposed on ATG2A and ATG2B and modelled
+in `modules/phagophore_organelle_contact_site.yaml`, now reached from a third direction:
+`GO:0120095` is the ontology's *only* isolation-membrane contact site term, and it is the yeast
+VICS. The organelle membrane contact site branch has ER–vacuole, ER–endosome, ER–lysosome,
+ER–plasma membrane, ER–*trans*-Golgi and ER–lipid droplet children, and no ER–phagophore child.
+
+Two adjacent findings that are *not* missing-term cases, recorded here because they came from
+the same sweep:
+
+- **ULK1 `GO:0035032`** asserts `part_of` the class III PI3-kinase complex. PMID:40442316 shows
+  the ULK1C:PI3KC3-C1 *supercomplex*, assembled through contacts between the FIP200 scaffold and
+  the VPS15, ATG14 and BECN1 subunits. ULK1 is not at the interface and is not a subunit. GO has
+  no way to say two named complexes coassemble, so the observation was expressed as membership —
+  which corrupts `GO:0035032`'s subunit list. A supercomplex term is proposed on that review.
+- **ATG16L1 `GO:0019787`** ubiquitin-like protein transferase activity, from Reactome, where
+  `GO:0019776` Atg8-family ligase activity exists and its definition already covers both the
+  phosphatidylethanolamine and the phosphatidylserine routes. Not a missing term; a
+  not-yet-used one.
+
+### Qualifier inconsistency across the conjugation complex
+
+ATG12 annotates `GO:0019776` with `contributes_to`. ATG5 and ATG16L1 use `enables` for the same
+complex-level reaction. All three are subunits of an E3-like conjugate that none of them
+performs alone, so `contributes_to` is right and the other two should follow — and ATG12 has the
+best claim of the three to a specific contribution, since the high-affinity ATG3-binding surface
+is exclusive to it. Recorded as a question on the ATG12 review rather than acted on, since it is
+a consortium-wide convention rather than a gene-level call.
+
 ## What this slice supports and does not
 
 **Supports.** That the term is accepted uncritically even under review; that the failure is
@@ -211,15 +322,21 @@ assertion in the slice turned out to have a destination, either an existing term
 proposing; and — from the `GO:0097629` finding — that the #23424 sweep was incomplete in a way
 that is checkable from the ontology alone.
 
-**Does not support.** Anything about the ~2,120 assertions not in this corpus. This slice is
-biased toward genes someone chose to review, and toward IEA/IBA (19 of 31 assertions); it
-contains only five of the 110 manual annotations in §5.3, and a single gene (ATG14) supplies
-10 of the 31. It is a demonstration that the per-assertion method in Stage 5 works and produces
-corrections, not a sample from which the full audit's outcome can be projected.
+**Does not support.** Anything about the ~2,090 assertions not in this corpus. This slice is
+biased toward genes someone chose to review or that the issue itself named. It is a
+demonstration that the per-assertion method in Stage 5 works and produces corrections, not a
+sample from which the full audit's outcome can be projected.
+
+The two passes differ in a way that bears on that caveat. The first pass was 19 IEA/IBA out of
+31, and a single gene (ATG14) supplied 10 of them. The second pass is 15 experimental out of
+28 — 10 `EXP` and 5 `IDA` — spread across seven genes, none supplying more than seven.
+Combined, the audit is **27 experimental assertions out of 59**. The objection that this
+failure mode is confined to automatic pipelines does not survive that: most of the
+second-pass assertions were made by curators reading papers.
 
 ## Regenerating the inventory
 
-The 31-assertion inventory comes from scanning `genes/*/*/*-goa.tsv` for the three terms and
+The 59-assertion inventory comes from scanning `genes/*/*/*-goa.tsv` for the three terms and
 joining against the `review.action` in the corresponding `*-ai-review.yaml`. The general
 condensate-space scan in
 [the GO and annotation audit](CONDENSATES-go-audit.md) uses the same approach over a wider
