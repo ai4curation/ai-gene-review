@@ -63,9 +63,12 @@ an important but substrate-specific branch.
 
 ### PDZ-dependent scaffolding
 
-Human LNX binds INPP5K/SKIP through PDZ domains and co-immunoprecipitates with it
-in HEK293 cells [PMID:16002321, "The co-immunoprecipitation results suggested that
-LNX interacted with SKIP in HEK293 cells."]. The paper's `cytoplasm` wording comes
+PMID:16002321 reports that human LNX binds Ski-interacting protein/SNW1 through
+PDZ domains and co-immunoprecipitates with "SKIP" in HEK293 cells [PMID:16002321,
+"The co-immunoprecipitation results suggested that LNX interacted with SKIP in
+HEK293 cells."]. GOA/IntAct instead maps that row to Q9BT40/INPP5K, a different
+protein also aliased SKIP; the homonym discrepancy remains unresolved. The paper's
+`cytoplasm` wording comes
 from in-situ hybridization and describes transcript signal, not protein localization.
 Mouse-derived UniProt evidence assigns p70 an endocytic JAM4 scaffold role. This
 supports a bounded p70 scaffold function, but not intrinsic E3 activity or a stable
