@@ -102,7 +102,7 @@ def test_fully_ready_pr_is_eligible():
 
 
 def test_approved_draft_requires_explicit_opt_in():
-    pr = make_pr(isDraft=True)
+    pr = make_pr(isDraft=True, mergeStateStatus="DRAFT")
     assert not decide(pr).eligible
     assert decide(pr, include_drafts=True).eligible
 
@@ -823,6 +823,7 @@ def _run_main(
     post_file_heads=None,
     list_view=None,
     ready_calls=None,
+    draft_calls=None,
 ):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
     view = view or make_pr(number=42)
@@ -831,6 +832,7 @@ def _run_main(
     post_file_heads = list(post_file_heads or [HEAD_SHA, HEAD_SHA])
     merges = []
     ready_calls = ready_calls if ready_calls is not None else []
+    draft_calls = draft_calls if draft_calls is not None else []
     monkeypatch.setattr(
         auto_merge,
         "list_open_prs",
@@ -869,6 +871,11 @@ def _run_main(
     )
     monkeypatch.setattr(
         auto_merge,
+        "mark_pr_draft",
+        lambda repo, number, _token: draft_calls.append((repo, number)),
+    )
+    monkeypatch.setattr(
+        auto_merge,
         "merge_pr",
         lambda repo, number, days, head, _token: merges.append(
             (repo, number, days, head)
@@ -895,7 +902,7 @@ def test_explicit_dry_run_never_merges(monkeypatch, tmp_path):
 
 
 def test_include_drafts_audit_reports_without_marking_ready(monkeypatch, tmp_path):
-    draft = make_pr(number=42, isDraft=True)
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
     ready_calls = []
     code, merges, summary = _run_main(
         monkeypatch,
@@ -914,15 +921,17 @@ def test_include_drafts_audit_reports_without_marking_ready(monkeypatch, tmp_pat
 def test_include_drafts_execute_marks_ready_then_reverifies_and_merges(
     monkeypatch, tmp_path
 ):
-    draft = make_pr(number=42, isDraft=True)
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
     ready = make_pr(number=42, isDraft=False)
     ready_calls = []
+    draft_calls = []
     code, merges, summary = _run_main(
         monkeypatch,
         tmp_path,
         views=[draft, ready],
         list_view=draft,
         ready_calls=ready_calls,
+        draft_calls=draft_calls,
         args=(
             "--execute",
             "--required-check",
@@ -932,19 +941,22 @@ def test_include_drafts_execute_marks_ready_then_reverifies_and_merges(
     )
     assert code == 0
     assert ready_calls == [("o/r", 42)]
+    assert draft_calls == []
     assert merges == [("o/r", 42, 3, HEAD_SHA)]
     assert "Merged 1" in summary
 
 
 def test_include_drafts_execute_requires_ready_transition(monkeypatch, tmp_path):
-    draft = make_pr(number=42, isDraft=True)
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
     ready_calls = []
+    draft_calls = []
     code, merges, summary = _run_main(
         monkeypatch,
         tmp_path,
         views=[draft, draft],
         list_view=draft,
         ready_calls=ready_calls,
+        draft_calls=draft_calls,
         args=(
             "--execute",
             "--required-check",
@@ -954,8 +966,32 @@ def test_include_drafts_execute_requires_ready_transition(monkeypatch, tmp_path)
     )
     assert code == 0
     assert ready_calls == [("o/r", 42)]
+    assert draft_calls == [("o/r", 42)]
     assert merges == []
     assert "state changed after verification: draft" in summary
+
+
+def test_include_drafts_restores_draft_after_final_guard_failure(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="BLOCKED")
+    held = make_pr(number=42, labels=[{"name": "shepherd:hold"}])
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, held],
+        list_view=draft,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == [("o/r", 42)]
+    assert "state changed after verification: held by label" in summary
 
 
 def test_execute_merges_and_pins_verified_head(monkeypatch, tmp_path):

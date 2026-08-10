@@ -320,7 +320,8 @@ Manual dispatch exposes three independent controls:
 - `merge_mode=audit|execute|off` selects the closing pass.
 - `include_drafts=true` includes otherwise eligible approved drafts. Audit mode
   only reports them; execute mode marks each verified draft ready, re-reads all
-  merge guards, and only then performs the head-pinned merge.
+  merge guards, and only then performs the head-pinned merge. If any later
+  guard or the merge fails, it restores the PR to draft state.
 
 Schedules audit by default. They execute only while the repository variable
 `PR_SHEPHERD_MERGE_ENABLED` is exactly `true`. Manual execute also requires that
