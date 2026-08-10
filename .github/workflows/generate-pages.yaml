@@ -43,6 +43,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          # A manual dispatch may select any workflow ref. Generated artifacts
+          # must nevertheless always be built from the trusted default branch.
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -175,6 +178,7 @@ jobs:
           private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
 
       - name: Create or update regeneration PR
+        id: regen-pr
         if: steps.check-changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
@@ -207,7 +211,7 @@ jobs:
           # content. Allowed: gene-review HTML, everything under pages/, the
           # three browser-app files, and reports/.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/|app/(index\.html|data\.js|schema\.js)$|reports/)' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(index\.html|data\.js|schema\.js)|reports/[^[:space:]]+)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
@@ -274,7 +278,9 @@ jobs:
           PR_NUMBER="$(gh pr list \
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH_NAME" \
+            --base main \
             --state open \
+            --author app/ai4c-agent \
             --json number \
             --limit 1 \
             --jq '.[0].number // empty')"
@@ -297,7 +303,9 @@ jobs:
             PR_NUMBER="$(gh pr list \
               --repo "$GITHUB_REPOSITORY" \
               --head "$BRANCH_NAME" \
+              --base main \
               --state open \
+              --author app/ai4c-agent \
               --json number \
               --limit 1 \
               --jq '.[0].number // empty')"
@@ -310,26 +318,113 @@ jobs:
             echo "Created regeneration PR #$PR_NUMBER."
           fi
 
-          merge_state="$(gh pr view "$PR_NUMBER" \
-            --repo "$GITHUB_REPOSITORY" \
-            --json mergeStateStatus \
-            --jq '.mergeStateStatus')"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-          if [ "$merge_state" = "CLEAN" ]; then
-            echo "Regeneration PR #$PR_NUMBER is clean; merging generated artifacts directly."
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --squash
-          else
-            # Publish automatically: enable auto-merge so the regeneration PR
-            # lands on main once required checks or reviews pass, instead of
-            # sitting unmerged. The PR only contains generated artifacts
-            # (enforced by the safety guard above), so merging it cannot clobber
-            # source files. Non-fatal if the repo does not allow auto-merge -- in
-            # that case the PR simply stays open for a maintainer to merge.
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --auto \
-              --squash \
-              || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+      - name: Approve exact generated commit
+        id: approve-generated
+        if: steps.check-changes.outputs.has_changes == 'true'
+        # Approval is a fail-safe convenience after the expensive render and
+        # push. The later step will not arm auto-merge when the reviewer App is
+        # unavailable, so preserve the artifacts and emit a loud warning below.
+        continue-on-error: true
+        uses: ./.github/actions/approve-regen-pr
+        with:
+          pr-number: ${{ steps.regen-pr.outputs.pr_number }}
+          branch-name: auto/generate-pages
+          base-branch: main
+          expected-author: app/ai4c-agent
+          app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
+          private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
+
+      - name: Warn when generated approval is unavailable
+        if: >-
+          ${{ always() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.approve-generated.outcome == 'failure' }}
+        env:
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+        shell: bash
+        run: |
+          echo "::warning title=Generated PR approval unavailable::The exact-head approval for regeneration PR #${PR_NUMBER:-unknown} failed. Generated artifacts were already pushed; the later step will not arm auto-merge. Retry the workflow or inspect the ai4c-reviewer App."
+
+      # Approval is deliberately a separate, earlier step. A protection-read or
+      # rollout-guard failure below must never prevent the independent reviewer
+      # App from recording its exact-head decision on the generated PR.
+      - name: Validate protection and arm generated auto-merge
+        if: >-
+          ${{ !cancelled() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.regen-pr.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          MERGE_ENABLED: ${{ vars.PR_SHEPHERD_MERGE_ENABLED }}
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+          EXPECTED_HEAD: ${{ steps.regen-pr.outputs.head_sha }}
+          APPROVAL_OUTCOME: ${{ steps.approve-generated.outcome }}
+        shell: bash
+        run: |
+          # Share the Shepherd rollout flag as the generated lane's kill switch.
+          # Flag-off still leaves the already-created and reviewed PR open.
+          if [ "$MERGE_ENABLED" != "true" ]; then
+            echo "Auto-merge is rollout-disabled; PR #$PR_NUMBER remains open."
+            exit 0
           fi
+
+          # The generated PR and approval action both use literal base `main`.
+          # Refuse a renamed/default-branch mismatch rather than checking one
+          # branch and arming auto-merge against another.
+          if [ "$DEFAULT_BRANCH" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::Repository default branch is $DEFAULT_BRANCH, but the generated lane targets literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+          pr_base=""
+          if ! pr_base="$(gh pr view "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json baseRefName \
+            --jq '.baseRefName')"; then
+            echo "::error title=Generated auto-merge base check failed::Could not read the current base for PR #$PR_NUMBER; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$pr_base" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::PR #$PR_NUMBER targets $pr_base, not literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Mirror the Shepherd's protected-branch existence smoke check with
+          # the current App token. This intentionally does not claim to verify
+          # the exact classic-protection settings in the rollout checklist.
+          protected=""
+          if ! protected="$(gh api \
+            "repos/$GITHUB_REPOSITORY/branches/main" \
+            --jq '.protected')"; then
+            echo "::error title=Generated auto-merge protection check failed::Could not read protection for literal base main; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$protected" != "true" ]; then
+            echo "::error title=Generated auto-merge requires protected main::Literal base main reports protected=$protected; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Do not arm a PR whose independent exact-head approval was not
+          # recorded. The warning step above reports the fail-safe outcome.
+          if [ "$APPROVAL_OUTCOME" != "success" ]; then
+            echo "Auto-merge was not armed because exact-head approval is unavailable."
+            exit 0
+          fi
+          if [ -z "$EXPECTED_HEAD" ]; then
+            echo "::error title=Generated auto-merge head pin missing::The generated head SHA is empty; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Arm auto-merge rather than issue a direct merge. Protected main must
+          # enforce the exact-head reviewer approval and required test check.
+          # The staged-path allowlist guarantees derived artifacts only.
+          echo "Arming auto-merge for regeneration PR #$PR_NUMBER."
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --squash \
+            --match-head-commit "$EXPECTED_HEAD" \
+            || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
