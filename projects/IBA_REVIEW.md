@@ -159,6 +159,41 @@ These are the schema values for `propagation_review.source_entities[].source_sta
 | `NOT_RELEVANT` | Source was inspected but is not relevant to the target annotation. |
 | `UNRESOLVED` | Source could not be classified confidently. |
 
+### What an IBA actually asserts, and two ways to misread the WITH/FROM
+
+An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
+**PAINT curator's IBD** (Inferred from Biological aspect of Descendant): the curator
+inspected the family tree and the multiple sequence alignment, read the experimental
+annotations of *all* extant members, decided at which node the function arose — sometimes
+recent, sometimes as deep as LUCA — and placed the assertion there. The IBA rows are then
+the mechanical consequence of descent from that node. So an IBA carries a considered
+phylogenetic judgment that no pairwise transfer does, and reviewing it means arguing with
+that judgment, not with a similarity score.
+
+Two corollaries, both of which are easy to get backwards:
+
+**A small donor list does not mean weak support.** A node seeded by a single well-characterized
+MOD or human gene can be perfectly strong, because the curator's claim is about where the
+function arose, and they made that call with the whole alignment and the whole tree in view.
+Counting donor genes is not a measure of evidential strength. If you want to challenge an IBA,
+challenge the node placement — is the target inside or outside the clade that inherited the
+function, and is there target-specific evidence of loss or divergence?
+
+**The target appearing in its own `WITH/FROM` is correct and expected.** When a gene has its
+own experimental annotation for the term, that annotation is one of the descendant evidences
+the curator used to place the IBD, so the gene legitimately appears among the sources of the
+IBA it later receives. This is **not** circular and **not** self-citation. It means the target's
+own experimental data helped establish that the function is ancestral, and the IBA is then
+saying something additional: that the function is inherited rather than lineage-specific.
+Do **not** mark such a source `CIRCULAR_OR_REDUNDANT` and do not describe it as inflating
+support.
+
+`CIRCULAR_OR_REDUNDANT` is for genuine circularity — a propagation whose source is *itself*
+a propagated annotation with no experimental grounding anywhere in the chain, or a source
+that adds nothing because the target already has stronger direct evidence for the same claim.
+Target-in-own-`WITH/FROM` is the opposite situation: it is a marker that experimental
+grounding exists, and on the target itself.
+
 Before a strong `REMOVE` on an IBA row, record that these checks were done:
 
 - The GO term definition, aspect, qualifier, and taxon constraints were checked.

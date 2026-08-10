@@ -258,20 +258,40 @@ omegasome membrane — the more precise membrane term — from the same study th
 its `GO:0034045` assertions. For soluble PAS residents of this kind, the site term may simply be
 correct and no membrane term needed.
 
-### An unremarked feature of the PAINT records: self-referential WITH/FROM
+### A reviewer error worth recording: the target in its own WITH/FROM
 
 Five of the seven genes have at least one IBA whose `WITH/FROM` column lists **the annotation
 target itself**: WIPI2 (`UniProtKB:Q9Y4P8` on GO:0034045), ATG16L1 (`UniProtKB:Q676U5` on
 GO:0034045), ATG12 (`UniProtKB:O94817` on GO:0034045), ULK1 (`UniProtKB:O75385` on GO:0034045
-and on GO:0005737), and STBD1 (`UniProtKB:O95210` on GO:0016020). This was not looked for; it
-turned up once and then kept turning up.
+and on GO:0005737), and STBD1 (`UniProtKB:O95210` on GO:0016020).
 
-It is not a GO:0034045 problem — it is a property of how these PAINT records list node
-members — but it inflates the apparent evidence for exactly the annotations this audit is
-questioning. A reader counting donor genes to judge how well-supported a propagated
-annotation is will count the target among its own sources. Worth a separate check across the
-IBA corpus; the `propagation_review` blocks on these five reviews record it as
-`CIRCULAR_OR_REDUNDANT` so the cases are findable.
+This pass initially flagged that as circular and marked the five sources
+`CIRCULAR_OR_REDUNDANT`. **That was wrong, and the correction matters more than the
+observation did.** An IBA is not a pairwise similarity transfer. Behind it is a PAINT
+curator's IBD: the curator inspected the family tree and the MSA, read the experimental
+annotations of all extant members, judged at which node the function arose — sometimes recent,
+sometimes as deep as LUCA — and placed the assertion there. A gene with its own experimental
+annotation for the term is one of the *descendant evidences* used to make that call, so it
+legitimately appears among the sources of the IBA it later receives. Far from being circular,
+it is a marker that experimental grounding exists on the target itself, and the IBA then says
+something the experimental annotation does not: that the function is inherited rather than
+lineage-specific.
+
+Two related things the same misreading produced, both since corrected in these reviews:
+
+- **Donor count is not a measure of support.** A node seeded by a single well-characterized
+  MOD or human gene can be entirely sound, because the claim is about *where the function
+  arose* and the curator had the whole alignment and tree in view.
+- **Several PANTHER nodes per gene is the expected pattern, not a warning sign.** RAB1B's IBAs
+  are anchored at three nodes and ULK1's at four. Different functions arise at different
+  depths, and PAINT anchors each where it was judged to have originated. This review initially
+  read that spread as the family reconstruction being unstable.
+
+The remaining objections to these annotations are unchanged, because none of them ever
+depended on the propagation being weak: they are objections to the *destination term*
+(GO:0034045) or to *granularity* (bare `membrane`, bare `cytoplasm`). The propagation itself
+is sound in every one of these five cases, and the `propagation_review` blocks now say so.
+The general guidance is written up in [the IBA project](../IBA_REVIEW.md#what-an-iba-actually-asserts-and-two-ways-to-misread-the-withfrom).
 
 ### Three further missing-term cases, from full review rather than from the term
 
