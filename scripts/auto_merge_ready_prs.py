@@ -99,6 +99,7 @@ BENIGN_MERGE_FAILURES = (
     "pull request is closed",
     "no commits between",
 )
+PR_GONE_MERGE_FAILURES = ("already merged", "pull request is closed")
 GH_STATUS_MARKERS = ("X ", "! ", "✓ ")
 
 MERGE_COMMENT = (
@@ -568,6 +569,12 @@ def _gh_error(exc: subprocess.CalledProcessError) -> str:
 def is_benign_merge_failure(stderr: str) -> bool:
     lowered = stderr.lower()
     return any(marker in lowered for marker in BENIGN_MERGE_FAILURES)
+
+
+def is_pr_gone_merge_failure(stderr: str) -> bool:
+    """Return true when a benign merge race left no open PR to re-draft."""
+    lowered = stderr.lower()
+    return any(marker in lowered for marker in PR_GONE_MERGE_FAILURES)
 
 
 def list_open_prs(repo: str, limit: int, base_branch: str) -> list[dict]:
@@ -1046,6 +1053,7 @@ def main(argv: list[str] | None = None) -> int:
                 failed.append({"number": number, "reason": reason})
                 continue
         merge_completed = False
+        pr_gone = False
         try:
             # Re-read every load-bearing field immediately before the write.
             # This catches a newly added hold/assignee, review or check change,
@@ -1105,7 +1113,9 @@ def main(argv: list[str] | None = None) -> int:
                 merge_completed = True
             except subprocess.CalledProcessError as exc:
                 reason = _gh_error(exc)
-                if is_benign_merge_failure(exc.stderr or reason):
+                merge_error = exc.stderr or reason
+                if is_benign_merge_failure(merge_error):
+                    pr_gone = is_pr_gone_merge_failure(merge_error)
                     print(f"SKIP  #{number}: {reason}")
                     skipped.append({"number": number, "reason": reason})
                 else:
@@ -1113,7 +1123,7 @@ def main(argv: list[str] | None = None) -> int:
                     failed.append({"number": number, "reason": reason})
                 continue
         finally:
-            if marked_ready and not merge_completed:
+            if marked_ready and not merge_completed and not pr_gone:
                 try:
                     mark_pr_draft(args.repo, number, write_token)
                 except (subprocess.CalledProcessError, ValueError) as exc:
