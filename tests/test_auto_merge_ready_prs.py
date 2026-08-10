@@ -27,7 +27,6 @@ _SPEC.loader.exec_module(auto_merge)
 
 NOW = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
 HEAD_SHA = "cafe1234"
-BASE_SHA = "base1234"
 REQUIRED_CHECK = "test (3.12)"
 
 
@@ -53,7 +52,6 @@ def make_pr(**overrides):
         "state": "OPEN",
         "isDraft": False,
         "baseRefName": "main",
-        "baseRefOid": BASE_SHA,
         "headRefName": "agent/review-example",
         "headRefOid": HEAD_SHA,
         "labels": [],
@@ -89,7 +87,7 @@ def decide(pr, **kwargs):
     kwargs.setdefault("now", NOW)
     kwargs.setdefault("min_age_days", 3)
     kwargs.setdefault("base_branch", "main")
-    kwargs.setdefault("current_base_sha", BASE_SHA)
+    kwargs.setdefault("trusted_reviewers", ("ai4c-reviewer",))
     return auto_merge.evaluate(pr, **kwargs)
 
 
@@ -336,36 +334,16 @@ def test_graphql_review_shape_fails_closed_without_actor_type():
     assert not decide(make_pr(reviews=[review])).eligible
 
 
-def test_no_trusted_reviewer_configuration_fails_closed():
-    decision = decide(make_pr(), trusted_reviewers=[])
-    assert not decision.eligible
-    assert "no trusted reviewers configured" in decision.reason
+def test_no_trusted_reviewer_configuration_uses_aggregate_approval():
+    decision = decide(make_pr(reviews=[]), trusted_reviewers=[])
+    assert decision.eligible
 
 
-# Base-tip guards
+# Base freshness policy
 
 
-def test_missing_pr_base_sha_fails_closed():
-    decision = decide(make_pr(baseRefOid=""))
-    assert not decision.eligible
-    assert "no base SHA" in decision.reason
-
-
-def test_missing_current_base_tip_fails_closed():
-    decision = decide(make_pr(), current_base_sha="")
-    assert not decision.eligible
-    assert "could not verify" in decision.reason
-
-
-def test_stale_pr_base_fails_closed():
-    decision = decide(make_pr(baseRefOid="oldbase"))
-    assert not decision.eligible
-    assert "is stale" in decision.reason
-    assert BASE_SHA in decision.reason
-
-
-def test_base_sha_comparison_is_case_insensitive():
-    assert decide(make_pr(baseRefOid="ABCDEF"), current_base_sha="abcdef").eligible
+def test_recorded_stale_base_does_not_block_an_independent_pr():
+    assert decide(make_pr(baseRefOid="old-base-tip")).eligible
 
 
 # Changed-file path scope
@@ -378,6 +356,7 @@ def test_default_allowed_path_prefixes_are_the_conservative_content_set():
         "gocams/",
         "interpro/",
         "modules/",
+        "pages/",
         "projects/",
         "publications/",
         "reactome/",
@@ -602,7 +581,6 @@ def test_legacy_required_check_can_explicitly_succeed():
 def test_list_stage_defers_final_only_fields():
     pr = make_pr(
         headRefOid="",
-        baseRefOid="",
         reviews=[],
         mergeable="UNKNOWN",
         mergeStateStatus="UNKNOWN",
@@ -808,19 +786,6 @@ def test_view_pr_head_sha_retries_api_errors_and_empty_data(monkeypatch):
     assert sleeps == [0.25, 0.5]
 
 
-def test_view_base_tip_encodes_branch_and_rejects_empty(monkeypatch):
-    calls = []
-    monkeypatch.setattr(
-        auto_merge, "_gh", lambda args: calls.append(args) or "abc123\n"
-    )
-    assert auto_merge.view_base_tip("o/r", "release/v1") == "abc123"
-    assert "release%2Fv1" in calls[0][1]
-
-    monkeypatch.setattr(auto_merge, "_gh", lambda _: "\n")
-    with pytest.raises(ValueError, match="could not resolve"):
-        auto_merge.view_base_tip("o/r", "main")
-
-
 # End-to-end controller modes
 
 
@@ -831,14 +796,12 @@ def _run_main(
     view=None,
     views=None,
     args=(),
-    base_tips=None,
     post_file_heads=None,
 ):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
     view = view or make_pr(number=42)
     snapshots = [dict(item) for item in (views or [view, view])]
     last_view = {"value": dict(view)}
-    base_tips = list(base_tips or [BASE_SHA, BASE_SHA])
     post_file_heads = list(post_file_heads or [HEAD_SHA, HEAD_SHA])
     merges = []
     monkeypatch.setattr(
@@ -872,10 +835,6 @@ def _run_main(
         lambda _repo, _number: post_file_heads.pop(0),
     )
 
-    def fake_base_tip(_repo, _base):
-        return base_tips.pop(0)
-
-    monkeypatch.setattr(auto_merge, "view_base_tip", fake_base_tip)
     monkeypatch.setattr(
         auto_merge,
         "merge_pr",
@@ -923,18 +882,6 @@ def test_required_check_cli_is_enforced(monkeypatch, tmp_path):
     assert code == 0
     assert merges == []
     assert "required checks not explicitly successful" in summary
-
-
-def test_base_movement_after_final_verification_blocks_execute(monkeypatch, tmp_path):
-    code, merges, summary = _run_main(
-        monkeypatch,
-        tmp_path,
-        args=("--execute", "--required-check", REQUIRED_CHECK),
-        base_tips=[BASE_SHA, "newbase"],
-    )
-    assert code == 0
-    assert merges == []
-    assert "base branch moved after verification" in summary
 
 
 def test_hold_added_after_verification_blocks_execute(monkeypatch, tmp_path):
@@ -1226,7 +1173,6 @@ def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
         "view_pr_head_sha",
         lambda _repo, number: (older if number == 20 else newer)["headRefOid"],
     )
-    monkeypatch.setattr(auto_merge, "view_base_tip", lambda *_: BASE_SHA)
     merges = []
     monkeypatch.setattr(
         auto_merge,
@@ -1326,7 +1272,7 @@ def test_dry_run_summary_never_claims_a_merge():
     assert "#2 — draft" in report
 
 
-def test_multi_candidate_dry_run_explains_serial_base_refresh():
+def test_multi_candidate_dry_run_explains_no_base_refresh():
     report = auto_merge.render_summary(
         merged=[
             {"number": 1, "title": "curate: A"},
@@ -1336,5 +1282,5 @@ def test_multi_candidate_dry_run_explains_serial_base_refresh():
         failed=[],
         dry_run=True,
     )
-    assert "independently eligible at audit time" in report
-    assert "branch refresh" in report
+    assert "re-read before a head-pinned merge" in report
+    assert "do not require a branch refresh" in report

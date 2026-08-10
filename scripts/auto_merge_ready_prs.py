@@ -7,8 +7,6 @@ merges when every mechanical guard passes:
 
 * the PR is open, non-draft, unassigned, and targets the configured base;
 * the aggregate review decision is APPROVED;
-* a configured trusted reviewer approved the exact current head commit;
-* the PR was tested against the current base-branch tip;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
 * every changed file is under a conservative content-path allowlist;
 * every reported check is complete and non-failing, with at least one SUCCESS;
@@ -17,25 +15,25 @@ merges when every mechanical guard passes:
 The initial bulk list is only a cheap candidate scan. GitHub computes
 mergeability lazily and large bulk GraphQL requests for mergeStateStatus can
 fail, so mergeability, exact-head approval, and checks are evaluated only on a
-fresh per-PR view. The final merge is pinned with --match-head-commit.
-The PR's recorded base SHA must also equal a freshly read base-branch tip, and
-the tip is checked again before a write. GitHub has no atomic match-base option,
-so write mode requires branch protection that enforces the required check
-on an up-to-date merge result, dismisses stale approvals, resolves review
-threads, and grants neither automation App a bypass. The workflow keeps execute
-mode behind a repository feature flag until those settings are installed.
+fresh per-PR view when configured. The final merge is pinned with
+--match-head-commit.
+The PR does not have to be rebased onto the latest base-branch tip. GitHub
+re-evaluates mergeability against the current base, while the controller pins
+the exact reviewed and tested head with ``--match-head-commit``. This matches
+DisMech's closing policy and avoids rerunning CI and review for unrelated base
+changes. Branch protection still requires the named head check, dismisses stale
+approvals after a head push, resolves review threads, and grants neither
+automation App a bypass. The workflow keeps execute mode behind a repository
+feature flag until those settings are installed.
 
-The default trusted identity is the ai4c-reviewer GitHub App. Additional Bot
-reviewers can be explicitly allowlisted with repeatable --trusted-reviewer
-arguments; human reviewer accounts are never accepted by this trust gate.
-Logins are normalized for GraphQL/REST spellings such as ai4c-reviewer,
-ai4c-reviewer[bot], and app/ai4c-reviewer. Load-bearing REST reviews must also
-identify the reviewer as a Bot, so normalization cannot make a same-named human
-account trusted.
+Production follows DisMech and relies on GitHub's aggregate APPROVED decision
+plus branch protection that dismisses stale reviews after a head push. An
+optional stricter Bot-identity gate remains available through repeatable
+``--trusted-reviewer`` arguments, but the workflow does not enable it.
 
 The closing pass intentionally does not filter by PR author or head repository.
-An otherwise eligible human-authored PR, or a fork PR that received an explicit
-trusted exact-head review, is in scope. Automatic agentic review is narrower,
+An otherwise eligible human-authored or fork PR is in scope once GitHub reports
+the aggregate review decision as APPROVED. Automatic agentic review is narrower,
 but its author/branch ingress rules are not implicit merge-controller policy.
 
 The controller is report-only by default. Actual merging requires the explicit
@@ -57,7 +55,6 @@ import time
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from urllib.parse import quote
 
 
 LIST_FIELDS = (
@@ -65,11 +62,10 @@ LIST_FIELDS = (
     "mergeable,baseRefName,headRefName,labels,url"
 )
 VIEW_FIELDS = (
-    LIST_FIELDS
-    + ",state,statusCheckRollup,headRefOid,baseRefOid,mergeStateStatus,changedFiles"
+    LIST_FIELDS + ",state,statusCheckRollup,headRefOid,mergeStateStatus,changedFiles"
 )
 
-DEFAULT_TRUSTED_REVIEWERS = ("ai4c-reviewer",)
+DEFAULT_TRUSTED_REVIEWERS: tuple[str, ...] = ()
 DEFAULT_EXCLUDED_HEAD_PREFIXES = ("auto/generate-",)
 DEFAULT_ALLOWED_PATH_PREFIXES = (
     "genes/",
@@ -77,6 +73,7 @@ DEFAULT_ALLOWED_PATH_PREFIXES = (
     "gocams/",
     "interpro/",
     "modules/",
+    "pages/",
     "projects/",
     "publications/",
     "reactome/",
@@ -99,8 +96,8 @@ BENIGN_MERGE_FAILURES = (
 GH_STATUS_MARKERS = ("X ", "! ", "✓ ")
 
 MERGE_COMMENT = (
-    "🐑 **PR Shepherd** (deterministic sweep) — Squash-merged: approved at "
-    "the current commit by a trusted reviewer, unassigned, no conflicts, all "
+    "🐑 **PR Shepherd** (deterministic sweep) — Squash-merged: approved, "
+    "unassigned, no conflicts, all "
     "checks green, and open longer than {days} days. No further action needed."
 )
 TOO_YOUNG = "too_young"
@@ -434,7 +431,6 @@ def evaluate(
     base_branch: str,
     trusted_reviewers: Iterable[str] = DEFAULT_TRUSTED_REVIEWERS,
     required_checks: Iterable[str] = (),
-    current_base_sha: str = "",
     hold_label: str = "shepherd:hold",
     excluded_head_prefixes: Iterable[str] = DEFAULT_EXCLUDED_HEAD_PREFIXES,
     allowed_path_prefixes: Iterable[str] = (),
@@ -492,18 +488,6 @@ def evaluate(
     if not final:
         return Decision(True, "candidate (pending per-PR verification)")
 
-    base_sha = str(pr.get("baseRefOid") or "").strip()
-    current_base_sha = current_base_sha.strip()
-    if not base_sha:
-        return Decision(False, "no base SHA in the PR API response")
-    if not current_base_sha:
-        return Decision(False, "could not verify the current base-branch tip")
-    if base_sha.casefold() != current_base_sha.casefold():
-        return Decision(
-            False,
-            f"PR base {base_sha} is stale; current base tip is {current_base_sha}",
-        )
-
     paths = changed_files_decision(
         pr.get("changed_files"),
         expected_file_count=pr.get("changedFiles"),
@@ -513,14 +497,16 @@ def evaluate(
     if not paths.eligible:
         return paths
 
-    head_sha = str(pr.get("headRefOid") or "").strip()
-    approval = trusted_head_approval_decision(
-        pr.get("reviews"),
-        head_sha=head_sha,
-        trusted_reviewers=trusted_reviewers,
-    )
-    if not approval.eligible:
-        return approval
+    trusted_reviewers = tuple(trusted_reviewers)
+    if trusted_reviewers:
+        head_sha = str(pr.get("headRefOid") or "").strip()
+        approval = trusted_head_approval_decision(
+            pr.get("reviews"),
+            head_sha=head_sha,
+            trusted_reviewers=trusted_reviewers,
+        )
+        if not approval.eligible:
+            return approval
 
     if mergeable != "MERGEABLE":
         return Decision(False, f"mergeability is {mergeable.lower() or 'unset'}")
@@ -725,22 +711,6 @@ def require_unchanged_file_inventory_head(
         )
 
 
-def view_base_tip(repo: str, base_branch: str) -> str:
-    """Read the current base tip and fail closed on an empty response."""
-    encoded_branch = quote(base_branch, safe="")
-    oid = _gh(
-        [
-            "api",
-            f"repos/{repo}/git/ref/heads/{encoded_branch}",
-            "--jq",
-            ".object.sha",
-        ]
-    ).strip()
-    if not oid:
-        raise ValueError(f"could not resolve refs/heads/{base_branch}")
-    return oid
-
-
 def merge_pr(
     repo: str,
     number: int,
@@ -807,9 +777,9 @@ def render_summary(
             lines.extend(
                 [
                     "",
-                    "_Candidates are independently eligible at audit time. After the "
-                    "first merge advances `main`, later candidates normally require a "
-                    "branch refresh, new CI, and a new exact-head approval._",
+                    "_Each candidate is re-read before a head-pinned merge. Unrelated "
+                    "changes on `main` do not require a branch refresh, CI rerun, or "
+                    "new review._",
                 ]
             )
     else:
@@ -855,8 +825,8 @@ def main(argv: list[str] | None = None) -> int:
         type=trusted_reviewer_login,
         default=[],
         help=(
-            "additional Bot reviewer login trusted to approve the exact head; "
-            "repeatable (Bot accounts only; ai4c-reviewer is always trusted)"
+            "require this Bot reviewer to approve the exact head; repeatable "
+            "and optional (production relies on GitHub's APPROVED decision)"
         ),
     )
     parser.add_argument(
@@ -915,7 +885,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.execute and not write_token:
         parser.error("--execute requires a non-empty GH_MERGE_TOKEN")
 
-    trusted_reviewers = (*DEFAULT_TRUSTED_REVIEWERS, *args.trusted_reviewer)
+    trusted_reviewers = tuple(args.trusted_reviewer)
     excluded_head_prefixes = (
         *DEFAULT_EXCLUDED_HEAD_PREFIXES,
         *args.exclude_head_prefix,
@@ -957,10 +927,8 @@ def main(argv: list[str] | None = None) -> int:
         "list-level predicate."
     )
 
-    # A successful merge advances the base and normally makes every remaining
-    # candidate stale. Make that single useful merge deterministic: oldest PR
-    # first, then PR number as a stable tie-breaker, rather than relying on the
-    # changing default order of `gh pr list`.
+    # Process oldest PR first, then PR number as a stable tie-breaker, rather
+    # than relying on the changing default order of `gh pr list`.
     candidates.sort(key=lambda pr: (_parse_ts(pr["createdAt"]), int(pr["number"])))
 
     merged: list[dict] = []
@@ -976,7 +944,6 @@ def main(argv: list[str] | None = None) -> int:
             require_unchanged_file_inventory_head(
                 args.repo, number, fresh.get("headRefOid")
             )
-            current_base_sha = view_base_tip(args.repo, args.base_branch)
         except HeadMovedError as exc:
             reason = str(exc)
             print(f"SKIP  #{number}: {reason}")
@@ -1004,7 +971,6 @@ def main(argv: list[str] | None = None) -> int:
             base_branch=args.base_branch,
             trusted_reviewers=trusted_reviewers,
             required_checks=args.required_check,
-            current_base_sha=current_base_sha,
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
@@ -1020,19 +986,9 @@ def main(argv: list[str] | None = None) -> int:
             merged.append({"number": number, "title": fresh["title"]})
             continue
         # Re-read every load-bearing field immediately before the write. This
-        # catches a newly added hold/assignee, review or check change, head
-        # movement, and base movement. It still cannot make the base comparison
-        # and merge atomic, so strict branch protection remains mandatory.
+        # catches a newly added hold/assignee, review or check change, and head
+        # movement. The exact reviewed/tested head remains pinned at merge time.
         try:
-            merge_base_sha = view_base_tip(args.repo, args.base_branch)
-            if merge_base_sha.casefold() != current_base_sha.casefold():
-                reason = (
-                    f"base branch moved after verification: {current_base_sha} -> "
-                    f"{merge_base_sha}"
-                )
-                print(f"SKIP  #{number}: {reason}")
-                skipped.append({"number": number, "reason": reason})
-                continue
             fresh = view_pr(args.repo, number)
             fresh["reviews"] = list_pr_reviews(args.repo, number)
             files = list_pr_files(args.repo, number)
@@ -1064,7 +1020,6 @@ def main(argv: list[str] | None = None) -> int:
             base_branch=args.base_branch,
             trusted_reviewers=trusted_reviewers,
             required_checks=args.required_check,
-            current_base_sha=merge_base_sha,
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
