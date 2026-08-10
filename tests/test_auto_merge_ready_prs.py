@@ -101,6 +101,12 @@ def test_fully_ready_pr_is_eligible():
     assert decide(make_pr()).eligible
 
 
+def test_approved_draft_requires_explicit_opt_in():
+    pr = make_pr(isDraft=True, mergeStateStatus="DRAFT")
+    assert not decide(pr).eligible
+    assert decide(pr, include_drafts=True).eligible
+
+
 def test_required_check_can_be_enabled():
     assert decide(make_pr(), required_checks=[REQUIRED_CHECK]).eligible
 
@@ -815,6 +821,10 @@ def _run_main(
     views=None,
     args=(),
     post_file_heads=None,
+    list_view=None,
+    ready_calls=None,
+    draft_calls=None,
+    merge_error=None,
 ):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
     view = view or make_pr(number=42)
@@ -822,10 +832,12 @@ def _run_main(
     last_view = {"value": dict(view)}
     post_file_heads = list(post_file_heads or [HEAD_SHA, HEAD_SHA])
     merges = []
+    ready_calls = ready_calls if ready_calls is not None else []
+    draft_calls = draft_calls if draft_calls is not None else []
     monkeypatch.setattr(
         auto_merge,
         "list_open_prs",
-        lambda _repo, _limit, _base: [make_pr(number=42)],
+        lambda _repo, _limit, _base: [dict(list_view or make_pr(number=42))],
     )
 
     def fake_view_pr(_repo, _number):
@@ -855,11 +867,21 @@ def _run_main(
 
     monkeypatch.setattr(
         auto_merge,
-        "merge_pr",
-        lambda repo, number, days, head, _token: merges.append(
-            (repo, number, days, head)
-        ),
+        "mark_pr_ready",
+        lambda repo, number, _token: ready_calls.append((repo, number)),
     )
+    monkeypatch.setattr(
+        auto_merge,
+        "mark_pr_draft",
+        lambda repo, number, _token: draft_calls.append((repo, number)),
+    )
+
+    def fake_merge(repo, number, days, head, _token):
+        if merge_error is not None:
+            raise merge_error
+        merges.append((repo, number, days, head))
+
+    monkeypatch.setattr(auto_merge, "merge_pr", fake_merge)
     summary = tmp_path / "summary.md"
     code = auto_merge.main(["--repo", "o/r", "--summary-file", str(summary), *args])
     return code, merges, summary.read_text()
@@ -878,6 +900,152 @@ def test_explicit_dry_run_never_merges(monkeypatch, tmp_path):
     assert code == 0
     assert merges == []
     assert "Would merge 1" in summary
+
+
+def test_include_drafts_audit_reports_without_marking_ready(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        view=draft,
+        list_view=draft,
+        ready_calls=ready_calls,
+        args=("--dry-run", "--include-drafts"),
+    )
+    assert code == 0
+    assert merges == []
+    assert ready_calls == []
+    assert "Would merge 1" in summary
+
+
+def test_include_drafts_execute_marks_ready_then_reverifies_and_merges(
+    monkeypatch, tmp_path
+):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready = make_pr(number=42, isDraft=False)
+    ready_calls = []
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        ready_calls=ready_calls,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert ready_calls == [("o/r", 42)]
+    assert draft_calls == []
+    assert merges == [("o/r", 42, 3, HEAD_SHA)]
+    assert "Merged 1" in summary
+
+
+def test_include_drafts_execute_requires_ready_transition(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready_calls = []
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, draft],
+        list_view=draft,
+        ready_calls=ready_calls,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert ready_calls == [("o/r", 42)]
+    assert draft_calls == [("o/r", 42)]
+    assert merges == []
+    assert "state changed after verification: draft" in summary
+
+
+def test_include_drafts_restores_draft_after_final_guard_failure(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="BLOCKED")
+    held = make_pr(number=42, labels=[{"name": "shepherd:hold"}])
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, held],
+        list_view=draft,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == [("o/r", 42)]
+    assert "state changed after verification: held by label" in summary
+
+
+@pytest.mark.parametrize("message", ["already merged", "pull request is closed"])
+def test_include_drafts_does_not_redraft_a_pr_that_is_gone(
+    monkeypatch, tmp_path, message
+):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready = make_pr(number=42, isDraft=False)
+    draft_calls = []
+    error = subprocess.CalledProcessError(1, "gh", stderr=message)
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        draft_calls=draft_calls,
+        merge_error=error,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == []
+    assert message in summary
+
+
+def test_include_drafts_redrafts_after_open_pr_merge_race(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="BLOCKED")
+    ready = make_pr(number=42, isDraft=False)
+    draft_calls = []
+    error = subprocess.CalledProcessError(1, "gh", stderr="head branch was modified")
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        draft_calls=draft_calls,
+        merge_error=error,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == [("o/r", 42)]
+    assert "head branch was modified" in summary
 
 
 def test_execute_merges_and_pins_verified_head(monkeypatch, tmp_path):
@@ -1216,6 +1384,32 @@ def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
 # Merge invocation and reporting
 
 
+def test_ready_and_redraft_use_only_the_dedicated_writer(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda args, *, token=None: calls.append((args, token)) or "",
+    )
+    auto_merge.mark_pr_ready("o/r", 7, "writer-token")
+    auto_merge.mark_pr_draft("o/r", 7, "writer-token")
+    assert calls == [
+        (["pr", "ready", "7", "--repo", "o/r"], "writer-token"),
+        (["pr", "ready", "7", "--repo", "o/r", "--undo"], "writer-token"),
+    ]
+
+
+@pytest.mark.parametrize("function", ["mark_pr_ready", "mark_pr_draft"])
+def test_ready_state_writes_refuse_empty_token(monkeypatch, function):
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda *_args, **_kwargs: pytest.fail("gh must not run without a token"),
+    )
+    with pytest.raises(ValueError):
+        getattr(auto_merge, function)("o/r", 7, "  ")
+
+
 def test_merge_pr_always_pins_the_head(monkeypatch):
     calls = []
     monkeypatch.setattr(
@@ -1270,6 +1464,9 @@ GH_REFUSAL = (
 
 def test_benign_race_and_error_rendering():
     assert auto_merge.is_benign_merge_failure(GH_REFUSAL)
+    assert not auto_merge.is_pr_gone_merge_failure(GH_REFUSAL)
+    assert auto_merge.is_pr_gone_merge_failure("pull request is closed")
+    assert auto_merge.is_pr_gone_merge_failure("already merged")
     exc = subprocess.CalledProcessError(1, "gh", stderr=GH_REFUSAL)
     assert auto_merge._gh_error(exc).startswith("Pull request")
     assert "--admin" not in auto_merge._gh_error(exc)

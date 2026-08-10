@@ -37,6 +37,11 @@ on:
         required: false
         default: "3"
         type: string
+      include_drafts:
+        description: "Include approved drafts (execute marks eligible drafts ready)"
+        required: true
+        default: false
+        type: boolean
       model:
         description: "Optional model ID override (blank = use the configured default in agent-config.yaml)"
         required: false
@@ -302,6 +307,9 @@ jobs:
             (vars.PR_SHEPHERD_MERGE_ENABLED == 'true' && 'execute' || 'audit') ||
             inputs.merge_mode || 'audit' }}
       MIN_AGE_DAYS: ${{ inputs.min_age_days || '3' }}
+      INCLUDE_DRAFTS: >-
+        ${{ github.event_name == 'workflow_dispatch' &&
+            inputs.include_drafts && 'true' || 'false' }}
 
     steps:
       - name: Checkout trusted default branch
@@ -361,10 +369,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          draft_args=()
+          if [ "$INCLUDE_DRAFTS" = "true" ]; then
+            draft_args+=(--include-drafts)
+          fi
           uv run --python 3.12 --no-project python scripts/auto_merge_ready_prs.py \
             --repo "$GITHUB_REPOSITORY" \
             --min-age-days "$MIN_AGE_DAYS" \
             --required-check "test (3.12)" \
+            "${draft_args[@]}" \
             --dry-run
 
       - name: Merge ready PRs (deterministic)
@@ -382,8 +395,13 @@ jobs:
             echo "::error::The scoped merge token is empty."
             exit 1
           fi
+          draft_args=()
+          if [ "$INCLUDE_DRAFTS" = "true" ]; then
+            draft_args+=(--include-drafts)
+          fi
           uv run --python 3.12 --no-project python scripts/auto_merge_ready_prs.py \
             --repo "$GITHUB_REPOSITORY" \
             --min-age-days "$MIN_AGE_DAYS" \
             --required-check "test (3.12)" \
+            "${draft_args[@]}" \
             --execute
