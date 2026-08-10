@@ -7,6 +7,7 @@ merges when every mechanical guard passes:
 
 * the PR is open, non-draft, unassigned, and targets the configured base;
 * the aggregate review decision is APPROVED;
+* at least one approval is bound to the exact current PR head;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
 * every changed file is under a conservative content-path allowlist;
 * every reported check is complete and non-failing, with at least one SUCCESS;
@@ -15,7 +16,7 @@ merges when every mechanical guard passes:
 The initial bulk list is only a cheap candidate scan. GitHub computes
 mergeability lazily and large bulk GraphQL requests for mergeStateStatus can
 fail, so mergeability, exact-head approval, and checks are evaluated only on a
-fresh per-PR view when configured. The final merge is pinned with
+fresh per-PR view. The final merge is pinned with
 --match-head-commit.
 The PR does not have to be rebased onto the latest base-branch tip. GitHub
 re-evaluates mergeability against the current base, while the controller pins
@@ -27,8 +28,9 @@ automation App a bypass. The workflow keeps execute mode behind a repository
 feature flag until those settings are installed.
 
 Production follows DisMech and relies on GitHub's aggregate APPROVED decision
-plus branch protection that dismisses stale reviews after a head push. An
-optional stricter Bot-identity gate remains available through repeatable
+plus branch protection that dismisses stale reviews after a head push. The
+controller additionally binds an approval to the exact head being merged. An
+optional stricter Bot-identity allowlist remains available through repeatable
 ``--trusted-reviewer`` arguments, but the workflow does not enable it.
 
 The closing pass intentionally does not filter by PR author or head repository.

@@ -334,8 +334,10 @@ for its separate lifecycle. Automatic agentic review remains limited to
 same-repository PRs, but the closing pass uses GitHub's aggregate `APPROVED`
 decision just as DisMech does. With stale-review dismissal enabled, a head push
 invalidates that approval; unrelated movement on `main` does not. An optional
-exact-head Bot allowlist remains available to manual controller invocations
+Bot-identity allowlist remains available to manual controller invocations
 through `--trusted-reviewer`, but the production workflow does not enable it.
+The exact-head binding itself is always enforced: at least one approval must
+refer to the precise PR commit that the controller is about to merge.
 
 Broad author/head ingress does not mean broad file scope. The controller also
 requires every changed path to sit under one of these conservative curation and
@@ -359,6 +361,7 @@ The controller requires all of these at fresh reads immediately before merge:
   `main`;
 - no `shepherd:hold` label and no `auto/generate-*` head branch;
 - GitHub's aggregate review decision is `APPROVED`;
+- at least one approval is bound to the exact current PR head;
 - every changed file is inside the conservative path-prefix policy above;
 - GitHub reports mergeable and clean;
 - all reported checks are complete/non-failing, and `test (3.12)` is explicitly
