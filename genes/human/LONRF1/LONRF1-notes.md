@@ -2,7 +2,7 @@
 
 ## Identity and source reconstruction
 
-LONRF1 is the current approved HGNC symbol (HGNC:26302) for reviewed human UniProt Q17RB8. UniProt displays a 771-aa canonical product and one annotated splice product, Q17RB8-2, in which residues 452–462 are replaced. No current GOA row targets an isoform: all 110 live QuickGO rows use canonical `UniProtKB:Q17RB8`.
+LONRF1 is the current approved HGNC symbol (HGNC:26302) for reviewed human UniProt Q17RB8. UniProt displays a 773-aa canonical product and one annotated splice product, Q17RB8-2, which lacks residues 452–462. No current GOA row targets an isoform: all 110 live QuickGO rows use canonical `UniProtKB:Q17RB8`.
 
 The 110 live rows normalize to 11 review objects. The apparent compression is almost entirely interaction-screen multiplicity: PMID:25416956 contributes 27 distinct WITH/FROM partners to one GO:0005515 row, PMID:32296183 contributes 73 partners to another, and PMID:31515488 contributes two. Ordered source unions were restored exactly, giving 108 WITH/FROM tokens across the 11 objects. Live QuickGO contains no NOT qualifiers and no annotation extensions.
 
@@ -37,5 +37,5 @@ Until those are answered, the interaction rows should not substitute for a demon
 - Reconstitute full-length LONRF1 and RING-disrupting variants with a panel of human E2 enzymes, measuring E2~Ub discharge, autoubiquitination, substrate ubiquitination, and chain linkage.
 - Identify endogenous, LONRF1-dependent ubiquitination targets using acute knockout/degradation plus diGly proteomics and quantitative proteome turnover, followed by direct biochemical validation.
 - Determine endogenous localization and membrane/cytosol partitioning with knock-in tags rather than inferring location from generic Reactome pathway membership.
-- Test canonical and isoform-2 products separately; the 452–462 replacement lies immediately N-terminal to the annotated RING region and could alter local structure or regulation without proving isoform-specific function.
+- Test canonical and isoform-2 products separately; the 452–462 deletion lies upstream of the annotated second RING region and could alter local structure or regulation without proving isoform-specific function.
 - Resolve whether the LON-family domain has a noncatalytic substrate-recognition role and explicitly test for the absence or presence of any peptidase activity rather than transferring Lon-protease biology by name.
