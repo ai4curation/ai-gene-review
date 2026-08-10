@@ -87,8 +87,14 @@ def decide(pr, **kwargs):
     kwargs.setdefault("now", NOW)
     kwargs.setdefault("min_age_days", 3)
     kwargs.setdefault("base_branch", "main")
-    kwargs.setdefault("trusted_reviewers", ("ai4c-reviewer",))
+    kwargs.setdefault("trusted_reviewers", ())
     return auto_merge.evaluate(pr, **kwargs)
+
+
+def decide_trusted(pr, **kwargs):
+    """Evaluate with the optional Bot-identity allowlist enabled."""
+    kwargs.setdefault("trusted_reviewers", ("ai4c-reviewer",))
+    return decide(pr, **kwargs)
 
 
 def test_fully_ready_pr_is_eligible():
@@ -228,7 +234,7 @@ def test_trusted_reviewer_cli_rejects_spellings_that_normalize_empty(
 )
 def test_default_reviewer_spelling_is_trusted(login):
     pr = make_pr(reviews=[approved_review(login=login)])
-    assert decide(pr).eligible
+    assert decide_trusted(pr).eligible
 
 
 @pytest.mark.parametrize(
@@ -242,7 +248,7 @@ def test_default_reviewer_spelling_is_trusted(login):
 )
 def test_same_named_non_bot_rest_reviewer_is_not_trusted(login, user_type):
     pr = make_pr(reviews=[approved_review(login=login, user_type=user_type)])
-    decision = decide(pr)
+    decision = decide_trusted(pr)
     assert not decision.eligible
     assert "did not have a verified Bot identity" in decision.reason
 
@@ -266,19 +272,19 @@ def test_same_named_non_bot_rest_reviewer_is_not_trusted(login, user_type):
     ],
 )
 def test_missing_or_unrecognized_rest_user_shape_fails_closed(review):
-    assert not decide(make_pr(reviews=[review])).eligible
+    assert not decide_trusted(make_pr(reviews=[review])).eligible
 
 
-def test_ai4c_agent_approval_intentionally_does_not_count():
+def test_ai4c_agent_approval_does_not_count_with_identity_allowlist():
     pr = make_pr(reviews=[approved_review(login="ai4c-agent[bot]")])
-    decision = decide(pr)
+    decision = decide_trusted(pr)
     assert not decision.eligible
     assert "no trusted reviewer" in decision.reason
 
 
 def test_named_additional_bot_reviewer_can_be_explicitly_allowlisted():
     pr = make_pr(reviews=[approved_review(login="release-reviewer[bot]")])
-    assert not decide(pr).eligible
+    assert not decide_trusted(pr).eligible
     assert decide(
         pr,
         trusted_reviewers=(*auto_merge.DEFAULT_TRUSTED_REVIEWERS, "release-reviewer"),
@@ -287,14 +293,14 @@ def test_named_additional_bot_reviewer_can_be_explicitly_allowlisted():
 
 def test_trusted_review_on_stale_commit_does_not_count():
     pr = make_pr(reviews=[approved_review(commit_id="old123")])
-    decision = decide(pr)
+    decision = decide_trusted(pr)
     assert not decision.eligible
     assert "not for current head" in decision.reason
 
 
 def test_non_approval_on_current_head_does_not_count():
     pr = make_pr(reviews=[approved_review(state="COMMENTED")])
-    assert not decide(pr).eligible
+    assert not decide_trusted(pr).eligible
 
 
 @pytest.mark.parametrize(
@@ -310,11 +316,11 @@ def test_non_approval_on_current_head_does_not_count():
     ],
 )
 def test_malformed_or_dismissed_reviews_fail_closed(review):
-    assert not decide(make_pr(reviews=[review])).eligible
+    assert not decide_trusted(make_pr(reviews=[review])).eligible
 
 
 def test_missing_reviews_fail_closed():
-    decision = decide(make_pr(reviews=[]))
+    decision = decide_trusted(make_pr(reviews=[]))
     assert not decision.eligible
     assert "no trusted reviewer" in decision.reason
 
@@ -331,12 +337,24 @@ def test_graphql_review_shape_fails_closed_without_actor_type():
         "state": "APPROVED",
         "commit": {"oid": HEAD_SHA},
     }
-    assert not decide(make_pr(reviews=[review])).eligible
+    assert not decide_trusted(make_pr(reviews=[review])).eligible
 
 
-def test_no_trusted_reviewer_configuration_uses_aggregate_approval():
-    decision = decide(make_pr(reviews=[]), trusted_reviewers=[])
-    assert decision.eligible
+def test_no_trusted_reviewer_configuration_accepts_any_exact_head_approver():
+    review = approved_review(login="ai4c-agent[bot]")
+    assert decide(make_pr(reviews=[review])).eligible
+
+
+def test_no_trusted_reviewer_configuration_still_requires_exact_head_approval():
+    decision = decide(make_pr(reviews=[approved_review(commit_id="old123")]))
+    assert not decision.eligible
+    assert "not for current head" in decision.reason
+
+
+def test_no_trusted_reviewer_configuration_requires_a_rest_approval():
+    decision = decide(make_pr(reviews=[]))
+    assert not decision.eligible
+    assert "no approval is bound to the current head" in decision.reason
 
 
 # Base freshness policy

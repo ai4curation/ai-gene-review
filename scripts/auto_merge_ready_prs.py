@@ -223,14 +223,17 @@ def trusted_head_approval_decision(
     head_sha: str,
     trusted_reviewers: Iterable[str],
 ) -> Decision:
-    """Require an allowlisted APPROVED review on exactly the current head."""
+    """Require an APPROVED review on exactly the current head.
+
+    When ``trusted_reviewers`` is non-empty, additionally require an allowlisted
+    Bot identity.  An empty allowlist deliberately matches DisMech's aggregate
+    reviewer policy while retaining controller-side exact-head binding.
+    """
     if not head_sha.strip():
         return Decision(False, "no head SHA in the API response")
 
     trusted = {normalize_login(login) for login in trusted_reviewers}
     trusted.discard("")
-    if not trusted:
-        return Decision(False, "no trusted reviewers configured")
 
     approvals_on_other_commits: set[str] = set()
     approvals_without_bot_identity: set[str] = set()
@@ -238,21 +241,23 @@ def trusted_head_approval_decision(
         if (review.get("state") or "").upper() != "APPROVED":
             continue
         login = normalize_login(_review_author_login(review))
-        if login not in trusted:
-            continue
-        if not _review_author_is_bot(review):
-            approvals_without_bot_identity.add(login)
-            continue
+        if trusted:
+            if login not in trusted:
+                continue
+            if not _review_author_is_bot(review):
+                approvals_without_bot_identity.add(login)
+                continue
         review_sha = _review_commit_oid(review).strip()
         if review_sha.casefold() == head_sha.strip().casefold() and review_sha:
-            return Decision(True, f"current head approved by {login}")
-        approvals_on_other_commits.add(login)
+            reviewer = login or "a reviewer"
+            return Decision(True, f"current head approved by {reviewer}")
+        approvals_on_other_commits.add(login or "a reviewer")
 
     if approvals_on_other_commits:
         reviewers = ", ".join(sorted(approvals_on_other_commits))
         return Decision(
             False,
-            f"trusted approval by {reviewers} is not for current head {head_sha}",
+            f"approval by {reviewers} is not for current head {head_sha}",
         )
     if approvals_without_bot_identity:
         reviewers = ", ".join(sorted(approvals_without_bot_identity))
@@ -260,7 +265,9 @@ def trusted_head_approval_decision(
             False,
             f"allowlisted approval did not have a verified Bot identity: {reviewers}",
         )
-    return Decision(False, "no trusted reviewer approved the current head")
+    if trusted:
+        return Decision(False, "no trusted reviewer approved the current head")
+    return Decision(False, "no approval is bound to the current head")
 
 
 def _check_name(entry: dict) -> str:
@@ -497,16 +504,13 @@ def evaluate(
     if not paths.eligible:
         return paths
 
-    trusted_reviewers = tuple(trusted_reviewers)
-    if trusted_reviewers:
-        head_sha = str(pr.get("headRefOid") or "").strip()
-        approval = trusted_head_approval_decision(
-            pr.get("reviews"),
-            head_sha=head_sha,
-            trusted_reviewers=trusted_reviewers,
-        )
-        if not approval.eligible:
-            return approval
+    approval = trusted_head_approval_decision(
+        pr.get("reviews"),
+        head_sha=str(pr.get("headRefOid") or "").strip(),
+        trusted_reviewers=trusted_reviewers,
+    )
+    if not approval.eligible:
+        return approval
 
     if mergeable != "MERGEABLE":
         return Decision(False, f"mergeability is {mergeable.lower() or 'unset'}")
