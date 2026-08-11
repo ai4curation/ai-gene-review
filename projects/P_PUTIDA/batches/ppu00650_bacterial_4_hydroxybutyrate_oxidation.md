@@ -12,7 +12,7 @@ autolink_gene_symbols: false
 - Correct pathway boundary: oxidation of 4-hydroxybutyrate through succinate semialdehyde to succinate
 - Newly reviewed PSEPK proteins: 4
 - Module research provider: OpenScientist (complete)
-- Focused gene providers: active for three SSADH candidates (non-blocking)
+- Focused gene providers: complete for Sad-I and Sad-II; active for GabD-II (non-blocking)
 
 ## Workflow
 
@@ -46,12 +46,13 @@ paralogs have been found.
 
 - Gbd retains GO:0047577 as its core molecular function; compatible broad
   activity annotations are modified to that specific catalytic term.
-- Sad-I and Sad-II retain cofactor-neutral GO:0004030 as core; their
-  NAD-specific GO:0004777 annotations are `UNDECIDED` because submitter and
-  family metadata conflict.
-- GabD-II retains cofactor-neutral GO:0016620 as core. Both its NAD-specific
-  TreeGrafter annotation and EC-derived NADP annotation are `UNDECIDED` because
-  neither assignment is supported by a direct Q88EN2 assay.
+- Sad-I and Sad-II use substrate-specific, cofactor-neutral GO:0009013 as core;
+  their NAD-specific GO:0004777 annotations are `MODIFY` to GO:0009013 because
+  the proteins are supported as succinate-semialdehyde dehydrogenases but their
+  cofactor preferences remain unresolved.
+- GabD-II also uses GO:0009013 as core. Its NAD-specific GO:0004777 and
+  NADP-specific GO:0036243 annotations are both `MODIFY` to GO:0009013 because
+  neither cofactor assignment is supported by a direct Q88EN2 assay.
 - GabD-II's GABA catabolic-process annotation is also `UNDECIDED`: family
   inference does not resolve whether this paralog serves the GABA shunt,
   4-hydroxybutyrate oxidation, or another source of succinate semialdehyde.
@@ -72,10 +73,12 @@ paralogs have been found.
 ## Research Status
 
 The module OpenScientist report is complete and was reconciled with primary
-literature. Focused OpenScientist jobs for `sad-I`, `sad-II`, and `gabD-II`
-remain active with full provider timeouts and are not publication blockers.
-Unresolved cofactor and paralog assignments are recorded explicitly rather than
-converted into pathway claims.
+literature. Focused OpenScientist reports for `sad-I` and `sad-II` are complete;
+their provider-generated locus and residue mappings are recorded as research
+leads rather than published evidence. The `gabD-II` job remains active with its
+full provider timeout and is not a publication blocker. Unresolved cofactor and
+paralog assignments are recorded explicitly rather than converted into pathway
+claims.
 
 ## Validation
 
