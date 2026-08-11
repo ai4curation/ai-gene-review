@@ -34,7 +34,7 @@ termination, and recycling are outside the module.
       active; non-blocking for publication).
 - [x] Complete the independent annotation-reviewer audit.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open draft PR [#2521](https://github.com/ai4curation/ai-gene-review/pull/2521).
 
 ## Focused Genes
 
