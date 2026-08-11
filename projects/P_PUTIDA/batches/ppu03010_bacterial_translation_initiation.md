@@ -23,13 +23,16 @@ biogenesis or the full translation cycle.
 3. IF2 promotes fMet-tRNA binding and hydrolyzes GTP during 70S-complex
    formation.
 
-Initiator-tRNA charging/formylation, ribosomal proteins, elongation,
-termination, and recycling are outside the module.
+Initiator-tRNA charging/formylation, ribosomal proteins, elongation, and
+termination are outside the module. RRF/EF-G-driven recycling remains outside,
+while IF3 stabilization of newly split 30S subunits is retained as the
+recycling-to-initiation interface.
 
 ## Status
 
 - [x] Define a reusable three-role translation-initiation module.
 - [x] Curate the three KT2440 gene reviews.
+- [x] Add primary structural and kinetic evidence for IF1, IF2, and IF3.
 - [ ] Complete OpenScientist gene and module + pathway + taxon research (jobs
       active; non-blocking for publication).
 - [x] Complete the independent annotation-reviewer audit.
@@ -46,3 +49,15 @@ termination, and recycling are outside the module.
 
 The machine-readable focused set is recorded in
 [`ppu03010_bacterial_translation_initiation.tsv`](ppu03010_bacterial_translation_initiation.tsv).
+
+## Evidence and ordering
+
+- PMID:11228145 grounds IF1 occupancy of the 30S A site and its effects on the
+  decoding center.
+- PMID:22562136 supports IF3/IF2 arrival before IF1 as a kinetically favored
+  *E. coli* route, not an obligatory universal order; mRNA recruitment can occur
+  at different points during assembly.
+- PMID:10790378 directly measures IF2-dependent GTP hydrolysis during late
+  initiation.
+- PMID:16043510 shows that IF3 stabilizes 30S and 50S subunits transiently split
+  from post-termination ribosomes by RRF and EF-G.

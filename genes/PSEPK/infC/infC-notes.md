@@ -1,0 +1,12 @@
+# infC curation notes
+
+## Primary evidence
+
+The accepted ribosome-disassembly annotation is based on IF3's experimentally
+demonstrated role at the recycling-to-initiation interface, not merely its
+anti-association effect on vacant 70S ribosomes. RRF and EF-G transiently split
+post-termination ribosomes; IF3 binds the resulting 30S subunit and prevents
+reassociation [PMID:16043510, "IF3 stabilizes the dissociation by binding to the
+transiently formed 30S subunits, preventing re-association back to 70S
+ribosomes."]. Thus IF3 contributes to stable disassembly, while RRF and EF-G
+remain the core recycling machinery.
