@@ -144,12 +144,24 @@ fetch-gene organism gene *args:
 # Example: just fetch-ncrna human SNORD3A
 # Example: just fetch-ncrna human XIST --alias lncRNA-XIST
 # Example: just fetch-ncrna human U1 --rnacentral-id URS000012345_9606
-fetch-ncrna organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-ncrna organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral (alias for consistency)
-fetch-rna-gene organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-rna-gene organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq)
 # Example: just fetch-descriptions yeast CAT2
