@@ -19,8 +19,9 @@ route; it detoxifies it by oxidation to formate.
 2. FrmA oxidizes that hemithioacetal to S-formylglutathione.
 3. FrmC hydrolyzes S-formylglutathione to formate and regenerates glutathione.
 
-Formate oxidation, alternative formaldehyde dehydrogenases, efflux, and damage
-repair are separate pathways or response systems.
+Formate oxidation, PP_3970/FdhB glutathione-independent formaldehyde oxidation,
+other alternative formaldehyde dehydrogenases, efflux, and damage repair are
+separate pathways or response systems.
 
 ## Status
 

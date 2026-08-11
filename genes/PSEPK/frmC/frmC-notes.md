@@ -14,11 +14,13 @@ formaldehyde tolerance, but the paper calls PP_1617 an esterase and does not
 assign it to the FrmA-FrmC glutathione route. [PMID:21261833 "PP_1617Esterase,
 putative2.597Y"; PMID:21261833 "PP_1617Esterase, putative8.7"]
 
-The same study identifies PP_3970/fhdA as a glutathione-dependent formaldehyde
-dehydrogenase through a separate mutant screen. PP_3970 is therefore a known
-parallel route that must not be conflated with PP_1616/PP_1617. [PMID:21261833
-"the fhdA gene encoding a glutathione-dependent formaldehyde dehydrogenase
-(PP3970)"]
+The same study recovered a PP_3970 mutant in a separate formaldehyde-sensitivity
+screen and called the locus `fhdA`, but it did not assay the enzyme's glutathione
+dependence. An earlier direct KT2440 genetic study instead names PP_3970 `fdhB`,
+classifies it as a glutathione-independent formaldehyde dehydrogenase, and shows
+that a PP_3970 mutant has reduced conversion of labeled formaldehyde to carbon
+dioxide. PP_3970/FdhB is therefore a parallel oxidation route and must not be
+conflated with PP_1616/PP_1617. [PMID:21261833; PMID:19304846]
 
 Direct enzyme assays and isotope-resolved genetics are still needed to establish
 whether PP_1616 and PP_1617 operate consecutively in vivo.
