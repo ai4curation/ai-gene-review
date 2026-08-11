@@ -557,7 +557,7 @@ established:
 | SSA2 | *S. cerevisiae* | P10592 | 58 | MODIFY → GO:0044183 | HSP70 |
 | SSA3 | *S. cerevisiae* | P09435 | 26 | MODIFY → GO:0044183 | HSP70 |
 | SSA4 | *S. cerevisiae* | P22202 | 25 | MODIFY → GO:0044183 | HSP70 |
-| SSB1/2 | *S. cerevisiae* | P10080/P40150 | 32/39 | MODIFY → GO:0044183 | Ribosome-associated HSP70 |
+| SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0044183 | Ribosome-associated HSP70; canonical SSB1 pending separate refetch/review |
 | SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0044183 | Mito HSP70 |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | MODIFY → GO:0044183 | RAC HSP70 |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
