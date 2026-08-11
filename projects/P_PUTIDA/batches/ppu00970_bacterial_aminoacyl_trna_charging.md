@@ -28,14 +28,18 @@ autolink_gene_symbols: false
 - Bacterial alpha2-beta2 GlyRS (`glyQ`, `glyS`) and PheRS (`pheS`, `pheT`) are
   represented as complexes with explicit active subunits rather than as four
   independent complete synthetases.
+- Asparaginyl-tRNA formation is a route variant: direct AsnRS where present, or
+  the two-part indirect route in which a non-discriminating AspRS supplies
+  Asp-tRNA(Asn) and GatABC transamidates it. KT2440 has no canonical `asnS`;
+  Q88NJ4 AspS and Q88PB9/Q88PC0/Q88PB8 GatABC satisfy the indirect route.
 - Glutaminyl-tRNA formation is a route variant: direct GlnRS (`glnS`) or the
   two-part indirect route in which a non-discriminating GluRS supplies
   Glu-tRNA(Gln) and GatABC (`gatA`, `gatB`, `gatC`) transamidates it.
-- KT2440 encodes both GlnS and GatABC. Its GlnS route is directly supported;
-  use of Q88LF6 GltX on tRNA(Gln) is not established in the exact UniProt
-  record and remains a knowledge gap. GatABC also has a strongly supported
-  Asp-tRNA(Asn) to Asn-tRNA(Asn) activity, but that additional output is not
-  used to erase the requested Gln-route alternative.
+- KT2440 encodes both GlnS and GatABC. Its direct GlnS route is supported;
+  use of Q88LF6 GltX on tRNA(Gln) is not established and remains a knowledge
+  gap. The experimentally resolved homologous system in Pseudomonas aeruginosa
+  uses direct GlnRS charging and discriminating GluRS alongside the required
+  indirect AspRS-GatABC Asn route (PMID:14729703).
 - `fmt` is excluded because it formylates already charged initiator
   Met-tRNA(fMet). `selA` is excluded because it converts already charged
   Ser-tRNA(Sec) after SerS aminoacylation.
@@ -48,13 +52,16 @@ autolink_gene_symbols: false
 |---|---|---|
 | Direct class I aaRS charging | `argS`, `cysS`, `gltX`, `ileS`, `leuS`, `metG`, `trpS`, `tyrS`, `valS` | Covered by exact reviewed UniProt identities |
 | Direct class II aaRS charging | `alaS`, `aspS`, `glyQ`-`glyS`, `hisS`, `lysS`, `pheS`-`pheT`, `proS`, `serS`, `thrS` | Covered by exact reviewed UniProt identities |
-| Direct Gln-tRNA(Gln) route | `glnS` / PP_2904 / Q88IU5 | Covered; focused review complete |
+| Direct Asn-tRNA(Asn) route | `asnS` | Not present in KT2440; retained as a reusable bacterial alternative with exact ECOLI P0A8M0 exemplar |
+| Indirect Asn-tRNA(Asn) route | `aspS` then `gatA`-`gatB`-`gatC` | Required in KT2440 and covered by exact PSEPK exemplars plus comparative experimental support (PMID:14729703) |
+| Direct Gln-tRNA(Gln) route | `glnS` / PP_2904 / Q88IU5 | Covered; focused review remains DRAFT pending deeper gene-level literature synthesis |
 | Indirect Gln-tRNA(Gln) route | `gltX` then `gatA`-`gatB`-`gatC` | GatABC reaction capacity covered; PSEPK GltX recognition of tRNA(Gln) unresolved |
 
 The module is species-neutral and route-complete as a reusable model. The
-PSEPK direct route is covered. The PSEPK indirect Gln route is represented as
-documented GatABC biochemical capacity with an explicit strain-specific GltX
-substrate-discrimination gap, not asserted as the dominant physiological route.
+required PSEPK indirect Asn route and direct Gln route are covered. The PSEPK
+indirect Gln route is represented as documented GatABC biochemical capacity
+with an explicit strain-specific GltX substrate-discrimination gap, not
+asserted as the dominant physiological route.
 
 ## Required Workflow
 
@@ -63,9 +70,9 @@ substrate-discrimination gap, not asserted as the dominant physiological route.
 - [ ] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch focused genes `glnS`, `gltX`, `gatA`, `gatB`, and `gatC`.
 - [x] Use exact UniProt records plus module-level and pathway/taxon research for focused genes.
-- [x] Curate each focused gene review using the annotation-reviewer workflow.
+- [x] Curate each focused gene review using the annotation-reviewer workflow; retain DRAFT status until deeper gene-level literature synthesis is available.
 - [x] Validate module and focused gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway (PR #2518).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 2026-08-11: The first full-timeout generic and module+pathway+taxon
