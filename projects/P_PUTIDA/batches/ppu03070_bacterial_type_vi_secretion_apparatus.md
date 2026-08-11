@@ -31,7 +31,7 @@ conserved structural component.
 - [ ] Complete OpenScientist gene and module + pathway + taxon research.
 - [x] Obtain annotation-reviewer subagent sign-off.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open one draft PR ([#2515](https://github.com/ai4curation/ai-gene-review/pull/2515)).
 
 ## K1 Structural Operon
 
