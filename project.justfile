@@ -715,16 +715,51 @@ module-pathway-deep-research-falcon module pathway organism *args="":
     uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
 
 # Fetch a specific PMID
-fetch-pmid pmid output_dir="publications":
-    uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmid pmid *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pmids=("$1")
+    shift
+    while (( $# > 0 )) && [[ "$1" =~ ^(PMID:)?[0-9]+$ ]]; do
+        pmids+=("$1")
+        shift
+    done
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmid "${pmids[@]}" --output-dir "$output_dir" "$@"
 
 # Fetch all PMIDs referenced in a gene's review file
-fetch-gene-pmids organism gene output_dir="publications":
-    uv run ai-gene-review fetch-gene-pmids {{organism}} {{gene}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-gene-pmids organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-gene-pmids "$organism" "$gene" --output-dir "$output_dir" "$@"
 
 # Fetch PMIDs from a file
-fetch-pmids-from-file file output_dir="publications":
-    uv run ai-gene-review fetch-pmids-from-file {{file}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmids-from-file file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    input_file="$1"
+    shift
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmids-from-file "$input_file" --output-dir "$output_dir" "$@"
 
 # Refresh PMID titles in gene review YAML files (replaces TODO placeholders with actual titles)
 refresh-pmid-titles organism="" gene="":
