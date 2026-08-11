@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>glpD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>glpD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NY0" target="_blank" class="term-link">
+                        Q88NY0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_1073</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "glpD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NY0" data-a="DESCRIPTION: glpD (PP_1073) encodes the FAD-dependent, membrane..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>glpD (PP_1073) encodes the FAD-dependent, membrane-associated aerobic glycerol-3-phosphate dehydrogenase of the KT2440 glp locus. It oxidizes sn-glycerol-3-phosphate to dihydroxyacetone phosphate while reducing a quinone acceptor; organism-specific pathway work identifies ubiquinone as the physiological acceptor. GlpD therefore links glycerol catabolism to the respiratory quinone pool and is not the soluble NAD-dependent glycerol-3-phosphate dehydrogenase used in the opposite biosynthetic direction.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004368" target="_blank" class="term-link">
+                                    GO:0004368
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate dehydrogenase (quinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NY0" data-a="GO:0004368" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The EC/Rhea assignment and direct KT2440 pathway description agree that GlpD oxidizes G3P with ubiquinone/quinone as acceptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the specific core catalytic function; an NAD-dependent term would be incorrect.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glpD/glpD-notes.md
+
+                                </span>
+
+                                <div class="support-text">Glycerol-3-P is then oxidized in an ubiquinone-dependent reaction catalyzed by the membrane-bound GlpD</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Its primary function is to catalyze the oxidation of *sn*-glycerol-3-phosphate (G3P) to dihydroxyacetone phosphate (DHAP), transferring the abstracted electron pair through a non-covalently bound FAD prosthetic group to a membrane quinone.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006072" target="_blank" class="term-link">
+                                    GO:0006072
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NY0" data-a="GO:0006072" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlpD consumes sn-glycerol-3-phosphate, so participation in its metabolism is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The directional glycerol-3-phosphate catabolic term is more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009331" target="_blank" class="term-link">
+                                    GO:0009331
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate dehydrogenase (FAD) complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NY0" data-a="GO:0009331" data-r="GO_REF:0000104" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transferred complex term is not supported by target-specific subunit or oligomerization evidence for KT2440 GlpD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88NY0 is a single aerobic glpD gene with no identified GlpB/GlpC partners, and the available sources do not establish whether a homomeric assembly warrants this complex term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">a single *glpD* gene within *glpFKRD*, with **no adjacent glpB/glpC subunit genes**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NY0" data-a="GO:0005886" data-r="file:PSEPK/glpD/glpD-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlpD is a monotopic enzyme associated with the cytoplasmic face of the bacterial plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The conserved architecture and quinone-linked reaction support transfer of the experimentally established E. coli GlpD membrane association to Q88NY0.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">GlpD is a monotopic, cytoplasmic-membrane-associated flavoenzyme.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046168" target="_blank" class="term-link">
+                                    GO:0046168
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NY0" data-a="GO:0046168" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GlpD converts G3P to DHAP in the glycerol-utilization direction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the specific core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/glpD/glpD-notes.md
+
+                                </span>
+
+                                <div class="support-text">G3P is the substrate for GlpD, a membrane-bound G3P dehydrogenase that yields dihydroxyacetone-P</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent glycerol-3-phosphate:quinone dehydrogenase oxidizing sn-glycerol-3-phosphate to dihydroxyacetone phosphate in glycerol catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88NY0" data-a="FUNCTION: FAD-dependent glycerol-3-phosphate:quinone dehydro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004368" target="_blank" class="term-link">
+                            glycerol-3-phosphate dehydrogenase (quinone) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046168" target="_blank" class="term-link">
+                                glycerol-3-phosphate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glpD/glpD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   GO; GO:0004368; F:glycerol-3-phosphate dehydrogenase (quinone) activity; IEA:UniProtKB-EC.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glpD/glpD-notes.md
+
+                        </span>
+
+                        <div class="finding-text">Glycerol-3-P is then oxidized in an ubiquinone-dependent reaction catalyzed by the membrane-bound GlpD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene *glpD* (PP_1073, UniProt Q88NY0) in *Pseudomonas putida* KT2440 encodes the aerobic, FAD-dependent sn-glycerol-3-phosphate dehydrogenase (GlpD, EC 1.1.5.3).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25827416" target="_blank" class="term-link">
+                            PMID:25827416
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The glycerol-dependent metabolic persistence of Pseudomonas putida KT2440 reflects the regulatory logic of the GlpR repressor.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The organism-specific study places GlpD in the KT2440 glpFKRD glycerol utilization locus; detailed reaction and membrane statements were checked in PMC full text and retained in the notes.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glpD/glpD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for glpD (Q88NY0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record assigns EC 1.1.5.3, FAD, quinone-dependent G3P oxidation, and the FAD G3P-dehydrogenase complex.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glpD/glpD-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual evidence notes for glpD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PMID:25827416 specifies a membrane-bound, ubiquinone-dependent GlpD reaction in KT2440 glycerol catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/glpD/glpD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for glpD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies Q88NY0 as the aerobic FAD-dependent, quinone-linked glycerol-3-phosphate dehydrogenase and places it in the KT2440 glpFKRD locus.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glpD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NY0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *glpD* (PP_1073, UniProt Q88NY0) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-26T20:51:06.055884</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="glpD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="glpD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-glpd-pp_1073-uniprot-q88ny0-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>glpD</em> (PP_1073, UniProt Q88NY0) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Target:</strong> Glycerol-3-phosphate dehydrogenase (GlpD)<br />
+<strong>Gene:</strong> <em>glpD</em> / OrderedLocusName PP_1073<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440) — proteome code PSEPK<br />
+<strong>EC number:</strong> 1.1.5.3<br />
+<strong>Protein family:</strong> FAD-dependent glycerol-3-phosphate dehydrogenase (aerobic subfamily)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>The gene <em>glpD</em> (PP_1073, UniProt Q88NY0) in <em>Pseudomonas putida</em> KT2440 encodes the aerobic, FAD-dependent sn-glycerol-3-phosphate dehydrogenase (GlpD, EC 1.1.5.3).</strong> Its primary function is to catalyze the oxidation of <em>sn</em>-glycerol-3-phosphate (G3P) to dihydroxyacetone phosphate (DHAP), transferring the abstracted electron pair through a non-covalently bound FAD prosthetic group to a membrane quinone. The net reaction is: <strong>a quinone + sn-glycerol 3-phosphate → dihydroxyacetone phosphate + a quinol.</strong> By donating electrons directly to the membrane ubiquinone pool, GlpD couples the catabolism of glycerol to the aerobic respiratory chain, without producing a soluble reduced cofactor (NADH). It is therefore the committed, respiration-coupled step that converts a glycerol-derived intermediate into a central-metabolism triose phosphate.</p>
+<p><strong>Localization:</strong> GlpD is a monotopic, cytoplasmic-membrane-associated flavoenzyme. It is not an integral polytopic transporter; rather, it associates with the inner (cytoplasmic) face of the membrane where it can hand electrons to the quinone pool while its active site oxidizes the cytoplasmic substrate G3P. This localization and mechanism are established in molecular detail for the closely related <em>Escherichia coli</em> ortholog, whose crystal structures (up to 1.75 Å) reveal a hydrophobic membrane-binding "plateau" harboring the likely ubiquinone-binding site. Because Q88NY0 is ~57–60% identical to that reference enzyme and shares its complete domain architecture and FAD-binding fingerprint, this structural and mechanistic annotation transfers with high confidence.</p>
+<p><strong>Pathway context:</strong> In <em>P. putida</em> KT2440, <em>glpD</em> is the terminal gene of the substrate-inducible <strong>glpFKRD</strong> cluster that constitutes the canonical glycerol-utilization pathway: glycerol enters via the aquaglyceroporin GlpF, is phosphorylated by glycerol kinase GlpK to G3P, and G3P is oxidized by GlpD to DHAP, which then feeds glycolysis (EDEMP cycle) and gluconeogenesis. The cluster is under negative control by the G3P-responsive DeoR-family repressor GlpR. This regulation underlies the well-documented long, bimodal (stochastic) lag phase that KT2440 exhibits when growing on glycerol. A transcriptional Φ(<em>glpD-gfp</em>) fusion has been used as a direct proxy of G3P dehydrogenase activity in this organism, tying <em>glpD</em> expression to the glycerol growth phenotype.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-glpd-is-a-fad-dependent-aerobic-g3p-dehydrogenase-that-oxidizes-g3p-to-dhap-ec-1153">Finding 1 — GlpD is a FAD-dependent aerobic G3P dehydrogenase that oxidizes G3P to DHAP (EC 1.1.5.3)</h3>
+<p>UniProt entry Q88NY0 carries the recommended name <em>Glycerol-3-phosphate dehydrogenase</em> with EC 1.1.5.3 and the catalytic activity "a quinone + sn-glycerol 3-phosphate = dihydroxyacetone phosphate + a quinol." The cofactor is FAD, the protein is 514 amino acids long, and it belongs to the FAD-dependent glycerol-3-phosphate dehydrogenase family. Orthology databases reinforce this: KEGG assigns ppu:PP_1073 to ortholog group <strong>K00111</strong> ("glycerol-3-phosphate dehydrogenase, aerobic; EC 1.1.5.3"), eggNOG places it in <strong>COG0578</strong>, and the Pfam/InterPro architecture (PF01266 DAO + PF16901 DAO_C; IPR000447 G3P_DH_FAD-dep, IPR006076) is diagnostic of this enzyme class.</p>
+<p>The reaction itself is directly documented for the enzyme family. As stated for the characterized ortholog, "GlpD is a six transmembrane spanning redox enzyme that catalyzes the oxidation of glycerol-3-phosphate to dihydroxyacetone phosphate" (<a href="https://pubmed.ncbi.nlm.nih.gov/16363804/">PMID: 16363804</a>), and it is "an essential membrane enzyme, functioning at the central junction of respiration, glycolysis, and phospholipid biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/18296637/">PMID: 18296637</a>). The substrate specificity is narrow: the physiological substrate is <em>sn</em>-glycerol-3-phosphate, and the product is dihydroxyacetone phosphate. Unlike the cytosolic NAD⁺-linked glycerol-3-phosphate dehydrogenase (EC 1.1.1.8), this enzyme is FAD/quinone-linked (EC 1.1.5.3) and does not generate soluble NADH; the electrons instead enter the membrane quinone pool.</p>
+<h3 id="finding-2-glpd-is-a-monotopic-membrane-associated-respiratory-flavoenzyme-that-feeds-electrons-into-the-quinone-pool">Finding 2 — GlpD is a monotopic, membrane-associated respiratory flavoenzyme that feeds electrons into the quinone pool</h3>
+<p>The subcellular localization and respiratory role are firmly established for the <em>E. coli</em> ortholog, which is defined as "aerobic sn-glycerol 3-phosphate dehydrogenase is a cytoplasmic membrane-associated respiratory enzyme encoded by the glpD gene of Escherichia coli" (<a href="https://pubmed.ncbi.nlm.nih.gov/8955388/">PMID: 8955388</a>). Crystallographic work on the fully active <em>E. coli</em> enzyme, solving "seven previously undescribed structures ... up to 1.75 Å resolution," identified "a hydrophobic plateau that is likely the ubiquinone-binding site" and showed "how GlpD shuttles electrons into the respiratory pathway" (<a href="https://pubmed.ncbi.nlm.nih.gov/18296637/">PMID: 18296637</a>).</p>
+<p>Mechanistically, this defines GlpD as a <strong>monotopic membrane redox flavoenzyme</strong>: it is not a channel or a polytopic integral-membrane transporter but an enzyme that docks onto the cytoplasmic face of the inner membrane. The FAD cofactor accepts the hydride from G3P; the reduced flavin is then re-oxidized by ubiquinone bound at the hydrophobic plateau, generating quinol that diffuses into the respiratory chain. For Q88NY0 the annotated reaction (quinone + G3P → DHAP + quinol) is fully consistent with this mechanism — electrons enter the membrane quinone pool rather than a soluble cofactor, tightly linking glycerol oxidation to aerobic respiration and, ultimately, to proton-motive-force generation and ATP synthesis. Independent early genetic work also showed that "the amino-terminal 30 to 60 amino acids of this hybrid protein (provided by glpD) were sufficient for efficient membrane localization" (<a href="https://pubmed.ncbi.nlm.nih.gov/3027031/">PMID: 3027031</a>), consistent with an N-terminal membrane-association determinant.</p>
+<h3 id="finding-3-glpd-pp_1073-resides-in-the-glpr-controlled-glpfkrd-cluster-and-governs-the-glycerol-lag-phase-phenotype">Finding 3 — <em>glpD</em> (PP_1073) resides in the GlpR-controlled <em>glpFKRD</em> cluster and governs the glycerol lag-phase phenotype</h3>
+<p>The KEGG genomic neighborhood of PP_1073 in KT2440 shows an intact glycerol-utilization operon:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product / KO</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_1073</td>
+<td><em>glpD</em></td>
+<td>K00111</td>
+<td>FAD-dependent G3P dehydrogenase (EC 1.1.5.3)</td>
+</tr>
+<tr>
+<td>PP_1074</td>
+<td><em>glpR</em></td>
+<td>K02444</td>
+<td>DeoR-family G3P-responsive repressor of the <em>glp</em> regulon</td>
+</tr>
+<tr>
+<td>PP_1075</td>
+<td><em>glpK</em></td>
+<td>(EC 2.7.1.30)</td>
+<td>Glycerol kinase (glycerol → G3P)</td>
+</tr>
+<tr>
+<td>PP_1076</td>
+<td><em>glpF</em></td>
+<td>—</td>
+<td>Aquaglyceroporin / glycerol uptake facilitator</td>
+</tr>
+</tbody>
+</table>
+<p>This <em>glpFKRD</em> arrangement encodes a complete, self-contained glycerol pathway. Functional evidence in <em>P. putida</em> KT2440 comes from Nikel et al. (2015), who used a transcriptional Φ(<em>glpD-gfp</em>) fusion "(a proxy of the glycerol-3-phosphate [G3P] dehydrogenase activity)" to link "the macroscopic phenotype to the expression of the glp genes" (<a href="https://pubmed.ncbi.nlm.nih.gov/25827416/">PMID: 25827416</a>). Genetic perturbation confirmed the regulatory logic: "deleting glpR (encoding the G3P-responsive transcriptional repressor that controls the expression of the glpFKRD gene cluster)" — or overexpressing <em>glpK</em> — abolished the bimodal <em>glpD</em> expression and shortened the characteristic long glycerol lag phase. The physiological effector (inducer/anti-repressor) of GlpR is G3P itself. This places <em>glpD</em> both mechanistically (enzyme) and regulatorily (GlpR target) at the heart of glycerol metabolism in KT2440.</p>
+<h3 id="finding-4-glpd-provides-the-canonical-entry-of-glycerol-carbon-into-central-metabolism-via-dhap">Finding 4 — GlpD provides the canonical entry of glycerol carbon into central metabolism via DHAP</h3>
+<p>GlpD's product, DHAP, is a triose-phosphate node that feeds directly into glycolysis (the EDEMP cycle in <em>Pseudomonas</em>) and gluconeogenesis, and connects to glycerophospholipid metabolism (KEGG ppu00564). The linear catabolic route is therefore: glycerol → (GlpF import) → glycerol → (GlpK phosphorylation) → G3P → (GlpD oxidation) → DHAP → central carbon metabolism. Nikel &amp; de Lorenzo (2018) confirmed that in KT2440 the prolonged glycerol lag "has been shown to be connected with the stochastic expression of the glp genes, which encode the enzymes needed for glycerol processing" (<a href="https://pubmed.ncbi.nlm.nih.gov/29476475/">PMID: 29476475</a>), underscoring that <em>glpD</em> and its operon partners are the enzymes required for glycerol catabolism.</p>
+<p>Notably, KT2440 also possesses an <strong>alternative, lanthanide/PQQ-dependent periplasmic route</strong> for glycerol oxidation (Wehrmann et al. 2020, <a href="https://pubmed.ncbi.nlm.nih.gov/32345644/">PMID: 32345644</a>). This route is distinct from, and runs parallel to, the cytoplasmic GlpD/G3P pathway. Its existence does not alter the assignment of GlpD as the classical G3P-oxidizing enzyme, but it is important context: glycerol metabolism in <em>P. putida</em> is not solely dependent on GlpD, which may explain some of the metabolic flexibility and phenotypic variability seen on glycerol.</p>
+<h3 id="finding-5-q88ny0-is-a-bona-fide-ortholog-of-e-coli-glpd-60-identity-justifying-annotation-transfer">Finding 5 — Q88NY0 is a bona fide ortholog of <em>E. coli</em> GlpD (~60% identity), justifying annotation transfer</h3>
+<p>A Needleman-Wunsch global alignment (BLOSUM62, gap = −4) of <em>P. putida</em> GlpD (Q88NY0, 514 aa) against the structurally and biochemically characterized <em>E. coli</em> aerobic GlpD (P13035, 501 aa) yields <strong>297 identical positions over 501 aligned columns = ~59–60% amino-acid identity.</strong> Both enzymes share the N-terminal FAD-binding dinucleotide (Rossmann) fingerprint — Q88NY0 <code>GGGINGVGIAADAAGRG</code> versus <em>E. coli</em> <code>GGGINGAGIAADAAGRG</code>, both containing the GxGxxG motif — and the identical domain architecture (Pfam PF01266 DAO + PF16901 DAO_C; InterPro IPR000447), ortholog group (COG0578), and KEGG KO (K00111).</p>
+<p>The reference enzyme, P13035, is the subject of the high-resolution crystallographic study reporting "seven previously undescribed structures of the fully active E. coli GlpD, up to 1.75 A resolution" (<a href="https://pubmed.ncbi.nlm.nih.gov/18296637/">PMID: 18296637</a>). At ~60% identity with fully conserved catalytic architecture, transfer of the reaction, cofactor, mechanism, and membrane-association annotation from P13035 to Q88NY0 is well justified by standard homology-based inference thresholds (&gt;40% identity over the full length with conserved active-site motifs).</p>
+<h3 id="finding-6-q88ny0-is-the-aerobic-glpd-not-the-anaerobic-glpa">Finding 6 — Q88NY0 is the aerobic GlpD, not the anaerobic GlpA</h3>
+<p><em>E. coli</em> has two FAD-dependent G3P dehydrogenase systems: the aerobic <strong>GlpD</strong> (a single polypeptide feeding ubiquinone) and the anaerobic <strong>GlpABC</strong> (a three-subunit enzyme, GlpA being the flavoprotein, feeding menaquinone). To discriminate which subfamily Q88NY0 belongs to, global pairwise alignments were computed against both:</p>
+<table>
+<thead>
+<tr>
+<th>Reference</th>
+<th>Type</th>
+<th>Length</th>
+<th>% identity to Q88NY0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>E. coli</em> GlpD (P13035)</td>
+<td>Aerobic, single-subunit</td>
+<td>501 aa</td>
+<td><strong>57.4%</strong></td>
+</tr>
+<tr>
+<td><em>E. coli</em> GlpA (P0A9C0)</td>
+<td>Anaerobic, GlpABC complex</td>
+<td>542 aa</td>
+<td>26.7%</td>
+</tr>
+</tbody>
+</table>
+<p>The &gt;2-fold higher identity to GlpD, combined with the operon context — a single <em>glpD</em> gene within <em>glpFKRD</em>, with <strong>no adjacent glpB/glpC subunit genes</strong> — and the K00111/COG0578 assignment, unambiguously places PP_1073 in the aerobic GlpD subfamily. The reference enzyme's identity as the aerobic, respiration-linked GlpD "functioning at the central junction of respiration, glycolysis, and phospholipid biosynthesis" (<a href="https://pubmed.ncbi.nlm.nih.gov/18296637/">PMID: 18296637</a>) therefore applies to Q88NY0.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Putting the six findings together yields a coherent picture of GlpD as the respiration-coupled gateway for glycerol carbon in <em>P. putida</em> KT2440:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">Extracellular</span><span class="w"> </span><span class="n">glycerol</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">GlpF</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1076</span><span class="p">)</span><span class="w">  </span><span class="n">aquaglyceroporin</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">facilitated</span><span class="w"> </span><span class="n">diffusion</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">      </span><span class="n">Cytoplasmic</span><span class="w"> </span><span class="n">glycerol</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="n">GlpK</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1075</span><span class="p">)</span><span class="w">  </span><span class="n">glycerol</span><span class="w"> </span><span class="n">kinase</span><span class="p">,</span><span class="w"> </span><span class="n">ATP</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ADP</span><span class="w">   </span><span class="p">(</span><span class="n">EC</span><span class="w"> </span><span class="mf">2.7</span><span class="o">.</span><span class="mf">1.30</span><span class="p">)</span>
+<span class="w">    </span><span class="err">▼</span>
+<span class="w">   </span><span class="n">sn</span><span class="o">-</span><span class="n">glycerol</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="n">phosphate</span><span class="w"> </span><span class="p">(</span><span class="n">G3P</span><span class="p">)</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="p">(</span><span class="n">also</span><span class="w"> </span><span class="n">effector</span><span class="o">/</span><span class="n">anti</span><span class="o">-</span><span class="n">repressor</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">GlpR</span><span class="p">)</span>
+<span class="w">    </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">┌───────────────────────────────────────────────────┐</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">GlpD</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1073</span><span class="p">)</span><span class="w">  </span><span class="n">FAD</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">G3P</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="w">     </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">monotopic</span><span class="p">,</span><span class="w"> </span><span class="n">inner</span><span class="o">-</span><span class="n">membrane</span><span class="o">-</span><span class="n">associated</span><span class="w"> </span><span class="n">flavoenzyme</span><span class="w">   </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">G3P</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">FAD</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">DHAP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">FADH2</span><span class="w">                            </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">FADH2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">quinone</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">FAD</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">quinol</span><span class="p">(</span><span class="n">QH2</span><span class="p">)</span><span class="w">              </span><span class="err">│</span>
+<span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">└───────────────────────────────────────────────────┘</span>
+<span class="w">    </span><span class="err">▼</span><span class="w">                                    </span><span class="err">│</span>
+<span class="w">   </span><span class="n">Dihydroxyacetone</span><span class="w"> </span><span class="n">phosphate</span><span class="w"> </span><span class="p">(</span><span class="n">DHAP</span><span class="p">)</span><span class="w">            </span><span class="err">│</span><span class="w"> </span><span class="n">electrons</span>
+<span class="w">    </span><span class="err">│</span><span class="w">                                    </span><span class="err">▼</span>
+<span class="w">    </span><span class="err">│</span><span class="w">                          </span><span class="n">Membrane</span><span class="w"> </span><span class="n">ubiquinone</span><span class="w"> </span><span class="n">pool</span>
+<span class="w">   </span><span class="err">┌────────┴─────────┐</span><span class="w">                          </span><span class="err">│</span>
+<span class="w">   </span><span class="err">▼</span><span class="w">                  </span><span class="err">▼</span><span class="w">                          </span><span class="err">▼</span>
+<span class="w"> </span><span class="n">Glycolysis</span><span class="o">/</span><span class="w">       </span><span class="n">Gluconeogenesis</span><span class="w">        </span><span class="n">Aerobic</span><span class="w"> </span><span class="n">respiratory</span><span class="w"> </span><span class="n">chain</span>
+<span class="w"> </span><span class="n">EDEMP</span><span class="w"> </span><span class="n">cycle</span><span class="w">       </span><span class="o">&amp;</span><span class="w"> </span><span class="n">phospholipid</span><span class="w">         </span><span class="err">→</span><span class="w"> </span><span class="n">proton</span><span class="o">-</span><span class="n">motive</span><span class="w"> </span><span class="n">force</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">ATP</span>
+<span class="w"> </span><span class="p">(</span><span class="n">central</span><span class="w"> </span><span class="n">carbon</span><span class="p">)</span><span class="w">  </span><span class="n">biosynthesis</span>
+
+<span class="w">   </span><span class="n">Regulation</span><span class="p">:</span><span class="w"> </span><span class="n">GlpR</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1074</span><span class="p">,</span><span class="w"> </span><span class="n">DeoR</span><span class="w"> </span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="n">represses</span><span class="w"> </span><span class="n">glpFKRD</span><span class="p">;</span><span class="w"> </span><span class="n">G3P</span><span class="w"> </span><span class="n">relieves</span>
+<span class="w">   </span><span class="n">repression</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="n">induction</span><span class="o">.</span><span class="w"> </span><span class="n">Stochastic</span><span class="w"> </span><span class="p">(</span><span class="n">bimodal</span><span class="p">)</span><span class="w"> </span><span class="n">glpD</span><span class="w"> </span><span class="n">expression</span>
+<span class="w">   </span><span class="err">→</span><span class="w"> </span><span class="n">long</span><span class="p">,</span><span class="w"> </span><span class="n">variable</span><span class="w"> </span><span class="n">glycerol</span><span class="w"> </span><span class="n">lag</span><span class="w"> </span><span class="n">phase</span><span class="o">.</span>
+</code></pre></div>
+
+<p><strong>Two functional outputs from one reaction.</strong> The oxidation of G3P to DHAP simultaneously (i) delivers a carbon skeleton (DHAP) to central metabolism and (ii) delivers reducing equivalents to the respiratory chain. This dual coupling is what makes GlpD the "committed" and metabolically pivotal step of glycerol utilization — it is the point at which glycerol-derived carbon and electrons are fully integrated into the cell's energy and biosynthetic economy.</p>
+<p><strong>Why the quinone linkage matters.</strong> Because GlpD reduces quinone rather than NAD⁺, glycerol oxidation via this route is obligately coupled to a functioning membrane electron-transport chain. This is the biochemical basis of the enzyme's classification as "aerobic" G3P dehydrogenase and distinguishes it sharply from the cytosolic NAD⁺-linked isozyme.</p>
+<p><strong>Regulatory logic and phenotype.</strong> The GlpR repressor keeps the operon off until G3P accumulates, at which point the pathway is induced. The stochastic, all-or-none character of this induction in individual cells produces population-level bimodality and the notoriously long glycerol lag phase in KT2440 — a phenotype directly traced to <em>glp</em> gene expression via the Φ(<em>glpD-gfp</em>) reporter.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Relevance to Q88NY0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18296637/">18296637</a></td>
+<td><em>Structure of glycerol-3-phosphate dehydrogenase, an essential monotopic membrane enzyme</em></td>
+<td>Primary structural reference (P13035, up to 1.75 Å). Defines monotopic membrane association, ubiquinone-binding site, respiratory electron shuttling, and the "central junction" role. Annotation transferred to Q88NY0 (~57–60% identity).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8955388/">8955388</a></td>
+<td><em>Action at a distance for negative control of glpD</em></td>
+<td>Establishes GlpD as a cytoplasmic-membrane-associated respiratory enzyme and documents <em>glpD</em> regulation. Supports localization (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16363804/">16363804</a></td>
+<td><em>Peptergents ... membrane protein, glycerol-3-phosphate dehydrogenase</em></td>
+<td>States directly that GlpD catalyzes oxidation of G3P to DHAP and is a transmembrane redox enzyme. Supports reaction/mechanism (F001).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3027031/">3027031</a></td>
+<td><em>Cloning and characterization of glpD of E. coli K-12</em></td>
+<td>Confirms <em>glpD</em> is the structural gene for aerobic G3P dehydrogenase (Mr ~55,000) and that its N-terminal ~30–60 residues confer membrane localization. Supports F001/F002/F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25827416/">25827416</a></td>
+<td><em>Glycerol-dependent metabolic persistence of P. putida KT2440 / GlpR</em></td>
+<td>The key organism-specific paper. Uses Φ(<em>glpD-gfp</em>) as a proxy for G3P dehydrogenase activity; establishes <em>glpFKRD</em> cluster, GlpR control, and the glycerol lag phenotype. Supports F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29476475/">29476475</a></td>
+<td><em>Assessing Carbon Source-Dependent Phenotypic Variability in P. putida</em></td>
+<td>Confirms <em>glp</em> genes encode the enzymes needed for glycerol processing and links stochastic <em>glp</em> expression to the lag phenotype. Supports F004.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32345644/">32345644</a></td>
+<td><em>Cellular Response to Lanthanum ... Novel Route for Glycerol Metabolism</em></td>
+<td>Documents an alternative PQQ/lanthanide-dependent glycerol-oxidation route in KT2440, parallel to and distinct from the GlpD/G3P pathway. Context for F004.</td>
+</tr>
+</tbody>
+</table>
+<p>Additional KT2440 systems-biology and metabolic-engineering papers (<a href="https://pubmed.ncbi.nlm.nih.gov/41260329/">PMID: 41260329</a> on HexR regulation of central carbon metabolism; <a href="https://pubmed.ncbi.nlm.nih.gov/41856294/">PMID: 41856294</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/33796510/">PMID: 33796510</a> on glycerol as a co-feedstock) provide broader context on central-carbon regulation and the biotechnological importance of glycerol utilization in this organism, but do not directly characterize GlpD.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemical characterization of the <em>P. putida</em> protein.</strong> The functional assignment of Q88NY0 rests on (i) sequence orthology (~57–60% identity to <em>E. coli</em> GlpD), (ii) conserved domain architecture and FAD motif, and (iii) organism-specific genetic/regulatory evidence from KT2440. There is, to our knowledge, no published purified-enzyme kinetic study (Km, kcat, quinone specificity) of the KT2440 GlpD itself. Kinetic parameters and quinone (ubiquinone vs. other) specificity are inferred, not measured, for the <em>P. putida</em> enzyme.</p>
+</li>
+<li>
+<p><strong>Structure is homology-based.</strong> No experimental structure of Q88NY0 exists; the monotopic membrane topology and ubiquinone-binding plateau are inferred from the <em>E. coli</em> crystal structures. An AlphaFold model plus the conserved FAD fingerprint make this inference robust, but residue-level details (e.g., the exact quinone pocket) remain predictive.</p>
+</li>
+<li>
+<p><strong>Regulatory effector confirmation.</strong> GlpR is annotated as G3P-responsive by homology and by phenotype (glpR deletion abolishes bimodality), but a direct in vitro demonstration that G3P binds KT2440 GlpR and relieves repression at the <em>glpD</em> promoter was not located in the reviewed literature.</p>
+</li>
+<li>
+<p><strong>Interplay with the alternative PQQ/lanthanide route.</strong> The relative flux through GlpD versus the lanthanide-dependent periplasmic glycerol-oxidation route under different growth conditions is not quantified here, leaving the precise physiological weighting of GlpD's contribution open.</p>
+</li>
+<li>
+<p><strong>Phospholipid-biosynthesis link.</strong> The "phospholipid biosynthesis" junction cited for the <em>E. coli</em> enzyme reflects G3P being a shared precursor; whether <em>P. putida</em> GlpD activity meaningfully competes with G3P acyltransferases for the G3P pool in KT2440 has not been established experimentally.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymology.</strong> Heterologously express and purify KT2440 GlpD (PP_1073), reconstitute with FAD, and measure steady-state kinetics with <em>sn</em>-G3P and a panel of quinone acceptors (ubiquinone-1/-2 analogs, menaquinone) to obtain Km/kcat and confirm ubiquinone preference — distinguishing it definitively from the anaerobic menaquinone-linked GlpABC class.</p>
+</li>
+<li>
+<p><strong>Genetic loss-of-function.</strong> Construct a clean ΔPP_1073 mutant and test growth on glycerol as sole carbon source, with and without the lanthanide/PQQ route active (± La³⁺). This would quantify GlpD's contribution to glycerol catabolism and dissect its redundancy with the alternative route.</p>
+</li>
+<li>
+<p><strong>Localization / topology.</strong> Perform membrane fractionation and protease-protection assays (or a GFP/PhoA-LacZ topology fusion) on KT2440 GlpD to experimentally confirm monotopic cytoplasmic-membrane association predicted from the ortholog.</p>
+</li>
+<li>
+<p><strong>Regulatory validation.</strong> Purify KT2440 GlpR and perform EMSA / DNase-footprinting at the <em>glpFKRD</em> promoter ± G3P to confirm G3P as the physiological anti-repressor and map operator sites; correlate with the previously reported bimodal Φ(<em>glpD-gfp</em>) expression.</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Solve the KT2440 GlpD structure (cryo-EM of the membrane-associated form or X-ray of a solubilized construct) to validate the predicted FAD and quinone pockets and the membrane-binding surface.</p>
+</li>
+<li>
+<p><strong>Flux analysis.</strong> Use ¹³C-glycerol metabolic flux analysis in wild-type and ΔglpD strains to quantify carbon flow from G3P/DHAP into the EDEMP cycle versus gluconeogenesis and phospholipid biosynthesis, resolving the "central junction" role in <em>P. putida</em> specifically.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>glpD</em> (PP_1073, UniProt Q88NY0) in <em>Pseudomonas putida</em> KT2440 encodes the <strong>aerobic, FAD-dependent sn-glycerol-3-phosphate dehydrogenase (GlpD, EC 1.1.5.3)</strong>, a monotopic cytoplasmic-membrane-associated flavoenzyme that oxidizes <em>sn</em>-glycerol-3-phosphate to dihydroxyacetone phosphate and delivers the electrons to the membrane quinone pool (quinone + G3P → DHAP + quinol), thereby coupling glycerol catabolism to aerobic respiration. It operates at the junction of glycerol utilization, central carbon metabolism (DHAP feeding glycolysis/EDEMP and gluconeogenesis) and phospholipid biosynthesis. In KT2440 it is the terminal gene of the substrate-inducible, GlpR-repressed <em>glpFKRD</em> cluster, and its stochastic expression underlies the organism's characteristic long glycerol lag phase. The identity is confirmed by ~57–60% amino-acid identity, conserved FAD fingerprint, and shared domain architecture with the structurally characterized <em>E. coli</em> GlpD, and it is discriminated as the aerobic GlpD (57%) rather than the anaerobic GlpA (27%).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="glpD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="glpD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:16363804</li>
+<li>PMID:18296637</li>
+<li>PMID:8955388</li>
+<li>PMID:3027031</li>
+<li>PMID:25827416</li>
+<li>PMID:29476475</li>
+<li>PMID:32345644</li>
+<li>PMID:41260329</li>
+<li>PMID:41856294</li>
+<li>PMID:33796510</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(glpD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NY0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="glpd-review-notes">glpD review notes</h1>
+<h2 id="identity-and-scope">Identity and scope</h2>
+<ul>
+<li>Target: <code>glpD</code>, PP_1073, UniProt Q88NY0, <em>Pseudomonas putida</em> KT2440.</li>
+<li>Reviewed target files: <code>glpD-ai-review.yaml</code>, <code>glpD-goa.tsv</code>, and <code>glpD-uniprot.txt</code>.</li>
+<li>Read-only pathway context: <code>genes/PSEPK/glpK/glpK-ai-review.yaml</code>, <code>glpK-uniprot.txt</code>, and <code>glpK-deep-research-asta.md</code>.</li>
+<li>Retrieval date for external sources: 2026-07-26.</li>
+</ul>
+<h2 id="exact-provenance">Exact provenance</h2>
+<h3 id="uniprot-record">UniProt record</h3>
+<p>Source: <code>file:PSEPK/glpD/glpD-uniprot.txt</code>.</p>
+<ul>
+<li><code>"DE   RecName: Full=Glycerol-3-phosphate dehydrogenase"</code></li>
+<li><code>"DE            EC=1.1.5.3"</code></li>
+<li><code>"CC       Reaction=a quinone + sn-glycerol 3-phosphate = dihydroxyacetone"</code></li>
+<li><code>"CC       Name=FAD; Xref=ChEBI:CHEBI:57692;"</code></li>
+<li><code>"DR   GO; GO:0004368; F:glycerol-3-phosphate dehydrogenase (quinone) activity; IEA:UniProtKB-EC."</code></li>
+<li><code>"DR   GO; GO:0046168; P:glycerol-3-phosphate catabolic process; IEA:TreeGrafter."</code></li>
+</ul>
+<h3 id="direct-kt2440-pathway-description">Direct KT2440 pathway description</h3>
+<p>Source: Nikel et al., 2015, PMID:25827416, PMCID:PMC4453509, DOI:10.1128/mBio.00340-15. Full text accessed through PMC/web search.</p>
+<ul>
+<li><code>"Glycerol-3-P is then oxidized in an ubiquinone-dependent reaction catalyzed by the membrane-bound GlpD"</code></li>
+<li><code>"G3P is the substrate for GlpD, a membrane-bound G3P dehydrogenase that yields dihydroxyacetone-P"</code></li>
+<li>The abstract states that a transcriptional <code>glpD-gfp</code> fusion was used as <code>"a proxy of the glycerol-3-phosphate [G3P] dehydrogenase activity"</code> and that GlpR controls the <code>glpFKRD</code> cluster.</li>
+</ul>
+<h3 id="read-only-glpk-context">Read-only GlpK context</h3>
+<p><code>glpK-ai-review.yaml</code> identifies GlpK as the ATP-dependent first committed step that produces sn-glycerol-3-phosphate. No glpK file was edited.</p>
+<h3 id="openscientist-report">OpenScientist report</h3>
+<p>Source: <code>file:PSEPK/glpD/glpD-deep-research-openscientist.md</code>.</p>
+<ul>
+<li>The report completed with HTML and PDF artifacts even though the wrapper returned a timeout status.</li>
+<li>Its target identity, reaction, and <code>glpFKRD</code> pathway placement agree with the UniProt record and PMID:25827416.</li>
+<li>The report also quotes a secondary source as calling GlpD a six-transmembrane enzyme while elsewhere correctly describing the characterized enzyme as monotopic. That contradictory topology claim was not used as evidence.</li>
+</ul>
+<h2 id="curation-conclusions">Curation conclusions</h2>
+<ul>
+<li>Accept GO:0004368 specifically as quinone-dependent activity.</li>
+<li>Do not substitute an NAD-dependent glycerol-3-phosphate dehydrogenase term; that would reverse the physiological chemistry and use the wrong acceptor.</li>
+<li>Accept G3P catabolism and plasma-membrane association; keep the broader G3P metabolic process as non-core.</li>
+<li>Leave the transferred FAD-complex component term UNDECIDED because no<br />
+  target-specific oligomerization evidence or distinct GlpB/GlpC partners were<br />
+  found. The available evidence establishes a monotopic GlpD enzyme, not the<br />
+  composition of a molecular complex.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NY0
+gene_symbol: glpD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  glpD (PP_1073) encodes the FAD-dependent, membrane-associated aerobic
+  glycerol-3-phosphate dehydrogenase of the KT2440 glp locus. It oxidizes
+  sn-glycerol-3-phosphate to dihydroxyacetone phosphate while reducing a quinone
+  acceptor; organism-specific pathway work identifies ubiquinone as the
+  physiological acceptor. GlpD therefore links glycerol catabolism to the
+  respiratory quinone pool and is not the soluble NAD-dependent
+  glycerol-3-phosphate dehydrogenase used in the opposite biosynthetic
+  direction.
+existing_annotations:
+- term:
+    id: GO:0004368
+    label: glycerol-3-phosphate dehydrogenase (quinone) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The EC/Rhea assignment and direct KT2440 pathway description agree that GlpD oxidizes G3P with ubiquinone/quinone as acceptor.
+    action: ACCEPT
+    reason: This is the specific core catalytic function; an NAD-dependent term would be incorrect.
+    supported_by:
+    - reference_id: file:PSEPK/glpD/glpD-notes.md
+      supporting_text: &#34;Glycerol-3-P is then oxidized in an ubiquinone-dependent reaction catalyzed by the membrane-bound GlpD&#34;
+    - reference_id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+      supporting_text: &#34;Its primary function is to catalyze the oxidation of *sn*-glycerol-3-phosphate (G3P) to dihydroxyacetone phosphate (DHAP), transferring the abstracted electron pair through a non-covalently bound FAD prosthetic group to a membrane quinone.&#34;
+- term:
+    id: GO:0006072
+    label: glycerol-3-phosphate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: GlpD consumes sn-glycerol-3-phosphate, so participation in its metabolism is correct.
+    action: KEEP_AS_NON_CORE
+    reason: The directional glycerol-3-phosphate catabolic term is more informative.
+- term:
+    id: GO:0009331
+    label: glycerol-3-phosphate dehydrogenase (FAD) complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: part_of
+  review:
+    summary: The transferred complex term is not supported by target-specific subunit or oligomerization evidence for KT2440 GlpD.
+    action: UNDECIDED
+    reason: &gt;-
+      Q88NY0 is a single aerobic glpD gene with no identified GlpB/GlpC
+      partners, and the available sources do not establish whether a
+      homomeric assembly warrants this complex term.
+    supported_by:
+    - reference_id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+      supporting_text: &#34;a single *glpD* gene within *glpFKRD*, with **no adjacent glpB/glpC subunit genes**&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+  qualifier: located_in
+  review:
+    summary: GlpD is a monotopic enzyme associated with the cytoplasmic face of the bacterial plasma membrane.
+    action: NEW
+    reason: &gt;-
+      The conserved architecture and quinone-linked reaction support transfer
+      of the experimentally established E. coli GlpD membrane association to
+      Q88NY0.
+    supported_by:
+    - reference_id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+      supporting_text: &#34;GlpD is a monotopic, cytoplasmic-membrane-associated flavoenzyme.&#34;
+- term:
+    id: GO:0046168
+    label: glycerol-3-phosphate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: GlpD converts G3P to DHAP in the glycerol-utilization direction.
+    action: ACCEPT
+    reason: This is the specific core biological process.
+    supported_by:
+    - reference_id: file:PSEPK/glpD/glpD-notes.md
+      supporting_text: &#34;G3P is the substrate for GlpD, a membrane-bound G3P dehydrogenase that yields dihydroxyacetone-P&#34;
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:25827416
+  title: The glycerol-dependent metabolic persistence of Pseudomonas putida KT2440 reflects the regulatory logic of the GlpR repressor.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The organism-specific study places GlpD in the KT2440 glpFKRD glycerol
+      utilization locus; detailed reaction and membrane statements were
+      checked in PMC full text and retained in the notes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The cached record is abstract-only; full-text statements used in this
+      review are documented with PMCID and DOI in glpD-notes.md.
+- id: file:PSEPK/glpD/glpD-uniprot.txt
+  title: UniProt record for glpD (Q88NY0)
+  findings:
+  - statement: The record assigns EC 1.1.5.3, FAD, quinone-dependent G3P oxidation, and the FAD G3P-dehydrogenase complex.
+- id: file:PSEPK/glpD/glpD-notes.md
+  title: Manual evidence notes for glpD
+  findings:
+  - statement: PMID:25827416 specifies a membrane-bound, ubiquinone-dependent GlpD reaction in KT2440 glycerol catabolism.
+- id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+  title: OpenScientist deep research report for glpD
+  findings:
+  - statement: The report identifies Q88NY0 as the aerobic FAD-dependent, quinone-linked glycerol-3-phosphate dehydrogenase and places it in the KT2440 glpFKRD locus.
+aliases:
+- PP_1073
+core_functions:
+- description: &gt;-
+    FAD-dependent glycerol-3-phosphate:quinone dehydrogenase oxidizing
+    sn-glycerol-3-phosphate to dihydroxyacetone phosphate in glycerol catabolism.
+  molecular_function:
+    id: GO:0004368
+    label: glycerol-3-phosphate dehydrogenase (quinone) activity
+  directly_involved_in:
+  - id: GO:0046168
+    label: glycerol-3-phosphate catabolic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/glpD/glpD-uniprot.txt
+    supporting_text: &#34;DR   GO; GO:0004368; F:glycerol-3-phosphate dehydrogenase (quinone) activity; IEA:UniProtKB-EC.&#34;
+  - reference_id: file:PSEPK/glpD/glpD-notes.md
+    supporting_text: &#34;Glycerol-3-P is then oxidized in an ubiquinone-dependent reaction catalyzed by the membrane-bound GlpD&#34;
+  - reference_id: file:PSEPK/glpD/glpD-deep-research-openscientist.md
+    supporting_text: &#34;The gene *glpD* (PP_1073, UniProt Q88NY0) in *Pseudomonas putida* KT2440 encodes the aerobic, FAD-dependent sn-glycerol-3-phosphate dehydrogenase (GlpD, EC 1.1.5.3).&#34;
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tgt - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tgt</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PL7" target="_blank" class="term-link">
+                        Q88PL7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tgt";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PL7" data-a="DESCRIPTION: Tgt is the bacterial tRNA-guanine transglycosylase..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tgt is the bacterial tRNA-guanine transglycosylase of Pseudomonas putida KT2440. As a zinc-dependent homodimer, it exchanges guanine 34 for the bacterially synthesized base preQ1 in tRNAs with GUN anticodons, generating preQ1-tRNA for subsequent QueA and QueG reactions. Unlike eukaryotic TGT, bacterial Tgt inserts preQ1, not free queuine.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>bacterial tRNA-guanosine(34) preQ1 transglycosylase activity</h3>
+                <span class="vote-buttons" data-g="Q88PL7" data-a="bacterial tRNA-guanosine(34) preQ1 transglycosylase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the exchange of guanine at position 34 in a target tRNA with 7-aminomethyl-7-deazaguanine (preQ1), producing preQ1-modified tRNA and free guanine.</p>
+
+
+
+            <p><strong>Justification:</strong> Bacterial Tgt performs RHEA:24104 with preQ1, whereas the current GO:0008479 definition specifies the distinct free-queuine reaction RHEA:16633. A dedicated term would preserve the bacterial substrate and distinguish this activity from eukaryotic TGT.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                    pentosyltransferase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:PSEPK/tgt/tgt-uniprot.txt
+
+
+                    : queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34
+
+                </li>
+
+                <li>
+
+                    file:rules/unirule/UR000079182/UR000079182.json
+
+
+                    : &#34;id&#34;: &#34;RHEA:24104&#34;
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002099" target="_blank" class="term-link">
+                                    GO:0002099
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA wobble guanine modification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0002099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tgt directly replaces wobble guanine 34 with preQ1 in target bacterial tRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records base exchange at anticodon position 34 in tRNA(Asp), tRNA(Asn), tRNA(His), and tRNA(Tyr). Cached genetic evidence also states that an E. coli tgt mutant fails to insert preQ1 in tRNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40703034" target="_blank" class="term-link">
+                                        PMID:40703034
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the mutant does not insert preQ1 in tRNA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is compatible with Tgt but redundant with the more specific cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the valid broader location while using GO:0005829 in the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO; GO:0005829; C:cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the more specific soluble compartment consistent with Tgt function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter assigns cytosol, consistent with a soluble tRNA-modifying enzyme lacking targeting or membrane features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO; GO:0005829; C:cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006400" target="_blank" class="term-link">
+                                    GO:0006400
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA modification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0006400" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic tRNA modification should be narrowed to wobble guanine modification.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target residue and position are known: Tgt exchanges guanine 34 for preQ1. GO:0002099 captures the direct substrate-level process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002099" target="_blank" class="term-link">
+                                    tRNA wobble guanine modification
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">at position 34</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008479" target="_blank" class="term-link">
+                                    GO:0008479
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA-guanosine(34) queuine transglycosylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0008479" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the GOC-maintained molecular-function mapping for bacterial Tgt, although its formal definition describes free-queuine insertion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro2GO maps the bacterial IPR004803 family to GO:0008479, and UniRule UR000079182 pairs the same GO term with EC 2.4.2.29 and the preQ1 exchange reaction RHEA:24104. Retain that established mapping while recording the conflict with the term&#39;s free-queuine definition and requesting a dedicated bacterial term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:rules/arba/_interpro2go.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro:IPR004803 tRNA-guanine transglycosylase &gt; GO:tRNA-guanosine(34) queuine transglycosylase activity ; GO:0008479</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008616" target="_blank" class="term-link">
+                                    GO:0008616
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA queuosine(34) biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0008616" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tgt catalyzes the first tRNA-bound step of bacterial queuosine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Insertion of preQ1 at guanine 34 creates the substrate for QueA and QueG, so Tgt directly participates in tRNA queuosine(34) biosynthesis even though it does not insert queuine itself.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/tgt/tgt-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PL7" data-a="GO:0008270" data-r="file:PSEPK/tgt/tgt-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tgt binds one zinc ion per subunit as part of its conserved catalytic architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed HAMAP record explicitly assigns the zinc cofactor and its coordinating residues. Its UniProt record also carries the broader keyword-derived metal ion binding term, while seeded GOA lacks a metal-binding row.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tgt/tgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 zinc ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent base exchange of guanine 34 with preQ1 in bacterial GUN-anticodon tRNAs, producing preQ1-tRNA for QueA; this is preQ1 insertion, not eukaryotic free-queuine insertion.</h3>
+                <span class="vote-buttons" data-g="Q88PL7" data-a="FUNCTION: Zinc-dependent base exchange of guanine 34 with pr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008479" target="_blank" class="term-link">
+                            tRNA-guanosine(34) queuine transglycosylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002099" target="_blank" class="term-link">
+                                tRNA wobble guanine modification
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008616" target="_blank" class="term-link">
+                                tRNA queuosine(34) biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tgt/tgt-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tgt/tgt-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The gene ***tgt*** (ordered locus **PP_0833**; UniProt **Q88PL7**) of *Pseudomonas putida* KT2440 encodes **queuine tRNA-ribosyltransferase (tRNA-guanine transglycosylase, TGT; EC 2.4.2.29)**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        GO:0008479
+
+                    </span>
+                </div>
+
+                <div class="reference-title">tRNA-guanosine(34) queuine transglycosylase activity</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The current GO definition specifies free-queuine insertion and cross-references RHEA:16633.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:rules/arba/_interpro2go.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">InterPro2GO mappings</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The GOC-maintained mapping assigns bacterial Tgt family IPR004803 to GO:0008479.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:rules/unirule/UR000079182/UR000079182.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniRule UR000079182 for bacterial Tgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HAMAP MF_00168 associates GO:0008479 with EC 2.4.2.29 and the bacterial preQ1 exchange reaction RHEA:24104.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40703034" target="_blank" class="term-link">
+                            PMID:40703034
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Limitations of current machine learning models in predicting enzymatic functions for uncharacterized proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Experimental genetics assigns preQ1 insertion in tRNA to bacterial Tgt.</div>
+
+                        <div class="finding-text">"This activity is catalyzed by Tgt/b0406, and the mutant does not insert preQ1 in tRNA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tgt/tgt-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK tgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida Tgt exchanges guanine 34 for preQ1 in GUN-anticodon tRNAs.</div>
+
+                        <div class="finding-text">"queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tgt/tgt-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional-annotation report for tgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report corroborates Q88PL7 as a bacterial preQ1-inserting tRNA-guanine transglycosylase and explicitly finds no direct P. putida-specific experimental characterization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR46499/PTHR46499-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for PTHR46499</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88PL7 belongs to the queuine tRNA-ribosyltransferase family.</div>
+
+                        <div class="finding-text">"name: QUEUINE TRNA-RIBOSYLTRANSFERASE"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR46499/PTHR46499-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family members for PTHR46499</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88PL7 is assigned to the Tgt subfamily.</div>
+
+                        <div class="finding-text">"Q88PL7,Queuine tRNA-ribosyltransferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO add a bacterial tRNA-guanosine(34) preQ1 transglycosylase activity term distinct from GO:0008479?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PL7" data-a="Q: Should GO add a bacterial tRNA-guanosine(34) preQ1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute base exchange with purified Tgt and target tRNAs, quantify preQ1 incorporation by LC-MS, and test active-site and zinc-binding mutants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Q88PL7 exchanges guanine 34 for preQ1 in KT2440 GUN-anticodon tRNAs.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PL7" data-a="EXPERIMENT: Reconstitute base exchange with purified Tgt and t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tgt-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PL7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *tgt* (PP_0833, UniProt Q88PL7) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-26T21:22:00.332824</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tgt-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tgt-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-tgt-pp_0833-uniprot-q88pl7-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>tgt</em> (PP_0833, UniProt Q88PL7) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><em>tgt</em></strong> (ordered locus <strong>PP_0833</strong>; UniProt <strong>Q88PL7</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>queuine tRNA-ribosyltransferase (tRNA-guanine transglycosylase, TGT; EC 2.4.2.29)</strong>, also known as the <strong>guanine insertion enzyme</strong>. This is a soluble, cytoplasmic, zinc-dependent enzyme that catalyzes the <strong>committed first step of de novo queuosine (Q34) biosynthesis that operates on the tRNA substrate</strong>. Specifically, TGT catalyzes an irreversible <strong>base-exchange reaction</strong>: it excises the genetically encoded guanine at the wobble position (<strong>G34</strong>) of tRNAs bearing <strong>GUN anticodons</strong> — the tRNAs for <strong>Asp, Asn, His, and Tyr</strong> — and replaces it with the modified 7-deazaguanine precursor <strong>preQ₁ (7-aminomethyl-7-deazaguanine)</strong>. The preQ₁-modified tRNA is subsequently matured to the hypermodified nucleoside <strong>queuosine (Q34)</strong> by downstream enzymes QueA and QueG.</p>
+<p>There is <strong>no <em>P. putida</em>-specific experimental study</strong> of this enzyme. The functional annotation is therefore assigned by <strong>strong orthology</strong> to the biochemically and structurally characterized bacterial enzymes from <em>Escherichia coli</em> and <em>Zymomonas mobilis</em>, and is corroborated in this investigation by four independent, converging lines of computational evidence: (1) <strong>complete conservation of every experimentally validated catalytic and zinc-binding residue</strong> in Q88PL7 (69.8% identity to <em>E. coli</em> Tgt); (2) a <strong>very-high-confidence AlphaFold structural model</strong> (global pLDDT 96.6) that reproduces the (α/β)₈ TIM-barrel fold with an intact tetrahedral Cys₃His zinc site; (3) a <strong>conserved <em>queA-tgt</em> operon</strong> (PP_0832–PP_0833) mirroring the <em>E. coli</em> gene organization; and (4) a <strong>complete de novo queuosine biosynthetic pathway</strong> encoded in the KT2440 genome.</p>
+<p>The functional significance of the reaction is that queuosine at the wobble position <strong>fine-tunes decoding accuracy and translational speed</strong> at NAU/NAC codons. Q34 is non-essential for viability but supports <strong>translational fidelity and proteostasis</strong>: loss of the modification, particularly in combination with the loss of other anticodon-loop modifications, increases codon misreading/frameshifting and promotes protein aggregation. The enzyme acts entirely in the <strong>cytoplasm</strong>, on tRNA, as a <strong>homodimer</strong> using a covalent enzyme–RNA catalytic intermediate anchored on a catalytic aspartate.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-tgt-catalyzes-base-exchange-of-guanine-34-for-preq1-in-gun-anticodon-trnas-the-primary-function">Finding 1 — TGT catalyzes base-exchange of guanine-34 for preQ₁ in GUN-anticodon tRNAs (the primary function)</h3>
+<p>The primary catalytic function of the <em>tgt</em> gene product is the <strong>irreversible transglycosylation (base-exchange) of guanine at the tRNA wobble position (position 34)</strong> for the premodified 7-deazaguanine base <strong>preQ₁ (7-aminomethyl-7-deazaguanine)</strong>. This reaction (EC 2.4.2.29) is the <strong>committed insertion step of queuosine biosynthesis</strong> and is specific to the four tRNA isoacceptors that carry a <strong>GUN anticodon</strong>: tRNA-Asp, tRNA-Asn, tRNA-His, and tRNA-Tyr. Mechanistically, the enzyme breaks the N-glycosidic bond of G34, releases free guanine, and forms a new glycosidic bond to preQ₁ at the same ribose. The product, preQ₁-tRNA, is not the final modification — preQ₁ is subsequently converted <strong>at the tRNA level</strong> to mature queuosine by the downstream enzymes QueA (forming epoxyqueuosine) and QueG (forming Q34).</p>
+<p>The review by Reuter &amp; Ficner (2025) states that TGTs "exchange a guanine base in the primary RNA transcript by various 7-substituted 7-deazaguanines leading to the modified nucleosides queuosine and archaeosine ... queuosine in the anticodon of bacterial and eukaryotic tRNAs specific for Asp, Asn, His and Tyr" (<a href="https://pubmed.ncbi.nlm.nih.gov/39956694/">PMID: 39956694</a>). This directly establishes both the base-exchange chemistry and the anticodon (wobble) specificity for the four GUN-anticodon tRNAs.</p>
+<p>The <strong>substrate specificity for preQ₁</strong> (over the earlier pathway intermediate preQ₀, 7-cyano-7-deazaguanine) is governed by active-site residues including a conserved cysteine (Cys158 in <em>Z. mobilis</em> numbering) and is gated by a general acid/base glutamate (Glu235). Tidten et al. (2007) confirmed the reaction identity — "Bacterial tRNA-guanine transglycosylase (Tgt) catalyses the exchange of guanine in the wobble position of particular tRNAs by the modified base preQ(0)" — and showed through kinetics and crystallography that preQ₁-over-preQ₀ selectivity is achieved through <strong>higher catalytic turnover rather than tighter binding affinity</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17949745/">PMID: 17949745</a>).</p>
+<h3 id="finding-2-tgt-is-a-homodimeric-8-tim-barrel-zinc-metalloenzyme-using-an-aspartate-nucleophile-covalent-mechanism">Finding 2 — TGT is a homodimeric (β/α)₈ TIM-barrel zinc metalloenzyme using an aspartate-nucleophile covalent mechanism</h3>
+<p>The bacterial (queuosine-class) TGT catalytic domain folds into an <strong>(α/β)₈ (TIM) barrel</strong> carrying a <strong>characteristic structural zinc-binding site</strong>. Ishitani et al. (2002), in solving the archaeosine TGT structure, noted that "the N-terminal catalytic domain folds into an (alpha/beta)(8) barrel with a characteristic zinc-binding site, showing structural similarity with that of the bacterial queuosine TGT (QueTGT)" (<a href="https://pubmed.ncbi.nlm.nih.gov/12054814/">PMID: 12054814</a>). The enzyme is a <strong>functional homodimer</strong>; while an isolated anticodon stem-loop bearing the UGU recognition motif serves as a minimal substrate, full-length tRNA binds with higher affinity through multiple contacts with the dimeric enzyme (Reuter &amp; Ficner 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/39956694/">PMID: 39956694</a>).</p>
+<p>Catalysis proceeds via a <strong>covalent enzyme–RNA intermediate</strong>. Xie, Liu &amp; Huang (2003) chemically trapped and crystallized a <em>Z. mobilis</em> TGT covalent intermediate, showing that "the crystal structure of the TGT-RNA-9dzG ternary complex at a resolution of 2.9 A reveals, unexpectedly, that RNA is tethered to TGT through the side chain of Asp280. Thus, Asp280, instead of the previously proposed Asp102, acts as the nucleophile for the reaction" (<a href="https://pubmed.ncbi.nlm.nih.gov/12949492/">PMID: 12949492</a>). The target nucleotide is flipped out of the anticodon loop into the active-site pocket. Heterocyclic-base recognition and general acid/base chemistry are handled by <strong>Asp143</strong> and <strong>Glu235</strong> (Todorov &amp; Garcia 2006, <a href="https://pubmed.ncbi.nlm.nih.gov/16401090/">PMID: 16401090</a>; Tidten et al. 2007, <a href="https://pubmed.ncbi.nlm.nih.gov/17949745/">PMID: 17949745</a>). Aspartate 143 in particular maintains anticodon identity: mutations invert the guanine-versus-xanthine recognition preference, confirming its role in preserving the correct wobble base-pairing properties.</p>
+<h3 id="finding-3-tgt-operates-in-the-cytoplasmic-de-novo-queuosine-pathway-q34-fine-tunes-translation-and-its-loss-impairs-fidelity-and-proteostasis">Finding 3 — TGT operates in the cytoplasmic de novo queuosine pathway; Q34 fine-tunes translation, and its loss impairs fidelity and proteostasis</h3>
+<p>In <em>E. coli</em>, <em>tgt</em> lies within a <strong>queuosine biosynthesis gene cluster/operon together with <em>queA</em></strong>, directly linking TGT to downstream Q maturation. Reuter et al. (1991) reported that "the genes are arranged in the following order: ORF 14 (transcribed in the counterclockwise direction), queA, tgt, and ORF 12" (<a href="https://pubmed.ncbi.nlm.nih.gov/1706703/">PMID: 1706703</a>). TGT acts <strong>before QueA</strong>, which uses S-adenosylmethionine to transfer and isomerize a ribosyl moiety onto preQ₁-tRNA to form epoxyqueuosine (oQ). Slany et al. (1993) demonstrated that "the Q precursor (oQ), carrying a 2,3-epoxy-4,5-dihydroxycyclopentane ring, is formed from tRNA precursors containing 7-(aminomethyl)-7-deazaguanine (preQ1) by the queA gene product" (<a href="https://pubmed.ncbi.nlm.nih.gov/8347586/">PMID: 8347586</a>), placing TGT's product squarely as the substrate for the next pathway enzyme. Both TGT and QueA act on the anticodon stem-loop, and their tRNA identity elements cluster in the anticodon region (Mueller &amp; Slany 1995, <a href="https://pubmed.ncbi.nlm.nih.gov/7698334/">PMID: 7698334</a>; Iwata-Reuyl 2003 review, <a href="https://pubmed.ncbi.nlm.nih.gov/12697167/">PMID: 12697167</a>).</p>
+<p>Functionally, <strong>Q34 is non-essential but fine-tunes translational speed and fidelity</strong>. Sun et al. (2026) showed that "simultaneous absence of Q34 and ms2i6A37 increases +1 frameshifting at tyrosine codons and promotes protein aggregation, indicating impaired tRNATyr function" (<a href="https://pubmed.ncbi.nlm.nih.gov/42391044/">PMID: 42391044</a>). This directly links TGT-dependent Q34 modification to <strong>decoding accuracy (suppression of +1 frameshifting)</strong> and <strong>proteostasis (prevention of protein aggregation)</strong>.</p>
+<h3 id="finding-4-all-catalytic-and-zinc-binding-residues-are-conserved-in-q88pl7-confirming-a-functional-bacterial-preq1-inserting-tgt">Finding 4 — All catalytic and zinc-binding residues are conserved in Q88PL7, confirming a functional bacterial preQ₁-inserting TGT</h3>
+<p>Global pairwise alignment shows Q88PL7 (371 aa) is <strong>69.8% identical to <em>E. coli</em> Tgt (P0A847)</strong> and <strong>54.8% identical to <em>Z. mobilis</em> Tgt (P28720)</strong> — the two enzymes with solved crystal structures and full mechanistic characterization. Every experimentally validated functional residue maps to a conserved equivalent in the <em>P. putida</em> protein:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th><em>Z. mobilis</em> / <em>E. coli</em> residue</th>
+<th><em>P. putida</em> (Q88PL7) equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalytic nucleophile</td>
+<td>Asp280 (Zm) / Asp280 (Ec)</td>
+<td><strong>Asp262</strong></td>
+</tr>
+<tr>
+<td>Heterocyclic base recognition</td>
+<td>Asp143 (Ec)</td>
+<td><strong>Asp143</strong></td>
+</tr>
+<tr>
+<td>preQ₁ specificity (bacterial signature)</td>
+<td>Cys145 (Ec) / Cys158 (Zm)</td>
+<td><strong>Cys145</strong></td>
+</tr>
+<tr>
+<td>Substrate-pocket specificity</td>
+<td>Val233 (Zm)</td>
+<td><strong>Val215</strong></td>
+</tr>
+<tr>
+<td>General acid/base</td>
+<td>Glu235 (Zm)</td>
+<td><strong>Glu217</strong></td>
+</tr>
+<tr>
+<td>Structural Zn ligand 1</td>
+<td>Cys318 (Zm)</td>
+<td><strong>Cys300</strong></td>
+</tr>
+<tr>
+<td>Structural Zn ligand 2</td>
+<td>Cys320 (Zm)</td>
+<td><strong>Cys302</strong></td>
+</tr>
+<tr>
+<td>Structural Zn ligand 3</td>
+<td>Cys323 (Zm)</td>
+<td><strong>Cys305</strong></td>
+</tr>
+<tr>
+<td>Structural Zn ligand 4</td>
+<td>His349 (Zm)</td>
+<td><strong>His331</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Critically, Q88PL7 carries a <strong>cysteine (Cys145) at the specificity position</strong> — the diagnostic <strong>bacterial</strong> residue that selects preQ₁ — rather than the valine found in eukaryotic queuine-inserting TGTs. Chen et al. (2011) established that "the Cys145 evolved in eubacterial TGTs to recognize preQ(1) but not queuine, whereas the eukaryal equivalent, Val161, evolved for increased recognition of queuine and a concomitantly decreased recognition of preQ(1)" (<a href="https://pubmed.ncbi.nlm.nih.gov/21131277/">PMID: 21131277</a>). This confirms that Q88PL7 is a <strong>bacterial, preQ₁-inserting</strong> TGT (not a eukaryal queuine-inserting one), consistent with a de novo queuosine pathway. The role of the specificity cysteine and Val233 was further dissected by Biela et al. (2013), who showed by enzyme kinetics and X-ray crystallography that a Cys158Val mutation reduces preQ₁ affinity while a Val233Gly exchange enlarges the pocket to accommodate queuine (<a href="https://pubmed.ncbi.nlm.nih.gov/23704982/">PMID: 23704982</a>).</p>
+<h3 id="finding-5-pp_0833-sits-in-a-quea-tgt-operon-within-a-complete-de-novo-queuosine-pathway-in-kt2440">Finding 5 — PP_0833 sits in a <em>queA-tgt</em> operon within a complete de novo queuosine pathway in KT2440</h3>
+<p>Genomic analysis (KEGG, <em>P. putida</em> KT2440) shows <strong>PP_0833</strong> (<em>tgt</em>, K00773, EC 2.4.2.29; genomic coordinates 970,152–971,267, forward strand) is immediately preceded by <strong>PP_0832 = <em>queA</em></strong> (K07568, S-adenosylmethionine:tRNA ribosyltransferase-isomerase; 969,088–970,137, forward strand, ~15 bp intergenic gap). This recapitulates the <em>E. coli</em> <em>queA-tgt</em> operon organization (<a href="https://pubmed.ncbi.nlm.nih.gov/1706703/">PMID: 1706703</a>), supporting an operonic, co-regulated pathway context.</p>
+<p>The <strong>full de novo 7-deazaguanine/queuosine pathway is encoded</strong> in the KT2440 genome:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Enzyme</th>
+<th>KT2440 locus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GTP → 7,8-dihydroneopterin triphosphate</td>
+<td>GTP cyclohydrolase I (FolE)</td>
+<td>PP_1823, PP_2512</td>
+</tr>
+<tr>
+<td>→ CPH₄</td>
+<td>QueD</td>
+<td>PP_2341</td>
+</tr>
+<tr>
+<td>→ CDG</td>
+<td>QueE</td>
+<td>PP_1225</td>
+</tr>
+<tr>
+<td>CDG → preQ₀</td>
+<td>QueC</td>
+<td>PP_1226 (adjacent to queE)</td>
+</tr>
+<tr>
+<td>preQ₀ → preQ₁ (base)</td>
+<td>QueF</td>
+<td>PP_2160</td>
+</tr>
+<tr>
+<td><strong>preQ₁ base → preQ₁-tRNA (G34 exchange)</strong></td>
+<td><strong>TGT (this gene)</strong></td>
+<td><strong>PP_0833</strong></td>
+</tr>
+<tr>
+<td>preQ₁-tRNA → epoxyqueuosine-tRNA</td>
+<td>QueA</td>
+<td>PP_0832</td>
+</tr>
+<tr>
+<td>epoxyqueuosine-tRNA → queuosine-tRNA</td>
+<td>QueG (epoxyQ reductase)</td>
+<td>PP_4900</td>
+</tr>
+</tbody>
+</table>
+<p>Notably, <em>queH</em> (the alternative Fe-S-dependent epoxyqueuosine reductase) is <strong>absent</strong>, consistent with <em>P. putida</em> using QueG for the final reduction step. The presence of a complete de novo pathway, including the preQ₁-synthesizing branch (FolE→QueD→QueE→QueC→QueF), confirms that <em>P. putida</em> <strong>synthesizes queuosine de novo</strong> and that TGT inserts an endogenously produced preQ₁ base.</p>
+<h3 id="finding-6-the-alphafold-model-of-q88pl7-confirms-a-folded-tgt-with-an-intact-tetrahedral-structural-zinc-site">Finding 6 — The AlphaFold model of Q88PL7 confirms a folded TGT with an intact tetrahedral structural zinc site</h3>
+<p>The AlphaFold DB model of Q88PL7 (AF-Q88PL7-F1, v6) is <strong>very high confidence</strong>: global pLDDT <strong>96.62</strong>, with 93.3% of residues in the very-high-confidence band (pLDDT &gt; 90) and 0% in the low/very-low bands. All nine mechanistically important residues identified by ortholog mapping are present and confidently modeled: Asp143 (95.9), Cys145 (89.4), Val215 (89.9), Glu217 (93.8), Asp262 nucleophile (97.9), and the four zinc ligands Cys300 (97.8), Cys302 (98.5), Cys305 (98.4), His331 (98.8).</p>
+<p>The predicted zinc site forms a <strong>compact tetrahedral coordination cage</strong>: the ligand side-chain atoms (three Cys SG plus one His NE2) are all mutually 3.2–4.2 Å apart and converge on a common centroid within 2.4 Å — the geometry expected for a single Zn²⁺ ion coordinated with each ligand ~2.3 Å from the metal. The base-recognition residues Asp143 and Cys145 are adjacent (6.3 Å Cα–Cα), while the catalytic Asp262 and Glu217 sit across the substrate-binding cleft, consistent with a large active-site pocket that accommodates the flipped-out target nucleotide of the tRNA anticodon loop. This structural prediction matches the "characteristic zinc-binding site" of the TGT (α/β)₈ barrel defined by Ishitani et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/12054814/">PMID: 12054814</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-catalyzed">The reaction catalyzed</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">          </span><span class="n">TGT</span><span class="w"> </span><span class="p">(</span><span class="n">PP_0833</span><span class="p">,</span><span class="w"> </span><span class="n">Q88PL7</span><span class="p">)</span>
+<span class="w">          </span><span class="n">homodimer</span><span class="p">,</span><span class="w"> </span><span class="n">Zn2</span><span class="o">+</span><span class="p">,</span><span class="w"> </span><span class="n">cytoplasm</span>
+<span class="w">                    </span><span class="o">|</span>
+<span class="w">   </span><span class="n">tRNA</span><span class="p">(</span><span class="n">Asp</span><span class="o">/</span><span class="n">Asn</span><span class="o">/</span><span class="n">His</span><span class="o">/</span><span class="n">Tyr</span><span class="p">)</span><span class="w">           </span><span class="n">v</span><span class="w">            </span><span class="n">tRNA</span><span class="p">(</span><span class="n">Asp</span><span class="o">/</span><span class="n">Asn</span><span class="o">/</span><span class="n">His</span><span class="o">/</span><span class="n">Tyr</span><span class="p">)</span>
+<span class="w">   </span><span class="p">...</span><span class="n">G34</span><span class="w"> </span><span class="p">(</span><span class="n">wobble</span><span class="p">)...</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">preQ1</span><span class="w">  </span><span class="o">--------&gt;</span><span class="w">  </span><span class="p">...</span><span class="n">preQ1</span><span class="mf">-34.</span><span class="p">..</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">guanine</span>
+<span class="p">[</span><span class="n">GUN</span><span class="w"> </span><span class="n">anticodon</span><span class="p">]</span><span class="w">        </span><span class="p">(</span><span class="n">base</span><span class="o">-</span><span class="n">exchange</span><span class="p">,</span><span class="w"> </span><span class="n">irreversible</span><span class="p">)</span>
+
+<span class="w">   </span><span class="nl">Mechanism</span><span class="p">:</span><span class="w"> </span><span class="n">Asp262</span><span class="w"> </span><span class="n">nucleophile</span><span class="w"> </span><span class="n">attacks</span><span class="w"> </span><span class="n">C1</span><span class="err">&#39;</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">G34</span><span class="w"> </span><span class="n">ribose</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">      </span><span class="n">covalent</span><span class="w"> </span><span class="n">TGT</span><span class="o">-</span><span class="n">RNA</span><span class="w"> </span><span class="n">intermediate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">free</span><span class="w"> </span><span class="n">guanine</span><span class="w"> </span><span class="o">-&gt;</span>
+<span class="w">      </span><span class="n">preQ1</span><span class="w"> </span><span class="n">attacks</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">glycosidic</span><span class="w"> </span><span class="n">bond</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="k">release</span>
+</code></pre></div>
+
+<h3 id="placement-in-the-queuosine-pathway">Placement in the queuosine pathway</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">GTP</span>
+<span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="n">FolE</span><span class="w"> </span><span class="p">(</span><span class="n">PP_1823</span><span class="o">/</span><span class="n">PP_2512</span><span class="p">)</span>
+<span class="w">  </span><span class="n">v</span>
+<span class="w"> </span><span class="n">H2NTP</span><span class="w"> </span><span class="o">--</span><span class="n">QueD</span><span class="p">(</span><span class="n">PP_2341</span><span class="p">)</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">CPH4</span><span class="w"> </span><span class="o">--</span><span class="n">QueE</span><span class="p">(</span><span class="n">PP_1225</span><span class="p">)</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">CDG</span><span class="w"> </span><span class="o">--</span><span class="n">QueC</span><span class="p">(</span><span class="n">PP_1226</span><span class="p">)</span><span class="o">--&gt;</span><span class="w"> </span><span class="n">preQ0</span>
+<span class="w">                                                          </span><span class="o">|</span><span class="w"> </span><span class="n">QueF</span><span class="w"> </span><span class="p">(</span><span class="n">PP_2160</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="n">v</span>
+<span class="w">                                                        </span><span class="n">preQ1</span><span class="w"> </span><span class="p">(</span><span class="n">free</span><span class="w"> </span><span class="n">base</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="o">|</span>
+<span class="w">                    </span><span class="o">============</span><span class="w"> </span><span class="n">TGT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PP_0833</span><span class="w"> </span><span class="o">===========|</span>
+<span class="w">                    </span><span class="o">|</span><span class="w"> </span><span class="n">inserts</span><span class="w"> </span><span class="n">preQ1</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">tRNA</span><span class="w"> </span><span class="n">G34</span><span class="w">         </span><span class="n">v</span>
+<span class="w">   </span><span class="n">tRNA</span><span class="o">-</span><span class="n">G34</span><span class="w">  </span><span class="o">------------------------------------------------------&gt;</span><span class="w">  </span><span class="n">tRNA</span><span class="o">-</span><span class="n">preQ1</span>
+<span class="w">                                                          </span><span class="o">|</span><span class="w"> </span><span class="n">QueA</span><span class="w"> </span><span class="p">(</span><span class="n">PP_0832</span><span class="p">)</span><span class="w">  </span><span class="o">+</span><span class="n">SAM</span>
+<span class="w">                                                          </span><span class="n">v</span>
+<span class="w">                                                    </span><span class="n">tRNA</span><span class="o">-</span><span class="n">epoxyQ</span><span class="w"> </span><span class="p">(</span><span class="n">oQ</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="o">|</span><span class="w"> </span><span class="n">QueG</span><span class="w"> </span><span class="p">(</span><span class="n">PP_4900</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="n">v</span>
+<span class="w">                                                    </span><span class="n">tRNA</span><span class="o">-</span><span class="n">Q34</span><span class="w"> </span><span class="p">(</span><span class="n">queuosine</span><span class="p">)</span>
+</code></pre></div>
+
+<p>TGT is the <strong>gatekeeper that channels a small-molecule precursor (preQ₁) onto the tRNA polymer</strong>. It is the only step at which the 7-deazaguanine core enters the tRNA; all subsequent chemistry (side-chain construction by QueA, epoxide reduction by QueG) occurs on the tRNA-bound base. Because the <em>queA</em> and <em>tgt</em> genes are adjacent and co-oriented (PP_0832–PP_0833), the two tRNA-level modification enzymes are likely <strong>co-expressed</strong>, ensuring that preQ₁-tRNA is efficiently handed off to QueA.</p>
+<h3 id="biological-role-and-localization">Biological role and localization</h3>
+<p>TGT is a <strong>soluble cytoplasmic enzyme</strong> (no signal peptide, no transmembrane segments; it acts on cytoplasmic tRNA). Its biological output — queuosine at position 34 — modulates <strong>wobble decoding</strong> at NAU/NAC codon pairs read by the Asp/Asn/His/Tyr tRNAs. The modification is dispensable for growth under standard conditions but contributes to <strong>translational fidelity</strong> (suppressing +1 frameshifting) and <strong>proteostasis</strong> (limiting protein aggregation), particularly under conditions of combined anticodon-loop modification loss (<a href="https://pubmed.ncbi.nlm.nih.gov/42391044/">PMID: 42391044</a>). In pathogenic relatives, bacterial Tgt is linked to efficient pathogenicity (e.g., <em>Shigella</em>), making it a validated antibacterial drug target (<a href="https://pubmed.ncbi.nlm.nih.gov/23704982/">PMID: 23704982</a>); in the non-pathogenic soil/rhizosphere organism <em>P. putida</em> the enzyme's role is confined to the housekeeping fine-tuning of translation.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39956694/">39956694</a></td>
+<td><em>RNA-modification by Base Exchange: Structure, Function and Application of TGTs</em></td>
+<td>Authoritative 2025 review; defines base-exchange chemistry and specificity for Asp/Asn/His/Tyr anticodon tRNAs</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17949745/">17949745</a></td>
+<td><em>Glu vs Gln exchange swaps substrate selectivity in TGT</em></td>
+<td>Kinetics/crystallography of preQ₁/preQ₀ selectivity; role of Glu235 general acid/base</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12054814/">12054814</a></td>
+<td><em>Crystal structure of archaeosine TGT</em></td>
+<td>Defines (α/β)₈ TIM-barrel fold + characteristic zinc site shared with bacterial QueTGT</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12949492/">12949492</a></td>
+<td><em>Chemical trapping and crystal structure of TGT covalent intermediate</em></td>
+<td>Identifies Asp280 as catalytic nucleophile; covalent enzyme-RNA mechanism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16401090/">16401090</a></td>
+<td><em>Role of Asp143 in E. coli TGT</em></td>
+<td>Asp143 governs heterocyclic base recognition / anticodon identity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21131277/">21131277</a></td>
+<td><em>Evolution of eukaryal TGT</em></td>
+<td>Cys145 = bacterial preQ₁-specificity residue vs eukaryal Val161 (queuine); diagnostic for bacterial TGT</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23704982/">23704982</a></td>
+<td><em>Specificity determinants in bacterial Tgt</em></td>
+<td>Dissects Cys158/Val233 specificity; drug-target relevance</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1706703/">1706703</a></td>
+<td><em>E. coli queuine biosynthesis gene organization</em></td>
+<td>Establishes <em>queA-tgt</em> operon organization (mirrored in PP_0832–PP_0833)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8347586/">8347586</a></td>
+<td><em>Ribosyl moiety of AdoMet is precursor of queuine</em></td>
+<td>Shows preQ₁-tRNA (TGT product) is QueA substrate; pathway ordering</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7698334/">7698334</a></td>
+<td><em>Interaction of Tgt and QueA with substrate tRNA</em></td>
+<td>tRNA identity elements cluster in anticodon; both enzymes accept anticodon stem-loop</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12697167/">12697167</a></td>
+<td><em>Biosynthesis of 7-deazaguanosine nucleosides (review)</em></td>
+<td>Comprehensive pathway review; TGT and QueA as key enzymes</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42391044/">42391044</a></td>
+<td><em>Defective Q and i6A/ms2i6A of tRNATyr cause frameshifting and aggregation</em></td>
+<td>Links Q34 loss to +1 frameshifting and protein aggregation (fidelity/proteostasis)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of evidence:</strong> All twelve primary/review sources converge on the same enzymatic identity. No source contradicts the assignment. The only caveat is that all mechanistic and structural data derive from orthologs (<em>E. coli</em>, <em>Z. mobilis</em>, and <em>Pyrococcus furiosus</em> for the archaeal counterpart), not from <em>P. putida</em> itself — but the extremely high sequence identity (69.8% to <em>E. coli</em>), complete residue conservation, and high-confidence structural model make the orthology-based inference robust.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific experimental characterization.</strong> There is no published biochemical, structural, kinetic, or genetic study of Q88PL7 / PP_0833. The functional assignment rests entirely on orthology and computational inference. No enzyme assay has directly demonstrated preQ₁ insertion by the <em>P. putida</em> protein, and no <em>P. putida</em> Δ<em>tgt</em> phenotype has been reported.</p>
+</li>
+<li>
+<p><strong>Structural evidence is predictive, not experimental.</strong> The zinc site, tetrahedral geometry, and residue positions come from an AlphaFold model, not an experimental crystal or cryo-EM structure. AlphaFold does not model the Zn²⁺ ion itself, substrate, or the tRNA complex; the "intact zinc site" is inferred from ligand side-chain geometry.</p>
+</li>
+<li>
+<p><strong>tRNA substrate scope not verified in <em>P. putida</em>.</strong> The GUN-anticodon (Asp/Asn/His/Tyr) specificity is assumed from orthology. The exact tRNA gene complement and any species-specific identity elements have not been experimentally mapped in KT2440.</p>
+</li>
+<li>
+<p><strong>Pathway operation inferred from gene presence.</strong> The complete de novo pathway is inferred from KEGG gene calls; flux through the pathway, actual queuosine content of <em>P. putida</em> tRNA, and regulation of the <em>queA-tgt</em> operon have not been measured.</p>
+</li>
+<li>
+<p><strong>Quantitative kinetics unknown.</strong> k_cat, K_m for preQ₁ and tRNA substrates, and the degree of preQ₁-over-preQ₀ selectivity in the <em>P. putida</em> enzyme are not measured; values are extrapolated from <em>E. coli</em>/<em>Z. mobilis</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct enzymatic assay.</strong> Heterologously express and purify Q88PL7, and assay guanine/preQ₁ base-exchange activity on in vitro-transcribed <em>P. putida</em> tRNA-Tyr/Asp (or the anticodon stem-loop), monitoring incorporation of radiolabeled or fluorescent preQ₁ and release of guanine. Determine k_cat and K_m.</p>
+</li>
+<li>
+<p><strong>Genetic knockout and modification mapping.</strong> Construct a <em>P. putida</em> KT2440 Δ<em>tgt</em> (ΔPP_0833) strain and quantify tRNA queuosine content by LC-MS/MS of digested total tRNA in wild-type vs mutant, confirming loss of Q34.</p>
+</li>
+<li>
+<p><strong>Phenotypic characterization.</strong> Test the Δ<em>tgt</em> strain for translational fidelity phenotypes (reporter-based +1 frameshifting/misreading assays) and proteostasis/aggregation, and probe stress conditions (oxidative, stationary phase, alternative carbon sources relevant to <em>P. putida</em> physiology).</p>
+</li>
+<li>
+<p><strong>Operon regulation.</strong> Verify co-transcription of PP_0832 (<em>queA</em>) and PP_0833 (<em>tgt</em>) by RT-PCR across the intergenic region, and map the promoter/transcription start site to confirm operonic organization.</p>
+</li>
+<li>
+<p><strong>Structural validation.</strong> Solve an experimental structure (X-ray/cryo-EM) of Q88PL7, ideally in complex with preQ₁ and/or a substrate anticodon stem-loop, to confirm the predicted zinc site and active-site geometry.</p>
+</li>
+<li>
+<p><strong>Specificity confirmation.</strong> Mutate Cys145→Val in the <em>P. putida</em> enzyme and test whether preQ₁ affinity/turnover drops (as predicted from ortholog studies), directly validating the bacterial-type specificity signature.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The <em>tgt</em> gene (PP_0833, Q88PL7) of <em>Pseudomonas putida</em> KT2440 encodes a <strong>bacterial queuosine-class tRNA-guanine transglycosylase (EC 2.4.2.29)</strong>: a cytoplasmic, homodimeric, zinc-dependent (α/β)₈ TIM-barrel enzyme that irreversibly exchanges wobble-position guanine (G34) of GUN-anticodon tRNAs (Asp, Asn, His, Tyr) for the precursor base preQ₁ via a covalent aspartate-linked intermediate. It is the committed insertion step of de novo queuosine biosynthesis, feeding preQ₁-tRNA to the adjacent QueA (PP_0832) and downstream QueG (PP_4900). The resulting Q34 modification fine-tunes wobble decoding to support translational fidelity and proteostasis. This annotation is supported by strong orthology to biochemically and structurally characterized enzymes, complete conservation of all catalytic and zinc-binding residues (including the diagnostic bacterial preQ₁-specificity residue Cys145), a high-confidence AlphaFold model with an intact tetrahedral zinc site, and a complete genomic queuosine pathway — while no <em>P. putida</em>-specific experimental study yet exists.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tgt-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tgt-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:39956694</li>
+<li>PMID:17949745</li>
+<li>PMID:12054814</li>
+<li>PMID:12949492</li>
+<li>PMID:16401090</li>
+<li>PMID:1706703</li>
+<li>PMID:8347586</li>
+<li>PMID:7698334</li>
+<li>PMID:12697167</li>
+<li>PMID:42391044</li>
+<li>PMID:21131277</li>
+<li>PMID:23704982</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tgt-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PL7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tgt-review-notes">tgt review notes</h1>
+<ul>
+<li>Q88PL7 is a reviewed bacterial Tgt homodimer assigned to PTHR46499:SF1.<br />
+  [file:PSEPK/tgt/tgt-uniprot.txt<br />
+  "RecName: Full=Queuine tRNA-ribosyltransferase"]<br />
+  [file:interpro/panther/PTHR46499/PTHR46499-entries.csv<br />
+  "Q88PL7,Queuine tRNA-ribosyltransferase"]</li>
+<li>The bacterial reaction exchanges guanine 34 for preQ1. It is not the<br />
+  eukaryotic reaction that inserts free queuine. [file:PSEPK/tgt/tgt-uniprot.txt<br />
+  "queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40703034" title="the mutant does not insert preQ1 in tRNA">PMID:40703034</a></li>
+<li>QuickGO GO:0008479 (retrieved 2026-07-27) defines <code>"guanosine34 in tRNA +
+  queuine = guanine + queuosine34 in tRNA"</code> and cross-references RHEA:16633,<br />
+  the free-queuine reaction.</li>
+<li>The repository's GOC-maintained rules apply GO:0008479 to bacterial Tgt:<br />
+<code>file:rules/arba/_interpro2go.txt</code> maps IPR004803 to GO:0008479, and<br />
+<code>file:rules/unirule/UR000079182/UR000079182.json</code> pairs GO:0008479 with<br />
+  EC 2.4.2.29 and the preQ1 reaction RHEA:24104.</li>
+<li>The review therefore accepts the existing machine-sourced GO:0008479 mapping<br />
+  with an explicit ontology-conflict caveat rather than demoting the core<br />
+  activity to broad GO:0016763. A dedicated bacterial preQ1 transglycosylase<br />
+  molecular-function term is proposed under GO:0016763.</li>
+<li>GO:0050147 remains unsuitable because it describes free-nucleoside<br />
+  ribosyltransferase chemistry rather than a tRNA substrate.</li>
+<li>The reviewed record assigns one zinc ion per subunit, so GO:0008270 zinc ion<br />
+  binding is added as a missing annotation. [file:PSEPK/tgt/tgt-uniprot.txt<br />
+  "Note=Binds 1 zinc ion per subunit."]</li>
+<li>Upstream preQ0 production is outside scope; Tgt receives preQ1 from QueF and<br />
+  supplies preQ1-tRNA to QueA.</li>
+</ul>
+<h2 id="openscientist-reconciliation">OpenScientist reconciliation</h2>
+<p>Source: <code>file:PSEPK/tgt/tgt-deep-research-openscientist.md</code>.</p>
+<ul>
+<li>The report independently identifies Q88PL7 as bacterial Tgt and supports<br />
+  preQ1 insertion at guanine 34 rather than the eukaryotic free-queuine<br />
+  reaction.</li>
+<li>Its sequence, AlphaFold, operon, and pathway-completeness analyses are<br />
+  computational corroboration, not organism-specific experimental evidence.</li>
+<li>The report explicitly found no biochemical, structural, kinetic, or genetic<br />
+  study of Q88PL7 itself. The curated review therefore retains the existing<br />
+  orthology-based confidence level and records this as a knowledge gap.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PL7
+gene_symbol: tgt
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  Tgt is the bacterial tRNA-guanine transglycosylase of Pseudomonas putida
+  KT2440. As a zinc-dependent homodimer, it exchanges guanine 34 for the
+  bacterially synthesized base preQ1 in tRNAs with GUN anticodons, generating
+  preQ1-tRNA for subsequent QueA and QueG reactions. Unlike eukaryotic TGT,
+  bacterial Tgt inserts preQ1, not free queuine.
+existing_annotations:
+- term:
+    id: GO:0002099
+    label: tRNA wobble guanine modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Tgt directly replaces wobble guanine 34 with preQ1 in target bacterial tRNAs.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records base exchange at anticodon position 34 in tRNA(Asp),
+      tRNA(Asn), tRNA(His), and tRNA(Tyr). Cached genetic evidence also states
+      that an E. coli tgt mutant fails to insert preQ1 in tRNA.
+    supported_by:
+    - reference_id: PMID:40703034
+      supporting_text: &#34;the mutant does not insert preQ1 in tRNA&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is compatible with Tgt but redundant with the more specific cytosol annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the valid broader location while using GO:0005829 in the core function.
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;GO; GO:0005829; C:cytosol&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is the more specific soluble compartment consistent with Tgt function.
+    action: ACCEPT
+    reason: &gt;-
+      TreeGrafter assigns cytosol, consistent with a soluble tRNA-modifying
+      enzyme lacking targeting or membrane features.
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;GO; GO:0005829; C:cytosol&#34;
+- term:
+    id: GO:0006400
+    label: tRNA modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Generic tRNA modification should be narrowed to wobble guanine modification.
+    action: MODIFY
+    reason: &gt;-
+      The target residue and position are known: Tgt exchanges guanine 34 for
+      preQ1. GO:0002099 captures the direct substrate-level process.
+    proposed_replacement_terms:
+    - id: GO:0002099
+      label: tRNA wobble guanine modification
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;at position 34&#34;
+- term:
+    id: GO:0008479
+    label: tRNA-guanosine(34) queuine transglycosylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the GOC-maintained molecular-function mapping for bacterial Tgt, although its formal definition describes free-queuine insertion.
+    action: ACCEPT
+    reason: &gt;-
+      InterPro2GO maps the bacterial IPR004803 family to GO:0008479, and
+      UniRule UR000079182 pairs the same GO term with EC 2.4.2.29 and the
+      preQ1 exchange reaction RHEA:24104. Retain that established mapping while
+      recording the conflict with the term&#39;s free-queuine definition and
+      requesting a dedicated bacterial term.
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34&#34;
+    - reference_id: file:rules/arba/_interpro2go.txt
+      supporting_text: &#34;InterPro:IPR004803 tRNA-guanine transglycosylase &gt; GO:tRNA-guanosine(34) queuine transglycosylase activity ; GO:0008479&#34;
+- term:
+    id: GO:0008616
+    label: tRNA queuosine(34) biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Tgt catalyzes the first tRNA-bound step of bacterial queuosine synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Insertion of preQ1 at guanine 34 creates the substrate for QueA and QueG,
+      so Tgt directly participates in tRNA queuosine(34) biosynthesis even
+      though it does not insert queuine itself.
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34&#34;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IC
+  original_reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+  qualifier: enables
+  review:
+    summary: Tgt binds one zinc ion per subunit as part of its conserved catalytic architecture.
+    action: NEW
+    reason: &gt;-
+      The reviewed HAMAP record explicitly assigns the zinc cofactor and its
+      coordinating residues. Its UniProt record also carries the broader
+      keyword-derived metal ion binding term, while seeded GOA lacks a
+      metal-binding row.
+    supported_by:
+    - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+      supporting_text: &#34;Note=Binds 1 zinc ion per subunit.&#34;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: GO:0008479
+  title: tRNA-guanosine(34) queuine transglycosylase activity
+  findings:
+  - statement: The current GO definition specifies free-queuine insertion and cross-references RHEA:16633.
+- id: file:rules/arba/_interpro2go.txt
+  title: InterPro2GO mappings
+  findings:
+  - statement: The GOC-maintained mapping assigns bacterial Tgt family IPR004803 to GO:0008479.
+- id: file:rules/unirule/UR000079182/UR000079182.json
+  title: UniRule UR000079182 for bacterial Tgt
+  findings:
+  - statement: HAMAP MF_00168 associates GO:0008479 with EC 2.4.2.29 and the bacterial preQ1 exchange reaction RHEA:24104.
+- id: PMID:40703034
+  title: Limitations of current machine learning models in predicting enzymatic functions for uncharacterized proteins.
+  findings:
+  - statement: Experimental genetics assigns preQ1 insertion in tRNA to bacterial Tgt.
+    supporting_text: &#34;This activity is catalyzed by Tgt/b0406, and the mutant does not insert preQ1 in tRNA&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This full-text review of enzyme prediction cites the classical E. coli
+      mutant result and explicitly distinguishes Tgt-mediated preQ1 insertion.
+- id: file:PSEPK/tgt/tgt-uniprot.txt
+  title: UniProtKB entry for PSEPK tgt
+  findings:
+  - statement: P. putida Tgt exchanges guanine 34 for preQ1 in GUN-anticodon tRNAs.
+    supporting_text: &#34;queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34&#34;
+- id: file:PSEPK/tgt/tgt-deep-research-openscientist.md
+  title: OpenScientist functional-annotation report for tgt
+  findings:
+  - statement: &gt;-
+      The report corroborates Q88PL7 as a bacterial preQ1-inserting
+      tRNA-guanine transglycosylase and explicitly finds no direct
+      P. putida-specific experimental characterization.
+- id: file:interpro/panther/PTHR46499/PTHR46499-metadata.yaml
+  title: PANTHER family metadata for PTHR46499
+  findings:
+  - statement: Q88PL7 belongs to the queuine tRNA-ribosyltransferase family.
+    supporting_text: &#34;name: QUEUINE TRNA-RIBOSYLTRANSFERASE&#34;
+- id: file:interpro/panther/PTHR46499/PTHR46499-entries.csv
+  title: PANTHER family members for PTHR46499
+  findings:
+  - statement: Q88PL7 is assigned to the Tgt subfamily.
+    supporting_text: &#34;Q88PL7,Queuine tRNA-ribosyltransferase&#34;
+core_functions:
+- description: &gt;-
+    Zinc-dependent base exchange of guanine 34 with preQ1 in bacterial
+    GUN-anticodon tRNAs, producing preQ1-tRNA for QueA; this is preQ1
+    insertion, not eukaryotic free-queuine insertion.
+  molecular_function:
+    id: GO:0008479
+    label: tRNA-guanosine(34) queuine transglycosylase activity
+  directly_involved_in:
+  - id: GO:0002099
+    label: tRNA wobble guanine modification
+  - id: GO:0008616
+    label: tRNA queuosine(34) biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+    supporting_text: &#34;queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34&#34;
+  - reference_id: file:PSEPK/tgt/tgt-deep-research-openscientist.md
+    supporting_text: &#34;The gene ***tgt*** (ordered locus **PP_0833**; UniProt **Q88PL7**) of *Pseudomonas putida* KT2440 encodes **queuine tRNA-ribosyltransferase (tRNA-guanine transglycosylase, TGT; EC 2.4.2.29)**&#34;
+  knowledge_gaps:
+  - gap_statement: GO:0008479 formally defines free-queuine insertion, while InterPro2GO IPR004803 and UniRule MF_00168 apply it to bacterial preQ1-inserting Tgt.
+    significance: A dedicated bacterial preQ1 transglycosylase molecular-function term is needed to resolve the ontology-to-rule inconsistency.
+  - gap_statement: No direct biochemical or genetic characterization of Q88PL7 in P. putida was found.
+    significance: &gt;-
+      The reaction and substrate specificity are strongly supported by the
+      reviewed record, family conservation, and characterized bacterial
+      orthologs, but remain untested for purified Q88PL7.
+proposed_new_terms:
+- proposed_name: bacterial tRNA-guanosine(34) preQ1 transglycosylase activity
+  proposed_definition: &gt;-
+    Catalysis of the exchange of guanine at position 34 in a target tRNA with
+    7-aminomethyl-7-deazaguanine (preQ1), producing preQ1-modified tRNA and
+    free guanine.
+  justification: &gt;-
+    Bacterial Tgt performs RHEA:24104 with preQ1, whereas the current
+    GO:0008479 definition specifies the distinct free-queuine reaction
+    RHEA:16633. A dedicated term would preserve the bacterial substrate and
+    distinguish this activity from eukaryotic TGT.
+  proposed_parent:
+    id: GO:0016763
+    label: pentosyltransferase activity
+  supported_by:
+  - reference_id: file:PSEPK/tgt/tgt-uniprot.txt
+    supporting_text: &#34;queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34&#34;
+  - reference_id: file:rules/unirule/UR000079182/UR000079182.json
+    supporting_text: &#39;&#34;id&#34;: &#34;RHEA:24104&#34;&#39;
+suggested_questions:
+- question: Should GO add a bacterial tRNA-guanosine(34) preQ1 transglycosylase activity term distinct from GO:0008479?
+suggested_experiments:
+- hypothesis: Q88PL7 exchanges guanine 34 for preQ1 in KT2440 GUN-anticodon tRNAs.
+  description: &gt;-
+    Reconstitute base exchange with purified Tgt and target tRNAs, quantify
+    preQ1 incorporation by LC-MS, and test active-site and zinc-binding mutants.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
