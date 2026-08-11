@@ -1,0 +1,6 @@
+# recD curation notes
+
+- Q88DZ6 is the canonical RecBCD RecD subunit in the contiguous KT2440 `recD-recB-recC` locus. Its target record explicitly assigns ssDNA-dependent ATPase and 5-prime-to-3-prime helicase activity [UniProtKB:Q88DZ6, "ssDNA-dependent ATPase and 5'-3' helicase activity"].
+- Generic helicase activity and single-stranded DNA helicase activity are true but non-core views rather than errors; GO:0043139 captures the defining motor polarity. Exonuclease V activity remains over-annotated with `enables` because RecD stimulates the RecBC nuclease while RecB contains the nuclease active site [UniProtKB:Q88DZ6, "assembled RecBC greatly stimulates nuclease activity and augments holoenzyme processivity"].
+- P. syringae recD mutants are DNA-damage sensitive, unlike E. coli recD mutants, and ATP-dependent RecD function is required in that pseudomonad [PMID:20195537, "sensitive to DNA-damaging agents and fail to grow at 4 degrees C"; "the ATP-dependent functions of both RecB and RecD are essential"]. This is comparative evidence and is not represented as a direct KT2440 experiment.
+- PTHR43788:SF6 includes canonical RecD and standalone RecD2/HelB proteins. The module therefore uses the RecBCD-specific NCBIfam:TIGR01447 selector and requires cognate RecB-RecC genomic or complex context.
