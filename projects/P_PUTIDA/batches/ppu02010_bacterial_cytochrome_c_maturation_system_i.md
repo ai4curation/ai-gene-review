@@ -24,7 +24,7 @@ This batch extracts the Ccm system I machinery from the broad `ppu02010` ABC-tra
 - [ ] Integrate completed OpenScientist artifacts.
 - [x] Obtain annotation-reviewer audit and sign-off.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open draft PR [#2526](https://github.com/ai4curation/ai-gene-review/pull/2526).
 
 ## Satisfiability
 
