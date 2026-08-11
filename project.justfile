@@ -102,22 +102,37 @@ fetch-gene organism gene *args:
     shift 2
 
     force=0
+    file_prefix="$gene"
+    expect_alias=0
     for arg in "$@"; do
-        if [[ "$arg" == "--force" || "$arg" == "-f" ]]; then
-            force=1
-            break
+        if (( expect_alias == 1 )); then
+            file_prefix="$arg"
+            expect_alias=0
+            continue
         fi
+        case "$arg" in
+            --alias|-a) expect_alias=1 ;;
+            --alias=*) file_prefix="${arg#--alias=}" ;;
+            -a?*) file_prefix="${arg#-a}" ;;
+            -fa) force=1; expect_alias=1 ;;
+            -fa?*) force=1; file_prefix="${arg#-fa}" ;;
+            --force|-f) force=1 ;;
+            --) break ;;
+        esac
     done
+    if [ -z "$file_prefix" ]; then
+        file_prefix="$gene"
+    fi
 
     # Check if gene directory already exists and warn if --force not used
-    gene_dir="genes/$organism/$gene"
+    gene_dir="genes/$organism/$file_prefix"
     if (( force == 0 )) && [ -d "$gene_dir" ]; then
-        uniprot_file="$gene_dir/$gene-uniprot.txt"
-        goa_file="$gene_dir/$gene-goa.tsv"
+        uniprot_file="$gene_dir/$file_prefix-uniprot.txt"
+        goa_file="$gene_dir/$file_prefix-goa.tsv"
         if [ -f "$uniprot_file" ] || [ -f "$goa_file" ]; then
-            echo "⚠️  Gene data for $organism/$gene already exists."
+            echo "⚠️  Gene data for $organism/$file_prefix already exists."
             echo "   To prevent churn, existing files will not be overwritten unless they differ from remote."
-            echo "   Use 'just fetch-gene $organism $gene --force' to force overwrite."
+            echo "   Add --force to this command to force overwrite."
             echo ""
         fi
     fi
