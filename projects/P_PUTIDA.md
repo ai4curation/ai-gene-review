@@ -34,6 +34,12 @@ metadata snapshot. This phase deliberately separates metadata discovery from
 full gene-review seeding: the first pass uses UniProt REST TSV metadata only,
 not full UniProt flat files, GOA downloads, PMID caches, or review YAML stubs.
 
+The current focused batch is
+[phosphatidylglycerol and cardiolipin biosynthesis](P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md).
+It curates the connected route from CDP-diacylglycerol through
+phosphatidylglycerol to alternative bacterial cardiolipin synthase reactions,
+with uncertain PSEPK PLD-family paralogs kept as explicit knowledge gaps.
+
 Lightweight data products:
 
 - `projects/P_PUTIDA/fetch_uniprot_metadata.py` downloads basic UniProt metadata

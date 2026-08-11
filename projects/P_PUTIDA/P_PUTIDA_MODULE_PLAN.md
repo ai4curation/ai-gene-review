@@ -19,6 +19,24 @@ The first pass is intentionally light: build a whole-proteome metadata table fro
 UniProt REST, group genes into pathway/module buckets, and identify holes or
 over-annotations before running full `fetch-gene`, GOA review, or deep research.
 
+## Current batch: ppu00564 / bacterial phosphatidylglycerol and cardiolipin biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md`
+
+The selected boundary begins with CDP-diacylglycerol and contains a coherent
+two-step phosphatidylglycerol submodule followed by alternative cardiolipin
+synthase variants. The six selected PSEPK reviews are `pgsA`, `pgpA`, `clsA`,
+`clsB`, `PP_0892`, and `PP_5276`. PP_0892 and PP_5276 are retained as explicit
+curation questions rather than forced into the named ClsB and ClsC roles.
+
+All required OpenScientist gene, module, and module-plus-pathway-plus-taxon jobs
+were started with long allowances. The module uses exact PSEPK UniProt
+exemplars and a characterized E. coli ClsC exemplar to separate the PG+PG and
+PE+PG cardiolipin reactions.
+
 ## First-pass data
 
 Use the project-local downloader:
