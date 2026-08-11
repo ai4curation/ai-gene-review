@@ -28,7 +28,7 @@ autolink_gene_symbols: false
 - [x] Audit all nine focused gene reviews as the annotation-reviewer consultant.
 - [x] Edit only annotation review sections where action semantics required correction.
 - [x] Validate and render the module, project page, and touched gene reviews.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one draft PR for this module/pathway: [PR #2519](https://github.com/ai4curation/ai-gene-review/pull/2519).
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
