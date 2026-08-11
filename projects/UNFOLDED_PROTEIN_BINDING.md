@@ -42,6 +42,10 @@ sidecars:
 > [Human Gene Checklist](#human-gene-checklist)); the 115 non-human genes validate that the
 > same decision rules apply consistently across all species (see
 > [Cross-Species Completeness Audit](#cross-species-completeness-audit)).
+> **Identity correction (2026-08-11):** the former P10080 “SSB1” entry was SBP1, an
+> RNA-binding translational repressor, not the ribosome-associated Hsp70. Canonical
+> SSB1 (P11484) is therefore pending a separate refetch/review; the historical aggregate
+> counts above will be reconciled when that cohort slot is restored.
 > **Critical finding**: GO:0140309 "unfolded protein carrier activity"
 > was created specifically for TIM carrier-holdases ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552))
 > and does **not** fit in-situ holdases (crystallins, sHSPs, CLU). A general "holdase chaperone
@@ -557,7 +561,7 @@ established:
 | SSA2 | *S. cerevisiae* | P10592 | 58 | MODIFY → GO:0044183 | HSP70 |
 | SSA3 | *S. cerevisiae* | P09435 | 26 | MODIFY → GO:0044183 | HSP70 |
 | SSA4 | *S. cerevisiae* | P22202 | 25 | MODIFY → GO:0044183 | HSP70 |
-| SSB1/2 | *S. cerevisiae* | P10080/P40150 | 32/39 | MODIFY → GO:0044183 | Ribosome-associated HSP70 |
+| SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0044183 | Ribosome-associated HSP70; canonical SSB1 pending separate refetch/review |
 | SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0044183 | Mito HSP70 |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | MODIFY → GO:0044183 | RAC HSP70 |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
