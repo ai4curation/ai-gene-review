@@ -59,17 +59,21 @@ conserved module.
 
 - GspE alone retains `GO:0016887` ATP hydrolysis activity. Platform,
   pseudopilus, and secretin subunits receive no inferred catalytic MF.
-- PilD retains leader-peptidase activity and gains the missing broad
-  methyltransferase activity; both MFs are attached to PilD leaves under the
-  pseudopilus-maturation part.
+- XcpQ receives `GO:0008320` protein transmembrane transporter activity for the
+  secretin channel, and GspG receives `GO:0005198` structural molecule activity
+  for the major pseudopilus subunit.
+- PilD retains leader-peptidase activity and gains the specific
+  `GO:0071885` N-terminal protein N-methyltransferase activity; both MFs are
+  attached to PilD leaves under the pseudopilus-maturation part.
 - Existing `GO:0015627` T2SS-complex and `GO:0015628` T2SS-process annotations
   are accepted when the exact Gsp/Xcp family assignment is diagnostic.
 - Broad `protein secretion`, `membrane`, and duplicate generic outer-membrane
   terms are marked over-annotated where a more specific existing term is
   available.
 - XcpX broad protein secretion is refined to the T2SS-specific process.
-- Missing T2SS complex/process assertions are proposed as NEW for XcpP, XcpW,
-  XcpY, and XcpZ based on exact family identity and locus context.
+- Missing T2SS complex/process and plasma-membrane assertions are proposed as
+  NEW for XcpP, XcpW, XcpY, and XcpZ based on exact family identity, topology,
+  and locus context.
 - The existing PilA review is not folded into this batch: it correctly removes
   T2SS annotations caused by a shared pilin-domain mapping and retains type IV
   pilus biology.
