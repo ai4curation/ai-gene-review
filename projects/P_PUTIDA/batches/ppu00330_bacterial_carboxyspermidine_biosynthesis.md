@@ -44,7 +44,7 @@ are strong comparative/synteny inferences, not direct KT2440 experiments.
 - [ ] Complete remaining gene and generic-module OpenScientist jobs.
 - [x] Obtain annotation-reviewer subagent sign-off.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open one draft PR (PR #2533).
 
 ## Focused Genes
 
