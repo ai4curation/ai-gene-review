@@ -36,9 +36,19 @@
 - The authors also state: “the majority of PPIs in HuRI were found in only one screen”. [PMID:32296183]
 - The many IntAct/GOA LPAR3 partners should therefore retain their exact partner-level provenance and receive curator deference as experimentally screened binary contacts, while remaining non-core candidate interactions unless supported by targeted validation, endogenous co-localization, and a receptor-signaling consequence.
 
+## Tissue context and reproductive physiology
+
+- The reviewed UniProt Q9UBY5 record provides tissue-expression context: “Most abundantly expressed in prostate, testes, pancreas, and heart, with moderate levels in lung and ovary. No detectable expression in brain, placenta, liver, skeletal muscle, kidney, spleen, thymus, small intestine, colon, or peripheral blood leukocytes.” This is a curated database statement from the cached UniProt record, not a direct mechanistic experiment, and “no detectable expression” remains assay- and source-dependent. Its canonical-record placenta statement differs from the older HOFNH30 RT-PCR result above; that tension may reflect sequence, assay, or transcript-definition differences and does not establish HOFNH30 as a current isoform.
+- The same UniProt function comment cautiously states: “May play a role in the development of ovarian cancer.” This is a database-level disease association and should not be treated as a demonstrated normal molecular function or as proof of an LPAR3-specific cancer mechanism.
+- In vivo reproductive evidence comes from the mouse ortholog: “Targeted deletion of LPA3 in mice resulted in significantly reduced litter size, which could be attributed to delayed implantation and altered embryo spacing.” [PMID:15875025]
+- The two reproductive defects had separable consequences and pathway rescue: “Exogenous administration of PGE2 or carbaprostacyclin (a stable analogue of PGI2) into LPA3-deficient female mice rescued delayed implantation but did not rescue defects in embryo spacing.” [PMID:15875025]
+- The upstream pathway observation was: “An enzyme demonstrated to influence implantation, cyclooxygenase 2 (COX2) (ref. 5), was downregulated in LPA3-deficient uteri during pre-implantation.” [PMID:15875025] Together with reduced PGE2/PGI2 and selective rescue of implantation timing, this links mouse Lpar3 signaling to uterine COX2-prostaglandin biology while showing that embryo spacing requires an additional or distinct downstream mechanism.
+- Species boundary: PMID:15875025 is a targeted **mouse Lpar3 knockout** study. It establishes strong mammalian ortholog physiology but does not by itself demonstrate an equivalent implantation or spacing phenotype for human LPAR3.
+
 ## Reference-level conclusions for later annotation review
 
 - High-confidence core: human LPAR3 is an LPA-responsive class-A GPCR; unsaturated LPA species are favored in the foundational assay; calcium mobilization and modulation of adenylyl cyclase are directly demonstrated.
 - Coupling should be assay-bounded. The foundational and 2024 calcium/ERK experiments are pertussis-toxin insensitive, whereas receptor-focused reviews describe both Gq/11 and Gi/o coupling; direct claims about a specific G alpha family require matching primary evidence.
 - Trafficking is now experimentally supported: ligand-induced phosphorylation, β-arrestin-2 association, and clathrin-sensitive internalization have direct evidence.
+- Mouse knockout evidence establishes an in vivo role for Lpar3 in implantation timing and embryo spacing, with COX2-prostaglandin signaling accounting for the timing defect but not the spacing defect; transfer to human reproductive physiology requires direct evidence.
 - Do not transfer LPAR1/LPAR2-specific PDZ scaffolds, antagonism, signaling, or tissue phenotypes to LPAR3. Likewise, dual LPAR1/LPAR3 pharmacology cannot establish an LPAR3-specific native phenotype by itself.
