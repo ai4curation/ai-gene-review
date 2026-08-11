@@ -388,7 +388,8 @@ apply consistently across species.
 | Decision | Count | Description |
 |----------|-------|-------------|
 | MODIFY → GO:0044183 or holdase NTR | 88 | Genuine chaperones reclassified to mechanism-specific terms |
-| MARK_AS_OVER_ANNOTATED | 23 | Assembly factors, sensors, co-chaperones where UPB overstates activity |
+| MARK_AS_OVER_ANNOTATED | 22 | Assembly factors, sensors, co-chaperones where UPB overstates activity |
+| UNDECIDED | 1 | Full-text evidence is unavailable to resolve the direct binding assay (EUG1) |
 | ACCEPT (retain GO:0051082) | 3 | Genes where GO:0051082 remains best available term |
 | KEEP_AS_NON_CORE | 2 | UPB is secondary to primary function (ATP11, VMA22) |
 | REMOVE | 2 | Misannotations (slrP/Salmonella, hsp-12.6/worm) |
