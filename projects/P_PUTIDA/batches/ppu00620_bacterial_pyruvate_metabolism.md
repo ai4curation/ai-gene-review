@@ -39,7 +39,7 @@ autolink_gene_symbols: false
 | Pyruvate dehydrogenase E2 | `aceF` / PP_0338 | Q88QZ6 | Covered by GO:0004742, RHEA:17017, and PTHR43178:SF2 |
 | Pyruvate dehydrogenase E3 | `lpd` / PP_5366 | Q88C17 | Covered by GO:0004148, RHEA:15045, and PTHR22912:SF151 |
 | Two-subunit pyruvate carboxylase, biotin carboxylase half | `pycA` / PP_5347 | Q88C36 | Covered by GO:0004075, RHEA:13501, and PTHR48095:SF1 |
-| Two-subunit pyruvate carboxylase, carrier/carboxyltransferase half | `pycB` / PP_5346 | Q88C37 | Covered by GO:0004736, RHEA:20844, and PTHR43778 |
+| Two-subunit pyruvate carboxylase, carrier/carboxyltransferase half | `pycB` / PP_5346 | Q88C37 | Covered by GO:0004736, PMID:24157795, and PTHR43778 |
 | PEP carboxylase anaplerosis | `ppc` / PP_1505 | Q88MR4 | Covered by GO:0008964, RHEA:28370, and PTHR30523:SF6 |
 | PEP-to-pyruvate conversion | `pykA` / PP_1362; `pyk` / PP_4301 | Q88N54; Q88EZ9 | Two pyruvate-kinase exemplars covered by GO:0004743, RHEA:18157, and PTHR11817 |
 | Pyruvate-to-PEP conversion | `ppsA` / PP_2082 | Q88L53 | Covered by GO:0008986, RHEA:11364, and PTHR43030:SF1 |
@@ -60,6 +60,7 @@ remain accepted.
 - `aceE`, `aceF`, `lpd`, `pycB`, and `ppsA` required no review-section changes.
 - `pycA` ATP binding was changed from `ACCEPT` to `KEEP_AS_NON_CORE`; ATP is a substrate of the biotin-carboxylase half-reaction, but GO:0004075 is the core function.
 - `ppc` magnesium binding was changed from `ACCEPT` to `KEEP_AS_NON_CORE`; metal dependence is valid supporting chemistry, not the defining activity.
+- `ppc` carbon fixation was changed from `ACCEPT` to `MODIFY` toward GO:0006107; heterotrophic anaplerotic bicarbonate incorporation is not a carbon-fixation pathway.
 - `pyk` and `pykA` magnesium and potassium binding were changed from `ACCEPT` to `KEEP_AS_NON_CORE`; GO:0004743 remains the accepted core molecular function.
 - Existing removal of sodium transport and oxaloacetate decarboxylase from `pycB` remains appropriate because those are over-propagated OadA-family inferences for the carboxylase beta subunit.
 
@@ -68,6 +69,8 @@ remain accepted.
 - The root represents direct bacterial pyruvate-node chemistry. It does not duplicate the existing mitochondrial PDC/PC module.
 - Lipoylation and cofactor biosynthesis are prerequisites, not pyruvate-metabolism parts.
 - Complete Entner-Doudoroff/glycolytic and gluconeogenic trunks remain in their existing modules; only the direct PEP/pyruvate branchpoint reactions are represented here.
+- Pyruvate dehydrogenase is optional because anaerobic bacteria may use an alternative oxidative route such as pyruvate:ferredoxin oxidoreductase.
+- Competition between Pyk/Ppc for PEP and the potential Pyk/PpsA cycle are recorded as a knowledge gap rather than asserted as simultaneous flux.
 - Citrate-cycle, glyoxylate-shunt, malate-dehydrogenase, malate-quinone-oxidoreductase, fumarase, and CoA-transferase rows are downstream or adjacent central-carbon map spillover.
 - `maeB` and PP_1389 provide opposing C4-to-pyruvate chemistry, but are not required to define the oxidative and anaplerotic core; their physiological weighting belongs in a dedicated cataplerotic-node treatment.
 - `ldhA`, `lldD`, and `dld2` belong to stereospecific lactate production or utilization modules rather than the reusable core defined here.
