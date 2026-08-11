@@ -48,3 +48,10 @@ downstream functions of exported proteins are outside the boundary.
 
 The existence of two intact loci supports structural satisfiability, but their
 substrate specificity and physiological division of labor remain unresolved.
+PMID:23530902 provides direct KT2440 evidence that both complete Tat systems can
+transport UxpB; it does not isolate individual subunit mechanisms or establish
+broader locus-specific substrate sets.
+
+The exact UniProt symbol for PP_5017 is `tatB` and is retained here. The
+OpenScientist protein-export report's `tatB-II` relabel suggestion is treated as
+a non-authoritative naming proposal, not as a source-annotation change.
