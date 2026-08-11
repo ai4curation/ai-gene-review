@@ -31,7 +31,7 @@ tRNA U8 thiolation, and downstream MnmC chemistry are outside this module.
 - [ ] Complete OpenScientist gene, module, and module + pathway + taxon research.
 - [x] Obtain annotation-reviewer subagent sign-off.
 - [x] Validate and render all current curation artifacts.
-- [ ] Open one draft PR.
+- [x] Open one draft PR.
 
 ## Focused Genes
 
