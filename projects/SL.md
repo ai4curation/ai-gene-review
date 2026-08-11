@@ -37,7 +37,7 @@ downgraded or worse** and **10% carry a hard issue** (`REMOVE` / `MARK_AS_OVER_A
 |---|---|---|---|---|---|---|
 | SL-0171 Mitochondrion membrane | 13 | **31%** | | SL-0097 ER membrane | 36 | **0%** |
 | SL-0066 Cilium | 12 | **25%** | | SL-0134 Golgi apparatus membrane | 21 | **0%** |
-| SL-0162 Membrane | 61 | **31%** | | SL-0151 Late endosome membrane | 18 | **0%** |
+| SL-0162 Membrane | 61 | **28%** | | SL-0151 Late endosome membrane | 18 | **0%** |
 | SL-0147 Endomembrane system | 10 | **20%** | | SL-0071 Clathrin-coated vesicle membrane | 18 | **0%** |
 | SL-0090 Cytoskeleton | 59 | **27%** | | SL-0091 Cytosol | 13 | **0%** |
 | SL-0132 Golgi apparatus | 23 | **17%** | | SL-0158 Lysosome | 10 | **0%** |
@@ -56,7 +56,7 @@ pre-batch figures were 23% and 17%.)
 
 Same organelle, same pipeline, same curators. The under-specified location is three to four
 times worse. The pattern repeats for Golgi apparatus (17%) versus Golgi apparatus membrane
-(0%), endoplasmic reticulum (10%) versus ER membrane (0%), and bare Membrane (31%) versus
+(0%), endoplasmic reticulum (10%) versus ER membrane (0%), and bare Membrane (28%) versus
 every specific membrane in the table (0%).
 
 **This is a different failure mode from SPKW.** SPKW's problems were semantic — process
@@ -183,7 +183,7 @@ committed script.
 
 | Subproject | SL | Reviewed | Issue rate | Status |
 |---|---|---|---|---|
-| [Membrane](SL/SL-0162-MEMBRANE.md) | SL-0162 | 61 | 31% | 5 annotations moved; pattern A |
+| [Membrane](SL/SL-0162-MEMBRANE.md) | SL-0162 | 61 | 28% | 3 annotations moved; pattern A |
 | [Cytoskeleton](SL/SL-0090-CYTOSKELETON.md) | SL-0090 | 59 | 27% | 6 annotations moved; patterns A + B |
 | [Secreted](SL/SL-0243-SECRETED.md) | SL-0243 | 89 | 15% | analysis only; patterns C + D |
 | [Mitochondrial granularity triple](SL/SL-MITOCHONDRIA.md) | SL-0171/0168/0170 | 46 | 31/11/7% | controlled comparison; analysis only |
@@ -213,7 +213,7 @@ This case is documented in full in the
 
 ## What the subprojects established
 
-- **The granularity signal is real and large** — 31% on `membrane`, 27% on `cytoskeleton`,
+- **The granularity signal is real and large** — 28% on `membrane`, 27% on `cytoskeleton`,
   31% on `mitochondrial membrane`, against 0% on every precise membrane term in the corpus.
 - **But it is not redundancy**, so it cannot be automated away (above).
 - **Precision does not reduce errors; it makes them visible.** The mitochondrial triple's
