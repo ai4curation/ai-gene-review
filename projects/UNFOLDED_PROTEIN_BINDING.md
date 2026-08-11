@@ -388,7 +388,8 @@ apply consistently across species.
 | Decision | Count | Description |
 |----------|-------|-------------|
 | MODIFY → GO:0044183 or holdase NTR | 88 | Genuine chaperones reclassified to mechanism-specific terms |
-| MARK_AS_OVER_ANNOTATED | 23 | Assembly factors, sensors, co-chaperones where UPB overstates activity |
+| MARK_AS_OVER_ANNOTATED | 22 | Assembly factors, sensors, co-chaperones where UPB overstates activity |
+| UNDECIDED | 1 | Full-text evidence is unavailable to resolve the direct binding assay (EUG1) |
 | ACCEPT (retain GO:0051082) | 3 | Genes where GO:0051082 remains best available term |
 | KEEP_AS_NON_CORE | 2 | UPB is secondary to primary function (ATP11, VMA22) |
 | REMOVE | 2 | Misannotations (slrP/Salmonella, hsp-12.6/worm) |
@@ -523,7 +524,7 @@ established:
 | EGD1 | *S. cerevisiae* | Q02642 | 19 | MODIFY → GO:0044183 | NAC complex |
 | EGD2 | *S. cerevisiae* | P38879 | 22 | MODIFY → GO:0044183 | NAC complex |
 | EPS1 | *S. cerevisiae* | P40557 | 15 | OVER_ANNOTATED | ER QC factor |
-| EUG1 | *S. cerevisiae* | P32474 | 24 | OVER_ANNOTATED | PDI homolog |
+| EUG1 | *S. cerevisiae* | P32474 | 24 | UNDECIDED | CXXS PDI-family redox/folding factor; the cached evidence does not resolve generic unfolded-protein binding |
 | GET3 | *S. cerevisiae* | Q12154 | 64 | MODIFY | TA protein chaperone |
 | GSF2 | *S. cerevisiae* | Q04697 | 9 | MODIFY | Glucose transporter chaperone |
 | HSC82 | *S. cerevisiae* | P15108 | 47 | MODIFY → GO:0044183 | HSP90 |
