@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPAL2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LPAL2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q16609" target="_blank" class="term-link">
+                        Q16609
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LPAL2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q16609" data-a="DESCRIPTION: LPAL2 is a transcribed human pseudogene in the apo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LPAL2 is a transcribed human pseudogene in the apolipoprotein(a)/plasminogen gene cluster. Its annotated transcripts contain truncated open reading frames and are candidates for nonsense-mediated decay. An early liver transcript defined a hypothetical 132-amino-acid product with a signal peptide and one kringle domain, represented by UniProt Q16609, but the splice-donor defect, frameshift, and premature stops underlying that model were identified at the RNA level; no stable endogenous LPAL2 protein has been demonstrated, and UniProt assigns protein-existence level 5. LPAL2 transcripts have been studied as pseudogene-derived long noncoding RNAs. In hepatocellular carcinoma models, LPAL2 RNA is reduced in tumors, its depletion promotes growth, migration, invasion, stem-like phenotypes, and doxorubicin resistance, and depletion increases MMP9 expression; the direct RNA mechanism remains unresolved. The single-kringle homology does not establish lipoprotein(a) particle assembly, lipid transport, plasminogen regulation, protease activity, or any other LPA- or plasminogen-derived protein function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16609" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked as over-annotated. A predicted signal peptide would route the historical 132-residue ORF to the secretory pathway if translated, but no stable endogenous LPAL2 protein has been demonstrated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The SL-0243 mapping faithfully propagates UniProt&#39;s predicted &#34;Secreted&#34; statement, and PMID:7749817 derives a secretion signal from a transcript ORF. However, current NCBI/HGNC classification treats LPAL2 as a pseudogene whose transcript ORFs are truncated and candidates for nonsense-mediated decay; PMID:7749817 reports a splice-donor defect, exon skipping, a frameshift, and premature stops rather than endogenous protein detection. UniProt assigns Q16609 protein-existence level 5 and cautions that it may be a pseudogene product. Thus extracellular localization is conditionally plausible for an experimentally expressed ORF but overstates the evidence for the endogenous gene product. It remains unsuitable as a core function and does not imply any LPA particle, plasminogen, or protease biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7749817" target="_blank" class="term-link">
+                                        PMID:7749817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This results in &#34;exon skipping&#34; during maturation of the mRNA, causing a coding frame shift and the presence of premature stop codons.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/LPAL2/LPAL2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Could be the product of a pseudogene.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16609" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked as over-annotated: the source is a proteome-scale binary-interaction map and the normalized row records VAC14 as the partner, but generic protein binding is uninformative and physiological relevance is not established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IPI annotation is retained with curator deference to the experimental screen, but it should not be interpreted as a core activity. LPAL2 is a short, putatively secreted single-kringle precursor, whereas VAC14 is an intracellular phosphoinositide-regulatory scaffold; the cached paper does not discuss LPAL2 or validate this pair in a physiological compartment. A high-throughput binary contact neither supplies a more informative molecular-function term nor supports transfer of apo(a)/plasminogen biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16609" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked as over-annotated: five high-throughput candidate interactions are collapsed into this normalized protein-binding row, but none establishes a defining molecular activity of LPAL2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Live QuickGO records HIP1, CLSTN1 isoform 2, CCK, CASP6, and RAN as the five WITH/FROM partners. The source is a systematic yeast two-hybrid interactome focused on neurodegenerative-disease proteins, and the cached abstract does not discuss LPAL2 or provide pair-specific orthogonal validation. Several partners are intracellular and therefore topologically difficult to reconcile with a signal-peptide-bearing putative secreted product; CCK may share an extracellular route, but the screen alone does not establish a physiological interaction. Curator deference argues against removing the IPI result, while the generic GO:0005515 term and pooled partner set should remain non-core and must not be used to infer LPA-like function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">connects ∼5,000 human proteins via ∼30,000 candidate interactions and is generated by systematic yeast two-hybrid interaction screening</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The source is a systematic proteome-scale binary-interaction map; it does not establish endogenous production or physiological function of LPAL2.</div>
+
+                        <div class="finding-text">"Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The source reports a systematic yeast two-hybrid map of candidate human interactions rather than direct evidence of endogenous LPAL2 protein.</div>
+
+                        <div class="finding-text">"Here, we report on an interactome map that focuses on neurodegenerative disease (ND), connects ∼5,000 human proteins via ∼30,000 candidate interactions and is generated by systematic yeast two-hybrid interaction screening of ∼500 ND-related proteins and integration of literature interactions."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8148351" target="_blank" class="term-link">
+                            PMID:8148351
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The human apolipoprotein(a)/plasminogen gene cluster contains a novel homologue transcribed in liver.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The founding locus study placed apo(a)-related gene C among two apo(a)-related genes or pseudogenes in the chromosome 6 gene cluster.</div>
+
+                        <div class="finding-text">"To further characterize these genes, we analyzed overlapping human genomic yeast artificial chromosome clones, which revealed a cluster of four highly homologous genes encoding apolipoprotein(a), plasminogen, and two apolipoprotein(a)-related genes (rg) or pseudogenes."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Hybridization and RT-PCR detected transcription of apo(a)-related gene C in human liver.</div>
+
+                        <div class="finding-text">"Hybridization analysis and reverse transcriptase polymerase chain reaction showed that one of these novel genes, designated apolipoprotein(a)rg-C, has a domain structure similar to apolipoprotein(a) and is transcribed in human liver."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7749817" target="_blank" class="term-link">
+                            PMID:7749817
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Loss of a splice donor site at a &#39;skipped exon&#39; in a gene homologous to apolipoprotein(a) leads to an mRNA encoding a protein consisting of a single kringle domain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A human liver transcript of apo(a)-related gene C was predicted to encode a 132-amino-acid polypeptide with a secretion signal and one kringle domain.</div>
+
+                        <div class="finding-text">"We have isolated the human liver transcript derived from one of these genes, designated apo(a)-related gene C, that encodes a polypeptide of 132 amino acids composed of a secretion signal and a single kringle domain."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of a canonical splice donor causes exon skipping, a coding-frame shift, and premature stop codons in the derived transcript.</div>
+
+                        <div class="finding-text">"Analysis of genomic sequence shows that the predicted exon at this site lacks a canonical splice donor site. This results in &#34;exon skipping&#34; during maturation of the mRNA, causing a coding frame shift and the presence of premature stop codons."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36010685" target="_blank" class="term-link">
+                            PMID:36010685
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LPAL2 Suppresses Tumor Growth and Metastasis of Hepatocellular Carcinoma by Modulating MMP9 Expression.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This study explicitly treats LPAL2 as a pseudogene-derived lncRNA and found it downregulated in hepatocellular carcinoma tissues.</div>
+
+                        <div class="finding-text">"In the current study, we found that the pseudogene-derived lncRNA LPAL2 is downregulated in hepatocellular carcinoma (HCC) tissues, and further showed that elevated LPAL2 expression is positively correlated with survival outcome."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAL2 RNA depletion in hepatoma cells increased growth, migration, and invasion.</div>
+
+                        <div class="finding-text">"We found that the knockdown of LPAL2 in HA22T and Huh7 cell lines accelerated cell growth, migration, and invasion"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MMP9 RNA and protein increased in LPAL2-depleted hepatoma cells.</div>
+
+                        <div class="finding-text">"Furthermore, MMP9 mRNA and protein were upregulated in LPAL2-depleted HA22T and Huh7 cell lines"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors&#39; synthesis is that LPAL2 acts as a tumor-suppressor lncRNA in hepatocellular carcinoma.</div>
+
+                        <div class="finding-text">"Our collective results indicate that LPAL2 acts as a tumor-suppressor lncRNA in HCC."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LPAL2/LPAL2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q16609 (LPAL2_HUMAN), putative apolipoprotein(a)-like protein 2</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns Q16609 protein-existence level 5, uncertain.</div>
+
+                        <div class="finding-text">"PE   5: Uncertain;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The modeled product is much shorter than apolipoprotein(a) and lacks a peptidase region.</div>
+
+                        <div class="finding-text">"much shorter and does not contain any peptidase region."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt cautions that Q16609 could be a pseudogene product.</div>
+
+                        <div class="finding-text">"Could be the product of a pseudogene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is any LPAL2 transcript translated into a stable endogenous protein, or is Q16609 solely a conceptual product of the historical 132-residue ORF?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="Q: Is any LPAL2 transcript translated into a stable e..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which LPAL2 transcript isoform and RNA structural elements are necessary and sufficient for the hepatocellular-carcinoma phenotypes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="Q: Which LPAL2 transcript isoform and RNA structural ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LPAL2 RNA regulate MMP9 directly at chromatin or through an RNA-binding protein, microRNA, transcript-stability, or signaling intermediate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="Q: Does LPAL2 RNA regulate MMP9 directly at chromatin..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform transcript-resolved ribosome profiling and targeted parallel-reaction monitoring for peptides unique to the predicted LPAL2 ORF across liver and hepatocyte models, before and after NMD inhibition. Confirm any signal with an independently validated endogenous antibody and CRISPR disruption of the ORF without altering the candidate lncRNA promoter.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Endogenous LPAL2 transcripts are not translated into a stable Q16609-like protein.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous translation and proteomics assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="EXPERIMENT: Perform transcript-resolved ribosome profiling and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Resolve LPAL2 transcripts by long-read RNA sequencing, selectively deplete each isoform with junction-specific reagents, and rescue with matched wild-type and start-codon-disabled RNA constructs expressed at endogenous abundance. Measure growth, migration, invasion, MMP9 expression, and NMD sensitivity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: A specific noncoding LPAL2 transcript, rather than translation of its short ORF, mediates the observed tumor-suppressive phenotype.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved RNA loss-of-function and rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="EXPERIMENT: Resolve LPAL2 transcripts by long-read RNA sequenc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map endogenous LPAL2 RNA-protein contacts by orthogonal RNA pulldown and crosslinking methods and map RNA-chromatin occupancy at the MMP9 locus. Validate candidate partners with reciprocal binding, targeted depletion, and rescue, and measure nascent MMP9 transcription rather than steady-state RNA alone.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LPAL2 RNA represses MMP9 transcription through a specific RNA-associated protein or chromatin interaction.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: lncRNA interactome and chromatin-mechanism analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="EXPERIMENT: Map endogenous LPAL2 RNA-protein contacts by ortho..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine LPAL2 depletion with MMP9 knockout or catalytic inhibition in multiple hepatoma lines, primary HCC organoids, and xenografts. Rescue LPAL2 with the validated noncoding transcript and test whether MMP9 epistasis separates invasion from proliferation, stemness, and doxorubicin-resistance phenotypes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MMP9 induction is a causal mediator of the growth and invasion phenotypes observed after LPAL2 depletion.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis in HCC models</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q16609" data-a="EXPERIMENT: Combine LPAL2 depletion with MMP9 knockout or cata..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether any LPAL2 transcript produces a stable endogenous polypeptide corresponding to Q16609 or another open reading frame.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Liver transcription is established, and one historical transcript contains a predicted 132-residue signal-peptide-plus-kringle ORF. The same transcript study documents exon skipping, a frameshift, and premature stop codons; current transcript models are truncated and NMD candidates, and UniProt rates Q16609 protein existence as uncertain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Product-existence evidence is prerequisite to assigning any protein molecular function, localization, or interaction to LPAL2.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Demonstrate endogenous translation and a stable product with transcript- resolved ribosome profiling, targeted mass spectrometry using unique peptides, and an independently validated endogenous antibody, including NMD and pseudogene-negative controls.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"This results in &#34;exon skipping&#34; during maturation of the mRNA, causing a coding frame shift and the presence of premature stop codons."</em> — PMID:7749817</li>
+
+                <li><em>"PE   5: Uncertain;"</em> — file:human/LPAL2/LPAL2-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular mechanism by which LPAL2 RNA alters MMP9 transcription and hepatocellular-carcinoma phenotypes is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LPAL2 depletion increases MMP9 RNA and protein and promotes growth, migration, invasion, sphere formation, and doxorubicin resistance in hepatoma models, but no RNA-binding protein, RNA target, chromatin site, or causal intermediate has been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a direct RNA mechanism, the observed phenotypes cannot be represented as a precise core molecular activity or distinguished confidently from indirect perturbation effects.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combine endogenous LPAL2 perturbation and RNA-only rescue with RNA-protein and RNA-chromatin interaction mapping, then test candidate intermediates and MMP9 promoter effects by epistasis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The direct, transcriptional effects of LPAL2 on MMP9 expression should be fully addressed in future studies."</em> — PMID:36010685</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The transcript isoform and structural RNA elements responsible for the reported lncRNA activity have not been resolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LPAL2 has multiple truncated transcript variants, while the functional study perturbs LPAL2 RNA and attributes the phenotype to a pseudogene-derived lncRNA without establishing which transcript form or sequence element is sufficient.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform resolution is necessary to separate a reproducible RNA function from NMD-linked transcript abundance and from the historical Q16609 ORF model.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Define full-length LPAL2 transcripts by long-read RNA sequencing and map NMD sensitivity, then perform isoform-specific loss-of-function and rescue with nontranslatable RNA constructs.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LPAL2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16609" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lpal2-literature-and-product-status-notes">LPAL2 literature and product-status notes</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<ul>
+<li>On 2026-08-11, the repository's Falcon deep-research recipe was attempted with<br />
+<code>just deep-research-falcon human Q16609 --alias LPAL2</code>. The client completed<br />
+  setup and launched, but returned no report; the stalled run was stopped. No<br />
+<code>LPAL2-deep-research-falcon.md</code> file was created. An initial attempt using the<br />
+  generic <code>just deep-research</code> name also failed because this checkout has no such<br />
+  recipe. Per repository policy, neither failure was represented as a provider<br />
+  report.</li>
+<li>Decisive papers were fetched with the project <code>fetch-pmid</code> recipe and assessed<br />
+  directly from the resulting cache: PMID:8148351, PMID:7749817, and<br />
+  PMID:36010685. The two early papers are abstract-only; PMID:36010685 has cached<br />
+  PMC full text.</li>
+</ul>
+<h2 id="identity-locus-and-expression">Identity, locus, and expression</h2>
+<p>The original locus paper called the gene <em>apolipoprotein(a)-related gene C</em> and<br />
+explicitly left open whether the two related loci were genes or pseudogenes:</p>
+<blockquote>
+<p>"we analyzed overlapping human genomic yeast artificial chromosome clones,<br />
+which revealed a cluster of four highly homologous genes encoding<br />
+apolipoprotein(a), plasminogen, and two apolipoprotein(a)-related genes (rg) or<br />
+pseudogenes."</p>
+</blockquote>
+<p>[PMID:8148351, abstract; full text unavailable]</p>
+<p>The same abstract provides RNA-level evidence in liver:</p>
+<blockquote>
+<p>"Hybridization analysis and reverse transcriptase polymerase chain reaction<br />
+showed that one of these novel genes, designated apolipoprotein(a)rg-C, has a<br />
+domain structure similar to apolipoprotein(a) and is transcribed in human<br />
+liver."</p>
+</blockquote>
+<p>[PMID:8148351, abstract; full text unavailable]</p>
+<p>This establishes locus identity and transcription. It does not establish an<br />
+endogenous protein, secretion, incorporation into an Lp(a) particle, or any<br />
+apolipoprotein(a)/plasminogen biochemical activity.</p>
+<h2 id="transcript-architecture-and-historical-q16609-product-model">Transcript architecture and historical Q16609 product model</h2>
+<p>The follow-up transcript paper derived a short open reading frame from human<br />
+liver RNA:</p>
+<blockquote>
+<p>"We have isolated the human liver transcript derived from one of these genes,<br />
+designated apo(a)-related gene C, that encodes a polypeptide of 132 amino acids<br />
+composed of a secretion signal and a single kringle domain."</p>
+</blockquote>
+<p>[PMID:7749817, abstract; full text unavailable]</p>
+<p>Crucially, the same abstract documents the splice defect and premature stops:</p>
+<blockquote>
+<p>"Analysis of genomic sequence shows that the predicted exon at this site lacks<br />
+a canonical splice donor site. This results in \"exon skipping\" during<br />
+maturation of the mRNA, causing a coding frame shift and the presence of<br />
+premature stop codons."</p>
+</blockquote>
+<p>[PMID:7749817, abstract; full text unavailable]</p>
+<p>The evidence is sequence analysis of a transcript and a predicted 132-aa ORF,<br />
+not detection of the corresponding endogenous polypeptide. UniProt models this<br />
+historical ORF as Q16609 but marks protein existence as <code>PE   5: Uncertain;</code> and<br />
+cautions, <code>Could be the product of a pseudogene.</code> It also states, <code>This protein
+is however much shorter and does not contain any peptidase region.</code><br />
+[file:human/LPAL2/LPAL2-uniprot.txt, current reviewed Q16609 record]</p>
+<p>Current NCBI Gene nomenclature is <strong>LPAL2, lipoprotein(a) like 2 (pseudogene)</strong>,<br />
+GeneID 80350, gene type <code>PSEUDO</code>. RefSeq's current summary states:</p>
+<blockquote>
+<p>"This gene is similar to the lipoprotein, Lp(a) gene, but all transcripts<br />
+produced by this gene contain a truncated open reading frame and are candidates<br />
+for nonsense-mediated decay. Consequently, this gene is considered to be a<br />
+pseudogene. Alternative splicing results in multiple transcript variants."</p>
+</blockquote>
+<p>[NCBI Gene:80350 / NCBI Datasets gene record for human LPAL2, accessed<br />
+2026-08-11]</p>
+<p>Together, the sources support a transcribed pseudogene with a historical<br />
+single-kringle ORF model. They do not currently support confident existence of a<br />
+stable endogenous Q16609 protein.</p>
+<h2 id="rna-level-functional-evidence">RNA-level functional evidence</h2>
+<p>The 2022 HCC paper explicitly studies a noncoding RNA rather than Q16609 protein:</p>
+<blockquote>
+<p>"In the current study, we found that the pseudogene-derived lncRNA LPAL2 is<br />
+downregulated in hepatocellular carcinoma (HCC) tissues, and further showed<br />
+that elevated LPAL2 expression is positively correlated with survival<br />
+outcome."</p>
+</blockquote>
+<p>[PMID:36010685, abstract; cached full text available]</p>
+<p>Its perturbation evidence is also RNA-directed:</p>
+<blockquote>
+<p>"We found that the knockdown of LPAL2 in HA22T and Huh7 cell lines accelerated<br />
+cell growth, migration, and invasion"</p>
+<p>"Furthermore, MMP9 mRNA and protein were upregulated in LPAL2-depleted HA22T<br />
+and Huh7 cell lines"</p>
+</blockquote>
+<p>[PMID:36010685, Results sections 3.2 and 3.3; cached full text available]</p>
+<p>The authors summarize the entity boundary directly:</p>
+<blockquote>
+<p>"Our collective results indicate that LPAL2 acts as a tumor-suppressor lncRNA<br />
+in HCC."</p>
+</blockquote>
+<p>[PMID:36010685, Discussion; cached full text available]</p>
+<p>These findings may be relevant to an RNA-aware review of LPAL2, but they cannot<br />
+be assigned to the hypothetical Q16609 protein or used to infer a protein<br />
+molecular function.</p>
+<h2 id="high-throughput-interaction-records">High-throughput interaction records</h2>
+<p>PMID:25416956 describes <code>a systematic map of ?14,000 high-quality human binary
+protein-protein interactions.</code> The GOA row identifies VAC14 as the candidate<br />
+Q16609 partner, but the paper does not provide LPAL2-specific evidence of<br />
+endogenous protein production or physiological co-localization.<br />
+[PMID:25416956, abstract; cached full text available; LPAL2-goa.tsv for the<br />
+Q16609--VAC14 association]</p>
+<p>PMID:32814053 reports an interactome that <code>connects ∼5,000 human proteins via
+∼30,000 candidate interactions and is generated by systematic yeast two-hybrid
+interaction screening</code>. GOA identifies HIP1, CLSTN1 isoform 2, CCK, CASP6, and<br />
+RAN as the five partners collapsed into the normalized Q16609 row. These remain<br />
+screen-derived candidate contacts and do not resolve the product-existence<br />
+problem.<br />
+[PMID:32814053, abstract; full text unavailable; LPAL2-goa.tsv for partner<br />
+identities]</p>
+<h2 id="functional-boundary-for-subsequent-curation">Functional boundary for subsequent curation</h2>
+<ul>
+<li>Do not transfer LPA's lipoprotein-particle assembly, lipid transport,<br />
+  plasminogen competition, antifibrinolytic, protease, or receptor-binding<br />
+  functions to LPAL2. Homology and a single predicted kringle do not establish<br />
+  any of those activities.</li>
+<li>The 132-aa Q16609 sequence contains only a predicted signal peptide and one<br />
+  kringle; UniProt explicitly says it lacks a peptidase region.</li>
+<li>RNA expression and lncRNA knockdown phenotypes are evidence about LPAL2<br />
+  transcripts. They are not protein-existence evidence and should not be used as<br />
+  support for protein-centric GO annotations.</li>
+<li>Until direct endogenous protein evidence is found, any localization inferred<br />
+  from the predicted signal peptide and any interaction-screen rows require an<br />
+  explicit putative-product caveat.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q16609
+gene_symbol: LPAL2
+product_type: PSEUDOGENE
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LPAL2 is a transcribed human pseudogene in the apolipoprotein(a)/plasminogen
+  gene cluster. Its annotated transcripts contain truncated open reading frames
+  and are candidates for nonsense-mediated decay. An early liver transcript
+  defined a hypothetical 132-amino-acid product with a signal peptide and one
+  kringle domain, represented by UniProt Q16609, but the splice-donor defect,
+  frameshift, and premature stops underlying that model were identified at the
+  RNA level; no stable endogenous LPAL2 protein has been demonstrated, and
+  UniProt assigns protein-existence level 5. LPAL2 transcripts have been studied
+  as pseudogene-derived long noncoding RNAs. In hepatocellular carcinoma models,
+  LPAL2 RNA is reduced in tumors, its depletion promotes growth, migration,
+  invasion, stem-like phenotypes, and doxorubicin resistance, and depletion
+  increases MMP9 expression; the direct RNA mechanism remains unresolved. The
+  single-kringle homology does not establish lipoprotein(a) particle assembly,
+  lipid transport, plasminogen regulation, protease activity, or any other LPA-
+  or plasminogen-derived protein function.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0243
+  review:
+    summary: &gt;-
+      Marked as over-annotated. A predicted signal peptide would route the
+      historical 132-residue ORF to the secretory pathway if translated, but no
+      stable endogenous LPAL2 protein has been demonstrated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The SL-0243 mapping faithfully propagates UniProt&#39;s predicted &#34;Secreted&#34;
+      statement, and PMID:7749817 derives a secretion signal from a transcript ORF.
+      However, current NCBI/HGNC classification treats LPAL2 as a pseudogene whose
+      transcript ORFs are truncated and candidates for nonsense-mediated decay;
+      PMID:7749817 reports a splice-donor defect, exon skipping, a frameshift, and
+      premature stops rather than endogenous protein detection. UniProt assigns
+      Q16609 protein-existence level 5 and cautions that it may be a pseudogene
+      product. Thus extracellular localization is conditionally plausible for an
+      experimentally expressed ORF but overstates the evidence for the endogenous
+      gene product. It remains unsuitable as a core function and does not imply
+      any LPA particle, plasminogen, or protease biology.
+    supported_by:
+    - reference_id: PMID:7749817
+      supporting_text: &gt;-
+        This results in &#34;exon skipping&#34; during maturation of the mRNA, causing a coding frame shift and the presence of premature stop codons.
+    - reference_id: file:human/LPAL2/LPAL2-uniprot.txt
+      supporting_text: Could be the product of a pseudogene.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q08AM6
+  review:
+    summary: &gt;-
+      Marked as over-annotated: the source is a proteome-scale binary-interaction
+      map and the normalized row records VAC14 as the partner, but generic protein
+      binding is uninformative and physiological relevance is not established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The IPI annotation is retained with curator deference to the experimental
+      screen, but it should not be interpreted as a core activity. LPAL2 is a
+      short, putatively secreted single-kringle precursor, whereas VAC14 is an
+      intracellular phosphoinositide-regulatory scaffold; the cached paper does
+      not discuss LPAL2 or validate this pair in a physiological compartment.
+      A high-throughput binary contact neither supplies a more informative
+      molecular-function term nor supports transfer of apo(a)/plasminogen biology.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: &gt;-
+        Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:O00291
+  - UniProtKB:O94985-2
+  - UniProtKB:P06307
+  - UniProtKB:P55212
+  - UniProtKB:P62826
+  review:
+    summary: &gt;-
+      Marked as over-annotated: five high-throughput candidate interactions are
+      collapsed into this normalized protein-binding row, but none establishes a
+      defining molecular activity of LPAL2.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Live QuickGO records HIP1, CLSTN1 isoform 2, CCK, CASP6, and RAN as the five
+      WITH/FROM partners. The source is a systematic yeast two-hybrid interactome
+      focused on neurodegenerative-disease proteins, and the cached abstract does
+      not discuss LPAL2 or provide pair-specific orthogonal validation. Several
+      partners are intracellular and therefore topologically difficult to
+      reconcile with a signal-peptide-bearing putative secreted product; CCK may
+      share an extracellular route, but the screen alone does not establish a
+      physiological interaction. Curator deference argues against removing the
+      IPI result, while the generic GO:0005515 term and pooled partner set should
+      remain non-core and must not be used to infer LPA-like function.
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: &gt;-
+        connects ∼5,000 human proteins via ∼30,000 candidate interactions and is generated by systematic yeast two-hybrid interaction screening
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the documented mapping source for the extracellular-region IEA row,
+      not primary evidence that an endogenous LPAL2 protein exists or is secreted.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      The source is a systematic proteome-scale binary-interaction map; it does
+      not establish endogenous production or physiological function of LPAL2.
+    supporting_text: &gt;-
+      Here, we describe a systematic map of ?14,000 high-quality human binary
+      protein-protein interactions.
+    full_text_unavailable: false
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID and title are verified against the cached full text, and GOA uses
+      this screen for a candidate Q16609-VAC14 interaction. The paper is a valid
+      source for that screen result, but it does not demonstrate endogenous Q16609
+      protein production or a physiological LPAL2 molecular function.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings:
+  - statement: &gt;-
+      The source reports a systematic yeast two-hybrid map of candidate human
+      interactions rather than direct evidence of endogenous LPAL2 protein.
+    supporting_text: &gt;-
+      Here, we report on an interactome map that focuses on neurodegenerative
+      disease (ND), connects ∼5,000 human proteins via ∼30,000 candidate
+      interactions and is generated by systematic yeast two-hybrid interaction
+      screening of ∼500 ND-related proteins and integration of literature
+      interactions.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID and title are verified against the cached abstract, and GOA uses
+      this screen for five candidate Q16609 interactions. The abstract provides
+      no LPAL2-specific physiological validation and cannot resolve whether an
+      endogenous Q16609 protein product exists.
+- id: PMID:8148351
+  title: The human apolipoprotein(a)/plasminogen gene cluster contains a novel homologue
+    transcribed in liver.
+  findings:
+  - statement: &gt;-
+      The founding locus study placed apo(a)-related gene C among two
+      apo(a)-related genes or pseudogenes in the chromosome 6 gene cluster.
+    supporting_text: &gt;-
+      To further characterize these genes, we analyzed overlapping human genomic
+      yeast artificial chromosome clones, which revealed a cluster of four highly
+      homologous genes encoding apolipoprotein(a), plasminogen, and two
+      apolipoprotein(a)-related genes (rg) or pseudogenes.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Hybridization and RT-PCR detected transcription of apo(a)-related gene C in
+      human liver.
+    supporting_text: &gt;-
+      Hybridization analysis and reverse transcriptase polymerase chain reaction
+      showed that one of these novel genes, designated apolipoprotein(a)rg-C, has
+      a domain structure similar to apolipoprotein(a) and is transcribed in human
+      liver.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The identifier, title, and quoted abstract text are verified in the cached
+      PubMed record. This is decisive primary evidence for locus identity and
+      liver transcription, but it does not demonstrate a translated protein or
+      transfer any biochemical function from LPA or plasminogen.
+- id: PMID:7749817
+  title: Loss of a splice donor site at a &#39;skipped exon&#39; in a gene homologous to apolipoprotein(a)
+    leads to an mRNA encoding a protein consisting of a single kringle domain.
+  findings:
+  - statement: &gt;-
+      A human liver transcript of apo(a)-related gene C was predicted to encode a
+      132-amino-acid polypeptide with a secretion signal and one kringle domain.
+    supporting_text: &gt;-
+      We have isolated the human liver transcript derived from one of these genes,
+      designated apo(a)-related gene C, that encodes a polypeptide of 132 amino
+      acids composed of a secretion signal and a single kringle domain.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Loss of a canonical splice donor causes exon skipping, a coding-frame shift,
+      and premature stop codons in the derived transcript.
+    supporting_text: &gt;-
+      Analysis of genomic sequence shows that the predicted exon at this site
+      lacks a canonical splice donor site. This results in &#34;exon skipping&#34; during
+      maturation of the mRNA, causing a coding frame shift and the presence of
+      premature stop codons.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The identifier, title, and quoted abstract text are verified in the cached
+      PubMed record. This supports a transcript-derived historical 132-residue ORF
+      model and the disabling splice defect, not experimental detection of an
+      endogenous LPAL2 protein.
+- id: PMID:36010685
+  title: LPAL2 Suppresses Tumor Growth and Metastasis of Hepatocellular Carcinoma by
+    Modulating MMP9 Expression.
+  findings:
+  - statement: &gt;-
+      This study explicitly treats LPAL2 as a pseudogene-derived lncRNA and found
+      it downregulated in hepatocellular carcinoma tissues.
+    supporting_text: &gt;-
+      In the current study, we found that the pseudogene-derived lncRNA LPAL2 is
+      downregulated in hepatocellular carcinoma (HCC) tissues, and further showed
+      that elevated LPAL2 expression is positively correlated with survival
+      outcome.
+    full_text_unavailable: false
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LPAL2 RNA depletion in hepatoma cells increased growth, migration, and
+      invasion.
+    supporting_text: &gt;-
+      We found that the knockdown of LPAL2 in HA22T and Huh7 cell lines accelerated
+      cell growth, migration, and invasion
+    full_text_unavailable: false
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      MMP9 RNA and protein increased in LPAL2-depleted hepatoma cells.
+    supporting_text: &gt;-
+      Furthermore, MMP9 mRNA and protein were upregulated in LPAL2-depleted HA22T
+      and Huh7 cell lines
+    full_text_unavailable: false
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      The authors&#39; synthesis is that LPAL2 acts as a tumor-suppressor lncRNA in
+      hepatocellular carcinoma.
+    supporting_text: &gt;-
+      Our collective results indicate that LPAL2 acts as a tumor-suppressor lncRNA
+      in HCC.
+    full_text_unavailable: false
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID, title, and findings are verified against cached full text. The work
+      is direct functional evidence for an LPAL2 noncoding RNA in an HCC model; it
+      is not evidence for Q16609 protein existence and must not be converted into
+      protein-centric GO annotations.
+- id: file:human/LPAL2/LPAL2-uniprot.txt
+  title: UniProtKB entry Q16609 (LPAL2_HUMAN), putative apolipoprotein(a)-like protein 2
+  findings:
+  - statement: &gt;-
+      UniProt assigns Q16609 protein-existence level 5, uncertain.
+    supporting_text: &#39;PE   5: Uncertain;&#39;
+    reference_section_type: OTHER
+  - statement: &gt;-
+      The modeled product is much shorter than apolipoprotein(a) and lacks a
+      peptidase region.
+    supporting_text: &gt;-
+      much shorter and does not contain any peptidase region.
+    reference_section_type: OTHER
+  - statement: &gt;-
+      UniProt cautions that Q16609 could be a pseudogene product.
+    supporting_text: Could be the product of a pseudogene.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current reviewed UniProt record inspected directly. Its sequence model,
+      predicted signal peptide and kringle are useful for defining the historical
+      putative product, but PE 5 and the pseudogene caution preclude treating that
+      model as evidence that an endogenous protein exists.
+core_functions: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    It is unknown whether any LPAL2 transcript produces a stable endogenous
+    polypeptide corresponding to Q16609 or another open reading frame.
+  boundary: &gt;-
+    Liver transcription is established, and one historical transcript contains a
+    predicted 132-residue signal-peptide-plus-kringle ORF. The same transcript
+    study documents exon skipping, a frameshift, and premature stop codons;
+    current transcript models are truncated and NMD candidates, and UniProt rates
+    Q16609 protein existence as uncertain.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Product-existence evidence is prerequisite to assigning any protein molecular
+    function, localization, or interaction to LPAL2.
+  resolution: &gt;-
+    Demonstrate endogenous translation and a stable product with transcript-
+    resolved ribosome profiling, targeted mass spectrometry using unique peptides,
+    and an independently validated endogenous antibody, including NMD and
+    pseudogene-negative controls.
+  provenance:
+  - reference_id: PMID:7749817
+    supporting_text: &gt;-
+      This results in &#34;exon skipping&#34; during maturation of the mRNA, causing a coding frame shift and the presence of premature stop codons.
+  - reference_id: file:human/LPAL2/LPAL2-uniprot.txt
+    supporting_text: &#39;PE   5: Uncertain;&#39;
+- gap_statement: &gt;-
+    The direct molecular mechanism by which LPAL2 RNA alters MMP9 transcription
+    and hepatocellular-carcinoma phenotypes is unknown.
+  boundary: &gt;-
+    LPAL2 depletion increases MMP9 RNA and protein and promotes growth, migration,
+    invasion, sphere formation, and doxorubicin resistance in hepatoma models,
+    but no RNA-binding protein, RNA target, chromatin site, or causal intermediate
+    has been established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a direct RNA mechanism, the observed phenotypes cannot be represented
+    as a precise core molecular activity or distinguished confidently from
+    indirect perturbation effects.
+  resolution: &gt;-
+    Combine endogenous LPAL2 perturbation and RNA-only rescue with RNA-protein and
+    RNA-chromatin interaction mapping, then test candidate intermediates and MMP9
+    promoter effects by epistasis.
+  provenance:
+  - reference_id: PMID:36010685
+    supporting_text: &gt;-
+      The direct, transcriptional effects of LPAL2 on MMP9 expression should be fully addressed in future studies.
+- gap_statement: &gt;-
+    The transcript isoform and structural RNA elements responsible for the
+    reported lncRNA activity have not been resolved.
+  boundary: &gt;-
+    LPAL2 has multiple truncated transcript variants, while the functional study
+    perturbs LPAL2 RNA and attributes the phenotype to a pseudogene-derived lncRNA
+    without establishing which transcript form or sequence element is sufficient.
+  gap_kind:
+  - BIOLOGY
+  status: OPEN
+  significance: &gt;-
+    Isoform resolution is necessary to separate a reproducible RNA function from
+    NMD-linked transcript abundance and from the historical Q16609 ORF model.
+  resolution: &gt;-
+    Define full-length LPAL2 transcripts by long-read RNA sequencing and map NMD
+    sensitivity, then perform isoform-specific loss-of-function and rescue with
+    nontranslatable RNA constructs.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is any LPAL2 transcript translated into a stable endogenous protein, or is
+    Q16609 solely a conceptual product of the historical 132-residue ORF?
+- question: &gt;-
+    Which LPAL2 transcript isoform and RNA structural elements are necessary and
+    sufficient for the hepatocellular-carcinoma phenotypes?
+- question: &gt;-
+    Does LPAL2 RNA regulate MMP9 directly at chromatin or through an RNA-binding
+    protein, microRNA, transcript-stability, or signaling intermediate?
+suggested_experiments:
+- hypothesis: &gt;-
+    Endogenous LPAL2 transcripts are not translated into a stable Q16609-like
+    protein.
+  description: &gt;-
+    Perform transcript-resolved ribosome profiling and targeted parallel-reaction
+    monitoring for peptides unique to the predicted LPAL2 ORF across liver and
+    hepatocyte models, before and after NMD inhibition. Confirm any signal with an
+    independently validated endogenous antibody and CRISPR disruption of the ORF
+    without altering the candidate lncRNA promoter.
+  experiment_type: endogenous translation and proteomics assay
+- hypothesis: &gt;-
+    A specific noncoding LPAL2 transcript, rather than translation of its short
+    ORF, mediates the observed tumor-suppressive phenotype.
+  description: &gt;-
+    Resolve LPAL2 transcripts by long-read RNA sequencing, selectively deplete
+    each isoform with junction-specific reagents, and rescue with matched wild-type
+    and start-codon-disabled RNA constructs expressed at endogenous abundance.
+    Measure growth, migration, invasion, MMP9 expression, and NMD sensitivity.
+  experiment_type: isoform-resolved RNA loss-of-function and rescue
+- hypothesis: &gt;-
+    LPAL2 RNA represses MMP9 transcription through a specific RNA-associated
+    protein or chromatin interaction.
+  description: &gt;-
+    Map endogenous LPAL2 RNA-protein contacts by orthogonal RNA pulldown and
+    crosslinking methods and map RNA-chromatin occupancy at the MMP9 locus. Validate
+    candidate partners with reciprocal binding, targeted depletion, and rescue,
+    and measure nascent MMP9 transcription rather than steady-state RNA alone.
+  experiment_type: lncRNA interactome and chromatin-mechanism analysis
+- hypothesis: &gt;-
+    MMP9 induction is a causal mediator of the growth and invasion phenotypes
+    observed after LPAL2 depletion.
+  description: &gt;-
+    Combine LPAL2 depletion with MMP9 knockout or catalytic inhibition in multiple
+    hepatoma lines, primary HCC organoids, and xenografts. Rescue LPAL2 with the
+    validated noncoding transcript and test whether MMP9 epistasis separates
+    invasion from proliferation, stemness, and doxorubicin-resistance phenotypes.
+  experiment_type: genetic epistasis in HCC models
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
