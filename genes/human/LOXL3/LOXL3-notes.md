@@ -105,11 +105,11 @@ Human secretion is directly observed in PMID:11284725, whereas that experiment
 did not detect recombinant LOXL3 in nuclei. In contrast, PMID:28065600 reports a
 nuclear STAT3 mechanism:
 
-> LOXL3 associates with STAT3 in the nucleus to deacetylate and deacetyliminate Stat3 on multiple acetyl-lysine sites.
+> LOX-like 3 (Loxl3) associates with Stat3 in the nucleus to deacetylate and deacetyliminate Stat3 on multiple acetyl-lysine sites.
 
 It further reports an unusual domain assignment:
 
-> Unexpectedly, the N-terminal SRCR repeats, but not the C-terminal lysyl-oxidase catalytic domain, constitute the major deacetylation and deacetylimination activities.
+> Surprisingly, Loxl3 N-terminal scavenger receptor cysteine-rich (SRCR) repeats, rather than the C-terminal oxidase catalytic domain, represent the major deacetylase/deacetyliminase activity.
 
 The PMID/title/abstract are internally consistent, and the cached record carries
 no retraction flag. Nevertheless, only an abstract is cached, and no independent
