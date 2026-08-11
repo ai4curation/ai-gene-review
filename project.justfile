@@ -93,21 +93,35 @@ sync-codex-skills:
 # Use --force to overwrite existing UniProt and GOA files
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
-fetch-gene organism gene *args="":
+[positional-arguments]
+fetch-gene organism gene *args:
     #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+
+    force=0
+    for arg in "$@"; do
+        if [[ "$arg" == "--force" || "$arg" == "-f" ]]; then
+            force=1
+            break
+        fi
+    done
+
     # Check if gene directory already exists and warn if --force not used
-    gene_dir="genes/{{organism}}/{{gene}}"
-    if [[ "{{args}}" != *"--force"* ]] && [ -d "$gene_dir" ]; then
-        uniprot_file="$gene_dir/{{gene}}-uniprot.txt"
-        goa_file="$gene_dir/{{gene}}-goa.tsv"
+    gene_dir="genes/$organism/$gene"
+    if (( force == 0 )) && [ -d "$gene_dir" ]; then
+        uniprot_file="$gene_dir/$gene-uniprot.txt"
+        goa_file="$gene_dir/$gene-goa.tsv"
         if [ -f "$uniprot_file" ] || [ -f "$goa_file" ]; then
-            echo "⚠️  Gene data for {{organism}}/{{gene}} already exists."
+            echo "⚠️  Gene data for $organism/$gene already exists."
             echo "   To prevent churn, existing files will not be overwritten unless they differ from remote."
-            echo "   Use 'just fetch-gene {{organism}} {{gene}} --force' to force overwrite."
+            echo "   Use 'just fetch-gene $organism $gene --force' to force overwrite."
             echo ""
         fi
     fi
-    uv run --no-dev ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
+    uv run --no-dev ai-gene-review fetch-gene "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral
 # Use --alias to specify a custom directory name and file prefix
