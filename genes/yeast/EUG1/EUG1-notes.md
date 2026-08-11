@@ -29,11 +29,13 @@ from engineered CXXC variants and does not infer function from those mutants.
   than autonomous bulk Pdi1-like activity.
 
 - PMID:16002399 (cached abstract only) reports Eug1p oxidative-refolding
-  activity at 2.16% of Pdi1p. Its chaperone statement is specifically “although
-  only Eps1p and Pdi1p have chaperone activity.” Therefore the prior review's
-  claim of measurable Eug1p chaperone-like activity was removed, and generic
-  unfolded-protein binding remains marked over-annotated rather than treated as
-  Eug1p's core function.
+  activity at 2.16% of Pdi1p. Its statement that “only Eps1p and Pdi1p have
+  chaperone activity” occurs within an Eps1p-Pdi1p/Eps1p-Mpd1p complex analysis
+  and does not establish whether Eug1p has chaperone activity. The Falcon report
+  also records later literature proposing possible chaperone-like activity for
+  Eug1p. Accordingly, the experimental unfolded-protein-binding annotation is
+  left UNDECIDED without the full assay; the matching automated inference is
+  also UNDECIDED rather than being treated as a core function.
 
 ## Curation decisions
 
@@ -44,8 +46,9 @@ from engineered CXXC variants and does not infer function from those mutants.
 - Keep “response to endoplasmic reticulum stress” as non-core: EUG1 is induced
   during ER protein accumulation, but Eug1p is an effector rather than a UPR
   sensor or signaling protein.
-- Mark generic “unfolded protein binding” and “protein binding” over-annotated;
-  more specific redox-folding terms describe the demonstrated biology.
+- Leave both “unfolded protein binding” annotations UNDECIDED because the full
+  direct assay is not cached, while marking both uninformative “protein binding”
+  annotations over-annotated.
 
 ## Open question
 
