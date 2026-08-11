@@ -32,9 +32,11 @@ quinone metabolism, and global osmotic-stress regulation are outside the core.
 - [x] Validate and render all artifacts.
 - [x] Open draft PR [#2532](https://github.com/ai4curation/ai-gene-review/pull/2532).
 
-The independent audit removed unsupported KdpC ATP binding and KdpD cytoplasm
-localization, corrected complex-level transporter annotations to
-`contributes_to`, and grounded the KdpF stabilizing role with PMID:10608856.
+The independent audit retained KdpC ATP binding conservatively after primary
+evidence review (PMID:21711450), removed the full-length KdpD cytoplasm
+localization, represented qualifier preferences in prose and core functions,
+added KdpB ATP hydrolysis explicitly, and bounded the KdpF stabilizing role to
+the detergent-solubilized complex described in PMID:10608856.
 
 ## Focused Genes
 
