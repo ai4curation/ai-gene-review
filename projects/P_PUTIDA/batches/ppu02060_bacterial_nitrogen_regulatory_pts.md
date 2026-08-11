@@ -38,9 +38,11 @@ effects are downstream regulatory outputs.
 - [x] Validate and render all artifacts.
 - [x] Open draft PR [#2525](https://github.com/ai4curation/ai-gene-review/pull/2525).
 
-The independent audit confirmed all existing-annotation decisions across the
-three reviews. It also tightened each module participant from a broad PANTHER
-family to its verified nitrogen-regulatory subfamily.
+The independent audit confirmed the sugar-PTS removals and corrected the PtsN
+regulatory-function coverage. PtsP and PtsN retain verified
+nitrogen-regulatory PANTHER subfamilies; NPr instead uses an ortholog selector
+grounded in experimentally assigned KT2440 Q88PA2 because
+PANTHER:PTHR33705:SF2 also contains canonical sugar-PTS HPr proteins.
 
 ## Focused Genes
 
@@ -48,7 +50,10 @@ family to its verified nitrogen-regulatory subfamily.
 |---|---|---|---|
 | `ptsP` | PP_5145 | Q88CN5 | PEP-dependent enzyme I(Ntr) |
 | `ptsH` (`ptsO`/NPr) | PP_0948 | Q88PA2 | Intermediate phosphocarrier |
-| `ptsN` | PP_0950 | Q88PA0 | Terminal EIIA(Ntr) regulator |
+| `ptsN` | PP_0950 | Q88PA0 | Terminal EIIA(Ntr) regulator of KdpD and AceE |
 
 PMID:18296519 directly establishes the primary in vivo flow as PEP to PtsP to
 NPr to PtsN and describes the branch as unrelated to sugar traffic.
+PMID:26224366 establishes direct PtsN-KdpD control of `kdpFABC`, while
+PMID:21236318 establishes inhibition of pyruvate dehydrogenase through direct
+PtsN-AceE interaction.
