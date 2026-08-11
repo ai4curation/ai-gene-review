@@ -22,7 +22,7 @@ autolink_gene_symbols: false
 - [x] Keep GABA catabolism, uptake, upstream 4-hydroxybutyrate production, and the TCA cycle outside the module.
 - [x] Validate and render the module, genes, and project page.
 - [x] Complete independent annotation-reviewer and module-curation audit.
-- [ ] Open one PR for this module.
+- [x] Open one draft PR for this module: [#2534](https://github.com/ai4curation/ai-gene-review/pull/2534).
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
@@ -40,8 +40,8 @@ without choosing a paralog.
 
 ## Annotation Decisions
 
-- Gbd retains GO:0047577 as its core molecular function; generic
-  oxidoreductase terms are non-core or over-annotated.
+- Gbd retains GO:0047577 as its core molecular function; compatible broad
+  activity annotations are modified to that specific catalytic term.
 - Sad-I and Sad-II retain the NAD-specific GO:0004777 activity without a
   pathway-process claim.
 - GabD-II retains GO:0036243 as the current EC-derived NADP working prediction.
