@@ -13,6 +13,7 @@ Primary cross-species bacterial evidence supports the conserved mechanism but
 does not establish KT2440-specific behavior. Ffh and FtsY mutually stimulate
 one another's GTP hydrolysis in the 4.5S-RNA-dependent targeting cycle
 [PMID:11735405, "both Ffh and FtsY act as GTPase activating proteins for one
-another"]. Experimental characterization of a minimal bacterial SRP system
-also identifies FtsY as the receptor counterpart [PMID:12949169, "FtsY
-resembles the mammalian SRP receptor"].
+another"]. The abstract of a study characterizing a minimal bacterial SRP system
+describes FtsY only by resemblance to the mammalian receptor; it does not report
+a direct FtsY interaction experiment [PMID:12949169, "FtsY resembles the
+mammalian SRP receptor"].
