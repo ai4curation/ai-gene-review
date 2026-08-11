@@ -22,8 +22,8 @@ human-focused purine nucleotide-cycle module.
 - [x] Model a species-neutral module with four substantive root parts.
 - [x] Run full generic OpenScientist research; the request exhausted its
   7,200-second provider window without producing a report.
-- [ ] Module + `ppu00230` + PSEPK OpenScientist research is active and
-  non-blocking at publication time.
+- [x] Launch module + `ppu00230` + PSEPK OpenScientist research with the full
+  timeout; the provider job remains active and non-blocking during follow-up.
 - [x] Validate the seven focused gene reviews.
 
 ## Module Boundary
@@ -57,8 +57,10 @@ co-occurrence on KEGG `ppu00230`.
   modified to verified enzyme-specific or branch-specific terms.
 - ATP/GTP/nucleotide and metal-binding annotations are retained as non-core
   where chemically valid.
-- Redundant `cytoplasm` is modified to `cytosol` only for Gmk, where both terms
-  occur in the same GOA record.
+- Localization follows a uniform evidence tier: exact UniProt/HAMAP-supported
+  `cytoplasm` is core for PurA, Adk, Gmk, and Ndk; TreeGrafter-only `cytosol` is
+  non-core for GuaA; no location is invented for GuaB, whose exact record has
+  no subcellular-location statement.
 - Ndk's UTP and CTP biosynthetic annotations are retained as valid non-purine
   functions rather than removed to fit this module's scope.
 
@@ -69,4 +71,5 @@ The dedicated source table is
 
 The generic OpenScientist request was allowed its full 7,200-second timeout and
 returned no provider artifact. The species-aware request was launched with the
-same full timeout and is not required to complete before this draft PR opens.
+same full timeout. It remains active and is not required to complete before
+review-feedback updates are published.
