@@ -37,7 +37,11 @@ Aacs route.
 The prior module was mammal-specific and treated mitochondrial localization and
 tissue expression as universal. This revision retains the conserved reaction
 chain, moves those taxon-specific details out of the core, and adds exact PSEPK
-exemplars at the first three roles.
+candidate exemplars at the first three roles. `scope: CONCRETE` describes this
+defined chemical topology; FAMILY selectors keep its bacterial and eukaryotic
+realizations reusable. GO's "ketone body" process label is used for the
+D-3-hydroxybutyrate/acetoacetate chemistry, not to import hepatic physiology
+into the bacterial model.
 
 ## Satisfiability
 
@@ -49,6 +53,8 @@ exemplars at the first three roles.
 | Acetoacetyl-CoA thiolysis | multiple thiolase paralogs | candidate uncertain | BktB/Q88GH0 is reaction-capable, but the physiologically dominant enzyme during growth on D-3-hydroxybutyrate is unresolved. |
 
 The 38-row companion TSV is retained as the complete `ppu00650` overlap table.
+`bhbP` is adjacent and deliberately off-map, so it is reviewed for the optional
+uptake boundary but is not appended to the immutable 38-row KEGG overlap table.
 Most entries belong to neighboring 4-hydroxybutyrate, branched-chain amino-acid,
 fatty-acid, PHA, or central-carbon modules and are not part of this focused
 batch.
@@ -58,13 +64,20 @@ batch.
 ### 2026-08-11
 
 Initial curation completed from UniProt, GOA, InterPro, PANTHER, and local KEGG
-membership. OpenScientist jobs are intentionally allowed the full configured
-runtime before final evidence reconciliation.
+membership. OpenScientist jobs continue at their full configured runtime but
+are not a publication gate; completed literature checks were reconciled
+independently for this review response.
 
-Independent annotation-reviewer audit covered every GOA row for `bhbP`, `hbdH`,
-and `aacs`. The audit retained correction of the family-derived gluconate calls
-to broader monocarboxylate transport for BhbP, confirmed the specific Aacs and
-HbdH molecular functions, and changed the broad Aacs lipid-metabolism IEA from
-an over-annotation judgment to non-core retention. BktB remains only a
-reaction-capable terminal-thiolase candidate; its physiological use in this
-route is unresolved.
+Independent annotation-reviewer re-audit covered every GOA row for `bhbP`,
+`hbdH`, and `aacs`. It retained broad MF treatment for BhbP, replaced the
+gluconate BP with carboxylic acid transmembrane transport, removed unsupported
+synthetic ketone-body annotations, and marked the broad Aacs lipid-metabolism
+IEA as over-annotated. The molecular-function conclusions are predictions from
+unreviewed records, family assignments, and homolog evidence, not direct assays
+of the exact KT2440 proteins.
+
+Intracellular storage-polymer-derived D-3-hydroxybutyrate can bypass uptake in
+some bacteria, but *Pseudomonas* generally does not produce PHB and KT2440 is
+primarily associated with medium-chain-length PHA. The substrate source,
+relative HbdH/Aacs contribution, and terminal thiolase remain open rather than
+being forced into a single KT2440 route.
