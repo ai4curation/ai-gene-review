@@ -244,6 +244,6 @@ This case is documented in full in the
 
 - **Started**: 2026-08-08
 - **Corpus scan**: 1,300 SL-unique annotations, 986 gene folders, 1,297 with reviews
-- **Genes reviewed under this project**: 22 — 11 for SL-0221, 5 for SL-0162, 6 for SL-0090
-- **Annotations moved**: 29 — 18 under SL-0221, 11 under SL-0162/SL-0090
+- **Genes reviewed under this project**: 22 — 11 for SL-0221, 5 for SL-0162 (3 with annotations moved, 2 reverted to `ACCEPT` after re-review), 6 for SL-0090
+- **Annotations moved**: 27 — 18 under SL-0221, 9 under SL-0162/SL-0090
 - **Scripts**: `projects/SL/scripts/scan_sl_unique.py`, `projects/SL/scripts/sl_redundancy.py`
