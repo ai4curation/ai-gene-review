@@ -37,6 +37,12 @@ from engineered CXXC variants and does not infer function from those mutants.
   left UNDECIDED without the full assay; the matching automated inference is
   also UNDECIDED rather than being treated as a core function.
 
+- The same 2005 abstract says the yeast PDI-family reductive activities were
+  reported previously in Kimura et al. 2004, *Biochemical and Biophysical
+  Research Communications* 320:359-365. That earlier paper is not cached, so
+  reductase-activity annotations are retained by deference to the experimental
+  curators without claiming that the 2005 abstract exposes the Eug1p assays.
+
 ## Curation decisions
 
 - Retain specific PDI/reductase annotations with explicit weak-activity and
