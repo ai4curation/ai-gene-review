@@ -159,7 +159,7 @@ test — and refute — the hypothesis that SL over-annotation is duplication; s
 
 **The output below is post-intervention and partly circular**: the SL-0162 and SL-0090 review
 batches deliberately selected redundant annotations, which inflates the redundant group's issue
-rate from 10% to 13%. The result quoted on the project page is the pre-batch measurement.
+rate from 10% to 12%. The result quoted on the project page is the pre-batch measurement.
 
 ## Redundancy of SL-unique annotations
 
@@ -171,7 +171,7 @@ rate from 10% to 13%. The result quoted on the project page is the pre-batch mea
 
 | Group | n | Issue rate | KEEP_AS_NON_CORE |
 |---|---|---|---|
-| Redundant (more specific term present) | 445 | 56/445 (13%) | 137 (31%) |
+| Redundant (more specific term present) | 445 | 54/445 (12%) | 137 (31%) |
 | Not redundant (SL term is the most specific) | 852 | 71/852 (8%) | 269 (32%) |
 
 ### By SL location (>= 10 reviewed)
@@ -182,7 +182,7 @@ rate from 10% to 13%. The result quoted on the project page is the pre-batch mea
 | SL-0243 | extracellular region | 89 | 13 (15%) | 13/89 (15%) | 1/13 (8%) | 12/76 (16%) |
 | SL-0191 | nucleus | 77 | 32 (42%) | 8/77 (10%) | 2/32 (6%) | 6/45 (13%) |
 | SL-0039 | plasma membrane | 74 | 12 (16%) | 7/74 (9%) | 0/12 (0%) | 7/62 (11%) |
-| SL-0162 | membrane | 61 | 34 (56%) | 19/61 (31%) | 14/34 (41%) | 5/27 (19%) |
+| SL-0162 | membrane | 61 | 34 (56%) | 17/61 (28%) | 12/34 (35%) | 5/27 (19%) |
 | SL-0090 | cytoskeleton | 59 | 47 (80%) | 16/59 (27%) | 14/47 (30%) | 2/12 (17%) |
 | SL-0097 | endoplasmic reticulum membrane | 36 | 2 (6%) | 0/36 (0%) | 0/2 (0%) | 0/34 (0%) |
 | SL-0251 | spindle | 25 | 22 (88%) | 2/25 (8%) | 2/22 (9%) | 0/3 (0%) |

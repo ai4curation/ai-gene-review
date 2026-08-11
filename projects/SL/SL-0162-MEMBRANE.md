@@ -10,7 +10,8 @@ autolink_gene_symbols: false
 
 The largest under-specified subcellular location in the corpus, and the cleanest example of
 the SL project's [core finding](../SL.md). 61 SL-unique annotations reviewed; **17 carry a
-hard issue (28%)** — the highest rate of any location above n=10.
+hard issue (28%)** — the highest rate of any location with a substantial sample. Only
+SL-0171 Mitochondrion membrane rates higher (31%), on a sample a fifth the size (4/13).
 
 ## What the reviewers actually objected to
 

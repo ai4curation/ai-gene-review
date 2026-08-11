@@ -101,7 +101,7 @@ first.
 location says anything, and it has to be made per annotation.
 
 *Caveat on re-running the numbers:* the table above is the pre-intervention measurement.
-Re-running the script now returns 13% vs 8%, because the [SL-0162](SL/SL-0162-MEMBRANE.md) and
+Re-running the script now returns 12% vs 8%, because the [SL-0162](SL/SL-0162-MEMBRANE.md) and
 [SL-0090](SL/SL-0090-CYTOSKELETON.md) batches deliberately selected redundant cases to
 re-review. That is a self-fulfilling measurement and should not be quoted as a result.
 
