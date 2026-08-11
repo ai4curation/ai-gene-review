@@ -52,3 +52,14 @@ from engineered CXXC variants and does not infer function from those mutants.
 The decisive unresolved issue is native substrate specificity: which ER clients
 selectively require Eug1p, and whether its CXXS domains mainly rearrange unusual
 disulfides or support a distinct noncatalytic step.
+
+## OpenScientist hypothesis research attempt
+
+On 2026-08-11, the public `just gene-hypothesis-research` wrapper was used to
+test the hypothesis that native Eug1p primarily supports specialized ER-client
+folding/disulfide rearrangement rather than bulk Pdi1-like oxidation or
+isomerization. OpenScientist job
+`3d55e061-efef-44c7-8f37-428098e5fda6` reached the configured 7,200-second
+provider timeout and was cancelled with no research or citation artifact. No
+claim in this review depends on that failed run; the conclusions above remain
+grounded in the directly cached literature.
