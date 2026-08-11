@@ -35,27 +35,30 @@ This batch extracts the Ccm system I machinery from the broad `ppu02010` ABC-tra
 | 2 | Covalent heme chaperoning | `ccmE` | Q88EX9 | Covered |
 | 3 | Apocytochrome disulfide reduction/redox preparation | `ccmG`, `ccmH` | Q88EY1, A0A140FWM4 | Covered; exact CcmH contribution unresolved |
 | 4 | Heme ligation core | `ccmF`, `ccmH` | Q88EY0, A0A140FWM4 | Covered |
-| 4 | Lineage-variable substrate presentation | `cycH` (CcmI-like) | A0A140FWM3 | Accessory role covered |
+| 4 | Lineage-variable maturation support | `cycH` | A0A140FWM3 | Accessory process role covered; direct activity unresolved |
 
-The PSEPK locus provides all conserved system I functions plus a CcmI-like CycH substrate-presentation factor. CcmH and CycH are distinct proteins and are not treated as alternative names for one product.
+The PSEPK locus provides all conserved system I functions plus a lineage-variable CycH-family accessory. CcmH and CycH are distinct proteins and are not treated as alternative names for one product.
 
 ## Annotation Decisions
 
-- CcmA retains ATP hydrolysis as its core MF; ATP binding is an uninformative parent.
-- `ABC-type heme transporter activity`, `heme transmembrane transporter activity`, and inferred heme-transport processes are removed or downgraded where they encode the obsolete literal-export interpretation of CcmAB.
+- CcmA retains ATP hydrolysis as its core MF; ATP binding remains a valid, distinct non-core MF.
+- `ABC-type heme transporter activity`, `heme transmembrane transporter activity`, and inferred heme-transport processes are removed where they encode the obsolete literal-export interpretation of CcmAB. The contradictory Rhea/EC heme-export mappings in the unreviewed UniProt records are treated as legacy mappings because direct experiments show CcmAB is dispensable for heme export and instead supports CcmE processing.
 - CcmC, CcmE, and CcmF retain heme binding in their distinct loading, chaperoning, and ligation roles.
-- CcmG retains disulfide oxidoreductase activity; generic oxidoreductase activity and broad cell-redox context are not core.
+- CcmG retains disulfide oxidoreductase activity and both membrane-anchor and periplasmic-domain locations. Its module connection to CcmH represents redox cooperation: literature supports direct apocytochrome reduction and resolution of CcmH-linked intermediates rather than one invariant substrate order.
 - CcmH is kept as a distinct CPKC-containing redox/assembly component without assigning an unsupported leaf MF; CycH is the separate CcmI-like TPR protein.
 - Function-defining plasma-membrane or periplasm locations are accepted where they position the maturation activity; generic parent membrane and cell-envelope terms remain non-core or over-annotated.
-- CycH receives a new cytochrome c biosynthetic process annotation from its CcmI-specific family assignment.
+- CycH receives a conservative new cytochrome c biosynthetic process annotation by ISS from the exact PTHR47870:SF4 group and the characterized Bradyrhizobium CycH phenotype (PMID:8231805); no direct MF is assigned.
+- GO:0004408 (holocytochrome-c synthase activity) was verified and considered for CcmF, but is not assigned because available evidence supports the CcmF/H ligation machinery without establishing that activity for CcmF alone.
+- CcmE retains GO:0017003 because it directly participates in covalent protein-heme linkage; GO:1903607 is used for the other components to identify the product biosynthetic pathway, not as an asserted child of GO:0017004.
+- Additional PANTHER fetches PTHR34128, PTHR42852, and PTHR43499 are retained as audit caches but are not module selectors because they do not identify the exact CycH leaf family used here.
 
 ## Boundary
 
-The module starts with CcmABCD-dependent heme handling and CcmE loading, includes reductive preparation of apocytochrome CXXCH motifs, and ends with CcmF/H-dependent heme ligation and optional CcmI-like substrate presentation. Sec-dependent apocytochrome export, DsbD-mediated upstream electron delivery, heme biosynthesis, respiratory-chain assembly, and downstream cytochrome function remain outside this module.
+The module starts with CcmABCD-dependent heme handling and CcmE loading, includes reductive preparation of apocytochrome CXXCH motifs, and ends with CcmF/H-dependent heme ligation and optional CycH-family maturation support. Sec-dependent apocytochrome export, DsbD-mediated upstream electron delivery, heme biosynthesis, respiratory-chain assembly, and downstream cytochrome function remain outside this module.
 
 ## Research Status
 
-OpenScientist jobs were launched with 7200-second timeouts and are not interrupted by this curation workflow. Completed provider artifacts are integrated before publication; active or rejected jobs are reported on the PR.
+OpenScientist jobs were launched with 7200-second timeouts and are not interrupted by this curation workflow. Active jobs do not block publication, and incomplete provider output is not committed; active or rejected jobs are reported on the PR.
 
 ## Validation
 

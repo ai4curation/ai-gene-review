@@ -1,0 +1,4 @@
+# ccmB literature notes
+
+- Direct membrane-vesicle work found that CcmAB is dispensable for heme export [PMID:10708391 "CcmAB are not essential for haem export"].
+- Biochemical analysis instead links the CcmAB complex to ATP-dependent processing and release of holo-CcmE [PMID:17419738 "incomplete processing of CcmE"].
