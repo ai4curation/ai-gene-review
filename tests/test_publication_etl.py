@@ -1,5 +1,6 @@
 """Tests for publication ETL functionality."""
 
+import re
 import tempfile
 from pathlib import Path
 
@@ -56,6 +57,25 @@ def test_publication_to_markdown():
     assert "**DOI:** [10.1234/test](https://doi.org/10.1234/test)" in markdown
     assert "## Abstract" in markdown
     assert "This is a test abstract." in markdown
+
+
+def test_publication_to_markdown_strips_trailing_line_whitespace():
+    """Fetched PubMed text should not make generated cache files fail Git checks."""
+    pub = Publication(
+        pmid="12345",
+        title="Test Article",
+        authors=["Smith J"],
+        journal="Test Journal",
+        year="2024",
+        abstract="First abstract line.  \nSecond line.\t\n  Indented text stays indented.",
+        full_text="First full-text line. \r\nSecond full-text line.\t",
+    )
+
+    markdown = pub.to_markdown()
+
+    assert not re.search(r"[ \t]+(?=\r?\n|\r?$)", markdown)
+    assert "\n  Indented text stays indented.\n" in markdown
+    assert "First full-text line.\r\nSecond full-text line.\n" in markdown
 
 
 def test_publication_to_frontmatter_dict():
