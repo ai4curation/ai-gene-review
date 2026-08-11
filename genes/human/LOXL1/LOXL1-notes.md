@@ -8,10 +8,10 @@
 - PMID:37602378 is a decisive citation blocker for the seeded IDA extracellular-region
   annotation: the verified record is a HELZ2 exoribonuclease paper and contains no LOXL1
   result [PMID:37602378 "Database searches identified a new RNB domain-containing protein in human: HELZ2."].
-  This is flagged as `WRONG_IDENTIFIER` at reference level, and the unsupported assertion
-  is removed because the complete cached article was checked. The cause of the citation
-  mismatch is unknown; independently supported LOXL1 secretion/localization assertions
-  are retained elsewhere.
+  This is flagged as `WRONG_IDENTIFIER` at reference level. Because extracellular
+  localization is independently correct but the provenance of this experimental row
+  cannot be reconstructed, its action is `UNDECIDED` under curator-deference rather than
+  removal. The cause of the citation mismatch is unknown.
 - Direct catalytic evidence is species-bounded. The strongest LOXL1-specific in vivo
   evidence is mouse, and the direct purified-enzyme activity evidence is bovine. The
   current human UniProt function statement is explicitly by similarity to mouse. Do not
