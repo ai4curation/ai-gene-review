@@ -56,6 +56,16 @@ from engineered CXXC variants and does not infer function from those mutants.
   direct assay is not cached, while marking both uninformative “protein binding”
   annotations over-annotated.
 
+## Research-file provenance
+
+The Falcon report was regenerated during this review and its citation list
+changed from 32 entries to 23. The newer synthesis retains the central
+Nørgaard/Xiao/Laboissière evidence and records Hacioglu et al.'s possible
+chaperone-like interpretation, but it does not retain every source or assay
+claim from the prior generated report. Curation decisions therefore rely on
+the directly cached publications where available and explicitly mark the
+remaining full-text-dependent questions UNDECIDED.
+
 ## Open question
 
 The decisive unresolved issue is native substrate specificity: which ER clients
