@@ -1,0 +1,2381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tatA-II - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tatA-II</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D13" target="_blank" class="term-link">
+                        Q88D13
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_5016</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tatA-II";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D13" data-a="DESCRIPTION: TatA-II is the TatA-family inner-membrane componen..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TatA-II is the TatA-family inner-membrane component of the PP_5016-PP_5018 twin-arginine translocation system in Pseudomonas putida KT2440. It is recruited to substrate-bound TatBC and contributes to the dynamic, proton-motive-force-dependent assembly that moves folded proteins across the cytoplasmic membrane.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II is a single-pass component of the bacterial inner-membrane Tat apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/HAMAP explicitly assigns Q88D13 to the cell inner membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane protein transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0008320" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The assembled Tat translocon has protein transmembrane transporter activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TatA contributes to the assembled transporter but is not an independent transporter.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tatA-II/tatA-II-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">It is neither an enzyme nor a small-molecule transporter.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0015031" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II participates specifically in folded-protein transport by the Tat complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad parent process is correct but less informative than GO:0043953.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II is membrane embedded.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic membrane term is redundant with plasma membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033281" target="_blank" class="term-link">
+                                    GO:0033281
+                                </a>
+                            </span>
+                            <span class="term-label">TAT protein transport complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0033281" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II is a conserved subunit of the Tat protein-transport complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TatA family assignment and tatABC locus support complex membership.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043953" target="_blank" class="term-link">
+                                    GO:0043953
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport by the Tat complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0043953" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II performs the translocation phase of Tat-dependent folded-protein export.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining conserved biological process of TatA-family proteins.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0065002" target="_blank" class="term-link">
+                                    GO:0065002
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D13" data-a="GO:0065002" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TatA-II contributes to movement of folded substrates across the inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term correctly captures the transmembrane step, while GO:0043953 provides Tat specificity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forms the dynamic TatA translocation assembly recruited to a substrate-bound TatBC receptor.</h3>
+                <span class="vote-buttons" data-g="Q88D13" data-a="FUNCTION: Forms the dynamic TatA translocation assembly recr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043953" target="_blank" class="term-link">
+                                protein transport by the Tat complex
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033281" target="_blank" class="term-link">
+                            TAT protein transport complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tatA-II/tatA-II-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">TatA could form the protein-conducting channel of the Tat system.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tatA-II/tatA-II-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for tatA-II (Q88D13)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The local record supplies the TatA family assignment, membrane localization, and Tat-complex mechanism used in this review.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tatA-II/tatA-II-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for tatA-II</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table is the complete existing-annotation set reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:modules/bacterial_twin_arginine_translocation.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bacterial twin-arginine protein-translocation module</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reusable module separates TatC, TatB, and TatA roles.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which folded substrates preferentially use the PP_5016-PP_5018 Tat system?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D13" data-a="Q: Which folded substrates preferentially use the PP_..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare periplasmic proteomes and Tat-signal substrate localization in single and double tatABC-locus deletion strains.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Tat-system substrate partitioning</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D13" data-a="EXPERIMENT: Compare periplasmic proteomes and Tat-signal subst..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tatA-II-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D13" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: TatA-II (Q88D13, PP_5016) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-11T02:28:12.553869</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tatA-II-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tatA-II-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-tata-ii-q88d13-pp_5016-in-pseudomonas-putida-kt2440">Functional Annotation Report: TatA-II (Q88D13, PP_5016) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>TatA-II (UniProt Q88D13, locus PP_5016) is the small, single-span integral membrane subunit of a twin-arginine translocation (Tat) machine in <em>Pseudomonas putida</em> KT2440.</strong> It is neither an enzyme nor a small-molecule transporter. Its primary molecular function is to oligomerize into ring-like assemblies of variable size at a substrate-loaded TatBC receptor complex and thereby transiently weaken and permeabilize the bacterial cytoplasmic (inner) membrane, forming the transient conduit through which fully folded, cofactor-loaded proteins bearing an N-terminal twin-arginine signal peptide are exported from the cytoplasm to the periplasm. The energy for this translocation is provided by the proton-motive force (PMF) across the inner membrane. Crucially, substrate specificity does not reside in TatA-II itself; it is dictated by the twin-arginine signal peptide and its recognition by the TatBC receptor. TatA-II is therefore best described as the <strong>pore-forming / membrane-weakening effector</strong> of the translocase.</p>
+<p>This assignment rests on five converging, mutually reinforcing lines of evidence: (1) the protein has the canonical TatA sequence architecture — an N-terminal hydrophobic transmembrane helix (TMH) carrying a conserved polar residue, an invariant glycine "hinge," a basic amphipathic helix, and a disordered acidic C-terminal tail; (2) the gene sits in a complete, contiguous <em>tatA-II–tatB–tatC-II</em> operon (PP_5016–PP_5018), providing the full TatABC machinery; (3) TatA-II shares 55% sequence identity with the experimentally characterized <em>Escherichia coli</em> TatA over its structured functional core, with a perfectly conserved Gly-hinge and amphipathic-helix consensus; (4) an AlphaFold model (AF-Q88D13-F1) confirms the ordered TMH–hinge–amphipathic-helix hairpin followed by a disordered tail, exactly matching the <em>E. coli</em> TatA NMR structure; and (5) both Tat systems of <em>P. putida</em> are experimentally demonstrated to export a genuine folded Tat substrate, the periplasmic PhoX-family phosphatase UxpB, linking this pathway to phosphate scavenging.</p>
+<p><em>P. putida</em> KT2440 is unusual in encoding <strong>two complete Tat systems</strong>. TatA-II belongs to the second, chromosomal cluster (Cluster II: PP_5016–PP_5018), which is distinct from the <em>tat-1</em> cluster (Cluster I: PP_1039–PP_1041) located next to the <em>uxpB</em> and <em>xcp</em> genes. Both systems appear functionally competent and at least partially redundant. Given the depth and consistency of the evidence, the functional annotation of TatA-II is considered robust and well supported, even though this specific paralog has not itself been the subject of a dedicated biochemical study — its function is inferred with high confidence from sequence, structure, genomic context, and the extensive experimental literature on orthologous TatA proteins.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity check is confirmed. The gene symbol <strong>tatA-II</strong> matches the UniProt protein description "Sec-independent protein translocase protein TatA." The organism is confirmed as <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125), taxid 160488. The protein family (TatA/E family) and domains (PF02416 TatA_B_E; IPR006312 TatA/E; IPR003369 TatA/B/E) align precisely with what the literature describes for TatA-family membrane translocase subunits. <strong>No ambiguity or gene-symbol conflict was encountered.</strong> The "-II" suffix is a genome-specific designation reflecting the fact that <em>P. putida</em> carries two <em>tatA</em> copies (TatA-I / PP_1041 and TatA-II / PP_5016). The literature cited below concerns bona fide TatA orthologs and directly supports the functional assignment of Q88D13.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88D13</td>
+</tr>
+<tr>
+<td>Gene</td>
+<td><em>tatA-II</em> (syn. <em>tatA</em>)</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_5016</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (taxid 160488)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>90 aa</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>TatA/E (Pfam PF02416; InterPro IPR003369, IPR006312)</td>
+</tr>
+<tr>
+<td>Operon</td>
+<td>tatA-II (PP_5016) – tatB (PP_5017, Q88D12) – tatC-II (PP_5018, Q88D11)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sequence (Q88D13):</strong><br />
+<code>MGIFDWKHWIVLLVVVVLVFGTKKLKNFGSDLGESIKGFRKAMNEEETKPAEQTPPPAQPVPPVQNTAQPQQGHTIEGQAHPVQEPQRKD</code></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-tata-ii-is-a-bona-fide-tata-family-subunit-with-canonical-architecture">Finding 1 — TatA-II is a bona fide TatA-family subunit with canonical architecture</h3>
+<p>The 90-residue Q88D13 sequence displays every hallmark of a TatA-family protein. It begins with an N-terminal hydrophobic transmembrane helix (approximately residues 1–20, <code>MGIFDWKHWIVLLVVVVLVFG</code>) that carries a conserved polar residue near its N-terminal face (Asp5/Lys7) — a feature characteristic of TatA TMHs. This is followed by the <strong>invariant glycine hinge (Gly21)</strong>, then a basic amphipathic helix (approximately residues 21–42, <code>TKKLKNFGSDLGESIKGFRKAM</code>), and finally a disordered, proline-rich, acidic C-terminal tail (residues ~41–90, with a strong proline compositional bias in residues 53–63). This four-part topology — TMH, hinge, amphipathic helix, disordered tail — is the defining signature of TatA.</p>
+<p>The gene sits within a clear operon structure. A gene-neighborhood analysis of <em>P. putida</em> KT2440 places <strong>tatA-II/PP_5016 (Q88D13) immediately upstream of tatB/PP_5017 (Q88D12) and tatC-II/PP_5018 (Q88D11)</strong>, i.e., a complete TatA–TatB–TatC translocase encoded contiguously. Domain assignments (Pfam PF02416 TatA_B_E; InterPro IPR006312 TatA/E) confirm family membership. This finding establishes the essential premise: TatA-II is not an orphan protein but a fully contextualized subunit of an assembled export machine.</p>
+<h3 id="finding-2-tata-is-the-protein-translocating-membrane-weakening-element-of-the-tat-translocase">Finding 2 — TatA is the protein-translocating, membrane-weakening element of the Tat translocase</h3>
+<p>The molecular role of the TatA subunit within the translocase is exceptionally well characterized in orthologs, and this is the crux of TatA-II's function. The NMR structural study of the <em>E. coli</em> TatA oligomer states plainly that "TatA, the protein-translocating element of the Tat system, is a small transmembrane protein that assembles into ring-like oligomers of variable size," with assembly mediated entirely by the transmembrane helix and the amphipathic helix extending outward (<a href="https://pubmed.ncbi.nlm.nih.gov/23471988/">PMID: 23471988</a>). Molecular-dynamics simulations in the same work led to the conclusion that "TatA facilitates protein transport by sensitizing the membrane to transient rupture" (<a href="https://pubmed.ncbi.nlm.nih.gov/23471988/">PMID: 23471988</a>) — the essential membrane-weakening mechanism.</p>
+<p>This mechanism is corroborated in vivo. One study concluded that "the TatA component supports transport by weakening the membrane upon full translocon assembly" (<a href="https://pubmed.ncbi.nlm.nih.gov/29535185/">PMID: 29535185</a>). Analysis of affinity-purified translocase complexes further established that "the TatA component is responsible for the permeabilization of the membrane during transport," with TatA recruited as multimeric clusters to the substrate-loaded TatBC receptor (<a href="https://pubmed.ncbi.nlm.nih.gov/38877109/">PMID: 38877109</a>). Finally, genetic analysis established the functional class of TatA: "while TatA and TatE are functionally interchangeable, the TatB protein is functionally distinct" (<a href="https://pubmed.ncbi.nlm.nih.gov/10593889/">PMID: 10593889</a>). Because TatA-II carries the full complement of TatA-defining features (Finding 1) and is highly similar to <em>E. coli</em> TatA (Finding 6), this mechanistic role transfers to TatA-II with high confidence.</p>
+<h3 id="finding-3-the-tat-pathway-exports-fully-folded-proteins-across-the-cytoplasmic-membrane-using-the-proton-motive-force">Finding 3 — The Tat pathway exports fully folded proteins across the cytoplasmic membrane using the proton-motive force</h3>
+<p>The broader pathway in which TatA-II operates is precisely defined. "The twin-arginine protein transport (Tat pathway) is found in prokaryotes and plant organelles and transports folded proteins across membranes," and "targeting of substrates to the Tat system is mediated by the presence of an N-terminal signal sequence containing a highly conserved twin-arginine motif" (<a href="https://pubmed.ncbi.nlm.nih.gov/31971282/">PMID: 31971282</a>). The distinctive feature of the Tat system — and what separates it from the Sec pathway — is that it moves <strong>already-folded</strong>, often cofactor-containing proteins, rather than unfolded polypeptides. This is the primary reason a cell maintains Tat alongside Sec: substrates that must acquire complex redox cofactors (FeS clusters, molybdopterin) in the cytoplasm can only be exported after folding.</p>
+<p>The energetics are equally clear: "The twin-arginine translocation (Tat) pathway utilizes the proton-motive force to transport folded proteins across cytoplasmic membranes in bacteria and archaea" (<a href="https://pubmed.ncbi.nlm.nih.gov/36764519/">PMID: 36764519</a>). Assembly of the translocation site is dynamic and is triggered specifically by substrate binding to the TatBC receptor complex (<a href="https://pubmed.ncbi.nlm.nih.gov/31971282/">PMID: 31971282</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/38877109/">PMID: 38877109</a>). This defines the location (cytoplasmic/inner membrane), the direction (cytoplasm → periplasm), the cargo (folded proteins), and the energy source (PMF) for TatA-II's activity.</p>
+<h3 id="finding-4-both-p-putida-tat-systems-export-the-periplasmic-phox-family-phosphatase-uxpb-linking-tat-to-phosphate-scavenging">Finding 4 — Both <em>P. putida</em> Tat systems export the periplasmic PhoX-family phosphatase UxpB, linking Tat to phosphate scavenging</h3>
+<p>The most direct functional evidence in the target organism comes from a study of secretion in <em>P. putida</em>. "Two different tat gene clusters were detected in the <em>P. putida</em> genome, of which one, named tat-1, is located adjacent to the uxpB and xcp genes" (<a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>). The Tat substrate UxpB is a PhoX-family phosphatase whose signal sequence "contains a twin-arginine translocation (Tat) motif as well as a lipobox, and both processing by leader peptidase II and Tat dependency were experimentally confirmed" (<a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>). Critically, "both Tat systems appeared to be capable of transporting the UxpB protein" (<a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>).</p>
+<p>This finding does three things at once. It (a) experimentally confirms that Tat-dependent export of a folded phosphatase substrate operates in <em>P. putida</em>; (b) demonstrates functional redundancy between the two Tat systems, meaning TatA-II's Cluster II can support the same substrate as the <em>tat-1</em> cluster; and (c) connects the pathway to a concrete physiological process — periplasmic phosphate scavenging via a secreted phosphatase. TatA-II (PP_5016) is a subunit of the second cluster (Cluster II), distinct from the <em>tat-1</em> cluster.</p>
+<h3 id="finding-5-complete-map-of-the-two-tat-operons-tata-ii-belongs-to-the-pp_50165018-cluster">Finding 5 — Complete map of the two Tat operons: TatA-II belongs to the PP_5016–5018 cluster</h3>
+<p>An exhaustive enumeration of <em>tat</em> genes in <em>P. putida</em> KT2440 reveals exactly two complete TatABC gene sets plus an unrelated TatD nuclease:</p>
+<table>
+<thead>
+<tr>
+<th>Cluster</th>
+<th>TatA</th>
+<th>TatB</th>
+<th>TatC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cluster I (<em>tat-1</em>)</strong></td>
+<td>tatA-I / PP_1041 (Q88P12, 77 aa)</td>
+<td>tatB-I / PP_1040 (Q88P13, 96 aa)</td>
+<td>tatC-I / PP_1039 (Q88P14, 253 aa)</td>
+</tr>
+<tr>
+<td><strong>Cluster II (target)</strong></td>
+<td><strong>tatA-II / PP_5016 (Q88D13, 90 aa)</strong></td>
+<td>tatB / PP_5017 (Q88D12, 125 aa)</td>
+<td>tatC-II / PP_5018 (Q88D11, 262 aa)</td>
+</tr>
+</tbody>
+</table>
+<p>The target protein <strong>TatA-II (Q88D13 / PP_5016) is the TatA subunit of Cluster II.</strong> The <em>tat-1</em> cluster (Cluster I) is located adjacent to <em>uxpB</em>/<em>xcp</em> and is strongly induced under inorganic phosphate limitation. Separately, TatD (PP_2311, Q88KH9) is annotated as a Mg²⁺-dependent cytoplasmic DNase/RNase (EC 3.1.21.-) — a soluble nuclease of the TatD family that, despite its name, is <strong>not</strong> part of the membrane translocase. This distinction is important to avoid misannotation. The two-cluster architecture explains the "-II" designation and the observed redundancy in Finding 4.</p>
+<h3 id="finding-6-tata-ii-shares-55-identity-with-e-coli-tata-over-its-functional-core-conserving-the-gly-hinge-and-amphipathic-helix-motif">Finding 6 — TatA-II shares 55% identity with <em>E. coli</em> TatA over its functional core, conserving the Gly-hinge and amphipathic-helix motif</h3>
+<p>Evolutionary evidence strongly supports transfer of function from experimentally characterized orthologs. A gapless alignment of the N-terminal structured region (TMH + Gly-hinge + amphipathic helix, 47 residues) is shown below:</p>
+<div class="codehilite"><pre><span></span><code>EcTatA    MGGISIWQLLIIAVIVVLLFGTKKLGSIGSDLGASIKGFKKAMSDDE
+PpTatA-II MGIFDWKHWIVLLVVVVLVFGTKKLKNFGSDLGESIKGFRKAMNEEE
+PpTatA-I  MGGIGIWQLVIVLLIVFLLFGTKRLKGLGSDVGEAIQGFRKSMGGDN
+cons      **:: :::: : :::*:*:****:*:  ***:*::*:**:*:*  ::
+</code></pre></div>
+
+<p>Pairwise identities over this 47-residue core:</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>Identity over 47-residue core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TatA-II vs <em>E. coli</em> TatA (P69428)</td>
+<td>26/47 = <strong>55%</strong></td>
+</tr>
+<tr>
+<td>TatA-II vs <em>P. putida</em> TatA-I (Q88P12)</td>
+<td>22/47 = 47%</td>
+</tr>
+<tr>
+<td><em>E. coli</em> TatA vs <em>P. putida</em> TatA-I</td>
+<td>28/47 = 60%</td>
+</tr>
+</tbody>
+</table>
+<p>TatA-II conserves the <strong>invariant Phe20–Gly21 hinge</strong> and the diagnostic amphipathic-helix consensus <code>GSDLG-x-SIKGF-R-K-A-M</code> shared by all three proteins. A notable observation is that TatA-II is <em>more</em> similar to <em>E. coli</em> TatA (55%) than to its own genomic paralog TatA-I (47%), indicating that the two <em>P. putida</em> TatA copies are anciently diverged rather than products of a recent gene duplication. This level of conservation across the functionally critical region — combined with perfect conservation of the Gly-hinge that is essential for the conformational flexibility of the TMH–amphipathic-helix junction — provides robust evolutionary grounds for assigning the <em>E. coli</em> TatA function to TatA-II.</p>
+<h3 id="finding-7-alphafold-model-confirms-the-ordered-tmh-amphipathic-helix-hairpin-with-a-disordered-c-terminal-tail">Finding 7 — AlphaFold model confirms the ordered TMH + amphipathic-helix hairpin with a disordered C-terminal tail</h3>
+<p>Structural prediction independently corroborates the topology. The AlphaFold DB model AF-Q88D13-F1 (v6, global pLDDT 72.5) shows a two-helix N-terminal module modeled with high confidence and a low-confidence C-terminal region:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Residues</th>
+<th>Mean pLDDT</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transmembrane helix</td>
+<td>1–20</td>
+<td>86.2</td>
+<td>High confidence, ordered</td>
+</tr>
+<tr>
+<td>Amphipathic helix</td>
+<td>21–42</td>
+<td>90.6</td>
+<td>Very high confidence, ordered</td>
+</tr>
+<tr>
+<td>Pro-rich C-terminal tail</td>
+<td>43–90</td>
+<td>58.4</td>
+<td>Low confidence, intrinsically disordered</td>
+</tr>
+</tbody>
+</table>
+<p>The predicted fold — a confidently modeled TMH–hinge–amphipathic-helix hairpin followed by a disordered acidic tail — matches the canonical TatA topology defined by the <em>E. coli</em> TatA NMR structure (<a href="https://pubmed.ncbi.nlm.nih.gov/23471988/">PMID: 23471988</a>). The disorder of the C-terminal tail is consistent with the UniProt annotation of residues 41–90 as disordered. This structural agreement closes the loop between sequence (Findings 1, 6), predicted structure (Finding 7), and experimentally determined ortholog structure (Finding 2), all pointing to the same molecular identity.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Synthesizing the seven findings yields a coherent mechanistic picture of TatA-II's role in the Tat export cycle. TatA-II is one of three protein components (TatA, TatB, TatC) that together form the twin-arginine translocase in the cytoplasmic (inner) membrane of <em>P. putida</em>. Within this division of labor:</p>
+<ul>
+<li><strong>TatC</strong> (PP_5018) is the large polytopic membrane protein at the heart of the receptor; together with TatB it recognizes and binds the twin-arginine signal peptide of substrate proteins.</li>
+<li><strong>TatB</strong> (PP_5017) is functionally distinct from TatA and works with TatC as the substrate receptor.</li>
+<li><strong>TatA-II</strong> (PP_5016) is the effector: upon substrate binding to TatBC, multiple TatA-II monomers are recruited and oligomerize into ring-like assemblies of variable size, whose transmembrane helices weaken and transiently permeabilize the lipid bilayer to allow the folded cargo to cross.</li>
+</ul>
+<p>The following schematic captures the export cycle:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">CYTOPLASM</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">Folded</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="n">protein</span><span class="w">                                 </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">with</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">twin</span><span class="o">-</span><span class="n">arginine</span><span class="w"> </span><span class="p">(</span><span class="n">S</span><span class="o">/</span><span class="n">T</span><span class="o">-</span><span class="n">R</span><span class="o">-</span><span class="n">R</span><span class="o">-</span><span class="n">x</span><span class="o">-</span><span class="n">F</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">K</span><span class="p">)</span><span class="w"> </span><span class="k">signal</span><span class="w">   </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">│</span><span class="w">                                             </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">▼</span><span class="w">  </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">signal</span><span class="w"> </span><span class="n">peptide</span><span class="w"> </span><span class="n">recognition</span><span class="w">            </span><span class="err">│</span>
+<span class="w">   </span><span class="err">═══════════</span><span class="p">[</span><span class="w"> </span><span class="n">TatB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">TatC</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="p">]</span><span class="err">════════════════════════</span><span class="w">  </span><span class="n">INNER</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">│</span><span class="w">                                    </span><span class="err">▲</span><span class="w">         </span><span class="n">MEMBRANE</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="n">triggers</span><span class="w">                 </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">       </span><span class="n">recruitment</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">TatA</span><span class="o">-</span><span class="n">II</span><span class="w"> </span><span class="n">monomers</span><span class="w"> </span><span class="err">───────────┘</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">▼</span><span class="w">  </span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="n">TatA</span><span class="o">-</span><span class="n">II</span><span class="w"> </span><span class="n">oligomerizes</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">variable</span><span class="w"> </span><span class="n">rings</span>
+<span class="w">   </span><span class="err">═══════</span><span class="p">[</span><span class="w"> </span><span class="n">TatA</span><span class="o">-</span><span class="n">II</span><span class="w"> </span><span class="n">oligomer</span><span class="w"> </span><span class="n">weakens</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">permeabilizes</span><span class="w"> </span><span class="n">bilayer</span><span class="w"> </span><span class="p">]</span><span class="err">══</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">│</span><span class="w">  </span><span class="n">driven</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">proton</span><span class="o">-</span><span class="n">motive</span><span class="w"> </span><span class="n">force</span><span class="w"> </span><span class="p">(</span><span class="n">PMF</span><span class="p">)</span>
+<span class="w">   </span><span class="err">│</span><span class="w">             </span><span class="err">▼</span><span class="w">  </span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="n">folded</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">translocated</span>
+<span class="w">   </span><span class="n">PERIPLASM</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">protein</span><span class="w"> </span><span class="n">released</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="p">,</span><span class="w"> </span><span class="n">UxpB</span><span class="w"> </span><span class="n">phosphatase</span><span class="p">)</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="n">TatA</span><span class="o">-</span><span class="n">II</span><span class="w"> </span><span class="n">disassembles</span><span class="p">;</span><span class="w"> </span><span class="n">translocase</span><span class="w"> </span><span class="n">resets</span><span class="w">            </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└─────────────────────────────────────────────────────────┘</span>
+</code></pre></div>
+
+<p>The key mechanistic insight — the <strong>membrane-weakening / toroidal-pore model</strong> — explains how a folded protein can cross a sealed bilayer without an obvious pre-formed channel. Rather than forming a rigid, water-filled pore of fixed diameter (which could not accommodate cargoes of widely varying size), TatA oligomers of variable stoichiometry locally thin and destabilize the membrane so that a transient, size-adjustable toroidal opening forms only when a substrate is engaged and the PMF is applied. This model is directly supported by MD simulations and structural work (<a href="https://pubmed.ncbi.nlm.nih.gov/23471988/">PMID: 23471988</a>), by in vivo membrane-weakening assays (<a href="https://pubmed.ncbi.nlm.nih.gov/29535185/">PMID: 29535185</a>), and by complex-purification studies (<a href="https://pubmed.ncbi.nlm.nih.gov/38877109/">PMID: 38877109</a>).</p>
+<p><strong>Localization.</strong> TatA-II carries out its function in and at the cytoplasmic (inner) membrane. Its single TMH anchors it in the bilayer; its amphipathic helix lies at the cytoplasmic membrane interface; its disordered acidic tail projects into the cytoplasm. The proteins it helps export end up in the periplasm (or, for lipoproteins like UxpB, anchored at the periplasmic face). The pathway thus spans the cytoplasm-to-periplasm axis, with TatA-II acting at the membrane itself.</p>
+<p><strong>Physiological pathway.</strong> The concrete downstream consequence documented in <em>P. putida</em> is the export of the PhoX-family phosphatase UxpB, tying the Tat pathway — and hence TatA-II — to periplasmic phosphate acquisition and the type II secretion (Xcp) context in which UxpB was studied (<a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>). More broadly, Tat substrates in <em>Pseudomonas</em> include many redox enzymes that bind cofactors in the cytoplasm before export, which is precisely why a folded-protein export route is required.</p>
+<p><strong>Substrate specificity.</strong> It is essential to note that TatA-II itself does <strong>not</strong> confer substrate specificity. Specificity is encoded in the substrate's twin-arginine signal peptide and read out by the TatBC receptor. TatA-II is the generic translocation effector shared across substrates. This is why the two <em>P. putida</em> Tat systems can be redundant for a shared substrate like UxpB (Finding 4), and why TatA and TatE are interchangeable in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10593889/">PMID: 10593889</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23471988/">23471988</a></td>
+<td><em>Structural model for the protein-translocating element of the twin-arginine transport system</em></td>
+<td>NMR + MD structural model of the <em>E. coli</em> TatA oligomer; establishes TatA as "the protein-translocating element" that forms variable rings and "sensitiz[es] the membrane to transient rupture." Defines the mechanism transferred to TatA-II and the topology matched by AlphaFold.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29535185/">29535185</a></td>
+<td><em>The TatA component locally weakens the cytoplasmic membrane</em></td>
+<td>In vivo evidence that "the TatA component supports transport by weakening the membrane upon full translocon assembly."</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38877109/">38877109</a></td>
+<td><em>A larger TatBC complex associates with TatA clusters ...</em></td>
+<td>Shows TatA is recruited as multimeric clusters to substrate-loaded TatBC and "is responsible for the permeabilization of the membrane during transport."</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10593889/">10593889</a></td>
+<td><em>Sec-independent protein translocation ... pivotal role for TatB</em></td>
+<td>Establishes that TatA and TatE are functionally interchangeable while TatB is distinct — fixes TatA-II's functional class.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31971282/">31971282</a></td>
+<td><em>Targeting of proteins to the twin-arginine translocation pathway</em></td>
+<td>Review; defines the pathway as transporting folded proteins via twin-arginine signal peptides recognized by the TatA/TatC machinery.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36764519/">36764519</a></td>
+<td><em>The polar amino acid in the TatA transmembrane helix ...</em></td>
+<td>States the Tat pathway "utilizes the proton-motive force to transport folded proteins across cytoplasmic membranes"; also probes the conserved TMH polar residue present in TatA-II.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">23530902</a></td>
+<td><em>The type II secretion system (Xcp) of Pseudomonas putida ...</em></td>
+<td>Organism-specific: documents two Tat clusters in <em>P. putida</em>, both able to export the folded PhoX phosphatase UxpB; Tat dependency experimentally confirmed.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35490783/">35490783</a></td>
+<td><em>Hydrophobic mismatch is a key factor in protein transport via Tat</em></td>
+<td>Supports the toroidal-pore / membrane-thinning model; shows TatA/TatB TMH length is tuned for reversible membrane thinning.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36523158/">36523158</a></td>
+<td><em>Length matters: Functional flip of the short TatA transmembrane helix</em></td>
+<td>Examines TatA as the putative pore-forming/membrane-weakening component and the role of its short TMH.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28857741/">28857741</a></td>
+<td><em>In vivo experiments do not support the charge zipper model ...</em></td>
+<td>Refines the TatA oligomerization model; confirms the translocation site forms by substrate-triggered TatA oligomerization.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29593092/">29593092</a></td>
+<td><em>The early mature part of Tat precursor proteins contributes to TatBC binding</em></td>
+<td>Shows specificity determinants lie in substrate + TatBC, not TatA — supporting TatA-II's generic effector role.</td>
+</tr>
+</tbody>
+</table>
+<p>All mechanistic claims about TatA are drawn from experimentally characterized orthologs (chiefly <em>E. coli</em> TatA) and are transferred to TatA-II on the strength of 55% core identity, conserved functional-region motifs, and structural congruence. The one directly organism-specific experimental anchor is <a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>, which confirms an operational Tat export system in <em>P. putida</em>.</p>
+<hr />
+<h2 id="hypotheses-supported-vs-refuted">Hypotheses: Supported vs. Refuted</h2>
+<p><strong>Supported</strong><br />
+- Q88D13/PP_5016 is a genuine TatA-family subunit within a <em>tatABC</em> operon (sequence architecture + operon structure).<br />
+- TatA-II is the membrane-weakening/pore-forming, protein-translocating element of the Tat translocase (homology to structurally/biochemically characterized TatA: PMIDs 23471988, 29535185, 38877109, 10593889).<br />
+- TatA-II acts in the cytoplasmic membrane, is PMF-driven, and exports folded proteins to the periplasm (PMIDs 31971282, 36764519).<br />
+- TatA-II contributes to Tat export in <em>P. putida</em>, with demonstrated redundancy for the phosphatase UxpB (PMID 23530902).</p>
+<p><strong>Refuted / rejected</strong><br />
+- TatA-II is a small-molecule transporter or an enzyme catalyzing a chemical reaction — refuted; no catalytic domain; family and mechanism are protein-translocation.<br />
+- TatA-II confers substrate specificity — refuted; specificity is signal-peptide/TatC-encoded, and TatA/TatE are interchangeable (PMID 10593889).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No dedicated experimental study of TatA-II (Q88D13) itself.</strong> The functional assignment is an inference — albeit a very strong one — from orthology, genomic context, sequence conservation, and structure prediction. No published work has knocked out <em>PP_5016</em> specifically and measured a translocation defect, nor purified TatA-II and reconstituted transport.</p>
+</li>
+<li>
+<p><strong>Redundancy vs. specialization of the two clusters is unresolved.</strong> Although both Tat systems can export UxpB (<a href="https://pubmed.ncbi.nlm.nih.gov/23530902/">PMID: 23530902</a>), it is unknown whether Cluster II (TatA-II) has a distinct substrate repertoire, distinct expression conditions, or a specialized physiological niche relative to Cluster I (the Pi-induced <em>tat-1</em> cluster). The two TatA paralogs are anciently diverged (Finding 6), which could hint at functional divergence, but this remains untested.</p>
+</li>
+<li>
+<p><strong>The AlphaFold model is a monomer.</strong> It confirms the fold of a single subunit but does not resolve the oligomeric ring or the toroidal-pore state central to the mechanism. Oligomer stoichiometry and the structure of the translocation-active state remain to be determined for TatA-II.</p>
+</li>
+<li>
+<p><strong>Cross-organism transfer of mechanism.</strong> Most mechanistic detail comes from <em>E. coli</em> and chloroplast systems. While conservation is high, subtle differences (lipid composition of the <em>P. putida</em> inner membrane, PMF magnitude, substrate set) could modulate behavior.</p>
+</li>
+<li>
+<p><strong>The full <em>P. putida</em> Tat substrate list is incomplete.</strong> Beyond UxpB, the specific set of folded proteins that depend on Cluster II for export in <em>P. putida</em> has not been systematically defined, limiting the physiological picture.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Targeted gene deletion and complementation.</strong> Construct single (ΔPP_5016) and double (ΔtatA-I ΔtatA-II) deletion strains, and assay Tat-dependent export (e.g., of UxpB, or a Tat-reporter such as an amidase or signal-peptide-GFP fusion) to establish TatA-II's necessity and any redundancy with TatA-I.</p>
+</li>
+<li>
+<p><strong>Substrate profiling of each cluster.</strong> Use comparative proteomics of periplasmic/secreted fractions across single- and double-<em>tat</em> mutants to define the substrate repertoire specifically dependent on Cluster II, testing the redundancy-vs-specialization question.</p>
+</li>
+<li>
+<p><strong>Reconstitution and membrane-permeabilization assay.</strong> Purify TatA-II and reconstitute with TatB/TatC into proteoliposomes; measure substrate-triggered, PMF-dependent membrane weakening (dye-leakage or electrophysiology) to directly test the toroidal-pore mechanism in the <em>P. putida</em> proteins.</p>
+</li>
+<li>
+<p><strong>Oligomerization and structural characterization.</strong> Determine the oligomeric size distribution of TatA-II (blue-native PAGE, cryo-EM, or crosslinking-MS) and, ideally, capture the translocation-active ring state to complement the monomer AlphaFold model.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of conserved motifs.</strong> Mutate the invariant Gly21 hinge and the TMH polar residue (Asp5/Lys7) in TatA-II and assay transport, testing whether motifs shown to be functionally important in <em>E. coli</em> TatA behave identically in the <em>P. putida</em> paralog.</p>
+</li>
+<li>
+<p><strong>Expression / condition mapping.</strong> Determine under which growth or stress conditions the <em>tatA-II</em> operon is expressed relative to <em>tat-1</em>, to connect TatA-II to specific physiological demands (e.g., phosphate limitation, given the UxpB link).</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>TatA-II (Q88D13 / PP_5016) is confidently annotated as the small single-span inner-membrane, pore-forming/membrane-weakening subunit of a twin-arginine translocase in <em>Pseudomonas putida</em> KT2440. It functions at the cytoplasmic membrane, within the <em>tatA-II–tatB–tatC-II</em> operon (PP_5016–5018), to oligomerize at the substrate-loaded TatBC receptor and transiently permeabilize the bilayer, enabling proton-motive-force-driven export of fully folded, twin-arginine-signal-peptide-bearing proteins (such as the PhoX-family phosphatase UxpB) from the cytoplasm to the periplasm. It is not an enzyme or a small-molecule transporter, and substrate specificity resides in the signal peptide and TatBC rather than in TatA-II. The assignment is supported by canonical sequence architecture, complete operon context, 55% identity to experimentally characterized <em>E. coli</em> TatA with a perfectly conserved Gly-hinge and amphipathic-helix motif, an AlphaFold model confirming the ordered helical hairpin plus disordered tail, and experimentally verified Tat-dependent export in <em>P. putida</em>.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tatA-II-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tatA-II-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:23471988</li>
+<li>PMID:29535185</li>
+<li>PMID:38877109</li>
+<li>PMID:10593889</li>
+<li>PMID:31971282</li>
+<li>PMID:36764519</li>
+<li>PMID:23530902</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D13
+gene_symbol: tatA-II
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  TatA-II is the TatA-family inner-membrane component of the PP_5016-PP_5018
+  twin-arginine translocation system in Pseudomonas putida KT2440. It is
+  recruited to substrate-bound TatBC and contributes to the dynamic,
+  proton-motive-force-dependent assembly that moves folded proteins across the
+  cytoplasmic membrane.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: TatA-II is a single-pass component of the bacterial inner-membrane Tat apparatus.
+    action: ACCEPT
+    reason: UniProt/HAMAP explicitly assigns Q88D13 to the cell inner membrane.
+- term:
+    id: GO:0008320
+    label: transmembrane protein transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The assembled Tat translocon has protein transmembrane transporter activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: TatA contributes to the assembled transporter but is not an independent transporter.
+    supported_by:
+      - reference_id: file:PSEPK/tatA-II/tatA-II-deep-research-openscientist.md
+        supporting_text: It is neither an enzyme nor a small-molecule transporter.
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: TatA-II participates specifically in folded-protein transport by the Tat complex.
+    action: KEEP_AS_NON_CORE
+    reason: The broad parent process is correct but less informative than GO:0043953.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: TatA-II is membrane embedded.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The generic membrane term is redundant with plasma membrane.
+- term:
+    id: GO:0033281
+    label: TAT protein transport complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: TatA-II is a conserved subunit of the Tat protein-transport complex.
+    action: ACCEPT
+    reason: The TatA family assignment and tatABC locus support complex membership.
+- term:
+    id: GO:0043953
+    label: protein transport by the Tat complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TatA-II performs the translocation phase of Tat-dependent folded-protein export.
+    action: ACCEPT
+    reason: This is the defining conserved biological process of TatA-family proteins.
+- term:
+    id: GO:0065002
+    label: intracellular protein transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: TatA-II contributes to movement of folded substrates across the inner membrane.
+    action: ACCEPT
+    reason: The term correctly captures the transmembrane step, while GO:0043953 provides Tat specificity.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/tatA-II/tatA-II-uniprot.txt
+  title: UniProtKB entry for tatA-II (Q88D13)
+  findings:
+    - statement: &gt;-
+        The local record supplies the TatA family assignment, membrane
+        localization, and Tat-complex mechanism used in this review.
+- id: file:PSEPK/tatA-II/tatA-II-goa.tsv
+  title: QuickGO GOA annotations for tatA-II
+  findings:
+    - statement: The fetched table is the complete existing-annotation set reviewed here.
+- id: file:modules/bacterial_twin_arginine_translocation.yaml
+  title: Bacterial twin-arginine protein-translocation module
+  findings:
+    - statement: The reusable module separates TatC, TatB, and TatA roles.
+aliases:
+  - PP_5016
+core_functions:
+  - description: &gt;-
+      Forms the dynamic TatA translocation assembly recruited to a
+      substrate-bound TatBC receptor.
+    supported_by:
+      - reference_id: file:PSEPK/tatA-II/tatA-II-uniprot.txt
+        supporting_text: TatA could form the protein-conducting channel of the Tat system.
+    contributes_to_molecular_function:
+      id: GO:0008320
+      label: protein transmembrane transporter activity
+    directly_involved_in:
+      - id: GO:0043953
+        label: protein transport by the Tat complex
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    in_complex:
+      id: GO:0033281
+      label: TAT protein transport complex
+suggested_questions:
+  - question: Which folded substrates preferentially use the PP_5016-PP_5018 Tat system?
+suggested_experiments:
+  - description: &gt;-
+      Compare periplasmic proteomes and Tat-signal substrate localization in
+      single and double tatABC-locus deletion strains.
+    experiment_type: Tat-system substrate partitioning
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
