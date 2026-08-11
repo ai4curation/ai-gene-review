@@ -25,7 +25,7 @@ conserved structural component.
 
 ## Status
 
-- [x] Resolve the 15-gene structural-operon map from PMID:36748579 and Table S4.
+- [x] Resolve the 15-gene structural-operon map from PMID:36748579 Figure 2a, operon text, and exact UniProt family records.
 - [x] Define a species-neutral, multi-part apparatus module.
 - [x] Curate all existing GO annotations and core functions.
 - [ ] Complete OpenScientist gene and module + pathway + taxon research.
@@ -55,3 +55,15 @@ conserved structural component.
 
 The adjacent `vgrG1` product PP_3106 (Q88I93) is included as the conserved tip
 exemplar, while the surrounding adapter/effector/immunity genes remain excluded.
+
+## Review Follow-up
+
+The PR review was addressed by adding gene-specific family evidence to the
+process assertions, structural molecule activity and GO:0033104 complex
+membership to the structural subunits, and a machine-usable negative-regulation
+term for TagF1. Family/domain-supported NEW annotations now use ISS, while the
+directly mapped TagP1 and TagB1 accessory assignments retain TAS. Figure 2a,
+not Table S4, is cited for the locus map; Table S4 is limited to intergenic
+distances. The TssM selector uses the family-level IPR053156 entry with an
+explicit full-length-architecture caveat because the truncated TagP1-like
+protein also matches that broad family.
