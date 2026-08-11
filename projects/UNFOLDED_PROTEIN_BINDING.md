@@ -42,6 +42,10 @@ sidecars:
 > [Human Gene Checklist](#human-gene-checklist)); the 115 non-human genes validate that the
 > same decision rules apply consistently across all species (see
 > [Cross-Species Completeness Audit](#cross-species-completeness-audit)).
+> **Identity correction (2026-08-11):** the former P10080 “SSB1” entry was SBP1, an
+> RNA-binding translational repressor, not the ribosome-associated Hsp70. Canonical
+> SSB1 (P11484) is therefore pending a separate refetch/review; the historical aggregate
+> counts above will be reconciled when that cohort slot is restored.
 > **Critical finding**: GO:0140309 "unfolded protein carrier activity"
 > was created specifically for TIM carrier-holdases ([go-ontology#30552](https://github.com/geneontology/go-ontology/issues/30552))
 > and does **not** fit in-situ holdases (crystallins, sHSPs, CLU). A general "holdase chaperone

@@ -38,6 +38,7 @@ path; fetched and provider-generated content was retained unchanged.
 
 The existing annotation decisions remain evidence-consistent after re-audit: RNA
 and mRNA binding, translation repression, eIF4G binding, and cytoplasmic localization
-are core; P-body/stress-granule and historical nucleolar localizations are retained as
-non-core; generic protein-binding annotations remain over-annotated. No experimental
+are core; P-body localization is accepted as the site of the core disassembly function,
+whereas stress-granule and historical nucleolar localizations remain non-core; generic
+protein-binding annotations remain over-annotated. No experimental
 annotation was removed on the basis of incomplete full text.
