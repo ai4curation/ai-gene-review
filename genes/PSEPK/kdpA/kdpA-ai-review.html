@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kdpA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>kdpA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FD7" target="_blank" class="term-link">
+                        Q88FD7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "kdpA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FD7" data-a="DESCRIPTION: Potassium-selective membrane subunit of the high-a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Potassium-selective membrane subunit of the high-affinity KdpFABC pump. KdpA binds and translocates potassium ions while coupling physically to the KdpB P-type ATPase that supplies transport energy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FD7" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct location for the integral KdpA transport subunit.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006813" target="_blank" class="term-link">
+                                    GO:0006813
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FD7" data-a="GO:0006813" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process, though the transmembrane child term is more precise.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008556" target="_blank" class="term-link">
+                                    GO:0008556
+                                </a>
+                            </span>
+                            <span class="term-label">P-type potassium transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FD7" data-a="GO:0008556" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The term correctly describes the collective KdpFABC pump activity, but KdpA supplies potassium selection and translocation rather than the full ATP-coupled activity independently.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain GO:0008556 with the qualifier contributes_to; enables incorrectly assigns the heteromeric pump activity to KdpA alone.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008556" target="_blank" class="term-link">
+                                    P-type potassium transmembrane transporter activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030955" target="_blank" class="term-link">
+                                    GO:0030955
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FD7" data-a="GO:0030955" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct mechanistic function of the KdpA selectivity pathway.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071805" target="_blank" class="term-link">
+                                    GO:0071805
+                                </a>
+                            </span>
+                            <span class="term-label">potassium ion transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FD7" data-a="GO:0071805" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Directly captures the core transport process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Selects and translocates potassium ions as the channel-like subunit of KdpFABC.</h3>
+                <span class="vote-buttons" data-g="Q88FD7" data-a="FUNCTION: Selects and translocates potassium ions as the cha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071805" target="_blank" class="term-link">
+                                potassium ion transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/kdpA/kdpA-uniprot.txt
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/kdpA/kdpA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 kdpA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88FD7 as the potassium-binding and translocating KdpA subunit.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What potassium affinity and selectivity does KT2440 KdpA confer under osmotic stress?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FD7" data-a="Q: What potassium affinity and selectivity does KT244..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure potassium uptake kinetics in a kdpA mutant complemented with selectivity-filter variants.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: ion transport assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88FD7" data-a="EXPERIMENT: Measure potassium uptake kinetics in a kdpA mutant..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(kdpA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FD7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *kdpA* (Q88FD7, PP_4161) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-11T04:01:57.578385</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="kdpA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="kdpA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-kdpa-q88fd7-pp_4161-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>kdpA</em> (Q88FD7, PP_4161) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>kdpA (Q88FD7, ordered locus PP_4161) encodes KdpA, the potassium-binding and translocating "A" subunit of the inner-membrane KdpFABC high-affinity K⁺ import pump of <em>Pseudomonas putida</em> KT2440.</strong> KdpA is a polytopic integral membrane protein that is <em>not itself an enzyme</em> — it contains no ATP-hydrolyzing or phosphorylation machinery. Instead, it is a <strong>channel-like ion-recognition subunit</strong>: it selectively binds K⁺ from the periplasmic side of the plasma membrane at a KcsA-like selectivity filter and hands the ion off, through an intersubunit tunnel, to the catalytic P-type ATPase subunit KdpB, which supplies the energy for uptake through ATP hydrolysis. In effect, KdpA provides the <em>substrate specificity</em> (K⁺) while KdpB provides the <em>power stroke</em>, an unusual division of labor that makes KdpFABC a "split-site" type Ia P-type ATPase.</p>
+<p>The <strong>substrate is the potassium ion (K⁺)</strong>, and the physiological function of the complex is <strong>high-affinity potassium scavenging and turgor/osmotic homeostasis</strong>. The <em>kdpFABC</em> operon (of which <em>kdpA</em> is a member) is not constitutively expressed; it is switched on specifically under <strong>severe K⁺ limitation or osmotic/salt upshift</strong> by the <strong>KdpD/KdpE two-component signal-transduction system</strong>, which senses the stress and transcriptionally activates the operon. KdpA carries out its function <strong>in the plasma (inner) membrane</strong>, recognizing K⁺ from the periplasmic face and delivering it to the cytoplasm.</p>
+<p>The functional assignment for the <em>P. putida</em> protein specifically is strongly supported. Q88FD7 is a confident ortholog of the biochemically and structurally characterized <em>Escherichia coli</em> KdpA (<strong>54% amino-acid identity</strong>), it retains the four-MPM channel topology and the KcsA-derived <strong>TNGGG selectivity-filter glycine motif</strong>, the experimentally validated <em>E. coli</em> filter glycine G232 is positionally conserved (P. putida G236), and the gene sits in an intact <em>kdpABCD</em> operon in the KT2440 genome alongside its cognate KdpD/KdpE regulatory system. The report below lays out each line of evidence, the mechanistic model that unifies them, the supporting literature, and the residual gaps (chiefly the absence of <em>P. putida</em>-specific biochemical studies).</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-kdpa-is-the-k-binding-channel-like-subunit-of-the-kdpfabc-pump">Finding 1 — KdpA is the K⁺-binding, channel-like subunit of the KdpFABC pump</h3>
+<p>The core identity of the protein is unambiguous. UniProt assigns Q88FD7 (PP_4161) to the <strong>KdpA family</strong> as the "Potassium-transporting ATPase potassium-binding subunit" under HAMAP-Rule MF_00275. This family assignment is grounded in decades of structural and biochemical work on the <em>E. coli</em> orthologue. The 2.9-Å crystal structure of the <em>E. coli</em> KdpFABC complex directly established the architecture: the complex has "one channel-like subunit (KdpA) belonging to the superfamily of potassium transporters and another pump-like subunit (KdpB) belonging to the superfamily of P-type ATPases" (<a href="https://pubmed.ncbi.nlm.nih.gov/28636601/">PMID: 28636601</a>). More recent cryo-EM work adds the functional detail that "<strong>KdpA is a channel-like subunit with a selectivity filter that binds potassium from the periplasm</strong>" (<a href="https://pubmed.ncbi.nlm.nih.gov/41929109/">PMID: 41929109</a>).</p>
+<p>The critical mechanistic point is that KdpA and KdpB have distinct roles: KdpA recognizes and translocates the ion, KdpB hydrolyzes ATP. KdpA alone has no catalytic activity — it is the <em>specificity</em> determinant of the pump, analogous to the pore module of a potassium channel, but harnessed to an active transporter rather than working as a passive channel.</p>
+<h3 id="finding-2-kdpa-is-evolutionarily-derived-from-2tm-k-channels-and-k-selectivity-is-set-by-conserved-filter-glycines">Finding 2 — KdpA is evolutionarily derived from 2TM K⁺ channels, and K⁺ selectivity is set by conserved filter glycines</h3>
+<p>KdpA's channel-like character is not merely a structural analogy — it reflects genuine evolutionary descent. Bioinformatic analysis of KdpA sequences showed that "the transmembrane KdpA subunit of the high affinity K(+)-translocating P-type Kdp-ATPase is evolutionarily derived from the superfamily of <strong>2TM-type K(+) channels</strong> in bacteria" (<a href="https://pubmed.ncbi.nlm.nih.gov/10620285/">PMID: 10620285</a>). Whereas a canonical KcsA-type channel is a tetramer of four identical two-transmembrane (2TM) subunits, KdpA fuses four such <strong>membrane–pore–membrane (MPM)</strong> units into a <em>single</em> polypeptide, reproducing the fourfold pseudosymmetric selectivity filter within one chain.</p>
+<p>The selectivity filter itself is built from conserved glycine motifs homologous to the GYG signature of K⁺ channels. Mutagenesis pins these residues to ion selectivity directly:</p>
+<table>
+<thead>
+<tr>
+<th>Mutation (E. coli KdpA)</th>
+<th>Consequence</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G232D</td>
+<td>Reduced K⁺ affinity; broadened specificity to Na⁺, Li⁺, H⁺; loss of Rb⁺ discrimination</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10920013/">PMID: 10920013</a></td>
+</tr>
+<tr>
+<td>G345 / G470 substitutions</td>
+<td>Altered ion selectivity of the whole KdpFABC complex</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15292155/">PMID: 15292155</a></td>
+</tr>
+</tbody>
+</table>
+<p>The G232 residue "is the first in a highly conserved GGG motif that was aligned with the GYG sequence of the selectivity filter (P- or H5-loop) of K(+) channels" (<a href="https://pubmed.ncbi.nlm.nih.gov/10920013/">PMID: 10920013</a>). Replacing the glycines at positions 345 and 470 — members of putative selectivity-filter regions III and IV — "alters the ion selectivity of the KdpFABC complex" (<a href="https://pubmed.ncbi.nlm.nih.gov/15292155/">PMID: 15292155</a>). These experiments establish that KdpA's filter glycines are the physical determinants of what the pump transports.</p>
+<h3 id="finding-3-mechanism-k-enters-at-the-kdpa-filter-and-is-delivered-to-kdpb-through-an-intersubunit-tunnel-energized-by-atp-hydrolysis">Finding 3 — Mechanism: K⁺ enters at the KdpA filter and is delivered to KdpB through an intersubunit tunnel, energized by ATP hydrolysis</h3>
+<p>The most striking mechanistic feature of KdpFABC is that ion binding and ATP hydrolysis occur on <em>different subunits</em>, which requires a physical conduit between them. The <em>E. coli</em> crystal structure revealed exactly that: "a <strong>protein-embedded tunnel</strong> runs between these potassium and water sites and a helix controlling the cytoplasmic gate of KdpA is linked to the phosphorylation domain of KdpB" (<a href="https://pubmed.ncbi.nlm.nih.gov/28636601/">PMID: 28636601</a>). K⁺ captured at the KdpA selectivity filter is therefore routed through this buried tunnel to a canonical cation site in KdpB, while a KdpA gating helix communicates mechanically with KdpB's catalytic phosphorylation domain.</p>
+<p>This design is described as a <strong>hybrid mechanism</strong>: the pump "features a unique hybrid mechanism combining a channel-like selectivity filter in KdpA with the ATP-driven transport functionality of KdpB" (<a href="https://pubmed.ncbi.nlm.nih.gov/41384914/">PMID: 41384914</a>). Coupling residues at the KdpA–KdpB interface link ATP hydrolysis to ion movement, ensuring that the channel-like filter does not leak K⁺ but instead moves it only in step with the catalytic cycle of KdpB.</p>
+<h3 id="finding-4-kdpa-is-expressed-within-the-kdpfabc-operon-induced-by-k-limitationosmotic-stress-via-kdpdkdpe">Finding 4 — <em>kdpA</em> is expressed within the <em>kdpFABC</em> operon, induced by K⁺ limitation/osmotic stress via KdpD/KdpE</h3>
+<p>KdpA is not produced constitutively. It is encoded within the <em>kdpFABC</em> operon, "an inducible high-affinity K⁺ transporter that is synthesised under conditions of severe K⁺ limitation or osmotic upshift" (<a href="https://pubmed.ncbi.nlm.nih.gov/17536175/">PMID: 17536175</a>). Expression is controlled by a dedicated two-component system: "The <strong>KdpD/KdpE two-component system</strong> of <em>Escherichia coli</em> activates the expression of the <em>kdpFABC</em> operon encoding the high-affinity K⁺ uptake system KdpFABC in response to K⁺ limitation or salt stress" (<a href="https://pubmed.ncbi.nlm.nih.gov/20146748/">PMID: 20146748</a>). KdpD is the membrane sensor histidine kinase; upon stress it phosphorylates the response regulator KdpE, which binds the operon promoter and drives transcription.</p>
+<p>This regulatory logic frames KdpA's physiological niche: it is an <strong>emergency, high-affinity K⁺-scavenging system</strong> deployed when the cell's constitutive, lower-affinity K⁺ uptake routes (e.g., Trk/Kup) can no longer maintain intracellular potassium, turgor, membrane potential, and cytoplasmic pH. Notably, the precise molecular stimulus sensed by KdpD remains debated: quantitative work argues that a reduction in turgor is <em>not</em> the direct trigger, and that KdpD responds most effectively to K⁺-limiting conditions in the medium (<a href="https://pubmed.ncbi.nlm.nih.gov/18245296/">PMID: 18245296</a>).</p>
+<h3 id="finding-5-the-p-putida-protein-itself-retains-the-channel-like-topology-and-selectivity-filter-signature">Finding 5 — The <em>P. putida</em> protein itself retains the channel-like topology and selectivity-filter signature</h3>
+<p>Crucially, the above features are not merely inferred from <em>E. coli</em> — they are directly present in Q88FD7. The 564-residue <em>P. putida</em> KdpA sequence has <strong>10 predicted transmembrane helices</strong>, consistent with the four-MPM topology of the K⁺-transporter superfamily. The conserved selectivity-filter signature <strong>TNGGG</strong> is present at residues 234–238 (the GGG corresponding to the <em>E. coli</em> KdpA G232 whose mutation broadens specificity), and additional pore-loop signatures mark the other three filter regions (GGVGAG ~378; TSGSANNGS ~465; SNGS/MHDS ~347–357). UniProt GO annotations for the protein are internally consistent with this: <strong>plasma membrane</strong> (GO:0005886), <strong>potassium ion binding</strong> (GO:0030955), and <strong>P-type K⁺ transmembrane transporter activity</strong> (GO:0008556). Cross-references anchor the identity across databases: RefSeq WP_010954929.1, KEGG ppu:PP_4161, Pfam PF03814, InterPro IPR004623.</p>
+<h3 id="finding-6-pp_4161-lies-in-an-intact-kdpabcde-operon-in-the-kt2440-genome">Finding 6 — PP_4161 lies in an intact <em>kdpABCD(E)</em> operon in the KT2440 genome</h3>
+<p>The genomic context confirms that the <em>P. putida</em> protein functions in the same molecular machine as its <em>E. coli</em> counterpart. In the KT2440 genome the genes form a contiguous cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>KEGG KO</th>
+<th>Product</th>
+<th>EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4161</td>
+<td><em>kdpA</em></td>
+<td>K01546</td>
+<td>K⁺-binding subunit</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_4160</td>
+<td><em>kdpB</em></td>
+<td>K01547</td>
+<td>P-type ATPase, ATP-binding subunit</td>
+<td>7.2.2.6</td>
+</tr>
+<tr>
+<td>PP_4159</td>
+<td><em>kdpC</em></td>
+<td>K01548</td>
+<td>Assembly/coupling subunit</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_4158</td>
+<td><em>kdpD</em></td>
+<td>K07646</td>
+<td>Two-component sensor histidine kinase</td>
+<td>2.7.13.3</td>
+</tr>
+</tbody>
+</table>
+<p>This <em>kdpA-kdpB-kdpC-kdpD</em> arrangement matches the canonical <em>kdpFABC</em> + <em>kdpDE</em> architecture, so PP_4161 has both its structural partners (KdpB/KdpC) and its regulatory system (KdpD/KdpE) encoded alongside it — exactly what is required for a functional, inducible high-affinity K⁺ pump.</p>
+<h3 id="finding-7-q88fd7-is-a-confident-ortholog-of-e-coli-kdpa-54-identity-with-exact-conservation-of-the-functional-filter-glycine">Finding 7 — Q88FD7 is a confident ortholog of <em>E. coli</em> KdpA (54% identity) with exact conservation of the functional filter glycine</h3>
+<p>Direct sequence alignment cements the transfer of functional knowledge from <em>E. coli</em> to <em>P. putida</em>. A Needleman–Wunsch global alignment (BLOSUM62) of P. putida KdpA (Q88FD7, 564 aa) against <em>E. coli</em> K-12 KdpA (P03959, 557 aa) yields <strong>302 identical positions = 54.4% identity, 69.9% similarity</strong> over a 566-column alignment. Most importantly, the functionally critical region aligns residue-for-residue: the P. putida TNGGG filter (residues 234–238) maps directly onto the <em>E. coli</em> TNGGG (230–234), and the <strong>experimentally characterized <em>E. coli</em> KdpA G232 aligns exactly to P. putida G236</strong>, both within the conserved GGG motif. Because that exact residue's mutation is known to broaden the pump's ion specificity, its conservation in <em>P. putida</em> is strong evidence that the KT2440 protein shares the same K⁺-selectivity mechanism.</p>
+<h3 id="finding-8-kdpfabc-is-an-electrogenic-type-ia-p-type-atpase-running-a-post-albers-cycle-with-ion-transport-and-atpase-sites-on-separate-subunits">Finding 8 — KdpFABC is an electrogenic type Ia P-type ATPase running a Post-Albers cycle with ion transport and ATPase sites on separate subunits</h3>
+<p>Finally, biophysical work defines the kinetic and thermodynamic character of the pump that KdpA is part of. Electrophysiological and kinetic studies on purified <em>E. coli</em> KdpFABC show it is "a <strong>unique type Ia P-type ATPase</strong>, because it separates the sites of ATP hydrolysis and ion transport on two different subunits" and imports K⁺ <strong>electrogenically</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/23930894/">PMID: 23930894</a>). Time-resolved caged-ATP experiments established that it follows a <strong>Post-Albers (E1/E2) reaction cycle</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/24766073/">PMID: 24766073</a>), with an apparent ATP-binding affinity of ~70 µM and a rate-limiting E1P→P-E2 conformational transition of ~1.7 s⁻¹ at 20 °C that is K⁺-independent (K⁺ binds in the membrane domain after phosphorylation). The electrogenic transport has been modeled quantitatively as an ATP-dependent pump (<a href="https://pubmed.ncbi.nlm.nih.gov/38950825/">PMID: 38950825</a>). These data place KdpA's ion-handling role firmly within a classical P-type ATPase pumping cycle — but one in which the ion-binding half is delegated to a channel-derived subunit.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Putting the findings together yields a coherent, structurally grounded model of how KdpA works and why it matters to <em>P. putida</em>.</p>
+<p><strong>Architecture and division of labor.</strong> KdpFABC is a heterotetramer of four subunits — KdpF (a small stabilizing peptide), KdpA (the K⁺-recognition subunit), KdpB (the catalytic P-type ATPase), and KdpC (assembly/coupling). KdpA is the evolutionary descendant of a KcsA-like K⁺ channel, folded into a single chain of four MPM repeats that reconstitute a fourfold selectivity filter. This is the "specificity module." KdpB is a classical P-type ATPase with the canonical actuator (A), nucleotide-binding (N), and phosphorylation (P) cytoplasmic domains — the "engine." The unusual feature of KdpFABC, relative to all other P-type ATPases, is that <strong>the ion is bound and released by a different subunit (KdpA) than the one that hydrolyzes ATP (KdpB)</strong>.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nx">PERIPLASM</span><span class="w">  </span><span class="p">(</span><span class="nx">K</span><span class="o">+</span><span class="w"> </span><span class="nx">source</span><span class="p">,</span><span class="w"> </span><span class="nx">low</span><span class="w"> </span><span class="kd">external</span><span class="w"> </span><span class="p">[</span><span class="nx">K</span><span class="o">+</span><span class="p">])</span>
+<span class="o">|</span>
+<span class="nx">v</span><span class="w">   </span><span class="nx">K</span><span class="o">+</span><span class="w"> </span><span class="nx">enters</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">selected</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">the</span>
+<span class="w">   </span><span class="p">[</span><span class="w"> </span><span class="nx">KdpA</span><span class="w"> </span><span class="p">]</span><span class="w">  </span><span class="nx">KcsA</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">selectivity</span><span class="w"> </span><span class="nx">filter</span>
+<span class="w">   </span><span class="nx">filter</span><span class="w">    </span><span class="p">(</span><span class="nx">TNGGG</span><span class="w"> </span><span class="nx">glycines</span><span class="p">;</span><span class="w"> </span><span class="nx">E</span><span class="p">.</span><span class="nx">coli</span><span class="w"> </span><span class="nx">G232</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">P</span><span class="p">.</span><span class="nx">putida</span><span class="w"> </span><span class="nx">G236</span><span class="p">)</span>
+<span class="o">|</span>
+<span class="o">|</span><span class="w">   </span><span class="nx">intersubunit</span><span class="w"> </span><span class="nx">protein</span><span class="o">-</span><span class="nx">embedded</span><span class="w"> </span><span class="nx">TUNNEL</span>
+<span class="nx">v</span><span class="w">   </span><span class="p">(</span><span class="nx">K</span><span class="o">+</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">water</span><span class="w"> </span><span class="nx">pathway</span><span class="p">;</span><span class="w"> </span><span class="nx">gating</span><span class="w"> </span><span class="nx">helix</span><span class="w"> </span><span class="nx">links</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">KdpB</span><span class="w"> </span><span class="nx">P</span><span class="o">-</span><span class="nx">domain</span><span class="p">)</span>
+<span class="w">   </span><span class="p">[</span><span class="w"> </span><span class="nx">KdpB</span><span class="w"> </span><span class="p">]</span><span class="w">  </span><span class="nx">canonical</span><span class="w"> </span><span class="nx">P</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">ATPase</span><span class="w"> </span><span class="nx">cation</span><span class="w"> </span><span class="nx">site</span>
+<span class="w">   </span><span class="nx">A</span><span class="o">-</span><span class="nx">N</span><span class="o">-</span><span class="nx">P</span><span class="w">     </span><span class="nx">ATP</span><span class="w"> </span><span class="nx">hydrolysis</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nx">aspartyl</span><span class="o">-</span><span class="nx">phosphate</span><span class="w"> </span><span class="p">(</span><span class="nx">E1P</span><span class="p">)</span>
+<span class="w">   </span><span class="nx">domains</span><span class="w">   </span><span class="nx">Post</span><span class="o">-</span><span class="nx">Albers</span><span class="w"> </span><span class="nx">cycle</span><span class="w"> </span><span class="nx">drives</span><span class="w"> </span><span class="nx">release</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">K</span><span class="o">+</span>
+<span class="o">|</span>
+<span class="nx">v</span>
+<span class="w">   </span><span class="nx">CYTOPLASM</span><span class="w">  </span><span class="p">(</span><span class="nx">K</span><span class="o">+</span><span class="w"> </span><span class="nx">delivered</span><span class="p">;</span><span class="w"> </span><span class="nx">turgor</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">Vm</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">pH</span><span class="w"> </span><span class="nx">restored</span><span class="p">)</span>
+
+<span class="w">   </span><span class="nx">Regulation</span><span class="p">:</span><span class="w">  </span><span class="nx">low</span><span class="w"> </span><span class="p">[</span><span class="nx">K</span><span class="o">+</span><span class="p">]</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="nx">osmotic</span><span class="w"> </span><span class="nx">upshift</span>
+<span class="o">--</span><span class="p">&gt;</span><span class="w"> </span><span class="nx">KdpD</span><span class="w"> </span><span class="p">(</span><span class="nx">sensor</span><span class="w"> </span><span class="nx">kinase</span><span class="p">)</span><span class="w"> </span><span class="nx">autophosphorylates</span>
+<span class="o">--</span><span class="p">&gt;</span><span class="w"> </span><span class="nx">KdpE</span><span class="o">~</span><span class="nx">P</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="w"> </span><span class="nx">regulator</span><span class="p">)</span><span class="w"> </span><span class="nx">activates</span>
+<span class="o">--</span><span class="p">&gt;</span><span class="w"> </span><span class="nx">transcription</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">kdpFABC</span><span class="w"> </span><span class="nx">operon</span>
+</code></pre></div>
+
+<p><strong>Transport cycle.</strong> In the Post-Albers scheme, K⁺ from the periplasm is captured at the KdpA filter and threaded through the buried tunnel toward KdpB. ATP binds KdpB (apparent Kd ~70 µM) and phosphorylates its conserved aspartate to form E1P; the rate-limiting E1P→P-E2 conformational change (~1.7 s⁻¹ at 20 °C) then drives the coupled release of K⁺ into the cytoplasm. The gating helix of KdpA, physically linked to the KdpB phosphorylation domain, is the mechanical relay that couples catalysis in KdpB to gating in KdpA, so that K⁺ moves only in register with the ATPase cycle rather than leaking through the channel-like filter. The net reaction is electrogenic K⁺ import against a steep concentration gradient — precisely the capability the cell needs when external K⁺ is scarce.</p>
+<p><strong>Physiological role and localization.</strong> KdpA does its job in the <strong>plasma (inner) membrane</strong>, recognizing K⁺ at the periplasmic face and delivering it to the cytoplasm. The whole system is an <strong>inducible, high-affinity, emergency K⁺ scavenger</strong>. Under normal conditions, constitutive transporters suffice, and <em>kdpFABC</em> is silent. When K⁺ becomes limiting or the cell suffers an osmotic/salt upshift, KdpD/KdpE turns the operon on, and KdpFABC restores intracellular K⁺ to maintain turgor pressure, membrane potential, and cytoplasmic pH homeostasis. For <em>P. putida</em> KT2440 — a metabolically versatile soil bacterium that experiences fluctuating water and ion availability in the rhizosphere — such a scavenging system is a plausible and important stress-adaptation module, even though the KT2440 protein has not itself been studied biochemically.</p>
+<p><strong>Confidence in the transfer to <em>P. putida</em>.</strong> The assignment for Q88FD7 rests on three independent, mutually reinforcing lines of evidence: (1) family/domain assignment (KdpA family, Pfam PF03814, InterPro IPR004623, HAMAP MF_00275); (2) 54% global identity to the structurally and mutationally characterized <em>E. coli</em> KdpA, including residue-for-residue conservation of the TNGGG filter and the functionally validated G232→G236 glycine; and (3) genomic context — an intact <em>kdpABCD</em> operon with the cognate KdpD/KdpE regulator. Together these justify high-confidence transfer of the <em>E. coli</em> mechanistic model to the <em>P. putida</em> protein.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28636601/">28636601</a></td>
+<td><em>Crystal structure of the potassium-importing KdpFABC membrane complex</em></td>
+<td>Defines KdpA as the channel-like K⁺ subunit and KdpB as the P-type ATPase; describes the intersubunit tunnel and gating-helix/P-domain link (Findings 1, 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41929109/">41929109</a></td>
+<td><em>Lipids are essential for potassium transport by KdpFABC</em></td>
+<td>States KdpA binds K⁺ from the periplasm via a selectivity filter (Finding 1)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10620285/">10620285</a></td>
+<td><em>Does KdpA have a structure similar to K⁺ channels?</em></td>
+<td>Establishes evolutionary derivation of KdpA from 2TM K⁺ channels (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10920013/">10920013</a></td>
+<td><em>Replacement of glycine 232 by aspartic acid in KdpA broadens ion specificity</em></td>
+<td>Mutagenesis identifying the GGG filter glycine (G232) as a K⁺-selectivity determinant (Findings 2, 7)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15292155/">15292155</a></td>
+<td><em>Substitutions in selectivity filter regions III and IV in KdpA alter ion selectivity</em></td>
+<td>Confirms KdpA filter residues (G345/G470) govern the pump's ion selectivity (Finding 2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41384914/">41384914</a></td>
+<td><em>On the mechanism of K⁺ transport through the inter-subunit tunnel of KdpFABC</em></td>
+<td>Describes the hybrid channel/ATPase mechanism and interface coupling (Finding 3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17536175/">17536175</a></td>
+<td><em>The Kdp-ATPase system and its regulation</em></td>
+<td>Establishes the operon as an inducible high-affinity K⁺ transporter under K⁺ limitation/osmotic upshift (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20146748/">20146748</a></td>
+<td><em>The complexity of the "simple" two-component system KdpD/KdpE</em></td>
+<td>KdpD/KdpE activates the operon in response to K⁺ limitation/salt stress (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18245296/">18245296</a></td>
+<td><em>Reduction of turgor is not the stimulus for the sensor kinase KdpD</em></td>
+<td>Refines the regulatory model: turgor reduction is not the direct KdpD stimulus (Finding 4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23930894/">23930894</a></td>
+<td><em>Mechanistic analysis of the pump cycle of KdpFABC</em></td>
+<td>Type Ia P-type ATPase separating ATP hydrolysis and ion transport on two subunits; electrogenic K⁺ import (Finding 8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24766073/">24766073</a></td>
+<td><em>Role of protons in the pump cycle of KdpFABC</em></td>
+<td>Establishes Post-Albers cycle and kinetic parameters (~70 µM ATP; 1.7 s⁻¹ rate-limiting step) (Finding 8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38950825/">38950825</a></td>
+<td><em>Numerical model for electrogenic transport by KdpFABC</em></td>
+<td>Quantitative electrogenic-pump model (Finding 8)</td>
+</tr>
+</tbody>
+</table>
+<p>Additional structural and regulatory studies in the reviewed literature reinforce this picture without altering it: cryo-EM structures of KdpFABC and analyses of the K⁺ conduction pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/34272288/">PMID: 34272288</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/30478378/">PMID: 30478378</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/40654642/">PMID: 40654642</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41259220/">PMID: 41259220</a>); studies of serine-phosphorylation regulation and an inhibited E1 off-cycle state (<a href="https://pubmed.ncbi.nlm.nih.gov/32955430/">PMID: 32955430</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/36255052/">PMID: 36255052</a>); intersubunit coupling analysis (<a href="https://pubmed.ncbi.nlm.nih.gov/34429416/">PMID: 34429416</a>); a KdpFABC review (<a href="https://pubmed.ncbi.nlm.nih.gov/31259644/">PMID: 31259644</a>); and a protocol for reconstituting P-type ATPases including KdpFABC in liposomes (<a href="https://pubmed.ncbi.nlm.nih.gov/26695029/">PMID: 26695029</a>).</p>
+<p><strong>Independence of evidence.</strong> It is worth emphasizing that the annotation does not rest on any single source. The structural biology (crystallography, cryo-EM), the classical mutagenesis, the electrophysiology, the regulatory genetics, and the sequence/genomic bioinformatics are independent methodologies that converge on the same conclusion. The one caveat — addressed next — is that nearly all of the <em>experimental</em> evidence comes from <em>E. coli</em>, and is transferred to <em>P. putida</em> by orthology.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific biochemistry.</strong> All direct experimental characterization (crystal/cryo-EM structures, mutagenesis, transport kinetics, regulation) has been performed on the <em>E. coli</em> KdpFABC system. For <em>P. putida</em> KT2440 specifically, the assignment is inferential — based on 54% orthology, domain conservation, and genomic context. No purified <em>P. putida</em> KdpA transport assay, structure, or knockout phenotype was identified.</p>
+</li>
+<li>
+<p><strong>Filter-residue numbering is homology-based.</strong> The identification of the <em>P. putida</em> selectivity-filter residues (e.g., G236 as the counterpart of <em>E. coli</em> G232) comes from sequence alignment, not from a solved <em>P. putida</em> structure. While the alignment is unambiguous in the filter region, the exact side-chain geometry has not been experimentally confirmed for Q88FD7.</p>
+</li>
+<li>
+<p><strong>KdpF is not separately annotated in the KT2440 locus survey.</strong> The genomic analysis identified <em>kdpA-B-C-D</em> as contiguous, but the very small <em>kdpF</em> peptide (which stabilizes the complex in <em>E. coli</em>) was not explicitly confirmed in the KT2440 context; its presence should be verified.</p>
+</li>
+<li>
+<p><strong>Regulatory stimulus is still debated even in <em>E. coli</em>.</strong> Work on KdpD indicates that turgor reduction is not the direct stimulus (<a href="https://pubmed.ncbi.nlm.nih.gov/18245296/">PMID: 18245296</a>), and the precise molecular signal remains contested. The regulatory model for <em>P. putida</em> is therefore transferred with the same open question.</p>
+</li>
+<li>
+<p><strong>Post-translational regulation not assessed in <em>P. putida</em>.</strong> Serine-phosphorylation control of KdpFABC (<a href="https://pubmed.ncbi.nlm.nih.gov/32955430/">PMID: 32955430</a>) and off-cycle inhibited states (<a href="https://pubmed.ncbi.nlm.nih.gov/36255052/">PMID: 36255052</a>) are established in <em>E. coli</em>; whether <em>P. putida</em> KdpB carries the analogous regulatory serine was not determined here.</p>
+</li>
+<li>
+<p><strong>Stoichiometry and coupling ratio not independently verified for the ortholog.</strong> The electrogenic, ATP-coupled uptake stoichiometry is from <em>E. coli</em> studies; the coupling ratio for the <em>P. putida</em> pump is assumed conserved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Confirm <em>kdpF</em> and the full operon structure.</strong> Re-examine the KT2440 genome annotation to verify the presence and position of <em>kdpF</em> and the <em>kdpE</em> response-regulator gene, completing the <em>kdpFABCDE</em> map.</p>
+</li>
+<li>
+<p><strong>Structural prediction and filter validation.</strong> Generate an AlphaFold model of Q88FD7 (and the KdpFABC complex by orthology-guided modeling) and confirm that G236 and the other predicted filter glycines (regions II–IV) form a fourfold selectivity filter superimposable on the <em>E. coli</em> KdpA structure (PMID 28636601).</p>
+</li>
+<li>
+<p><strong>Heterologous complementation.</strong> Test whether <em>P. putida</em> <em>kdpABC</em> restores high-affinity K⁺ uptake in an <em>E. coli</em> kdp-deletion strain, providing direct functional evidence for the ortholog.</p>
+</li>
+<li>
+<p><strong>Expression/induction assay in <em>P. putida</em>.</strong> Measure <em>kdpFABC</em> transcription in KT2440 under K⁺ limitation and osmotic/salt upshift (qRT-PCR or reporter fusion) to confirm KdpD/KdpE-dependent induction in this organism.</p>
+</li>
+<li>
+<p><strong>Targeted mutagenesis of G236.</strong> Recapitulate the <em>E. coli</em> G232D experiment in <em>P. putida</em> KdpA (G236D) and assay for the predicted loss of K⁺ affinity and broadened cation specificity, directly validating the filter mechanism in the ortholog.</p>
+</li>
+<li>
+<p><strong>Transport kinetics of purified complex.</strong> Reconstitute purified <em>P. putida</em> KdpFABC into proteoliposomes (as done for <em>E. coli</em>, PMID 26695029) and measure ATP-dependent, electrogenic K⁺ transport to confirm the conserved Post-Albers, split-site mechanism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>kdpA</em> (Q88FD7, PP_4161) encodes <strong>KdpA, the potassium-binding "A" subunit of the inner-membrane KdpFABC high-affinity K⁺ import pump</strong> of <em>Pseudomonas putida</em> KT2440. It is a <strong>channel-like, non-catalytic subunit</strong> — evolutionarily derived from 2TM K⁺ channels — that selectively binds <strong>K⁺</strong> at a KcsA-like selectivity filter on the periplasmic face and delivers it, via an intersubunit tunnel, to the catalytic P-type ATPase subunit <strong>KdpB</strong>, which powers electrogenic uptake by ATP hydrolysis through a Post-Albers cycle. The <em>kdpFABC</em> operon is an <strong>inducible, high-affinity K⁺-scavenging system</strong> switched on under K⁺ limitation or osmotic/salt stress by the <strong>KdpD/KdpE two-component system</strong> to maintain turgor, membrane potential, and pH homeostasis. The assignment for this specific ortholog is strongly supported by 54% identity to the experimentally characterized <em>E. coli</em> KdpA, conservation of the mutationally validated filter glycine (E. coli G232 = P. putida G236), retention of the four-MPM channel topology, and an intact <em>kdpABCD</em> operon in the KT2440 genome.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="kdpA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="kdpA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:28636601</li>
+<li>PMID:41929109</li>
+<li>PMID:10620285</li>
+<li>PMID:10920013</li>
+<li>PMID:15292155</li>
+<li>PMID:41384914</li>
+<li>PMID:17536175</li>
+<li>PMID:20146748</li>
+<li>PMID:18245296</li>
+<li>PMID:23930894</li>
+<li>PMID:24766073</li>
+<li>PMID:38950825</li>
+<li>PMID:34272288</li>
+<li>PMID:30478378</li>
+<li>PMID:40654642</li>
+<li>PMID:41259220</li>
+<li>PMID:32955430</li>
+<li>PMID:36255052</li>
+<li>PMID:34429416</li>
+<li>PMID:31259644</li>
+<li>PMID:26695029</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FD7
+gene_symbol: kdpA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  Potassium-selective membrane subunit of the high-affinity KdpFABC pump. KdpA
+  binds and translocates potassium ions while coupling physically to the KdpB
+  P-type ATPase that supplies transport energy.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct location for the integral KdpA transport subunit.
+    action: ACCEPT
+- term:
+    id: GO:0006813
+    label: potassium ion transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct process, though the transmembrane child term is more precise.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008556
+    label: P-type potassium transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The term correctly describes the collective KdpFABC pump activity, but
+      KdpA supplies potassium selection and translocation rather than the full
+      ATP-coupled activity independently.
+    action: MODIFY
+    reason: &gt;-
+      Retain GO:0008556 with the qualifier contributes_to; enables incorrectly
+      assigns the heteromeric pump activity to KdpA alone.
+    proposed_replacement_terms:
+    - id: GO:0008556
+      label: P-type potassium transmembrane transporter activity
+- term:
+    id: GO:0030955
+    label: potassium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Correct mechanistic function of the KdpA selectivity pathway.
+    action: ACCEPT
+- term:
+    id: GO:0071805
+    label: potassium ion transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Directly captures the core transport process.
+    action: ACCEPT
+references:
+- id: file:PSEPK/kdpA/kdpA-uniprot.txt
+  title: UniProtKB entry for Pseudomonas putida KT2440 kdpA
+  findings:
+  - statement: UniProt identifies Q88FD7 as the potassium-binding and translocating KdpA subunit.
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+core_functions:
+- description: Selects and translocates potassium ions as the channel-like subunit of KdpFABC.
+  contributes_to_molecular_function:
+    id: GO:0008556
+    label: P-type potassium transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0071805
+    label: potassium ion transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/kdpA/kdpA-uniprot.txt
+proposed_new_terms: []
+suggested_questions:
+- question: What potassium affinity and selectivity does KT2440 KdpA confer under osmotic stress?
+suggested_experiments:
+- description: Measure potassium uptake kinetics in a kdpA mutant complemented with selectivity-filter variants.
+  experiment_type: ion transport assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
