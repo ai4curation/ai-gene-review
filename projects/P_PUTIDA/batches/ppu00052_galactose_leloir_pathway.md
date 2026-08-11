@@ -36,10 +36,10 @@ transfer reaction.
 - [x] Retain PP_1165 as an aldose-epimerase candidate without asserting galactose specificity.
 - [x] Revise the reusable four-reaction module to remove disease-specific framing and module-level cytosol.
 - [ ] Complete module + `ppu00052` + PSEPK OpenScientist research.
-- [ ] Complete GalE OpenScientist research.
+- [x] Complete GalE OpenScientist research.
 - [x] Validate the module and focused gene reviews.
-- [ ] Render the focused gene review and batch page.
-- [ ] Open one PR for this module and shepherd review and CI.
+- [x] Render the focused gene review and batch page.
+- [x] Open draft PR #2485.
 
 ## Focused Genes
 
@@ -65,6 +65,11 @@ The module remains a reusable four-reaction definition with exact human
 exemplars and PSEPK GalE as a bacterial epimerase exemplar. GalE family
 membership is not sufficient to infer Leloir catabolism because the same
 UDP-sugar reaction serves nucleotide-sugar and envelope biosynthesis.
+
+The completed GalE OpenScientist report supports a canonical group-1
+UDP-glucose/UDP-galactose epimerase and places PP_3129 in an exopolysaccharide
+biosynthesis/export neighborhood. This strengthens the interpretation that its
+main KT2440 role is biosynthetic UDP-galactose supply for surface glycans.
 
 The broad candidate inventory and its exact metadata are retained in
 [`ppu00052_galactose_leloir_pathway.tsv`](ppu00052_galactose_leloir_pathway.tsv).
