@@ -16,15 +16,17 @@ path; fetched and provider-generated content was retained unchanged.
   and co-immunoprecipitated snR10 and snR11 [PMID:2121740, "SSB-1 colocalized with
   fibrillarin in a double-label immunofluorescence mapping experiment to the yeast
   nucleolus"].
-- Cytoplasmic translation control is the best-established core role. Sbp1 directly
-  binds eIF4G and represses translation through its RGG motif [PMID:22284680,
-  "Npl3 and Sbp1, also directly bind eIF4G and repress translation in a manner
-  dependent on their RGG motifs"]. Full-text experiments further show cooperative
-  binding of the two RRMs to the A-rich region in the PAB1 5' UTR and inhibition of
-  both cap-dependent and cap-independent initiation [PMID:28986506, "a decreased
-  translation activity in the presence of an increasing amount of Sbp1 indicated an
-  inhibitory function of this protein in both cap-dependent and cap-independent
-  initiation of the Pab1 mRNA"].
+- Cytoplasmic translation control is the best-established core role, but the directness
+  of the eIF4G interaction is disputed. Rajyaguru et al. reported RGG-dependent direct
+  binding and repression [PMID:22284680, "Npl3 and Sbp1, also directly bind eIF4G and
+  repress translation in a manner dependent on their RGG motifs"]. A later full-text
+  study using purified RNA-free proteins found no direct Sbp1-eIF4G interaction and
+  concluded that the earlier association was probably mediated by endogenous RNA or a
+  ternary protein [PMID:28986506, "Using purified RNA-free proteins, we observed no
+  direct interactions between eIF4G1 and Sbp1, and between eIF4G1 and the RGG domain of
+  Sbp1 (Sbp1RGG)"]. That later work instead demonstrates direct RGG-dependent Sbp1-Pab1
+  binding, cooperative binding of the two RRMs to the A-rich region in the PAB1 5' UTR,
+  and inhibition of both cap-dependent and cap-independent initiation.
 - The PMID:35440550 evidence is specifically for **P-body** disassembly, not stress
   granule disassembly: the abstract identifies Sbp1 as a P-body disassembly factor,
   reports defective disassembly in `sbp1`-null cells, and shows that Sbp1 competes
@@ -37,8 +39,8 @@ path; fetched and provider-generated content was retained unchanged.
 ## Review outcome
 
 The existing annotation decisions remain evidence-consistent after re-audit: RNA
-and mRNA binding, translation repression, eIF4G binding, and cytoplasmic localization
-are core; P-body localization is accepted as the site of the core disassembly function,
+and mRNA binding, translation repression, the curator's disputed eIF4G-association
+annotation, and cytoplasmic localization are retained as core; P-body localization is accepted as the site of the core disassembly function,
 whereas stress-granule and historical nucleolar localizations remain non-core; generic
 protein-binding annotations remain over-annotated. No experimental
 annotation was removed on the basis of incomplete full text.
