@@ -27,6 +27,7 @@ biosynthesis, and downstream substrate-specific pathways are outside the core.
 
 - [x] Define a reusable two-reaction DsbA/DsbB module.
 - [x] Curate the three KT2440 gene reviews.
+- [x] Add canonical primary literature and curator notes for DsbA and DsbB.
 - [ ] Complete OpenScientist gene, module, and taxon research (active; not a publication gate).
 - [x] Complete independent annotation-reviewer and module-curation audits.
 - [x] Validate and render all artifacts.
@@ -45,8 +46,20 @@ biosynthesis, and downstream substrate-specific pathways are outside the core.
 Every fetched GOA row for `dsbA`, `dsbB1`, and `dsbB2` was independently
 reviewed. The broad DsbA oxidoreductase parent was changed from an
 over-annotation judgment to non-core retention. The DsbB GO:0015035 assignment
-was retained because the current GO definition explicitly runs from reduced
-protein to oxidized protein, matching DsbA reoxidation. The module now models
-the reciprocal redox cycle instead of an artificial one-way ordering and keeps
-DsbC/DsbD repair, protein export, quinone biosynthesis, and substrate-specific
-downstream pathways outside the boundary.
+is retained as non-core because the official definition is reversible and does
+not establish physiological direction despite the reductase label. DsbB core
+function is instead GO:0009055 electron transfer activity, matching the
+quinone-linked relay. The module models the reciprocal redox cycle instead of
+an artificial one-way ordering and keeps DsbC/DsbD repair, protein export,
+quinone biosynthesis, and substrate-specific downstream pathways outside the
+boundary.
+
+## Primary Evidence
+
+- PMID:9342327 establishes that DsbA donates its active-site disulfide to
+  substrate proteins and that respiratory electron transfer maintains DsbA
+  oxidation through DsbB.
+- PMID:12853466 directly characterizes DsbB-catalyzed oxidation of DsbA by
+  ubiquinone.
+- The KT2440 DsbB1 and DsbB2 assignments remain explicitly by-similarity
+  transfers; the primary studies establish the conserved family mechanism.
