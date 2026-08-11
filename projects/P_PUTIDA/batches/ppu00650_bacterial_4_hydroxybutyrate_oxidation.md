@@ -33,10 +33,13 @@ autolink_gene_symbols: false
 | 2 | NAD-linked succinate-semialdehyde oxidation | `sad-I`, `sad-II` | Q88K05, Q88I50 | Candidate alternatives; physiological assignment unresolved |
 | 2 | NADP-linked succinate-semialdehyde oxidation | `gabD-II` | Q88EN2 | Candidate alternative; may primarily serve the GABA shunt |
 
-The chemistry is satisfiable in KT2440, but current local evidence does not
+The chemistry is satisfiable in KT2440, but current evidence does not
 identify which succinate-semialdehyde dehydrogenase is paired with Gbd during
 growth on 4-hydroxybutyrate. The module therefore records candidate coverage
-without choosing a paralog.
+without choosing a paralog. The three listed enzymes are the focused candidates
+recovered by product-name and family review, not an exhaustive genome-wide
+enumeration; the `gabD-II` suffix is not treated as proof that all related
+paralogs have been found.
 
 ## Annotation Decisions
 
