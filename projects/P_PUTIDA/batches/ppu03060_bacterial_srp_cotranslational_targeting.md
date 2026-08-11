@@ -30,7 +30,7 @@ ribosome assembly, and membrane-protein folding are outside this targeting modul
       (session `20685` remains active and is non-blocking for publication).
 - [x] Complete the independent annotation-reviewer and module-curation audit.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open draft PR [#2530](https://github.com/ai4curation/ai-gene-review/pull/2530).
 
 ## Focused Genes
 
