@@ -1534,6 +1534,13 @@ def print_run_result(result: RunResult) -> None:
     )
     print(f"output={result.output_file}")
     print(f"citations={result.citations_file}")
+    if result.status == "DRY_RUN":
+        citations_status = "planned"
+    elif result.citations_file.exists() and result.citations_file.stat().st_size > 0:
+        citations_status = "present"
+    else:
+        citations_status = "missing"
+    print(f"citations_status={citations_status}")
     print(f"command={shell_join(result.command)}")
     if result.detail:
         print(f"detail={result.detail}")

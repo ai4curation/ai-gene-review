@@ -457,6 +457,47 @@ def test_dry_run_does_not_create_output_directory(tmp_path: Path) -> None:
     assert not result.output_file.parent.exists()
 
 
+@pytest.mark.parametrize(
+    ("run_status", "citations_text", "expected_status"),
+    [
+        ("DRY_RUN", None, "planned"),
+        ("OK", None, "missing"),
+        ("OK", "citation list\n", "present"),
+    ],
+)
+def test_print_run_result_reports_citations_status(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    run_status: str,
+    citations_text: str | None,
+    expected_status: str,
+) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    record = ghr.candidate_records(genes_root, "human", "TEST")[0]
+    output_file = tmp_path / "output.md"
+    citations_file = Path(f"{output_file}.citations.md")
+    if citations_text is not None:
+        citations_file.write_text(citations_text, encoding="utf-8")
+
+    result = ghr.RunResult(
+        record=record,
+        provider="openscientist",
+        status=run_status,
+        returncode=0,
+        duration_seconds=1.0,
+        output_file=output_file,
+        citations_file=citations_file,
+        command=["deep-research-client", "research"],
+        detail="",
+    )
+
+    ghr.print_run_result(result)
+
+    output = capsys.readouterr().out
+    assert f"citations={citations_file}\n" in output
+    assert f"citations_status={expected_status}\n" in output
+
+
 def test_just_wrapper_preserves_quoted_free_text_arguments(tmp_path: Path) -> None:
     """The public Just wrapper must not flatten quoted variadic arguments."""
     genes_root = make_gene_workspace(tmp_path / "workspace with spaces")
