@@ -61,9 +61,9 @@
   NAD-dependent H4K5 child of GO:0017136, so the review proposes that missing
   term while retaining the generic NAD-dependent activity as the core function.
 - PMID:12972620 directly demonstrates Hst1-dependent repression of de novo NAD+
-  biosynthesis genes, but GO lacks a corresponding negative-regulation term.
-  The review proposes that process term rather than forcing the evidence into
-  the unregulated biosynthetic-process term.
+  biosynthesis genes. Existing GO:1905013, negative regulation of 'de novo' NAD
+  biosynthetic process from L-tryptophan, represents the yeast BNA route; use it
+  rather than proposing a duplicate process term.
 - Set3C membership is experimentally real, but Hst1 is largely dispensable for
   Set3C repression and the Sum1-Rfm1-Hst1 complex is its principal functional
   context. Set3C annotations are retained as non-core.
