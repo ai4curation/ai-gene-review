@@ -273,7 +273,7 @@ Last updated: 2026-08-12
 - RPD3: 160 annotations → 85 ACCEPT (53%)
 - HDA1: 38 annotations → 27 ACCEPT (71%)
 - ZDS1 (formerly misfiled as HST1): 40 annotations → 26 ACCEPT (65%); these results do not represent the sirtuin HST1
-- HST1 (canonical P53685/YOL068C): 38 annotations → 16 ACCEPT, 11 KEEP_AS_NON_CORE, 7 MARK_AS_OVER_ANNOTATED, 2 REMOVE, 2 UNDECIDED. The review distinguishes native Sum1-Rfm1-Hst1 promoter repression from conditional Sum1-1 mating-type silencing and rejects Sir2-derived telomeric inferences.
+- HST1 (canonical P53685/YOL068C): 38 annotations → 15 ACCEPT, 8 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 2 REMOVE, 2 UNDECIDED. The review distinguishes native Sum1-Rfm1-Hst1 promoter repression from conditional Sum1-1 mating-type silencing and rejects Sir2-derived telomeric inferences.
 - HST2: 26 annotations → 21 ACCEPT (81%)
 - SIR2: 79 annotations → 50 ACCEPT (63%)
 

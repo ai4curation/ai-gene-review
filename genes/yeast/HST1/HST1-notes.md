@@ -57,9 +57,13 @@
   transcription on nuclear chromatin.
 - H3K9-, H3K14-, and H4K16-specific IBA activities are marked
   over-annotated. Hst1-specific studies identify H4K5 as the predominant
-  residue but the current GOA lacks a corresponding H4K5-specific term, so the
-  core function uses the well-supported generic NAD-dependent histone
-  deacetylase term.
+  residue. Current GO has an H4K5 hydrolytic-mechanism term but no
+  NAD-dependent H4K5 child of GO:0017136, so the review proposes that missing
+  term while retaining the generic NAD-dependent activity as the core function.
+- PMID:12972620 directly demonstrates Hst1-dependent repression of de novo NAD+
+  biosynthesis genes, but GO lacks a corresponding negative-regulation term.
+  The review proposes that process term rather than forcing the evidence into
+  the unregulated biosynthetic-process term.
 - Set3C membership is experimentally real, but Hst1 is largely dispensable for
   Set3C repression and the Sum1-Rfm1-Hst1 complex is its principal functional
   context. Set3C annotations are retained as non-core.
