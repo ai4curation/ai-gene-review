@@ -42,7 +42,7 @@
 - Ssb has directly measured ATPase activity with unusual kinetics relative to
   Ssa Hsp70s: lower steady-state ATP affinity, higher maximal velocity, and no
   potassium dependence. C-terminal/substrate-binding domains govern these
-  properties [PMID:9860955, "The Ssb ATPase has an unusually low steady-state
+  properties [PMID:9860955, "Ssb, however, has an unusually low steady-state
   affinity for ATP but a higher maximal velocity."].
 
 ## Secondary and downstream roles
