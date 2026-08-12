@@ -243,7 +243,7 @@ Last updated: 2025-12-30
 ### Issues Identified & Notes
 - **CAF1 nomenclature collision**: Repository contains POP2 (mRNA deadenylase) under "CAF1" name, not chromatin assembly factor histone chaperone - requires clarification for future use
 - **SAS2/SAS3 substrate corrections**: Successfully corrected project description errors (H3K9 → H4K16/H3K14)
-- **HST1 nomenclature error**: P50111 is ZDS1 kinase, not sirtuin - noted in Phase 2
+- **HST1 nomenclature error corrected**: P50111/YMR273C is the PP2A-Cdc55 regulator ZDS1, not the sirtuin HST1; the review was moved to `genes/yeast/ZDS1/`, and canonical HST1 (P53685/YOL068C) remains to be reviewed
 
 ## 2025-12-31
 
@@ -272,13 +272,13 @@ Last updated: 2025-12-30
 **Phase 2 - Histone Deacetylases (HDACs)**
 - RPD3: 160 annotations → 85 ACCEPT (53%)
 - HDA1: 38 annotations → 27 ACCEPT (71%)
-- HST1: 40 annotations → 26 ACCEPT (65%) [Note: P50111 is ZDS1 kinase, not sirtuin]
+- ZDS1 (formerly misfiled as HST1): 40 annotations → 26 ACCEPT (65%); these results do not represent the sirtuin HST1
 - HST2: 26 annotations → 21 ACCEPT (81%)
 - SIR2: 79 annotations → 50 ACCEPT (63%)
 
 ### Critical Corrections Made
 1. SAS2/SAS3 substrate specificity: Corrected from H3K9 to H4K16/H3K14
-2. HST1 nomenclature: Identified P50111 as ZDS1 kinase, not histone deacetylase
+2. HST1 nomenclature: Identified P50111/YMR273C as the PP2A-Cdc55 regulator ZDS1, not the histone deacetylase HST1; canonical HST1 remains pending
 3. Generic protein binding annotations: Systematically marked as non-core
 4. Phylogenetic inference errors: Corrected SAS2 complex assignment
 

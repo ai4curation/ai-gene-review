@@ -113,7 +113,7 @@ with no active site (the catalytic residues are in their partner subunit).
 | human | RUNX3 | Q13761 | `GO:0006468` protein phosphorylation | IDA | 5 |
 | human | SLC3A2 | P08195 | `GO:0005975` carbohydrate metabolic process | IEA | 5 |
 | mouse | Dnaja3 | Q99M87 | `GO:0005524` ATP binding | IEA | 5 |
-| yeast | HST1 | P50111 | `GO:0004864` protein phosphatase inhibitor activity | IMP | 5 |
+| yeast | ZDS1 | P50111 | `GO:0004864` protein phosphatase inhibitor activity | IMP | 5 |
 
 ### Wrong Binding, Localization, and Process (score 4-5)
 
