@@ -272,10 +272,10 @@ Last updated: 2026-08-12
 **Phase 2 - Histone Deacetylases (HDACs)**
 - RPD3: 160 annotations → 85 ACCEPT (53%)
 - HDA1: 38 annotations → 27 ACCEPT (71%)
-- ZDS1 (formerly misfiled as HST1): 28 consolidated review entries → 20 ACCEPT,
-  1 KEEP_AS_NON_CORE, 6 MARK_AS_OVER_ANNOTATED, 1 NEW. The corrected review retains
+- ZDS1 (formerly misfiled as HST1): 27 consolidated review entries → 9 ACCEPT,
+  11 KEEP_AS_NON_CORE, 7 MARK_AS_OVER_ANNOTATED. The corrected review retains
   direct ZDS1 evidence for PP2A-Cdc55 inhibition and secondary heterochromatin effects,
-  and adds PP2A-complex membership plus a spatial-regulation core function; these
+  and synthesizes a PP2A-Cdc55 spatial-regulation core function; these
   results do not represent the sirtuin HST1.
 - HST1 (canonical P53685/YOL068C): 38 annotations → 15 ACCEPT, 8 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 2 REMOVE, 2 UNDECIDED. The review distinguishes native Sum1-Rfm1-Hst1 promoter repression from conditional Sum1-1 mating-type silencing and rejects Sir2-derived telomeric inferences.
 - HST2: 26 annotations → 21 ACCEPT (81%)

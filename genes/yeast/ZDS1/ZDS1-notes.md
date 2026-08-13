@@ -26,6 +26,9 @@
 - Generic `protein binding` annotations are marked over-annotated because they
   are true interaction observations but do not describe Zds1's adaptor/regulator
   function.
+- Coimmunoprecipitation with Cdc55 and Tpd3 demonstrates association with
+  PP2A-Cdc55, not `part_of` membership in the heterotrimeric PP2A holoenzyme;
+  no new GO:0000159 annotation is proposed.
 
 ## Core synthesis
 
@@ -33,4 +36,6 @@ Zds1 is a non-catalytic PP2A-Cdc55 adaptor/regulator. Its principal conserved
 role is to establish the cytoplasmic and cortical pool of PP2A-Cdc55 and limit
 nuclear Cdc55, thereby coordinating mitotic entry and exit. Cell-polarity,
 cell-wall, mRNA-export, and chromatin-silencing phenotypes are retained where
-experimentally supported but are secondary to this core mechanism.
+experimentally supported but are secondary to this core mechanism; the broad
+mRNA-transport parent is marked over-annotated because the more specific
+nuclear-export term is already supported.
