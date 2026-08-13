@@ -75,6 +75,10 @@ The focused inventory and report coverage are recorded in
   P80645, for GO:0008726 and GO:0046306. The GOA-provided PTN002450490 was
   retained as row provenance but was not misrepresented as the canonical PAINT
   ancestral node.
+- Official QuickGO records were checked directly on 2026-08-13. GO:0042959 is
+  correctly labeled `ABC-type alkanesulfonate transporter transporter activity`
+  (including the doubled `transporter`), and GO:0055052 is `ATP-binding cassette
+  (ABC) transporter complex, substrate-binding subunit-containing`.
 
 ## Residual Uncertainty
 
