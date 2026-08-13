@@ -564,7 +564,7 @@ established:
 | SSA4 | *S. cerevisiae* | P22202 | 25 | MODIFY → GO:0044183 | HSP70 |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
 | SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0044183 | Ribosome-associated HSP70 paralog of SSB1 |
-| SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0044183 | Mito HSP70 |
+| SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0140662 | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5 |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | MODIFY → GO:0044183 | RAC HSP70 |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
 | TCP1 | *S. cerevisiae* | P12612 | 23 | MODIFY → GO:0044183 | TRiC subunit |
