@@ -1,0 +1,10 @@
+# PP_1703 curation notes
+
+- Q88M71 is a 1,341-residue fusion with an N-terminal Mo-bisMGD/4Fe-4S nitrate-reductase region and C-terminal flavodoxin, FAD-binding, and NAD(P)-binding reductase regions. [file:PSEPK/PP_1703/PP_1703-uniprot.txt, "Nucleotide-binding domain of ferredoxin-NADP reductase (FNR) module"]
+- The fusion architecture supports direct pyridine-nucleotide electron input and argues against the imported periplasmic NapA/cytochrome assignment. No transmembrane segment or export signal is annotated.
+- The sulfite-reductase annotation is not supported by a siroheme nitrite/sulfite-reductase catalytic domain.
+- KT2440 literature explicitly assigns PP_1703 and nirBD (PP_1705 and PP_1706) to assimilatory reduction of nitrate to ammonium. [PMID:32523942, "the assimilating nitrate and nitrite reductases encoded by PP_1703 and nirBD (PP_1705, PP_1706)"]
+- BarSeq provides broader physiological evidence for KT2440 nitrogen-assimilation pathways, but Q88M71 donor specificity remains unassayed. [PMID:35285712, "Using pooled mutant fitness assays, we identified genes and proteins involved in the assimilation of 52 different nitrogen containing compounds."]
+- The completed OpenScientist report supports the fused diflavin assimilatory-nitrate-reductase interpretation and retrieves same-lineage genetics plus comparative diflavin-NAS biochemistry; it does not supply a direct Q88M71 biochemical assay. [file:PSEPK/PP_1703/PP_1703-deep-research-openscientist.md]
+- PMID:10852866 identifies a *P. putida* KT2442 `nasB` assimilatory nitrate reductase induced during ammonium deficiency, while PMID:32111737 establishes the fused molybdopterin plus FMN-FAD/NAD architecture as a monomeric assimilatory nitrate-reductase design. These are supporting lineage/architecture evidence; PMID:32523942 remains the direct KT2440 locus assignment.
+- The membrane IEA is explicitly propagated from `PANTHER:PTN000177398` in the GOA row. That exact PTN is recorded as provenance but is not used to ground the curated module because its membrane conclusion conflicts with Q88M71 architecture and the absence of signal-peptide or transmembrane features.
