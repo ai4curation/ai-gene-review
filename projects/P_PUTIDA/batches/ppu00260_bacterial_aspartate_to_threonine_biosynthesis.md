@@ -27,7 +27,7 @@ autolink_gene_symbols: false
 - [x] Review every GOA annotation and document candidate uncertainty.
 - [x] Integrate the OpenScientist reports completed before publication.
 - [x] Complete gene, module, project, render, and test validation.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one draft PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
@@ -35,7 +35,7 @@ autolink_gene_symbols: false
 | Order | Reaction or role | PSEPK protein(s) | UniProt | Decision |
 |---|---|---|---|---|
 | 1 | L-aspartate activation | `PP_4473` | Q88EI9 | Covered by the directly assayed monofunctional aspartate kinase; shared trunk |
-| 2 | L-aspartate 4-semialdehyde formation | `asd__Q88LE4`; candidate `asd__Q88LE2` | Q88LE4; Q88LE2 | Covered by Q88LE4; Q88LE2 is an unconfirmed PTHR46278:SF2 USG-like candidate without HAMAP or UniPathway support |
+| 2 | L-aspartate 4-semialdehyde formation | `asd__Q88LE4`; candidate `asd__Q88LE2` | Q88LE4; Q88LE2 | Covered by Q88LE4; Q88LE2 lacks the HAMAP, EC, curated Rhea reaction, and UniPathway support present on the canonical representative |
 | 3 | L-homoserine formation | `hom`; `PP_0664` | Q88MU8; Q88Q34 | Covered by Q88MU8; Q88Q34 is a shorter same-EC paralog with unresolved pathway partitioning |
 | 4 | L-homoserine phosphorylation | `thrB` | Q88RK8 | Covered; first threonine-specific reaction in this boundary |
 | 5 | O-phospho-L-homoserine conversion to L-threonine | `thrC`; candidate `PP_0662` | Q88MU7; Q88Q36 | Covered by Q88MU7; Q88Q36 is a predicted PLP-dependent threonine-synthase-like protein without direct catalytic or genetic evidence and does not independently satisfy the step |
@@ -64,9 +64,9 @@ reaction.
 
 | Candidate | Decision |
 |---|---|
-| `asd__Q88LE2` / PP_1992 | Retain as an unconfirmed Asd-family candidate only. PTHR46278:SF2 groups with USG-like proteins, and the record lacks the HAMAP and UniPathway support present for Q88LE4/SF4. |
+| `asd__Q88LE2` / PP_1992 | Retain as an unconfirmed Asd-family candidate only. The record lacks the HAMAP, EC, curated Rhea reaction, and UniPathway support present for Q88LE4. |
 | `PP_0664` | Retain as a predicted short homoserine dehydrogenase and possible redundant contributor; relative use versus `hom` is unresolved. |
-| `PP_0662` | Retain a conservative predicted threonine-synthase-like function, but keep it outside terminal-step satisfaction until biochemical or genetic evidence establishes EC 4.2.3.1 and its role relative to canonical `thrC` in KT2440. |
+| `PP_0662` | Retain the threonine-synthase-like protein assignment only as a candidate hypothesis, outside terminal-step satisfaction, until biochemical or genetic evidence establishes EC 4.2.3.1 and its role relative to canonical `thrC` in KT2440. |
 | PP_1147 / Q88NQ8 | Exclude: the 109-residue record lacks EC, GO, InterPro, Pfam, and PANTHER support for a complete Asd enzyme. |
 
 ## Historical Source Review
