@@ -23,7 +23,7 @@ and PhaZ-dependent intracellular mobilization.
 - [x] Consult the annotation reviewer and address findings.
 - [x] Review all six imported GOA rows with no PENDING actions.
 - [x] Validate and render all changed artifacts.
-- [ ] Open one focused draft PR.
+- [x] Open one focused draft PR: [#2585](https://github.com/ai4curation/ai-gene-review/pull/2585).
 
 ## Selected genes
 
