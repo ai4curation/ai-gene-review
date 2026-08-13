@@ -27,12 +27,15 @@ autolink_gene_symbols: false
 - Spermidine synthesis and gamma-glutamyl putrescine catabolism are excluded.
 - The AguA-dependent deiminase branch is excluded from the core model because
   KT2440 lacks a verified completing N-carbamoylputrescine amidohydrolase.
+- PP_4523 is excluded from the SpeB step because its K12255 assignment supports
+  guanidinobutyrase despite the same TIGR01230/InterPro family signatures.
 
 ## Notes
 
 2026-08-13: Started as module 15 of the current 20-module batch. Exact PSEPK
-UniProt exemplars and PTN identifiers from GOA are recorded, while broad
-PANTHER families are constrained by the required molecular functions.
+UniProt exemplars and PTN identifiers from GOA are recorded. Broad families
+are constrained by required molecular functions, and SpeB uses characterized
+orthology because its family signatures do not separate the PP_4523 paralog.
 
 2026-08-13: The completed consolidated OpenScientist module + `ppu00330` +
 PSEPK report and its HTML/PDF artifacts were reviewed. It supports all three
