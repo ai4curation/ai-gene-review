@@ -1,0 +1,3518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>putA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>putA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D80" target="_blank" class="term-link">
+                        Q88D80
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "putA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D80" data-a="DESCRIPTION: putA encodes a large fused proline-utilization pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>putA encodes a large fused proline-utilization protein with FAD-dependent proline dehydrogenase and NAD-dependent glutamate-5-semialdehyde dehydrogenase domains. It converts L-proline to L-glutamate in two coupled oxidative steps and also represses the divergently transcribed putA and putP promoters.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0000976" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PutA binds the regulatory region controlling the divergent put promoters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct P. putida genetics establishes PutA-dependent repression of both promoters, and Q88D80 contains the N-terminal RHH DNA-binding domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The PutA protein acts as a repressor of put gene expression in P. putida</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR048798; PutA_RHH.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    GO:0001217
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription repressor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0001217" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA-binding transcription repressor activity is directly supported for P. putida PutA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> putA knockout causes constitutive expression of both put promoters, while a catalytically inactive PutA retains regulation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The PutA protein acts as a repressor of put gene expression in P. putida</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This regulatory activity is independent of the catabolic activity of PutA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic transcription-factor term is sound but less informative than the supported repressor term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct P. putida evidence establishes repression rather than an unspecified transcription-factor activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    DNA-binding transcription repressor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The PutA protein acts as a repressor of put gene expression in P. putida</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003842" target="_blank" class="term-link">
+                                    GO:0003842
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate gamma-semialdehyde dehydrogenase (NAD+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0003842" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The NAD-dependent second oxidation step is a core PutA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact UniProt record assigns EC 1.2.1.88 and RHEA:30235, and the P. putida study identifies the corresponding C-terminal domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-glutamate 5-semialdehyde + NAD(+) + H2O = L-glutamate + NADH</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                        PMID:10613867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                                    GO:0004657
+                                </a>
+                            </span>
+                            <span class="term-label">proline dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0004657" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FAD-dependent proline dehydrogenase is the first core PutA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact record assigns EC 1.5.5.2 and RHEA:23784, and direct P. putida work places the proline-dehydrogenase region in PutA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                        PMID:10613867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PutA directly regulates transcription from the divergent put promoters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Promoter-expression experiments show constitutive expression in a putA knockout and proline-dependent regulation in the wild type.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">expression from the put promoters is constitutive in a host background with a knockout putA gene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                    GO:0006562
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0006562" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PutA performs both oxidative steps of L-proline catabolism to glutamate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A putA insertion prevents growth on proline as sole carbon and nitrogen source, and the fused protein carries both catalytic domains.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                        PMID:10613867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">unable to grow with proline as the sole carbon and nitrogen source</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                        PMID:10613867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PutA thus enables *P. putida* to use proline as a **carbon, nitrogen, and energy source.**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009898" target="_blank" class="term-link">
+                                    GO:0009898
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic side of plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0009898" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The membrane-facing location is mechanistically plausible but is not the sole state of this regulatory enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Type C PutA proteins switch between soluble DNA-bound and peripheral membrane-associated states; the exact KT2440 location has not been directly measured in the cited studies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28712849" target="_blank" class="term-link">
+                                        PMID:28712849
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">flavin redox dependent changes in subcellular location and function in response to proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent term is true but obscures the two known substrate-specific activities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004657 and GO:0003842 separately capture both catalytic activities with exact reaction support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.5.5.2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.2.1.88</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043168" target="_blank" class="term-link">
+                                    GO:0043168
+                                </a>
+                            </span>
+                            <span class="term-label">anion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0043168" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic anion binding does not describe a distinct PutA function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This ARBA parent-level binding prediction is uninformative beside the two specific catalytic activities and lacks direct KT2440 binding evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0043168	anion binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0045892" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative transcriptional regulation is experimentally established for PutA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss of putA causes constitutive expression from both divergent put promoters.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                        PMID:11097893
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The PutA protein acts as a repressor of put gene expression in P. putida</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055129" target="_blank" class="term-link">
+                                    GO:0055129
+                                </a>
+                            </span>
+                            <span class="term-label">L-proline biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0055129" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biosynthesis annotation is a directionally incorrect propagation from the shared semialdehyde-dehydrogenase domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct P. putida evidence and both exact reactions place PutA in oxidative proline catabolism to glutamate, not glutamate-to-proline biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                        PMID:10613867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amino-acid degradation; L-proline degradation into L-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098562" target="_blank" class="term-link">
+                                    GO:0098562
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic side of membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:0098562" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broader membrane-side annotation is plausible but secondary and redundant with GO:0009898.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PutA membrane association is conditional in the characterized regulatory class, and the exact KT2440 subcellular switch remains inferred.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28712849" target="_blank" class="term-link">
+                                        PMID:28712849
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">flavin redox dependent changes in subcellular location and function in response to proline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901363" target="_blank" class="term-link">
+                                    GO:1901363
+                                </a>
+                            </span>
+                            <span class="term-label">heterocyclic compound binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D80" data-a="GO:1901363" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic heterocycle binding is not an informative standalone PutA function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Binding of FAD, NAD, and proline is already inherent in the specific catalytic activities; no separate generic binding role is established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/putA/putA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:1901363	heterocyclic compound binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent oxidation of L-proline to P5C using a quinone electron acceptor.</h3>
+                <span class="vote-buttons" data-g="Q88D80" data-a="FUNCTION: FAD-dependent oxidation of L-proline to P5C using ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004657" target="_blank" class="term-link">
+                            proline dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                L-proline catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/putA/putA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                PMID:10613867
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD-dependent oxidation of L-glutamate 5-semialdehyde to L-glutamate.</h3>
+                <span class="vote-buttons" data-g="Q88D80" data-a="FUNCTION: NAD-dependent oxidation of L-glutamate 5-semialdeh..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003842" target="_blank" class="term-link">
+                            L-glutamate gamma-semialdehyde dehydrogenase (NAD+) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006562" target="_blank" class="term-link">
+                                L-proline catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/putA/putA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=L-glutamate 5-semialdehyde + NAD(+) + H2O = L-glutamate + NADH</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                                PMID:10613867
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Autogenous repression of the divergent putA and putP promoters.</h3>
+                <span class="vote-buttons" data-g="Q88D80" data-a="FUNCTION: Autogenous repression of the divergent putA and pu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                            DNA-binding transcription repressor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                negative regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                                PMID:11097893
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The PutA protein acts as a repressor of put gene expression in P. putida</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro mappings supplied broad transcription, catabolism, and oxidoreductase annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Logical inference supplied negative regulation from the repressor molecular function.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA supplied DNA-binding, repressor, membrane-side, and generic binding predictions reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated mappings supplied both catalytic activities, membrane association, and the erroneous biosynthesis process.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10613867" target="_blank" class="term-link">
+                            PMID:10613867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proline catabolism by Pseudomonas putida: cloning, characterization, and expression of the put genes in the presence of root exudates.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct P. putida genetics links PutA to growth on proline and identifies both catalytic regions in one protein.</div>
+
+                        <div class="finding-text">"both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11097893" target="_blank" class="term-link">
+                            PMID:11097893
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Control of expression of divergent Pseudomonas putida put promoters for proline catabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct promoter studies establish PutA-dependent repression independent of catalytic activity.</div>
+
+                        <div class="finding-text">"This regulatory activity is independent of the catabolic activity of PutA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28712849" target="_blank" class="term-link">
+                            PMID:28712849
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure, function, and mechanism of proline utilization A (PutA).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The review supports the conserved two-step chemistry and redox-dependent localization switch of PutA proteins.</div>
+
+                        <div class="finding-text">"FAD-dependent proline dehydrogenase (PRODH) and NAD+-dependent glutamate semialdehyde dehydrogenase (GSALDH) convert proline to glutamate in two sequential oxidative steps."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/putA/putA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88D80 for Pseudomonas putida KT2440 PutA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The exact record assigns both catalytic reactions, FAD, the PutA RHH domain, and the proline-degradation pathway.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/putA/putA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for putA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched table contains the fourteen source rows reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/putA/putA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on putA (Q88D80)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The generated report retrieved direct P. putida studies and family-level PutA mechanistic literature used for source discovery.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 PutA undergo the same directly measurable FAD-redox-dependent membrane switch as E. coli PutA?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D80" data-a="Q: Does KT2440 PutA undergo the same directly measura..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the identity of the sigma-54-dependent positive regulator required for full put promoter induction?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D80" data-a="Q: What is the identity of the sigma-54-dependent pos..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure coupled proline-to-glutamate turnover and intermediate channeling with purified Q88D80 and catalytic-domain mutants.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: coupled enzyme kinetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D80" data-a="EXPERIMENT: Measure coupled proline-to-glutamate turnover and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare membrane association and operator binding of oxidized and proline-reduced Q88D80.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: membrane-binding and DNA-binding assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88D80" data-a="EXPERIMENT: Compare membrane association and operator binding ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(putA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D80" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PutA (Q88D80) of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">15 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-13T02:31:38.408392</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="putA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="putA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-puta-q88d80-of-pseudomonas-putida-kt2440">Functional Annotation Report: PutA (Q88D80) of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>putA</em> (ordered locus PP_4947)<br />
+<strong>UniProt:</strong> Q88D80<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), PSEPK<br />
+<strong>Protein length:</strong> 1,317 aa · <strong>Mass:</strong> 142.6 kDa · <strong>Cofactor:</strong> FAD (non-covalent)<br />
+<strong>EC numbers:</strong> 1.5.5.2 (proline dehydrogenase) and 1.2.1.88 (L-glutamate-5-semialdehyde / Δ¹-pyrroline-5-carboxylate dehydrogenase)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>PutA (Q88D80, PP_4947) of <em>Pseudomonas putida</em> KT2440 is a large (~1,317-residue, ~142.6 kDa) FAD-dependent <strong>trifunctional flavoenzyme</strong> that carries out the complete catabolic conversion of L-proline to L-glutamate and, in addition, acts as the autogenous transcriptional repressor of its own proline-utilization (<em>put</em>) genes. It belongs to the enteric-type ("Type C") trifunctional PutA class: a global sequence alignment shows it is <strong>~74% identical over its full length to <em>Escherichia coli</em> PutA (P09546)</strong>, and direct experimental characterization of the <em>P. putida</em> enzyme confirmed that a single 1,315-residue polypeptide catalyzes both oxidative steps of proline degradation. This licenses a high-confidence transfer of the extensively studied <em>E. coli</em>/<em>Salmonella</em> PutA mechanism to the <em>P. putida</em> protein, reinforced by residue-level conservation of every catalytically important side chain.</p>
+<p>Mechanistically, PutA couples three functions within one polypeptide. (1) A <strong>proline dehydrogenase (PRODH)</strong> domain built on a (βα)₈ barrel uses a non-covalently bound FAD to oxidize L-proline to Δ¹-pyrroline-5-carboxylate (P5C), passing the electrons to a membrane ubiquinone (EC 1.5.5.2). (2) An <strong>aldehyde-dehydrogenase-superfamily domain</strong> (P5C / L-glutamate-γ-semialdehyde dehydrogenase; EC 1.2.1.88; catalytic Glu881 general base and Cys915 nucleophile) oxidizes the ring-opened intermediate L-glutamate-γ-semialdehyde (GSA) to L-glutamate using NAD⁺. The reactive P5C/GSA intermediate is not released to bulk solvent; it is <strong>channeled through a buried internal tunnel (~42 Å) between the two active sites</strong>, a mechanism that also facilitates the thermodynamically unfavorable P5C→GSA hydrolysis. (3) Through an <strong>N-terminal ribbon-helix-helix (RHH) DNA-binding domain</strong>, PutA binds the operator of the divergently transcribed <em>putA</em>/<em>putP</em> genes and represses them.</p>
+<p>Uniquely for this protein family, its <strong>subcellular localization and function are conditional and redox-controlled.</strong> When proline is scarce, the FAD is oxidized and PutA behaves as a cytoplasmic DNA-bound repressor. When proline is abundant, proline binding in the PRODH site reduces the FAD; reduction triggers a global conformational change (mediated by a flavin 2′-OH "toggle" and the FAD N5 environment) that dramatically increases membrane affinity, converting PutA into a <strong>peripheral inner-membrane catabolic enzyme</strong> that feeds electrons into the respiratory chain. In <em>P. putida</em> specifically, the repressor role was shown to be genetically <strong>separable from catalysis</strong> (a catalytically dead Glu896→Lys mutant still represses), and full proline-dependent induction additionally requires an unidentified σ⁵⁴(RpoN)-dependent activator. The partner protein <strong>PutP</strong>, an integral inner-membrane Na⁺/proline symporter encoded divergently, supplies the substrate.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-q88d80-is-a-trifunctional-puta-proline-catabolic-enzyme-plus-put-gene-repressor">F001 — Q88D80 is a trifunctional PutA: proline-catabolic enzyme plus <em>put</em>-gene repressor</h3>
+<p>UniProt Q88D80 (<em>P. putida</em> KT2440, PP_4947) is a 1,317-amino-acid, 142.6 kDa protein with a modular, multidomain architecture characteristic of the enteric trifunctional PutA. From N- to C-terminus it comprises: an <strong>N-terminal ribbon-helix-helix (RHH) DNA-binding domain</strong> (residues ~11–43); a PRODH N-terminal "arm" region (~87–257); a <strong>proline dehydrogenase (βα)₈ barrel</strong> carrying the FAD (~267–567); an <strong>aldehyde-dehydrogenase / P5C(GSAL) dehydrogenase domain</strong> (~654–1101, with catalytic residues near 881 and 915); and a <strong>C-terminal domain</strong> (~1102–1317). Two enzymatic activities are annotated: EC 1.5.5.2 (L-proline + quinone → (S)-1-pyrroline-5-carboxylate + quinol) and EC 1.2.1.88 (L-glutamate-5-semialdehyde + NAD⁺ + H₂O → L-glutamate + NADH), with FAD as cofactor. The presence of the N-terminal RHH domain places Q88D80 in the trifunctional ("Type C") class rather than the minimal bifunctional Type A/B PutAs, matching the ~1,320-residue <em>E. coli</em> enzyme.</p>
+<p>The dual catalytic/regulatory nature of this enzyme family is well established. As stated for the enzyme mechanism, <em>"The bifunctional enzyme proline utilization A (PutA) catalyzes the two-step oxidation of L-proline to L-glutamate using proline dehydrogenase (PRODH) and L-glutamate-γ-semialdehyde dehydrogenase (GSALDH) domains"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/40738191/">PMID: 40738191</a>), and the trifunctional character is captured by <em>"The trifunctional flavoprotein proline utilization A (PutA) links metabolism and gene regulation in Gram-negative bacteria by catalyzing the two-step oxidation of proline to glutamate and repressing transcription of the proline utilization regulon"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22013066/">PMID: 22013066</a>).</p>
+<h3 id="f002-the-reactive-p5cgsa-intermediate-is-channeled-through-a-buried-internal-tunnel">F002 — The reactive P5C/GSA intermediate is channeled through a buried internal tunnel</h3>
+<p>The two catalytic sites in PutA are physically distant — approximately <strong>42 Å apart</strong> — yet the intermediate produced by PRODH must reach the P5CDH/GSALDH site. Structural work shows the sites are <em>"42 Å apart and connected by a buried tunnel that is hypothesized to channel the intermediates"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/40738191/">PMID: 40738191</a>). Kinetic evidence directly demonstrates channeling: the coupled PRODH–P5CDH reaction <em>"is best described by a mechanism in which the intermediate is not released into the bulk medium, i.e., substrate channeling"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/24352662/">PMID: 24352662</a>). An independent study of the <em>Salmonella</em> enzyme reached the same conclusion, indicating that <em>"PutA directly transfers the intermediate P5C between the two enzymatic functions via a 'leaky channel' mechanism"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9637737/">PMID: 9637737</a>).</p>
+<p>Channeling is more than a kinetic curiosity: P5C is in a pH-dependent equilibrium with its ring-opened form GSA, and the hydrolysis of P5C to GSA is unfavorable at physiological pH. Sequestering the intermediate in a buried tunnel is proposed to facilitate this conversion and improve the overall efficiency of proline catabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/22201749/">PMID: 22201749</a>). Because Q88D80 possesses the same two-domain catalytic architecture and is ~74% identical to <em>E. coli</em> PutA (F005), the channeling mechanism is expected to be conserved in the <em>P. putida</em> enzyme. Supporting the generality of the mechanism, channeling has even been demonstrated between separate monofunctional PRODH and P5CDH enzymes, implying the core channeling pathway of bifunctional PutAs is broadly conserved (<a href="https://pubmed.ncbi.nlm.nih.gov/25492892/">PMID: 25492892</a>).</p>
+<h3 id="f003-a-redox-dependent-switch-moves-puta-between-cytoplasmic-repressor-and-membrane-bound-enzyme">F003 — A redox-dependent switch moves PutA between cytoplasmic repressor and membrane-bound enzyme</h3>
+<p>One of the most distinctive features of trifunctional PutA is that its localization and function are governed by the redox state of its own flavin. Proline binding in the PRODH active site reduces the FAD, and <em>"the binding of proline in the proline dehydrogenase (PRODH) active site and subsequent reduction of the FAD trigger global conformational changes that enhance PutA-membrane affinity. These events cause PutA to switch from its repressor to its enzymatic role"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19994913/">PMID: 19994913</a>). Membrane binding is tightly coupled to flavin chemistry: <em>"Membrane binding was thus coincident with both flavin reduction and a change in protein conformation"</em>, with ~0.1 mM proline producing half-maximal FAD bleaching and half-maximal membrane association (<a href="https://pubmed.ncbi.nlm.nih.gov/8473341/">PMID: 8473341</a>).</p>
+<p>The molecular toggle responsible has been localized to the flavin itself: <em>"the FAD 2'-OH group acts as a redox-sensitive toggle switch that controls PutA-membrane binding"</em>, with the FAD N5–Arg interaction required for reductive activation of membrane binding (<a href="https://pubmed.ncbi.nlm.nih.gov/17209558/">PMID: 17209558</a>). Importantly, PutA is a <strong>peripheral, not integral, membrane protein</strong>: <em>"PutA is a multifunctional, peripheral membrane protein which acts both as a transcriptional repressor for the put operon and enzyme catalyzing the two-step conversion of proline to glutamate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9637737/">PMID: 9637737</a>). In the PRODH half-reaction the electrons ultimately pass to a membrane quinone (ubiquinone; EC 1.5.5.2), physically linking proline oxidation to the respiratory chain and rationalizing why the catalytically active form must associate with the inner membrane. Tryptophan-fluorescence stopped-flow studies further established that FAD reduction <em>precedes</em> the conformational transition, with W211 serving as the primary molecular marker of the change (<a href="https://pubmed.ncbi.nlm.nih.gov/16156643/">PMID: 16156643</a>).</p>
+<h3 id="f004-quaternary-structure-and-domain-roles-n-terminal-domain-dimerizes-c-terminal-domain-is-a-channel-lid">F004 — Quaternary structure and domain roles: N-terminal domain dimerizes, C-terminal domain is a channel "lid"</h3>
+<p>Small-angle X-ray scattering of the 1,320-residue <em>E. coli</em> trifunctional PutA revealed a symmetric, V-shaped homodimer (~205 × 85 × 55 Å). Domain-deletion analysis assigned specific roles: <em>"Domain deletion analysis shows that the N-terminal DNA-binding domain mediates dimerization"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22013066/">PMID: 22013066</a>) — so the same RHH module that binds operator DNA also holds the dimer together. The ~200-residue C-terminal domain, in turn, was proposed to seal the channeling cavity: <em>"this domain serves as a lid that covers the internal substrate channeling cavity, thus preventing escape of the catalytic intermediate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22013066/">PMID: 22013066</a>).</p>
+<p>The modularity of the three functions is demonstrated by engineering studies: fusing a DNA-binding domain onto a naturally bifunctional PutA converts it into a functional trifunctional chimera (<a href="https://pubmed.ncbi.nlm.nih.gov/27742866/">PMID: 27742866</a>), and in Type B PutAs the C-terminal domain contributes to aldehyde dehydrogenase activity and channeling (<a href="https://pubmed.ncbi.nlm.nih.gov/25137435/">PMID: 25137435</a>). Because Q88D80 retains all of these modules, the same structural logic — RHH-mediated dimerization and C-terminal capping of the tunnel — is expected to apply.</p>
+<h3 id="f005-q88d80-is-a-full-length-ortholog-of-e-coli-puta-74-identity-with-conserved-aldh-catalytic-residues">F005 — Q88D80 is a full-length ortholog of <em>E. coli</em> PutA (~74% identity) with conserved ALDH catalytic residues</h3>
+<p>A banded Needleman–Wunsch global alignment of Q88D80 (1,317 aa) against <em>E. coli</em> trifunctional PutA P09546 (1,320 aa) yielded <strong>988 identical positions over 1,337 aligned columns = 73.9% amino-acid identity across the entire length</strong>, spanning the N-terminal RHH region, the PRODH (βα)₈ barrel, and the ALDH/P5CDH domain. The aldehyde-dehydrogenase catalytic dyad is intact: <strong>Glu881</strong> sits in the canonical ALDH general-base motif (…IPLIA-<strong>E</strong>TGG-QN…), and <strong>Cys915</strong> is the nucleophilic catalytic cysteine (…SAGQR-<strong>C</strong>-SALRV…). This is the same catalytic pairing found throughout the aldehyde-dehydrogenase superfamily.</p>
+<p>This high, full-length identity is the linchpin that justifies transferring the mechanistic conclusions from the enteric model enzymes to the <em>P. putida</em> protein. The reference class is defined by <em>"The trifunctional flavoprotein proline utilization A (PutA) links metabolism and gene regulation in Gram-negative bacteria by catalyzing the two-step oxidation of proline to glutamate and repressing transcription of the proline utilization regulon"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22013066/">PMID: 22013066</a>).</p>
+<h3 id="f006-p-putida-specific-puta-is-a-single-1315-aa-polypeptide-catalyzing-both-steps-putp-is-the-inner-membrane-proline-permease">F006 — <em>P. putida</em>-specific: PutA is a single 1,315-aa polypeptide catalyzing both steps; PutP is the inner-membrane proline permease</h3>
+<p>Beyond inference from homology, the <em>P. putida</em> <em>put</em> system has been directly characterized. The <em>putA</em> gene <em>"codes for a protein of 1,315 amino acid residues which is homologous to the PutA protein of Escherichia coli, Salmonella enterica serovar Typhimurium, Rhodobacter capsulatus, and several Rhizobium strains"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10613867/">PMID: 10613867</a>). Its central region is homologous to proline dehydrogenase and its C-terminal region to P5C dehydrogenase, so <em>"in P. putida, both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10613867/">PMID: 10613867</a>). The reported size (1,315 aa) matches UniProt Q88D80 (1,317 aa; PP_4947), confirming the identity of the research target.</p>
+<p>The adjacent, divergently transcribed <em>putP</em> gene encodes the substrate-supplying transporter: <em>"its gene product is an integral inner-membrane protein involved in the uptake of proline"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10613867/">PMID: 10613867</a>). Both genes are induced by proline — including proline present in corn root exudates, relevant to <em>P. putida</em>'s rhizosphere lifestyle. Notably, the <em>P. aeruginosa</em> PutA is only ~47% identical to the <em>P. putida</em> enzyme and lacks the regulatory function (<a href="https://pubmed.ncbi.nlm.nih.gov/12270821/">PMID: 12270821</a>), underscoring that <em>P. putida</em> PutA belongs firmly to the enteric-type, regulatory class rather than the divergent <em>P. aeruginosa</em> type.</p>
+<h3 id="f007-p-putida-puta-is-an-autogenous-repressor-repression-is-separable-from-catalysis-and-induction-needs-a-54-dependent-activator">F007 — <em>P. putida</em> PutA is an autogenous repressor; repression is separable from catalysis, and induction needs a σ⁵⁴-dependent activator</h3>
+<p>In <em>P. putida</em> the <em>putA</em> and <em>putP</em> genes are transcribed divergently and PutA represses both. Genetic evidence is direct: <em>"The PutA protein acts as a repressor of put gene expression in P. putida because expression from the put promoters is constitutive in a host background with a knockout putA gene"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">PMID: 11097893</a>). Crucially, the regulatory function is separable from catalysis: <em>"This regulatory activity is independent of the catabolic activity of PutA, because we show that a point mutation (Glu896--&gt;Lys) that prevents catalytic activity allowed the protein to retain its regulatory activity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">PMID: 11097893</a>). This confirms that DNA binding is an autonomous property of the RHH module and not a byproduct of the catalytic domains.</p>
+<p>Full proline-dependent induction, however, requires more than relief of repression. The system <em>"requires a positive regulatory protein, still unidentified, whose expression seems to be sigma(54) dependent"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">PMID: 11097893</a>). This is a genuine mechanistic distinction from the enteric paradigm and from <em>P. aeruginosa</em>, where the AraC/XylS-family activator PruR controls <em>putAP</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12270821/">PMID: 12270821</a>).</p>
+<h3 id="f008-prodh-fad-binding-and-redox-switch-residues-are-fully-conserved-in-q88d80">F008 — PRODH FAD-binding and redox-switch residues are fully conserved in Q88D80</h3>
+<p>Mapping the crystallographically defined <em>E. coli</em> PRODH active-site residues onto Q88D80 via the global alignment shows every one is conserved: <strong>Ec Lys329 → Q88D80 Lys327</strong> (the lysine covalently crosslinked to FAD N5 by the mechanism-based inactivator N-propargylglycine), <strong>Ec Asp370 → Asp368</strong> (part of the FAD N5 electrostatic network), <strong>Ec Arg431 → Arg429</strong> (hydrogen-bonds FAD N5), and <strong>Ec Arg556 → Arg554</strong> (hydrogen-bonds the FAD ribityl 2′-OH redox toggle). The inactivation chemistry that pinpointed the key lysine is described as follows: <em>"N-propargylglycine irreversibly inactivates PutA by covalently linking the flavin N(5) atom to the epsilon-amino of Lys329"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19994913/">PMID: 19994913</a>); and the 2′-OH toggle contacted by Arg554 is the element that <em>"acts as a redox-sensitive toggle switch that controls PutA-membrane binding"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17209558/">PMID: 17209558</a>). Combined with the conserved ALDH dyad (Glu881/Cys915, F005), both active sites and the full flavin redox-switch machinery are structurally intact in the <em>P. putida</em> enzyme.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction-puta-catalyzes">The reaction PutA catalyzes</h3>
+<p>PutA carries out the complete four-electron oxidation of proline to glutamate in two coupled half-reactions:</p>
+<div class="codehilite"><pre><span></span><code>PRODH domain (FAD)                     P5CDH/GSALDH domain (NAD+)
+                    (spontaneous
+                     ring opening/
+                     hydrolysis)
+ L-proline  ──────────►  Δ1-P5C  ◄════════►  L-glutamate-γ-      ──────────►  L-glutamate
+   + FAD                  + FADH2              semialdehyde (GSA)   + NAD+        + NADH
+   (EC 1.5.5.2)                                                    (EC 1.2.1.88)
+      │                                                                │
+      ▼  electrons                                                     ▼  hydride
+   membrane quinone (ubiquinone) → respiratory chain             to NAD+ → NADH
+
+   [====================  buried ~42 Å channeling tunnel  ====================]
+ (P5C/GSA never released to bulk solvent; C-terminal domain = lid)
+</code></pre></div>
+
+<p><strong>Step 1 (PRODH, EC 1.5.5.2):</strong> The (βα)₈-barrel PRODH domain uses non-covalently bound FAD to abstract two electrons and two protons from L-proline, generating Δ¹-pyrroline-5-carboxylate (P5C) and reduced flavin. The reduced flavin is reoxidized by a membrane-embedded quinone, coupling proline oxidation to aerobic respiration. Active-site residues Lys327, Asp368, Arg429 (FAD N5 network) and Arg554 (ribityl 2′-OH) — all conserved in Q88D80 — organize the flavin and transmit its redox state to the protein surface.</p>
+<p><strong>Intermediate handling:</strong> P5C is in equilibrium with its hydrolyzed, ring-opened tautomer, L-glutamate-γ-semialdehyde (GSA). Rather than releasing this reactive species, PutA channels it through a buried internal tunnel (~42 Å) to the second active site. The C-terminal domain caps this cavity as a "lid," and channeling is thought to help drive the otherwise unfavorable P5C→GSA hydrolysis.</p>
+<p><strong>Step 2 (P5CDH/GSALDH, EC 1.2.1.88):</strong> The aldehyde-dehydrogenase-superfamily domain oxidizes GSA to L-glutamate using NAD⁺. Catalysis follows the canonical ALDH chemistry: Cys915 acts as the nucleophile that attacks the aldehyde to form a thiohemiacetal, and Glu881 serves as the general base — both conserved in Q88D80.</p>
+<h3 id="the-regulatory-localization-switch">The regulatory / localization switch</h3>
+<p>PutA is a <strong>functional switch (a "moonlighting" flavoprotein)</strong> whose behavior is dictated by proline availability, read out through FAD redox state:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>FAD state</th>
+<th>Conformation</th>
+<th>Localization</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Low proline</td>
+<td>Oxidized</td>
+<td>"Repressor" conformation</td>
+<td>Cytoplasmic, DNA-bound</td>
+<td>Represses divergent <em>putA</em>/<em>putP</em> promoters via N-terminal RHH domain</td>
+</tr>
+<tr>
+<td>High proline</td>
+<td>Reduced (proline-driven)</td>
+<td>Global conformational change (2′-OH toggle, FAD N5 network, flexible W211 domain)</td>
+<td>Peripheral inner-membrane</td>
+<td>Catabolic enzyme; feeds electrons to respiratory quinone</td>
+</tr>
+</tbody>
+</table>
+<p>This design elegantly links metabolism and gene regulation: the same molecule <em>senses</em> proline (by trying to oxidize it), and the very act of catalysis (flavin reduction) flips it off the DNA and onto the membrane, de-repressing the genes exactly when substrate is present. In <em>P. putida</em> the two functions are experimentally separable (a catalytically dead mutant still represses), and de-repression alone is insufficient for full induction — a σ⁵⁴(RpoN)-dependent positive regulator is also required.</p>
+<h3 id="pathway-context-and-localization">Pathway context and localization</h3>
+<div class="codehilite"><pre><span></span><code>   Extracellular / periplasm            Inner membrane                 Cytoplasm
+   ------------------------      ------------------------------    ------------------
+L-proline  ───────►   PutP (Na+/proline symporter,  ───►  L-proline
+     (e.g. root exudates)       integral IM permease)                  │
+                                                       ▼
+          PutA (peripheral IM, reduced FAD) ── proline → glutamate
+                       │                                │
+                electrons → quinone/                    ▼
+                respiratory chain                  L-glutamate
+                                             (into central N/C metabolism:
+                                              TCA cycle / amino acid pools)
+</code></pre></div>
+
+<p>PutA thus enables <em>P. putida</em> to use proline as a <strong>carbon, nitrogen, and energy source.</strong> PutP concentrates proline across the inner membrane; PutA oxidizes it to glutamate, feeding both the carbon/nitrogen economy (glutamate → α-ketoglutarate / transamination) and the electron-transport chain (via the PRODH-to-quinone route). The rhizospheric relevance is notable: <em>P. putida put</em> genes respond to proline in corn root exudates (<a href="https://pubmed.ncbi.nlm.nih.gov/10613867/">PMID: 10613867</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22013066/">22013066</a></td>
+<td><em>SAXS of trifunctional E. coli PutA</em></td>
+<td>Defines the trifunctional class; assigns N-terminal domain to dimerization and C-terminal domain to a channel lid (F001, F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40738191/">40738191</a></td>
+<td><em>Covalent intermediates &amp; conformational states of PutA</em></td>
+<td>States the two catalytic activities and the 42 Å buried channeling tunnel (F001, F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24352662/">24352662</a></td>
+<td><em>Hysteretic substrate channeling in PutA</em></td>
+<td>Kinetic proof of substrate channeling — intermediate not released to solvent (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9637737/">9637737</a></td>
+<td><em>Salmonella PutA leaky channel</em></td>
+<td>Independent channeling evidence; establishes peripheral membrane + dual repressor/enzyme roles (F002, F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22201749/">22201749</a></td>
+<td><em>Substrate channeling in proline metabolism (review)</em></td>
+<td>Rationale: channeling drives unfavorable P5C→GSA hydrolysis (F002).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25492892/">25492892</a></td>
+<td><em>Channeling in monofunctional PRODH–P5CDH pair</em></td>
+<td>Shows the channeling pathway is conserved even in separate enzymes — reinforces F002.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19994913/">19994913</a></td>
+<td><em>N-propargylglycine-inactivated PRODH structure</em></td>
+<td>Redox-driven repressor→enzyme switch; identifies Lys329 at FAD N5 (F003, F008).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8473341/">8473341</a></td>
+<td><em>Conformation &amp; membrane association coincident with FAD reduction</em></td>
+<td>Couples FAD reduction, conformational change, and membrane binding; ~0.1 mM proline half-maximal (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17209558/">17209558</a></td>
+<td><em>Flavin N5 and ribityl 2′-OH in PutA–membrane binding</em></td>
+<td>Identifies the FAD 2′-OH redox toggle controlling membrane binding (F003, F008).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16156643/">16156643</a></td>
+<td><em>Trp fluorescence of proline-dependent conformational change</em></td>
+<td>Shows FAD reduction precedes the conformational transition; W211 as molecular marker (F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10613867/">10613867</a></td>
+<td><em><strong>P. putida</strong> put genes cloning/characterization</em></td>
+<td>Direct evidence: single 1,315-aa polypeptide catalyzes both steps; PutP is IM permease; root-exudate induction (F006).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">11097893</a></td>
+<td><em>Control of divergent </em><em>P. putida</em><em> put promoters</em></td>
+<td>PutA is a repressor; regulation separable from catalysis (E896K); σ⁵⁴-dependent activator required (F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12270821/">12270821</a></td>
+<td><em><strong>P. aeruginosa</strong> putAP / PruR</em></td>
+<td>Contrast: <em>P. aeruginosa</em> PutA only ~47% identical and non-regulatory — distinguishes <em>P. putida</em>'s enteric-type system (F006, F007).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27742866/">27742866</a></td>
+<td><em>Engineering a trifunctional PutA chimera</em></td>
+<td>Demonstrates modularity of the three PutA functions (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25137435/">25137435</a></td>
+<td><em>Type B PutA C-terminal domain</em></td>
+<td>C-terminal domain contributes to ALDH activity and channeling (F004).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28712849/">28712849</a></td>
+<td><em>Structure, function, mechanism of PutA (review)</em></td>
+<td>Authoritative synthesis of PutA biology underpinning the whole report.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> Multiple independent lines converge: two organisms (<em>E. coli</em>, <em>Salmonella</em>) independently demonstrate substrate channeling; structural, kinetic, and spectroscopic methods all support the redox-driven localization switch; and direct genetic/biochemical work in <em>P. putida</em> itself confirms the single-polypeptide bifunctional catalysis and the repressor role. No reviewed study contradicts the annotation. The only cross-species caveat is regulatory: <em>P. aeruginosa</em> diverges from <em>P. putida</em>, which is why the direct <em>P. putida</em> studies (F006, F007) are weighted most heavily for the regulation claims.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No experimental structure of Q88D80 itself.</strong> The domain assignments, catalytic residues, channeling tunnel, and redox switch for the <em>P. putida</em> protein are inferred from ~74% full-length identity to <em>E. coli</em> PutA and from residue-level conservation, not from a <em>P. putida</em> crystal structure or in vitro kinetics of the purified enzyme. Confidence is high but the specific values (Km, kcat, channeling efficiency) for Q88D80 are not directly measured.</p>
+</li>
+<li>
+<p><strong>Quinone identity and respiratory coupling.</strong> The PRODH electron acceptor is annotated as a membrane quinone (ubiquinone) based on the enteric model. The specific physiological electron acceptor in <em>P. putida</em> under aerobic vs. microaerobic conditions has not been experimentally pinned down here.</p>
+</li>
+<li>
+<p><strong>The σ⁵⁴-dependent activator is unidentified.</strong> <em>P. putida put</em> induction requires a positive regulator whose expression appears RpoN-dependent, but the identity of this activator and its binding site remain unknown (<a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">PMID: 11097893</a>).</p>
+</li>
+<li>
+<p><strong>Operator/DNA-binding site not mapped for <em>P. putida</em>.</strong> While PutA is established as an autogenous repressor, the precise operator sequence(s) at the divergent <em>putA</em>/<em>putP</em> promoters and the stoichiometry of PutA–DNA binding in <em>P. putida</em> are not detailed.</p>
+</li>
+<li>
+<p><strong>Membrane-association determinants in <em>P. putida</em>.</strong> The redox toggle residues are conserved, but whether <em>P. putida</em> PutA associates with the same membrane lipids/regions and with identical proline-response thresholds (~0.1 mM in <em>E. coli</em>) has not been directly measured.</p>
+</li>
+<li>
+<p><strong>Physiological/ecological role.</strong> Proline utilization is linked to rhizosphere colonization (root-exudate induction), but the quantitative contribution of PutA to <em>P. putida</em> fitness, osmotic stress response, or plant association is outside the reviewed dataset.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Purify and kinetically characterize recombinant Q88D80.</strong> Measure steady-state parameters for PRODH (proline + quinone analog) and P5CDH (GSA + NAD⁺), and demonstrate coupled-assay channeling directly for the <em>P. putida</em> enzyme (mirroring <a href="https://pubmed.ncbi.nlm.nih.gov/24352662/">PMID: 24352662</a>). This would convert the strongest inferences (F002, F005) into direct measurements.</p>
+</li>
+<li>
+<p><strong>Determine the structure of Q88D80</strong> by cryo-EM or X-ray crystallography (or validate a high-quality AlphaFold model with Phenix), confirming the RHH domain, (βα)₈ PRODH barrel, ALDH domain, the ~42 Å tunnel, and the C-terminal lid.</p>
+</li>
+<li>
+<p><strong>Test the redox-driven membrane switch in <em>P. putida</em>.</strong> Use proline titration with flavin-bleaching spectroscopy and membrane-fractionation/co-sedimentation assays to confirm reduction-coupled peripheral membrane association, and site-directed mutagenesis of Arg554 (2′-OH toggle) / Lys327 to test the switch.</p>
+</li>
+<li>
+<p><strong>Identify the σ⁵⁴-dependent activator.</strong> Combine RpoN-dependent promoter prediction, transposon/CRISPRi screens for loss of proline induction, and ChIP/EMSA to find the activator and its binding site at the divergent <em>put</em> promoters (<a href="https://pubmed.ncbi.nlm.nih.gov/11097893/">PMID: 11097893</a>).</p>
+</li>
+<li>
+<p><strong>Map the <em>put</em> operator and quantify repression.</strong> EMSA and DNase footprinting with purified PutA and the <em>P. putida</em> <em>putA</em>/<em>putP</em> intergenic region; complement with the catalytically dead E896K variant to reproduce the catalysis-independent repression result in vivo.</p>
+</li>
+<li>
+<p><strong>Confirm the physiological electron acceptor.</strong> Test PRODH activity with the native <em>P. putida</em> quinone pool and probe respiratory coupling (e.g., in quinone-biosynthesis or terminal-oxidase mutants).</p>
+</li>
+<li>
+<p><strong>Assess ecological relevance.</strong> Compare wild-type vs. Δ<em>putA</em> / Δ<em>putP</em> strains for growth on proline as sole C/N source, osmotic-stress tolerance, and root/rhizosphere colonization to quantify PutA's physiological contribution.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>All available evidence — full-length ~74% identity to the well-studied <em>E. coli</em> enzyme, conservation of every catalytic and redox-switch residue, and direct biochemical/genetic characterization of the <em>P. putida</em> <em>put</em> system — supports a confident, high-resolution functional annotation. <strong>PutA (Q88D80, PP_4947) is a trifunctional FAD-dependent flavoenzyme that oxidizes L-proline to L-glutamate in two channeled steps (PRODH, EC 1.5.5.2; P5C/GSAL dehydrogenase, EC 1.2.1.88) and, through an N-terminal ribbon-helix-helix domain, serves as the redox-regulated autogenous repressor of the divergent <em>put</em> genes, switching between a cytoplasmic DNA-bound repressor and a peripheral inner-membrane catabolic enzyme in response to proline-driven flavin reduction.</strong></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="putA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="putA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:40738191</li>
+<li>PMID:22013066</li>
+<li>PMID:24352662</li>
+<li>PMID:9637737</li>
+<li>PMID:22201749</li>
+<li>PMID:25492892</li>
+<li>PMID:19994913</li>
+<li>PMID:8473341</li>
+<li>PMID:17209558</li>
+<li>PMID:16156643</li>
+<li>PMID:27742866</li>
+<li>PMID:25137435</li>
+<li>PMID:10613867</li>
+<li>PMID:12270821</li>
+<li>PMID:11097893</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D80
+gene_symbol: putA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  putA encodes a large fused proline-utilization protein with FAD-dependent
+  proline dehydrogenase and NAD-dependent glutamate-5-semialdehyde dehydrogenase
+  domains. It converts L-proline to L-glutamate in two coupled oxidative steps
+  and also represses the divergently transcribed putA and putP promoters.
+existing_annotations:
+  - term:
+      id: GO:0000976
+      label: transcription cis-regulatory region binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: PutA binds the regulatory region controlling the divergent put promoters.
+      action: ACCEPT
+      reason: Direct P. putida genetics establishes PutA-dependent repression of both promoters, and Q88D80 contains the N-terminal RHH DNA-binding domain.
+      supported_by:
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: The PutA protein acts as a repressor of put gene expression in P. putida
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;DR   InterPro; IPR048798; PutA_RHH.&#34;
+  - term:
+      id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: DNA-binding transcription repressor activity is directly supported for P. putida PutA.
+      action: ACCEPT
+      reason: putA knockout causes constitutive expression of both put promoters, while a catalytically inactive PutA retains regulation.
+      supported_by:
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: The PutA protein acts as a repressor of put gene expression in P. putida
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: This regulatory activity is independent of the catabolic activity of PutA
+  - term:
+      id: GO:0003700
+      label: DNA-binding transcription factor activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: The generic transcription-factor term is sound but less informative than the supported repressor term.
+      action: MODIFY
+      reason: Direct P. putida evidence establishes repression rather than an unspecified transcription-factor activity.
+      proposed_replacement_terms:
+        - id: GO:0001217
+          label: DNA-binding transcription repressor activity
+      supported_by:
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: The PutA protein acts as a repressor of put gene expression in P. putida
+  - term:
+      id: GO:0003842
+      label: L-glutamate gamma-semialdehyde dehydrogenase (NAD+) activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: The NAD-dependent second oxidation step is a core PutA activity.
+      action: ACCEPT
+      reason: The exact UniProt record assigns EC 1.2.1.88 and RHEA:30235, and the P. putida study identifies the corresponding C-terminal domain.
+      supported_by:
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;Reaction=L-glutamate 5-semialdehyde + NAD(+) + H2O = L-glutamate + NADH&#34;
+        - reference_id: PMID:10613867
+          full_text_unavailable: true
+          supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+  - term:
+      id: GO:0004657
+      label: proline dehydrogenase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: FAD-dependent proline dehydrogenase is the first core PutA activity.
+      action: ACCEPT
+      reason: The exact record assigns EC 1.5.5.2 and RHEA:23784, and direct P. putida work places the proline-dehydrogenase region in PutA.
+      supported_by:
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate&#34;
+        - reference_id: PMID:10613867
+          full_text_unavailable: true
+          supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+  - term:
+      id: GO:0006355
+      label: regulation of DNA-templated transcription
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: PutA directly regulates transcription from the divergent put promoters.
+      action: ACCEPT
+      reason: Promoter-expression experiments show constitutive expression in a putA knockout and proline-dependent regulation in the wild type.
+      supported_by:
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: expression from the put promoters is constitutive in a host background with a knockout putA gene
+  - term:
+      id: GO:0006562
+      label: L-proline catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: PutA performs both oxidative steps of L-proline catabolism to glutamate.
+      action: ACCEPT
+      reason: A putA insertion prevents growth on proline as sole carbon and nitrogen source, and the fused protein carries both catalytic domains.
+      supported_by:
+        - reference_id: PMID:10613867
+          full_text_unavailable: true
+          supporting_text: unable to grow with proline as the sole carbon and nitrogen source
+        - reference_id: PMID:10613867
+          full_text_unavailable: true
+          supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+        - reference_id: file:PSEPK/putA/putA-deep-research-openscientist.md
+          supporting_text: PutA thus enables *P. putida* to use proline as a **carbon, nitrogen, and energy source.**
+  - term:
+      id: GO:0009898
+      label: cytoplasmic side of plasma membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: The membrane-facing location is mechanistically plausible but is not the sole state of this regulatory enzyme.
+      action: KEEP_AS_NON_CORE
+      reason: Type C PutA proteins switch between soluble DNA-bound and peripheral membrane-associated states; the exact KT2440 location has not been directly measured in the cited studies.
+      supported_by:
+        - reference_id: PMID:28712849
+          supporting_text: flavin redox dependent changes in subcellular location and function in response to proline
+  - term:
+      id: GO:0016491
+      label: oxidoreductase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: This parent term is true but obscures the two known substrate-specific activities.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: GO:0004657 and GO:0003842 separately capture both catalytic activities with exact reaction support.
+      supported_by:
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;EC=1.5.5.2&#34;
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;EC=1.2.1.88&#34;
+  - term:
+      id: GO:0043168
+      label: anion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: Generic anion binding does not describe a distinct PutA function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: This ARBA parent-level binding prediction is uninformative beside the two specific catalytic activities and lacks direct KT2440 binding evidence.
+      supported_by:
+        - reference_id: file:PSEPK/putA/putA-goa.tsv
+          supporting_text: &#34;GO:0043168\tanion binding&#34;
+  - term:
+      id: GO:0045892
+      label: negative regulation of DNA-templated transcription
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000108
+    qualifier: involved_in
+    review:
+      summary: Negative transcriptional regulation is experimentally established for PutA.
+      action: ACCEPT
+      reason: Loss of putA causes constitutive expression from both divergent put promoters.
+      supported_by:
+        - reference_id: PMID:11097893
+          full_text_unavailable: true
+          supporting_text: The PutA protein acts as a repressor of put gene expression in P. putida
+  - term:
+      id: GO:0055129
+      label: L-proline biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: The biosynthesis annotation is a directionally incorrect propagation from the shared semialdehyde-dehydrogenase domain.
+      action: REMOVE
+      reason: Direct P. putida evidence and both exact reactions place PutA in oxidative proline catabolism to glutamate, not glutamate-to-proline biosynthesis.
+      supported_by:
+        - reference_id: PMID:10613867
+          full_text_unavailable: true
+          supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+        - reference_id: file:PSEPK/putA/putA-uniprot.txt
+          supporting_text: &#34;PATHWAY: Amino-acid degradation; L-proline degradation into L-&#34;
+  - term:
+      id: GO:0098562
+      label: cytoplasmic side of membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: located_in
+    review:
+      summary: This broader membrane-side annotation is plausible but secondary and redundant with GO:0009898.
+      action: KEEP_AS_NON_CORE
+      reason: PutA membrane association is conditional in the characterized regulatory class, and the exact KT2440 subcellular switch remains inferred.
+      supported_by:
+        - reference_id: PMID:28712849
+          supporting_text: flavin redox dependent changes in subcellular location and function in response to proline
+  - term:
+      id: GO:1901363
+      label: heterocyclic compound binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: Generic heterocycle binding is not an informative standalone PutA function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: Binding of FAD, NAD, and proline is already inherent in the specific catalytic activities; no separate generic binding role is established.
+      supported_by:
+        - reference_id: file:PSEPK/putA/putA-goa.tsv
+          supporting_text: &#34;GO:1901363\theterocyclic compound binding&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings:
+      - statement: InterPro mappings supplied broad transcription, catabolism, and oxidoreductase annotations reviewed here.
+  - id: GO_REF:0000108
+    title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+    findings:
+      - statement: Logical inference supplied negative regulation from the repressor molecular function.
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings:
+      - statement: ARBA supplied DNA-binding, repressor, membrane-side, and generic binding predictions reviewed here.
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings:
+      - statement: Combined automated mappings supplied both catalytic activities, membrane association, and the erroneous biosynthesis process.
+  - id: PMID:10613867
+    title: &#39;Proline catabolism by Pseudomonas putida: cloning, characterization, and expression of the put genes in the presence of root exudates.&#39;
+    findings:
+      - statement: Direct P. putida genetics links PutA to growth on proline and identifies both catalytic regions in one protein.
+        supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: PubMed identity and abstract were checked; the cached record is abstract-only.
+  - id: PMID:11097893
+    title: Control of expression of divergent Pseudomonas putida put promoters for proline catabolism.
+    findings:
+      - statement: Direct promoter studies establish PutA-dependent repression independent of catalytic activity.
+        supporting_text: This regulatory activity is independent of the catabolic activity of PutA
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: PubMed identity and abstract were checked; the cached record is abstract-only.
+  - id: PMID:28712849
+    title: Structure, function, and mechanism of proline utilization A (PutA).
+    findings:
+      - statement: The review supports the conserved two-step chemistry and redox-dependent localization switch of PutA proteins.
+        supporting_text: FAD-dependent proline dehydrogenase (PRODH) and NAD+-dependent glutamate semialdehyde dehydrogenase (GSALDH) convert proline to glutamate in two sequential oxidative steps.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: PubMed identity and cached full text were checked; this is family-level mechanistic support.
+  - id: file:PSEPK/putA/putA-uniprot.txt
+    title: UniProtKB entry Q88D80 for Pseudomonas putida KT2440 PutA
+    findings:
+      - statement: The exact record assigns both catalytic reactions, FAD, the PutA RHH domain, and the proline-degradation pathway.
+  - id: file:PSEPK/putA/putA-goa.tsv
+    title: QuickGO GOA annotations for putA
+    findings:
+      - statement: The fetched table contains the fourteen source rows reviewed above.
+  - id: file:PSEPK/putA/putA-deep-research-openscientist.md
+    title: OpenScientist deep research report on putA (Q88D80)
+    findings:
+      - statement: The generated report retrieved direct P. putida studies and family-level PutA mechanistic literature used for source discovery.
+core_functions:
+  - description: FAD-dependent oxidation of L-proline to P5C using a quinone electron acceptor.
+    molecular_function:
+      id: GO:0004657
+      label: proline dehydrogenase activity
+    directly_involved_in:
+      - id: GO:0006562
+        label: L-proline catabolic process
+    supported_by:
+      - reference_id: file:PSEPK/putA/putA-uniprot.txt
+        supporting_text: &#34;Reaction=L-proline + a quinone = (S)-1-pyrroline-5-carboxylate&#34;
+      - reference_id: PMID:10613867
+        full_text_unavailable: true
+        supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+  - description: NAD-dependent oxidation of L-glutamate 5-semialdehyde to L-glutamate.
+    molecular_function:
+      id: GO:0003842
+      label: L-glutamate gamma-semialdehyde dehydrogenase (NAD+) activity
+    directly_involved_in:
+      - id: GO:0006562
+        label: L-proline catabolic process
+    supported_by:
+      - reference_id: file:PSEPK/putA/putA-uniprot.txt
+        supporting_text: &#34;Reaction=L-glutamate 5-semialdehyde + NAD(+) + H2O = L-glutamate + NADH&#34;
+      - reference_id: PMID:10613867
+        full_text_unavailable: true
+        supporting_text: both enzymatic steps for proline conversion to glutamic acid are catalyzed by a single polypeptide
+  - description: Autogenous repression of the divergent putA and putP promoters.
+    molecular_function:
+      id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    directly_involved_in:
+      - id: GO:0045892
+        label: negative regulation of DNA-templated transcription
+    supported_by:
+      - reference_id: PMID:11097893
+        full_text_unavailable: true
+        supporting_text: The PutA protein acts as a repressor of put gene expression in P. putida
+proposed_new_terms: []
+suggested_questions:
+  - question: Does KT2440 PutA undergo the same directly measurable FAD-redox-dependent membrane switch as E. coli PutA?
+  - question: What is the identity of the sigma-54-dependent positive regulator required for full put promoter induction?
+suggested_experiments:
+  - description: Measure coupled proline-to-glutamate turnover and intermediate channeling with purified Q88D80 and catalytic-domain mutants.
+    experiment_type: coupled enzyme kinetics
+  - description: Compare membrane association and operator binding of oxidized and proline-reduced Q88D80.
+    experiment_type: membrane-binding and DNA-binding assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
