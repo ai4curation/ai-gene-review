@@ -11,8 +11,8 @@ autolink_gene_symbols: false
 - Module seed: `phosphonoacetaldehyde_degradation`
 - Candidate genes from membership table: 2
 - Primary bucket genes: 2
-- Existing review files: 1
-- Curated review files: 1
+- Existing review files: 2
+- Curated review files: 2
 - Existing OpenScientist research files: 2
 
 ## Required Workflow
@@ -21,7 +21,7 @@ autolink_gene_symbols: false
 - [x] Run module-level OpenScientist deep research.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Run OpenScientist deep research for selected genes.
+- [x] Run OpenScientist deep research for selected genes; both full-timeout runs produced no gene-level report.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway.
@@ -39,3 +39,8 @@ autolink_gene_symbols: false
 Generated UTC: 2026-07-16T17:37:22.048250+00:00
 
 2026-07-16: OpenScientist timed out after 7200s for `phnX` and `phnW`; no gene-level report files were produced for those runs.
+
+2026-08-12: Integrated verified primary literature for the P. putida PhnWX
+route and phosphonatase mechanism, tightened both PANTHER selectors to exact
+subfamilies, removed module-level cytosol duplication, and regenerated all
+derived pages and batch status.
