@@ -16,13 +16,20 @@
   5.1% glucose as by-product."]
 - A companion primary article reports the KT2440 cloning forward primer
   `GGATCCATGACCCAGCCCGACCCGTC`; after the BamHI site, it encodes
-  `MTQPDPS`, exactly matching residues 1-7 of Q88IT1. The reported recombinant
-  protein was approximately 76 kDa, also matching the 75.6-kDa Q88IT1 record.
-  This resolves the assayed enzyme as PP_2918/Q88IT1 rather than the 1106-aa
-  TreSB/PP_4059 fusion. [Wang et al., Journal of Pure and Applied Microbiology
+  `MTQPDPS`, exactly matching residues 1-7 of Q88IT1. This primer match favors
+  PP_2918/Q88IT1 over the 1106-aa TreSB/PP_4059 fusion. [Wang et al., Journal
+  of Pure and Applied Microbiology
   8(2):1687-1692 (2014), "The forward primer was designed as 5'-(GGATCCATGACCC
   AGCCCGACCCGTC)-3'"; "a recombinant protein about 76 kDa, was observed";
   https://microbiologyjournal.org/download/69686/]
+- The molecular-mass reports conflict. The companion article reports an
+  approximately 76-kDa recombinant product, close to Q88IT1's predicted 75.6
+  kDa, but the cached PMID:25204684 abstract says 67 kDa. The latter matches
+  neither Q88IT1 nor the approximately 125.6-kDa Q88FN0 fusion. This
+  discrepancy is unresolved, so apparent mass is not treated as decisive locus
+  evidence; the exact primer-encoded N terminus remains the stronger assignment
+  evidence. [PMID:25204684, "The recombinant TreS showed a molecular mass of
+  67 kDa."]
 
 ## Coverage limitation
 

@@ -1,5 +1,5 @@
 ---
-title: "PSEPK trehalose synthesis from alpha-glucosides batch"
+title: "PSEPK ppu00500 trehalose synthesis from alpha-glucosides batch"
 maturity: DRAFT
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEPK]
@@ -39,12 +39,20 @@ route as a standalone module.
 2026-08-13: Annotation review completed. TreSA's sole GOA annotation was
 accepted after checking EC/family evidence and direct KT2440 recombinant-enzyme
 work. The cloning primer in a companion primary article matches the Q88IT1
-N terminus, distinguishing the assayed standalone enzyme from TreSB. The three
+N terminus, distinguishing the assayed standalone enzyme from TreSB. The
+companion article's approximately 76-kDa product conflicts with the 67-kDa
+value in PMID:25204684; because neither mass independently establishes the
+locus, the primer match is retained as the stronger identity evidence and the
+PMID reference review is `UNVERIFIED`. The three
 gene-level and two module-level OpenScientist jobs all completed without output
 files; this missing coverage is retained as a limitation rather than replaced
 with synthetic provider reports.
 
 The TreY-TreZ steps use the characterized Arthrobacter sp. Q36 proteins Q44315
-and Q44316 as broader exemplars. The standalone route uses reviewed,
-biochemically characterized Mycolicibacterium smegmatis TreS A0R6E0 alongside
-the exact KT2440 TreSA Q88IT1 exemplar.
+and Q44316 as broader exemplars. The standalone route uses the characterized
+Pseudomonas stutzeri CJ38 TreS Q9LAS5 (GenBank AAF26837.1), a characterized
+TIGR02455 exemplar,
+alongside the exact KT2440 TreSA Q88IT1 exemplar. The accompanying TSV is the
+standard extractor-generated ppu00500 membership snapshot. TreSA is absent
+from that TSV because KEGG does not assign PP_2918 to ppu00500; its inclusion
+in this curated batch is an explicit module-level extension.
