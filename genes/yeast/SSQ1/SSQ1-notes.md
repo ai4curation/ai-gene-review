@@ -11,6 +11,10 @@
 - Core mechanism: Jac1 recruits the Isu scaffold and stimulates the Ssq1 ATPase
   cycle; Mge1 promotes nucleotide exchange; Ssq1 recognizes the Isu LPPVK motif
   and drives release/handoff of the newly assembled cluster to Grx5.
+- UniProt resolves the GOA IntAct partners directly: Q03020 is the physiological
+  Isu1 scaffold client, whereas P15646 is the nucleolar protein Nop1. The Isu1
+  rows are biologically relevant but poorly expressed by bare protein binding;
+  the Nop1 rows are likely high-throughput background for a matrix protein.
 - Generic family terms were narrowed where a more informative child exists:
   GO:0044183 and GO:0051082 are modified to GO:0140662, generic nucleotide and
   hydrolase parents are over-annotated, and mitochondrial matrix is the core
