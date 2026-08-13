@@ -5,9 +5,9 @@
 - Q88PL0 is the named KT2440 `cysE` product and its exact UniProt record assigns
   the reaction L-serine + acetyl-CoA to O-acetyl-L-serine + CoA
   [UniProtKB:Q88PL0, "Reaction=L-serine + acetyl-CoA = O-acetyl-L-serine + CoA;"].
-- GO:0006535 formerly represented the route from L-serine but is obsolete in
-  current GO. The review therefore retains live GO:0019344 and records the
-  O-acetyl-L-serine route in prose.
+- GO:0006535 is the live, route-specific process term for cysteine biosynthesis
+  from L-serine. The review retains broad GO:0019344 and adds GO:0006535 as the
+  more informative authored core process.
 - P. putida S-313 has directly measured O-acetylserine sulfhydrylase activity,
   establishing organism-level pathway operation but not the identity of its
   serine acetyltransferase [PMID:10482527, "substantial levels of

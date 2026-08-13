@@ -421,9 +421,8 @@ Main curation conclusions from this batch:
   outside this module boundary.
 - Other KT2440 serine acetyltransferase-like candidates remain a targeted
   paralog-resolution question rather than speculative module leaves.
-- The obsolete route-specific GO term GO:0006535 is not authored; live
-  GO:0019344 is used with route specificity represented by the module parts and
-  exact reactions.
+- Live route-specific GO:0006535 is used for authored core functions and the
+  module concept; broad GO:0019344 annotations remain valid.
 
 ## Previous batch: ppu00622 / benzoate_upper_pathway
 

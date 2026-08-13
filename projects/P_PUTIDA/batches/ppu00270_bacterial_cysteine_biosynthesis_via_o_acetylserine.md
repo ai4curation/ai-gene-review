@@ -73,17 +73,17 @@ gap for future gene-level review.
 
 ## Ontology Note
 
-GO:0006535 still appears in current UniProt-derived records as the route from
-L-serine but is obsolete in the current GO release. Authored core functions and
-the module therefore use live GO:0019344, with the O-acetylserine route encoded
-by reaction structure and prose rather than an obsolete process term.
+GO:0006535 is the live, route-specific term for L-cysteine biosynthesis from
+L-serine. The three broad GO:0019344 annotations remain correct, while authored
+core functions and the module concept use GO:0006535 for greater precision.
 
 Generated UTC: 2026-08-11
 
 ## Research qualification
 
 The completed CysK report suggested a stable CysE-CysK cysteine-synthase
-complex. That claim is not adopted for this reusable bacterial module because
-the retrieved evidence does not establish such a complex in KT2440. The two
-enzymes are modeled as sequential pathway steps; any direct physical complex
-remains an experimental question.
+complex. That claim is not adopted for this reusable bacterial module. Direct
+work in P. aeruginosa found no detectable binding between CysK and the
+endogenous CysE1 C-terminal peptide (PMID:41676964), and no interaction has been
+tested in KT2440. The two enzymes are therefore modeled as sequential pathway
+steps; any direct physical complex remains an experimental question.

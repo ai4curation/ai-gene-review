@@ -7,8 +7,8 @@
   pyridoxal 5'-phosphate as cofactor [UniProtKB:Q88E95,
   "Reaction=O-acetyl-L-serine + hydrogen sulfide = L-cysteine + acetate;"].
 - GO:0004124 is therefore core; generic catalytic and transferase terms are
-  retained only as non-core parents. GO:0019344 is retained because the former
-  route-specific GO:0006535 term is obsolete.
+  retained only as non-core parents. Broad GO:0019344 remains correct, while
+  live route-specific GO:0006535 is used for the authored core process.
 - P. putida S-313 cell extracts directly show pathway-level cysteine synthase
   activity, but the study predates KT2440 locus assignments
   [PMID:10482527, "substantial levels of O-acetylserine sulfhydrylase
