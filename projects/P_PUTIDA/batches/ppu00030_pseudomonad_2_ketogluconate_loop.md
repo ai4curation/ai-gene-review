@@ -60,5 +60,9 @@ The catabolic proposal uses GO:0072329 as its chemical-class `is_a` parent; its
 association with D-gluconate metabolism is pathway context rather than parentage.
 GO:0005887 was also verified obsolete and replaced by GO:0005886, so Gcd uses the
 current plasma-membrane term in both its replacement action and core location.
+Relation-only corrections currently require `MODIFY` plus an identical
+`proposed_replacement_terms` entry under the schema. The three Gad reviews use
+that required representation to replace GOA `enables` with `contributes_to`; a
+dedicated relation-correction slot would avoid the apparent term-to-same-term replacement.
 
 2026-08-13: Started as module 18 of the current 20-module batch.
