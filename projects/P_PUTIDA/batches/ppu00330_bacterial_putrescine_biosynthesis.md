@@ -18,7 +18,7 @@ autolink_gene_symbols: false
 - [x] Reconcile route usage and literature evidence.
 - [x] Curate every GOA row and complete annotation review.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open one draft PR: [#2573](https://github.com/ai4curation/ai-gene-review/pull/2573).
 
 ## Boundary
 
