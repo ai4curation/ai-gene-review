@@ -32,8 +32,8 @@ UniProt even though it is absent from the KEGG membership list.
 - [ ] Module + ppu00470 + PSEPK OpenScientist research is active with the full allowance.
 - [x] Curate all six selected gene reviews and notes from current UniProt and
   independently checked primary literature.
-- [ ] Validate and render gene, module, batch, and project artifacts.
-- [ ] Publish one draft pull request.
+- [x] Validate and render gene, module, batch, and project artifacts.
+- [x] Publish one draft pull request.
 
 ## Selected Genes
 

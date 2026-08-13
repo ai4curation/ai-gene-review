@@ -269,9 +269,10 @@ Status as of 2026-08-11:
   DadX is the leading cytoplasmic candidate, but direct genetic or flux
   evidence for peptidoglycan supply is absent, so the step remains an honest
   `candidate_uncertain` hole.
-- PP_5673 is assigned to the DdlB-like family but is not used as an exemplar;
-  convergent HAMAP, catalytic-site, and PANTHER evidence supports its function,
-  while the UniProt record itself remains unreviewed.
+- PP_5673 is assigned to the DdlB-like family and retained as a second concrete
+  exemplar of that variant. Convergent HAMAP, catalytic-site, and PANTHER
+  evidence supports its function, while the UniProt record itself remains
+  unreviewed.
 
 ## Completed batch: ppu00220 / arginine_biosynthesis
 
