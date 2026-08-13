@@ -18,6 +18,7 @@
 - GO:0042026 protein refolding is an unsafe general-Hsp70 IBA transfer. Ssq1 is
   specialized for the Isu client and ISC transfer rather than broad stress
   refolding; the propagation audit records this functional divergence.
-- The cytoplasm IBA is removed because it conflicts with Ssq1 mitochondrial
-  targeting and direct matrix localization. Intracellular iron homeostasis is
-  retained as a genuine downstream phenotype, not a core direct function.
+- The cytoplasm IBA is ontologically true because mitochondria are part of the
+  GO cytoplasm, but it is marked over-annotated because matrix is the precise
+  functional compartment. Intracellular iron homeostasis is retained as a
+  genuine downstream phenotype, not a core direct function.
