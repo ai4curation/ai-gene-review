@@ -29,7 +29,7 @@ autolink_gene_symbols: false
   unresolved; it is not used as the terminal reductase.
 - PP_3376/Q88HI1 is reviewed under its current `ptxD` symbol but resolved
   conservatively as the KguD candidate from direct KT2440 genetics, locus context,
-  and KEGG K00032. No phosphite-dehydrogenase function is claimed.
+  and conserved pathway order. No phosphite-dehydrogenase function is claimed.
 
 ## Evidence reconciliation
 
@@ -56,5 +56,9 @@ The exact reviewed UniProt `ID`/`DE` lines are retained in
 GO:0015128 was verified as gluconate-specific and therefore was not reused for
 2-dehydro-D-gluconate; GO:0046943 is used as the existing carboxylic-acid transport
 intermediate while exact transporter and catabolic-process terms are proposed.
+The catabolic proposal uses GO:0072329 as its chemical-class `is_a` parent; its
+association with D-gluconate metabolism is pathway context rather than parentage.
+GO:0005887 was also verified obsolete and replaced by GO:0005886, so Gcd uses the
+current plasma-membrane term in both its replacement action and core location.
 
 2026-08-13: Started as module 18 of the current 20-module batch.
