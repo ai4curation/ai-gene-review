@@ -68,6 +68,9 @@ Lightweight data products:
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first
   pilot pathway checklist.
+- [Gallate catabolism batch](P_PUTIDA/batches/ppu00362_bacterial_gallate_catabolism.md)
+  curates the optional GalP entry context and the required GalA-D-B-C reaction
+  sequence represented by the reusable bacterial module.
 
 While the Edison-backed Falcon route is unavailable, use OpenScientist for
 gene-level research with a full two-hour provider allowance:

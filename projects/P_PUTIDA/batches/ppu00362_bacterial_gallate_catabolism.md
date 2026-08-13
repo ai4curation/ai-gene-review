@@ -8,6 +8,8 @@ autolink_gene_symbols: false
 
 # PSEPK bacterial gallate catabolism
 
+- Reusable module: [bacterial gallate catabolism](../../../modules/bacterial_gallate_catabolism.yaml)
+
 This batch assembles the curated KT2440 Gal proteins into a reusable multi-part
 gallate catabolism module. The complete OpenScientist GalC report was integrated
 with the existing Falcon reports, reviewed UniProt records, QuickGO rows, and
