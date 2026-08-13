@@ -54,7 +54,7 @@ Gad subunits, with Q88HH4, Q88HH5, and Q88HH6 as the exact KT2440 implementation
 The exact reviewed UniProt `ID`/`DE` lines are retained in
 `modules/pseudomonad_2_ketogluconate_loop-exemplar-verification.md` for offline QA.
 GO:0015128 was verified as gluconate-specific and therefore was not reused for
-2-dehydro-D-gluconate; GO:0046943 is used as the existing carboxylic-acid transport
+2-dehydro-D-gluconate; GO:0008028 is used as the existing monocarboxylic-acid transport
 intermediate while exact transporter and catabolic-process terms are proposed.
 The catabolic proposal uses GO:0072329 as its chemical-class `is_a` parent; its
 association with D-gluconate metabolism is pathway context rather than parentage.
