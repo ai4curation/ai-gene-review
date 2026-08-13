@@ -1,0 +1,4362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPAR5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LPAR5</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H1C0" target="_blank" class="term-link">
+                        Q9H1C0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LPAR5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H1C0" data-a="DESCRIPTION: LPAR5 is a class-A seven-transmembrane G protein-c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LPAR5 is a class-A seven-transmembrane G protein-coupled receptor that binds extracellular lysophosphatidic acid at the plasma membrane. Recombinant human receptor studies establish nanomolar LPA binding and activation of Gq-linked phosphoinositide signaling, G12/13-Rho signaling, and Gs-linked cAMP production. Farnesyl pyrophosphate and N-arachidonylglycine can also activate LPAR5 in heterologous assays, with ligand-dependent differences in Gq/11 and Gs branch use; these activities do not establish which agonists dominate in native tissues. A 2.96-angstrom cryo-EM structure captures 1-oleoyl-LPA-bound LPAR5 coupled to Gq, defining polar recognition of the phosphate headgroup, burial of the acyl tail, and a noncanonical receptor–Gq interface. This structure represents the activated signaling state rather than a constitutive stable complex. LPA also induces LPAR5 internalization in a tagged-receptor system. LPAR5 is expressed in multiple human tissues and is enriched in small-intestinal intraepithelial CD8-positive T cells, sensory dorsal-root ganglia, and platelet-lineage cells. Mouse Lpar5 loss protects against injury-induced neuropathic pain without a gross baseline phenotype, while human megakaryocytic-cell perturbation supports LPAR5-dependent LPA responses in the platelet lineage. Reduced LPAR5 expression promotes LPA-induced migration in EBV-associated nasopharyngeal carcinoma cells. These pain, platelet, atherosclerotic-plaque, and cancer phenotypes are tissue-, species-, or disease-context outputs of receptor signaling rather than additional core molecular activities.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048266" target="_blank" class="term-link">
+                                    GO:0048266
+                                </a>
+                            </span>
+                            <span class="term-label">behavioral response to pain</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0048266" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retained as a pain-related organismal outcome inferred from mouse Lpar5 biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse genetic evidence supports a role for Lpar5 in behavioral responses to pain, making the phylogenetic inference biologically plausible. Pain behavior is nevertheless an organism-, neural-context-, and stimulus-level output of receptor signaling rather than the core molecular activity of human LPAR5.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2685918</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; the transfer is biologically plausible but represents contextual organismal physiology rather than core receptor activity.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002796778</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; the transfer is biologically plausible but represents contextual organismal physiology rather than core receptor activity.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0004930" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic GPCR activity is valid but should be represented by the established ligand-specific receptor activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LPAR5 is a seven-transmembrane receptor for lysophosphatidic acid. The ligand-specific molecular-function term is more informative than the broad GPCR parent term.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR000276</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070915" target="_blank" class="term-link">
+                                    lysophosphatidic acid receptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core membrane location of LPAR5.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt subcellular-location mapping agrees with the receptor’s integral seven-transmembrane topology and curated plasma-membrane pathway placement.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0039</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; the propagated assignment agrees with established human LPAR5 biology.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0007186" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core signaling process initiated by LPA-bound LPAR5.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The rhodopsin-like GPCR family mapping and curated LPA-receptor pathway events support heterotrimeric G-protein signaling by LPAR5.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR000276</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; the propagated assignment agrees with established human LPAR5 biology.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic membrane term should be replaced by the established plasma-membrane location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LPAR5 is an integral membrane receptor, but the reviewed location and curated signaling events support the more informative plasma membrane term.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR000276</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR017452</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-379048
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-379048" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in curated proximal Gq/11 signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places LPAR5 in a liganded GPCR step at the plasma membrane that activates Gq/11, consistent with receptor topology and LPA signaling.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-380073
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-380073" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in curated proximal Gi signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places LPAR5 in a liganded GPCR step at the plasma membrane that activates Gi, consistent with its receptor role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-419389
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-419389" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location of the curated LPA-binding receptor event.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places human LPAR5 among plasma-membrane receptors that bind lysophosphatidic acid.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-749448
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-749448" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in curated Gq binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places liganded LPAR5 at the plasma membrane when binding inactive heterotrimeric Gq; this is appropriate pathway context for the receptor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-749452
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-749452" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in the curated Gq activation cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome models dissociation of the liganded receptor–Gq complex at the plasma membrane, consistent with LPAR5 signaling topology.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-749454
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-749454" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in the curated Gi activation cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome models dissociation of the liganded receptor–Gi complex at the plasma membrane, consistent with LPAR5 signaling topology.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-749456
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0005886" data-r="Reactome:R-HSA-749456" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the plasma-membrane location used in curated Gi binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome places liganded LPAR5 at the plasma membrane when binding inactive heterotrimeric Gi; this is appropriate pathway context for the receptor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035727" target="_blank" class="term-link">
+                                    GO:0035727
+                                </a>
+                            </span>
+                            <span class="term-label">lysophosphatidic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16651401
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lysophosphatidic acid binds to and activates GPR92, a G prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0035727" data-r="PMID:16651401" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as a new annotation for directly measured high-affinity LPA binding by LPAR5.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Recombinant human GPR92/LPAR5 binds LPA with nanomolar affinity, and independent membrane-binding experiments and the LPA-bound receptor structure confirm direct ligand recognition.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                                        PMID:16651401
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007189" target="_blank" class="term-link">
+                                    GO:0007189
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase-activating G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16651401
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lysophosphatidic acid binds to and activates GPR92, a G prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0007189" data-r="PMID:16651401" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as a new annotation for the directly demonstrated Gs/cAMP branch of LPAR5 signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LPA stimulation of recombinant human LPAR5 increases cAMP, and ligand-comparison experiments identify Gs-mediated signaling for LPA and FPP. This establishes activating receptor capability while leaving native tissue coupling weights open.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                                        PMID:16651401
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007200" target="_blank" class="term-link">
+                                    GO:0007200
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipase C-activating G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16651401
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lysophosphatidic acid binds to and activates GPR92, a G prot...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0007200" data-r="PMID:16651401" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as a new annotation for the directly demonstrated Gq/phosphoinositide branch of LPAR5 signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LPA-bound LPAR5 drives phosphoinositide hydrolysis, multiple agonists activate Gq/11 signaling, and the 2026 cryo-EM structure directly captures activated LPA-bound LPAR5 coupled to Gq.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                                        PMID:16651401
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002031" target="_blank" class="term-link">
+                                    GO:0002031
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor internalization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16774927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPR92 as a new G12/13- and Gq-coupled lysophosphatidic acid ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0002031" data-r="PMID:16774927" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as a new non-core annotation for directly observed agonist-dependent LPAR5 internalization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Epitope-tagged LPAR5 internalizes after LPA exposure but not after related lysophospholipids in the same heterologous system. This is a receptor-regulatory state, while its endogenous route and consequences remain unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link">
+                                        PMID:16774927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LPA-dependent receptor internalization following exposure to LPA but not related lysophospholipids was observed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035025" target="_blank" class="term-link">
+                                    GO:0035025
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of Rho protein signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16774927
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GPR92 as a new G12/13- and Gq-coupled lysophosphatidic acid ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H1C0" data-a="GO:0035025" data-r="PMID:16774927" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed as a new annotation for the directly demonstrated G12/13 signaling branch of LPAR5.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LPA activates G12/13 through recombinant human LPAR5, and independent ligand-response experiments place Rho downstream of this receptor branch. This supports proximal positive regulation of Rho signaling while leaving downstream tissue phenotypes context dependent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link">
+                                        PMID:16774927
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts at the plasma membrane as an LPA-activated GPCR. Recombinant human LPAR5 activates Gq-linked phosphoinositide signaling, G12/13 signaling, and Gs-linked cAMP production. LPA and FPP activate both Gq/11 and Gs branches, whereas NAG activates Gq/11 in the tested systems, showing ligand-dependent signaling bias. The LPA-bound LPAR5–Gq cryo-EM structure directly defines an activated coupling state with a noncanonical G-alpha-q interface; it does not imply a constitutive stable receptor–G-protein complex. Pain, platelet-lineage, immune, plaque, and cancer phenotypes are bounded downstream outputs rather than additional core molecular activities.</h3>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="FUNCTION: Acts at the plasma membrane as an LPA-activated GP..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070915" target="_blank" class="term-link">
+                            lysophosphatidic acid receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007189" target="_blank" class="term-link">
+                                adenylate cyclase-activating G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007200" target="_blank" class="term-link">
+                                phospholipase C-activating G protein-coupled receptor signaling pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035025" target="_blank" class="term-link">
+                                positive regulation of Rho protein signal transduction
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                                PMID:16651401
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link">
+                                PMID:16774927
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18499677" target="_blank" class="term-link">
+                                PMID:18499677
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">FPP and lysophosphatidic acid were able to activate both G(q/11)- and G(s)-mediated signaling pathways, whereas NAG activated only the G(q/11)-mediated signaling pathway.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42313925" target="_blank" class="term-link">
+                                PMID:42313925
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Here, we report the cryo-EM structure of LPAR5 bound to 1-oleoyl-lysophosphatidic acid (LPA) in complex with Gq at 2.96 Å resolution, revealing a distinct mode of receptor activation and G protein coupling.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Directly binds lysophosphatidic acid as the extracellular ligand-recognition step of LPAR5 signaling. Nanomolar binding measurements, structure-activity studies, mutagenesis, and the 1-oleoyl-LPA-bound structure establish a polar phosphate-headgroup site and deep hydrophobic acyl-tail cavity. FPP and NAG are assay-supported agonists, but their relative physiological contribution is not established by these heterologous experiments.</h3>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="FUNCTION: Directly binds lysophosphatidic acid as the extrac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035727" target="_blank" class="term-link">
+                            lysophosphatidic acid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                                PMID:16651401
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42313925" target="_blank" class="term-link">
+                                PMID:42313925
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The phosphate headgroup of LPA forms extensive polar interactions with residues from extracellular loop 2 and transmembrane helices TM5-TM7, while the lipid tail inserts into a deep hydrophobic cavity formed by TM3-TM5. Site-directed mutagenesis confirms the functional importance of these interactions.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-379048
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Liganded Gq/11-activating GPCRs act as GEFs for Gq/11</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome places Gq/11-linked GPCRs upstream of PLC, IP3, and calcium mobilization.</div>
+
+                        <div class="finding-text">"PLC hydrolyzes phosphatidylinositol (PIP2) to diacyl glycerol (DAG) and inositol triphosphate (IP3)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-380073
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Liganded Gi-activating GPCR acts as a GEF for Gi</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome describes nucleotide exchange as the proximal activation step for a Gi-coupled GPCR.</div>
+
+                        <div class="finding-text">"This stimulates the exchange of GDP for GTP in the G-protein alpha subunit, activating the G-protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-419389
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LPA-binding receptors bind LPA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The cached Reactome summary describes LPA binding by the EDG-family LPA1-3 receptors, not LPAR5 specifically.</div>
+
+                        <div class="finding-text">"The LPA-binding EDG receptors all bind to the ligand lysophosphatidic acid (LPA), a phospholipid derivative that acts as a potent signaling molecule."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-749448
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Liganded Gq-activating GPCRs bind inactive heterotrimeric Gq</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome models the generic association of liganded GPCRs with heterotrimeric Gq.</div>
+
+                        <div class="finding-text">"Numerous functionally unrelated GPCRs couple with the Gq G-protein subtype."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-749452
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Ligand:GPCR:Gq complex dissociates</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome models separation of activated Gq alpha and beta-gamma into downstream signaling branches.</div>
+
+                        <div class="finding-text">"Activated G alpha (q) and the beta:gamma dimer then participate in separate signaling cascades."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-749454
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Ligand:GPCR:Gi complex dissociates</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome models separation of activated Gi alpha and beta-gamma into downstream signaling branches.</div>
+
+                        <div class="finding-text">"Activated G alpha (i) and the beta:gamma dimer then participate in separate signaling cascades."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-749456
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Liganded Gi-activating GPCRs bind inactive heterotrimeric G-protein Gi</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome describes the canonical Gi consequence of reduced cAMP production.</div>
+
+                        <div class="finding-text">"The G-alpha (i) subunit inhibits the production of cAMP from ATP."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16651401" target="_blank" class="term-link">
+                            PMID:16651401
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lysophosphatidic acid binds to and activates GPR92, a G protein-coupled receptor highly expressed in gastrointestinal lymphocytes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GPR92 bound LPA with nanomolar affinity and LPA activation increased phosphoinositide hydrolysis and cAMP production.</div>
+
+                        <div class="finding-text">"The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reported human tissue survey found GPR92 broadly expressed and particularly abundant in gastrointestinal intraepithelial cytotoxic T cells.</div>
+
+                        <div class="finding-text">"It is the most abundant GPCR activated by LPA found in the small intestinal intraepithelial CD8+ cytotoxic T cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16774927" target="_blank" class="term-link">
+                            PMID:16774927
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GPR92 as a new G12/13- and Gq-coupled lysophosphatidic acid receptor that increases cAMP, LPA5.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Heterologously expressed GPR92 showed specific membrane LPA binding and LPA-dependent internalization.</div>
+
+                        <div class="finding-text">"LPA-dependent receptor internalization following exposure to LPA but not related lysophospholipids was observed."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPA activated G12/13 and Gq through GPR92 and increased cAMP in the receptor-expression systems.</div>
+
+                        <div class="finding-text">"Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAR5 expression was enriched in small intestine and sensory dorsal-root ganglia in the reported tissue survey.</div>
+
+                        <div class="finding-text">"Northern blot and reverse transcriptase-PCR studies indicated a broad low level of expression in many tissues including embryonic brain and enrichment in small intestine and sensory dorsal root ganglia, as well as embryonic stem cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18499677" target="_blank" class="term-link">
+                            PMID:18499677
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of farnesyl pyrophosphate and N-arachidonylglycine as endogenous ligands for GPR92.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FPP, N-arachidonylglycine, and LPA activated GPR92, with ligand-dependent differences in Gq/11 and Gs pathway use.</div>
+
+                        <div class="finding-text">"FPP and lysophosphatidic acid were able to activate both G(q/11)- and G(s)-mediated signaling pathways, whereas NAG activated only the G(q/11)-mediated signaling pathway."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutagenesis implicated four GPR92 residues in recognition of FPP and N-arachidonylglycine.</div>
+
+                        <div class="finding-text">"Computer-simulated modeling combined with site-directed mutagenesis of GPR92 indicated that Thr(97), Gly(98), Phe(101), and Arg(267) of GPR92 are responsible for the interaction of GPR92 with FPP and NAG."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GPR92 was detected in mouse and human dorsal-root ganglia with substantial TRPV1 colocalization.</div>
+
+                        <div class="finding-text">"Immunohistochemical analysis revealed that GPR92 is largely co-localized with TRPV1, a nonspecific cation channel that responds to noxious heat, in mouse and human DRG."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19366702" target="_blank" class="term-link">
+                            PMID:19366702
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Unique ligand selectivity of the GPR92/LPA5 lysophosphatidate receptor indicates role in human platelet activation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mutagenesis identified four residues required for full LPAR5 activation by LPA-related ligands.</div>
+
+                        <div class="finding-text">"Four residues involved in ligand recognition in LPA(5) were identified as follows: R2.60N mutant abolished receptor activation, whereas H4.64E, R6.62A, and R7.32A greatly reduced receptor activation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAR5 preferred alkyl glycerol phosphate over LPA, farnesyl phosphates, and N-arachidonoylglycine in the reported structure-activity series.</div>
+
+                        <div class="finding-text">"SAR revealed that the rank order of agonists is alkyl glycerol phosphate &gt; LPA &gt; farnesyl phosphates &gt;&gt; N-arachidonoylglycine."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Non-lipid LPAR5 antagonists inhibited human platelet activation.</div>
+
+                        <div class="finding-text">"Because LPA(5) transcripts are abundant in human platelets, we tested its antagonists on platelet activation and found that these non-lipid LPA(5) antagonists inhibit platelet activation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21106562" target="_blank" class="term-link">
+                            PMID:21106562
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GPR92/LPA₅ lysophosphatidate receptor mediates megakaryocytic cell shape change induced by human atherosclerotic plaques.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPA caused rapid Rho-kinase-dependent shape change in human megakaryocytic cell lines, with an LPA-species rank order resembling platelets.</div>
+
+                        <div class="finding-text">"They showed upon LPA stimulation a rapid, Rho-kinase-mediated shape change similar to that of human platelets."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Selective knockdown showed LPAR5, rather than the other assayed LPA receptors, mediated LPA activation of the megakaryocytic cells.</div>
+
+                        <div class="finding-text">"Knock-down of individual LPA receptors by siRNA showed that LPA-mediated activation of MK cells was mediated by LPA₅, but not by LPA₁₋₄,₆,₇."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAR5 silencing inhibited megakaryocytic-cell shape change induced by human atherosclerotic plaque material.</div>
+
+                        <div class="finding-text">"Importantly, we found that human atherosclerotic plaque and lipid-rich core induced shape change of Dami cells, and that this effect was inhibited after LPA₅ silencing."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22461625" target="_blank" class="term-link">
+                            PMID:22461625
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Targeted deletion of LPA5 identifies novel roles for lysophosphatidic acid signaling in development of neuropathic pain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lpar5-null mice lacked obvious baseline defects but were protected from neuropathic pain after partial sciatic nerve ligation.</div>
+
+                        <div class="finding-text">"Homozygous null mutants did not show obvious base-line phenotypic defects. However, following PSNL, LPA(5)-deficient mice were protected from developing neuropathic pain."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lpar5 loss reduced dorsal-horn phosphorylated CREB without preventing induction of other pain-associated markers.</div>
+
+                        <div class="finding-text">"They also showed reduced phosphorylated cAMP response element-binding protein expression within neurons of the dorsal horn despite continued up-regulation of the characteristic pain-related markers Caα(2)δ(1) and glial fibrillary acidic protein, results that were distinct from those previously observed for LPA(1) deletion."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25294670" target="_blank" class="term-link">
+                            PMID:25294670
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Down-regulation of LPA receptor 5 contributes to aberrant LPA signalling in EBV-associated nasopharyngeal carcinoma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAR5 was downregulated in primary nasopharyngeal carcinoma, and reduced LPAR5 promoted LPA-induced migration in NPC cell lines.</div>
+
+                        <div class="finding-text">"Focusing on the first of these phenotypes, we show that one of the LPA receptors, LPA receptor 5 (LPAR5), is down-regulated in primary NPC tissues and that this down-regulation promotes the LPA-induced migration of NPC cell lines."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EBV infection or its LMP2A protein was sufficient to reduce LPAR5 in NPC cells.</div>
+
+                        <div class="finding-text">"Furthermore, we found that EBV infection or ectopic expression of the EBV-encoded LMP2A was sufficient to down-regulate LPAR5 in NPC cell lines."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42313925" target="_blank" class="term-link">
+                            PMID:42313925
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for lysophosphatidic acid recognition and atypical Gα(q) coupling by LPAR5.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A 2.96-Å cryo-EM structure captured LPAR5 bound to 1-oleoyl-LPA in complex with Gq.</div>
+
+                        <div class="finding-text">"Here, we report the cryo-EM structure of LPAR5 bound to 1-oleoyl-lysophosphatidic acid (LPA) in complex with Gq at 2.96 Å resolution, revealing a distinct mode of receptor activation and G protein coupling."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPA engages a polar headgroup site and a deep hydrophobic tail cavity in LPAR5, with functional support from mutagenesis.</div>
+
+                        <div class="finding-text">"The phosphate headgroup of LPA forms extensive polar interactions with residues from extracellular loop 2 and transmembrane helices TM5-TM7, while the lipid tail inserts into a deep hydrophobic cavity formed by TM3-TM5. Site-directed mutagenesis confirms the functional importance of these interactions."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPAR5 uses a noncanonical Gq interface oriented toward intracellular loop 1 and helix 8 rather than primarily engaging TM6.</div>
+
+                        <div class="finding-text">"Unlike previously reported GPCR-G protein structures in which the Gα C-terminal α5 helix (&#34;wavy hook&#34;) primarily engages TM6, the wavy hook in LPAR5 is positioned toward the intracellular loop 1-helix 8 interface."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous Gq/11, G12/13, Gs, Gi/o, and beta-arrestin coupling weights of human LPAR5 in its major native cell types?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: What are the endogenous Gq/11, G12/13, Gs, Gi/o, a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which of LPA, FPP, NAG, and alkyl glycerol phosphate occupies and activates LPAR5 under physiological conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: Which of LPA, FPP, NAG, and alkyl glycerol phospha..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is ligand-specific LPAR5 internalization controlled, and does it alter signaling bias or resensitization?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: How is ligand-specific LPAR5 internalization contr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the Lpar5-dependent neuropathic-pain mechanism conserved in human sensory neurons?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: Is the Lpar5-dependent neuropathic-pain mechanism ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which LPAR5 outputs are specific to platelet-lineage, intestinal immune, plaque, or nasopharyngeal-carcinoma contexts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: Which LPAR5 outputs are specific to platelet-linea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are any endogenous LPAR5 isoforms or stable regulatory partners functionally distinct?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="Q: Are any endogenous LPAR5 isoforms or stable regula..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> CRISPR-tag endogenous LPAR5 and measure Gq/11, G12/13, Gs, Gi/o, beta-arrestin, phosphoinositide, cAMP, calcium, and Rho responses to LPA, FPP, NAG, and alkyl glycerol phosphate with selective G-alpha knockout and rescue.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Native LPAR5 coupling weights and ligand bias differ across intestinal immune, sensory-neuron, and platelet-lineage cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous multiplexed coupling and ligand-bias analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: CRISPR-tag endogenous LPAR5 and measure Gq/11, G12..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine targeted extracellular and membrane lipidomics with LPAR5 knockout, genomic rescue, and receptor-occupancy or functional competition assays in native-expression human cells.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Local lipid abundance determines which agonist class dominates native LPAR5.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: native ligand competition and lipidomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: Combine targeted extracellular and membrane lipido..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LPAR5, map agonist-dependent phosphorylation and arrestin recruitment, and quantify internalization, recycling, degradation, and signaling recovery after matched agonist pulses.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LPA and alternative agonists produce distinct LPAR5 trafficking and resensitization states.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous ligand-resolved receptor trafficking</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: Endogenously tag LPAR5, map agonist-dependent phos..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perturb LPAR5 in human iPSC-derived sensory neurons, apply injury-associated lipid mixtures, and measure excitability, calcium, cAMP, Rho, and CREB responses with genetic rescue and comparison to mouse neurons.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human sensory-neuron LPAR5 reproduces the injury-dependent CREB and excitability program inferred from Lpar5-null mice.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: mouse-to-human pain-mechanism conservation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: Perturb LPAR5 in human iPSC-derived sensory neuron..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform matched endogenous knockout/rescue and branch-resolved signaling in primary or stem-cell-derived models, then connect proximal responses to shape change, activation, immune effector behavior, plaque response, or migration.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LPAR5 uses different coupling branches in platelet-lineage, intestinal immune, and epithelial tumor cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: lineage-resolved receptor physiology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: Perform matched endogenous knockout/rescue and bra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconcile transcripts by targeted long-read sequencing and proteomics, then use endogenous proximity labeling before and after agonist exposure followed by partner knockout and signaling/trafficking rescue assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Only one predominant LPAR5 proteoform is expressed, while a small set of inducible partners controls tissue-specific signaling.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteoform reconciliation and endogenous interactome validation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H1C0" data-a="EXPERIMENT: Reconcile transcripts by targeted long-read sequen..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The quantitative Gq/11, G12/13, Gs, Gi/o, and beta-arrestin coupling profile of endogenous human LPAR5 is unresolved across native cell types and ligands.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Heterologous assays establish Gq, G12/13, and Gs capability and ligand-dependent branch use; the LPA-bound structure directly resolves Gq coupling. Seeded Reactome Gi events are pathway models, while the audited primary studies do not establish receptor-specific Gi coupling.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Native coupling weights determine how LPAR5 controls phosphoinositides, cAMP, cytoskeletal signaling, and tissue-specific physiology.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Measure endogenous LPAR5 with parallel Gq/11, G12/13, Gs, Gi/o, beta-arrestin, phosphoinositide, cAMP, calcium, and Rho biosensors across matched LPA, FPP, and NAG dose and time courses.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological competition and relative importance of LPA, FPP, NAG, and alkyl glycerol phosphate as endogenous LPAR5 agonists are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Recombinant assays support all four ligand classes and reveal different potency or pathway profiles, but do not establish their local concentrations, receptor occupancy, or dominant native-tissue effects.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Physiological ligand identity may determine signaling bias and reconcile divergent tissue phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combine quantitative lipidomics with endogenous LPAR5 knockout/rescue and branch-resolved pharmacology in intestinal immune, sensory, and platelet-lineage human cells.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous mechanism and consequences of LPA-induced LPAR5 internalization are unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Tagged recombinant LPAR5 internalizes selectively after LPA exposure, but the route, phosphorylation sites, arrestin dependence, recycling, degradation, and native-cell kinetics have not been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Trafficking controls signal duration and may vary with ligand and tissue context.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LPAR5 and perturb candidate kinases, arrestins, and endocytic machinery while quantifying ligand-specific internalization, recycling, degradation, and signaling resensitization.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The conservation and human relevance of Lpar5-dependent neuropathic-pain physiology remain uncertain.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Mouse Lpar5 deletion protects against injury-induced neuropathic pain without a gross baseline phenotype, and human DRG expresses LPAR5, but causal human sensory neuron evidence is lacking.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishing conservation is essential before assigning a constitutive human pain role or pursuing receptor-directed analgesia.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test LPAR5 loss and rescue in human sensory-neuron models with injury-associated lipid mixtures and compare neuronal excitability and CREB-pathway outputs with the mouse phenotype.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The native roles of LPAR5 in human platelet-lineage, intestinal immune, plaque, and cancer contexts require further separation.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Megakaryocytic-cell knockdown supports receptor-specific LPA responses, whereas mature platelet pharmacology is less genetically tractable. Intestinal T-cell enrichment, plaque-induced shape change, and nasopharyngeal-carcinoma migration each establish distinct contexts rather than a universal cellular function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Context resolution will distinguish normal receptor physiology from disease- or lineage-specific signaling.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use endogenous knockout/rescue in primary or stem-cell-derived platelet, intestinal immune, vascular-plaque, and epithelial tumor models with matched ligand and coupling measurements.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether LPAR5 has functionally distinct endogenous protein isoforms or stable receptor-specific partners is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Transcript databases list multiple accessions, but the reviewed protein record and audited literature do not establish isoform-specific function. No decisive stable endogenous receptor partner was identified; the LPA-bound Gq structure is an activated signaling state, not evidence of constitutive complex membership.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Unverified isoforms or partners should not be used to explain tissue-specific signaling without direct evidence.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconcile full-length transcripts by long-read sequencing and proteomics, then combine endogenous proximity labeling with genetic perturbation to identify reproducible signaling or trafficking partners.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LPAR5-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H1C0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lpar5-literature-notes">LPAR5 literature notes</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<ul>
+<li>The user made provider deep research optional, so no provider run or provider-named file was created. Primary literature was identified through PubMed/Europe PMC searches and citation chaining, then fetched with the project's <code>fetch-pmid</code> tooling. Every quotation below was checked against its local publication cache.</li>
+</ul>
+<h2 id="direct-receptor-identity-ligand-recognition-and-coupling">Direct receptor identity, ligand recognition, and coupling</h2>
+<ul>
+<li>One independent 2006 deorphanization study measured direct high-affinity binding: “The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.” [PMID:16651401, abstract]</li>
+<li>A second study found that “LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.” It also detected “Specific [3H]LPA binding” only in membranes heterologously expressing GPR92. [PMID:16774927, abstract] These establish human-receptor capability in heterologous systems, not fixed branch weights in every native cell.</li>
+<li>LPAR5 agonism is chemically broader than LPA alone. FPP and LPA activated both Gq/11 and Gs pathways, whereas N-arachidonylglycine activated only Gq/11. [PMID:18499677, abstract, “FPP and lysophosphatidic acid were able to activate both G(q/11)- and G(s)-mediated signaling pathways, whereas NAG activated only the G(q/11)-mediated signaling pathway.”]</li>
+<li>The comparative structure-activity series ranked agonists as “alkyl glycerol phosphate &gt; LPA &gt; farnesyl phosphates &gt;&gt; N-arachidonoylglycine.” [PMID:19366702, abstract] Thus FPP and NAG are assay-supported agonists, but the evidence does not establish them as universally dominant endogenous ligands.</li>
+<li>Mutagenesis implicated ligand-contact residues in two studies. The 2008 work identified Thr97, Gly98, Phe101, and Arg267 for FPP/NAG responses; the 2009 work found that R2.60N abolished activation and H4.64E, R6.62A, and R7.32A strongly reduced it. [PMID:18499677; PMID:19366702]</li>
+</ul>
+<h2 id="structural-evidence-and-trafficking">Structural evidence and trafficking</h2>
+<ul>
+<li>The 2026 cryo-EM study directly captured “LPAR5 bound to 1-oleoyl-lysophosphatidic acid (LPA) in complex with Gq at 2.96 Å resolution”. [PMID:42313925, abstract]</li>
+<li>Its ligand pocket separates phosphate-headgroup recognition from acyl-tail burial: “The phosphate headgroup of LPA forms extensive polar interactions with residues from extracellular loop 2 and transmembrane helices TM5-TM7, while the lipid tail inserts into a deep hydrophobic cavity formed by TM3-TM5.” [PMID:42313925, abstract]</li>
+<li>The Gq interface is noncanonical: the Gα α5 “wavy hook” is positioned toward the intracellular-loop-1/helix-8 interface rather than primarily engaging TM6. [PMID:42313925, abstract]</li>
+<li>Agonist-dependent trafficking capability was shown in a tagged-receptor system: “LPA-dependent receptor internalization following exposure to LPA but not related lysophospholipids was observed.” [PMID:16774927, abstract] The endogenous internalization route, arrestin dependence, recycling, and degradation remain unresolved by the audited set.</li>
+</ul>
+<h2 id="tissue-and-species-boundaries">Tissue and species boundaries</h2>
+<ul>
+<li>The first human survey reported expression mainly in heart, placenta, spleen, brain, lung, and gut, with especially high expression in small-intestinal intraepithelial CD8+ cytotoxic T cells. [PMID:16651401, abstract, “It is the most abundant GPCR activated by LPA found in the small intestinal intraepithelial CD8+ cytotoxic T cells.”]</li>
+<li>Another survey found broad low expression with enrichment in small intestine, sensory dorsal-root ganglia, embryonic brain, and embryonic stem cells. [PMID:16774927, abstract]</li>
+<li>The alternative-ligand study reported GPR92/TRPV1 colocalization “in mouse and human DRG.” [PMID:18499677, abstract] This is expression/localization evidence, not proof that every TRPV1-positive human sensory neuron uses the same ligand or downstream branch.</li>
+<li>The reviewed UniProt record defines no <code>ALTERNATIVE PRODUCTS</code> section or curated functional variants. RefSeq lists two protein accessions, but the audited literature does not establish distinct isoform-specific receptor functions; transcript multiplicity must not be converted into isoform biology without direct evidence.</li>
+</ul>
+<h2 id="pain-and-development-boundaries">Pain and development boundaries</h2>
+<ul>
+<li>The strongest causal pain evidence is murine. “Homozygous null mutants did not show obvious base-line phenotypic defects. However, following PSNL, LPA(5)-deficient mice were protected from developing neuropathic pain.” [PMID:22461625, abstract]</li>
+<li>The knockout also reduced dorsal-horn phosphorylated CREB while other pain markers remained induced, distinguishing the Lpar5 pathway from the previously studied Lpar1 response. [PMID:22461625, abstract]</li>
+<li>These results support injury-induced neuropathic-pain development in mice. They do not by themselves establish a constitutive human pain function, and the lack of gross baseline phenotype argues against broad developmental claims from this model.</li>
+</ul>
+<h2 id="human-platelet-lineage-and-disease-contexts">Human platelet-lineage and disease contexts</h2>
+<ul>
+<li>Human platelet transcripts and pharmacology suggested an LPAR5 contribution, but antagonist inhibition alone was not fully receptor selective. [PMID:19366702, abstract, “Because LPA(5) transcripts are abundant in human platelets, we tested its antagonists on platelet activation and found that these non-lipid LPA(5) antagonists inhibit platelet activation.”]</li>
+<li>Stronger receptor-selective evidence came from human megakaryocytic cells: “Knock-down of individual LPA receptors by siRNA showed that LPA-mediated activation of MK cells was mediated by LPA₅, but not by LPA₁₋₄,₆,₇.” [PMID:21106562, abstract]</li>
+<li>Human plaque material also induced megakaryocytic-cell shape change that was inhibited after LPAR5 silencing. [PMID:21106562, abstract] This supports a platelet-lineage and atherosclerotic-plaque context, while direct genetic manipulation of mature anucleate platelets was not possible in that design.</li>
+<li>In EBV-associated nasopharyngeal carcinoma, “we show that one of the LPA receptors, LPA receptor 5 (LPAR5), is down-regulated in primary NPC tissues and that this down-regulation promotes the LPA-induced migration of NPC cell lines.” [PMID:25294670, abstract] This disease result suggests a migration-suppressive role in that context, not a universal normal-tissue function.</li>
+</ul>
+<h2 id="interaction-and-evidence-gaps">Interaction and evidence gaps</h2>
+<ul>
+<li>No decisive receptor-specific protein partner or stable endogenous LPAR5 complex was identified in the audited primary set. Generic Reactome Gq/Gi cycle entries model pathway steps, not physical interaction experiments.</li>
+<li>Direct Gq coupling is supported by both functional assays and the LPA-bound LPAR5-Gq structure. By contrast, the seeded Reactome Gi entries are generic, and the audited primary studies emphasize increased cAMP rather than canonical Gi-mediated cAMP suppression; LPAR5-Gi coupling should remain unverified unless receptor-specific evidence is supplied.</li>
+<li>Important open questions include endogenous human coupling weights, physiological competition among LPA/FPP/NAG ligands, receptor-specific trafficking regulators, isoform/proteoform validity, and whether mouse pain and human platelet/cancer contexts generalize to other tissues.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H1C0
+gene_symbol: LPAR5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LPAR5 is a class-A seven-transmembrane G protein-coupled receptor that binds
+  extracellular lysophosphatidic acid at the plasma membrane. Recombinant human
+  receptor studies establish nanomolar LPA binding and activation of Gq-linked
+  phosphoinositide signaling, G12/13-Rho signaling, and Gs-linked cAMP production.
+  Farnesyl pyrophosphate and N-arachidonylglycine can also activate LPAR5 in
+  heterologous assays, with ligand-dependent differences in Gq/11 and Gs branch use;
+  these activities do not establish which agonists dominate in native tissues. A
+  2.96-angstrom cryo-EM structure captures 1-oleoyl-LPA-bound LPAR5 coupled to Gq,
+  defining polar recognition of the phosphate headgroup, burial of the acyl tail,
+  and a noncanonical receptor–Gq interface. This structure represents the activated
+  signaling state rather than a constitutive stable complex. LPA also induces LPAR5
+  internalization in a tagged-receptor system. LPAR5 is expressed in multiple human
+  tissues and is enriched in small-intestinal intraepithelial CD8-positive T cells,
+  sensory dorsal-root ganglia, and platelet-lineage cells. Mouse Lpar5 loss protects
+  against injury-induced neuropathic pain without a gross baseline phenotype, while
+  human megakaryocytic-cell perturbation supports LPAR5-dependent LPA responses in
+  the platelet lineage. Reduced LPAR5 expression promotes LPA-induced migration in
+  EBV-associated nasopharyngeal carcinoma cells. These pain, platelet,
+  atherosclerotic-plaque, and cancer phenotypes are tissue-, species-, or
+  disease-context outputs of receptor signaling rather than additional core
+  molecular activities.
+existing_annotations:
+- term:
+    id: GO:0048266
+    label: behavioral response to pain
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Retained as a pain-related organismal outcome inferred from mouse Lpar5 biology.
+    action: KEEP_AS_NON_CORE
+    reason: Mouse genetic evidence supports a role for Lpar5 in behavioral responses to pain, making the phylogenetic inference biologically plausible. Pain behavior is nevertheless an organism-, neural-context-, and stimulus-level output of receptor signaling rather than the core molecular activity of human LPAR5.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: MGI:MGI:2685918
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; the transfer is biologically plausible but represents contextual organismal physiology rather than core receptor activity.
+      - source_id: PANTHER:PTN002796778
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; the transfer is biologically plausible but represents contextual organismal physiology rather than core receptor activity.
+  supporting_entities:
+  - MGI:MGI:2685918
+  - PANTHER:PTN002796778
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic GPCR activity is valid but should be represented by the established ligand-specific receptor activity.
+    action: MODIFY
+    reason: LPAR5 is a seven-transmembrane receptor for lysophosphatidic acid. The ligand-specific molecular-function term is more informative than the broad GPCR parent term.
+    proposed_replacement_terms:
+    - id: GO:0070915
+      label: lysophosphatidic acid receptor activity
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: InterPro:IPR000276
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.
+  supporting_entities:
+  - InterPro:IPR000276
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Accepted as the core membrane location of LPAR5.
+    action: ACCEPT
+    reason: &#34;The UniProt subcellular-location mapping agrees with the receptor\u2019s integral seven-transmembrane topology and curated plasma-membrane pathway placement.&#34;
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0039
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; the propagated assignment agrees with established human LPAR5 biology.
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0039
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Accepted as the core signaling process initiated by LPA-bound LPAR5.
+    action: ACCEPT
+    reason: The rhodopsin-like GPCR family mapping and curated LPA-receptor pathway events support heterotrimeric G-protein signaling by LPAR5.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: InterPro:IPR000276
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; the propagated assignment agrees with established human LPAR5 biology.
+  supporting_entities:
+  - InterPro:IPR000276
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: The generic membrane term should be replaced by the established plasma-membrane location.
+    action: MODIFY
+    reason: LPAR5 is an integral membrane receptor, but the reviewed location and curated signaling events support the more informative plasma membrane term.
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: InterPro:IPR000276
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.
+      - source_id: InterPro:IPR017452
+        source_status: SUPPORTS_TRANSFER
+        comment: Exact WITH/FROM source; it supports the broad concept, while established LPAR5 biology supports the more precise replacement.
+  supporting_entities:
+  - InterPro:IPR000276
+  - InterPro:IPR017452
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-379048
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in curated proximal Gq/11 signaling.
+    action: ACCEPT
+    reason: Reactome places LPAR5 in a liganded GPCR step at the plasma membrane that activates Gq/11, consistent with receptor topology and LPA signaling.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-380073
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in curated proximal Gi signaling.
+    action: ACCEPT
+    reason: Reactome places LPAR5 in a liganded GPCR step at the plasma membrane that activates Gi, consistent with its receptor role.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-419389
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location of the curated LPA-binding receptor event.
+    action: ACCEPT
+    reason: Reactome places human LPAR5 among plasma-membrane receptors that bind lysophosphatidic acid.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-749448
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in curated Gq binding.
+    action: ACCEPT
+    reason: Reactome places liganded LPAR5 at the plasma membrane when binding inactive heterotrimeric Gq; this is appropriate pathway context for the receptor.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-749452
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in the curated Gq activation cycle.
+    action: ACCEPT
+    reason: &#34;Reactome models dissociation of the liganded receptor\u2013Gq complex at the plasma membrane, consistent with LPAR5 signaling topology.&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-749454
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in the curated Gi activation cycle.
+    action: ACCEPT
+    reason: &#34;Reactome models dissociation of the liganded receptor\u2013Gi complex at the plasma membrane, consistent with LPAR5 signaling topology.&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-749456
+  qualifier: located_in
+  review:
+    summary: Accepted as the plasma-membrane location used in curated Gi binding.
+    action: ACCEPT
+    reason: Reactome places liganded LPAR5 at the plasma membrane when binding inactive heterotrimeric Gi; this is appropriate pathway context for the receptor.
+- term:
+    id: GO:0035727
+    label: lysophosphatidic acid binding
+  evidence_type: IDA
+  original_reference_id: PMID:16651401
+  qualifier: enables
+  review:
+    summary: Proposed as a new annotation for directly measured high-affinity LPA binding by LPAR5.
+    action: NEW
+    reason: Recombinant human GPR92/LPAR5 binds LPA with nanomolar affinity, and independent membrane-binding experiments and the LPA-bound receptor structure confirm direct ligand recognition.
+    supported_by:
+    - reference_id: PMID:16651401
+      supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+    additional_reference_ids:
+    - PMID:16774927
+    - PMID:42313925
+- term:
+    id: GO:0007189
+    label: adenylate cyclase-activating G protein-coupled receptor signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:16651401
+  qualifier: involved_in
+  review:
+    summary: Proposed as a new annotation for the directly demonstrated Gs/cAMP branch of LPAR5 signaling.
+    action: NEW
+    reason: LPA stimulation of recombinant human LPAR5 increases cAMP, and ligand-comparison experiments identify Gs-mediated signaling for LPA and FPP. This establishes activating receptor capability while leaving native tissue coupling weights open.
+    supported_by:
+    - reference_id: PMID:16651401
+      supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+    additional_reference_ids:
+    - PMID:16774927
+    - PMID:18499677
+- term:
+    id: GO:0007200
+    label: phospholipase C-activating G protein-coupled receptor signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:16651401
+  qualifier: involved_in
+  review:
+    summary: Proposed as a new annotation for the directly demonstrated Gq/phosphoinositide branch of LPAR5 signaling.
+    action: NEW
+    reason: LPA-bound LPAR5 drives phosphoinositide hydrolysis, multiple agonists activate Gq/11 signaling, and the 2026 cryo-EM structure directly captures activated LPA-bound LPAR5 coupled to Gq.
+    supported_by:
+    - reference_id: PMID:16651401
+      supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+    additional_reference_ids:
+    - PMID:18499677
+    - PMID:42313925
+- term:
+    id: GO:0002031
+    label: G protein-coupled receptor internalization
+  evidence_type: IDA
+  original_reference_id: PMID:16774927
+  qualifier: involved_in
+  review:
+    summary: Proposed as a new non-core annotation for directly observed agonist-dependent LPAR5 internalization.
+    action: NEW
+    reason: Epitope-tagged LPAR5 internalizes after LPA exposure but not after related lysophospholipids in the same heterologous system. This is a receptor-regulatory state, while its endogenous route and consequences remain unresolved.
+    supported_by:
+    - reference_id: PMID:16774927
+      supporting_text: LPA-dependent receptor internalization following exposure to LPA but not related lysophospholipids was observed.
+- term:
+    id: GO:0035025
+    label: positive regulation of Rho protein signal transduction
+  evidence_type: IDA
+  original_reference_id: PMID:16774927
+  qualifier: involved_in
+  review:
+    summary: Proposed as a new annotation for the directly demonstrated G12/13 signaling branch of LPAR5.
+    action: NEW
+    reason: LPA activates G12/13 through recombinant human LPAR5, and independent ligand-response experiments place Rho downstream of this receptor branch. This supports proximal positive regulation of Rho signaling while leaving downstream tissue phenotypes context dependent.
+    supported_by:
+    - reference_id: PMID:16774927
+      supporting_text: Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.
+    additional_reference_ids:
+    - PMID:21106562
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Standard InterPro-to-GO mapping provenance for broad GPCR, signaling, and membrane annotations; it is not direct experimental evidence for human LPAR5.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Phylogenetic-inference provenance for the pain-behavior annotation; the transfer must be bounded by the underlying mouse knockout evidence.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: UniProt subcellular-location mapping provenance for the plasma-membrane annotation; it supports location but adds no receptor mechanism.
+- id: Reactome:R-HSA-379048
+  title: Liganded Gq/11-activating GPCRs act as GEFs for Gq/11
+  findings:
+  - statement: Reactome places Gq/11-linked GPCRs upstream of PLC, IP3, and calcium mobilization.
+    supporting_text: PLC hydrolyzes phosphatidylinositol (PIP2) to diacyl glycerol (DAG) and inositol triphosphate (IP3).
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Generic curated human Gq/11 pathway context consistent with direct LPAR5 coupling studies; it is not receptor-specific experimental evidence.
+- id: Reactome:R-HSA-380073
+  title: Liganded Gi-activating GPCR acts as a GEF for Gi
+  findings:
+  - statement: Reactome describes nucleotide exchange as the proximal activation step for a Gi-coupled GPCR.
+    supporting_text: This stimulates the exchange of GDP for GTP in the G-protein alpha subunit, activating the G-protein.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Generic Gi-cycle provenance attached to an LPAR5 pathway model. The audited direct LPAR5 studies establish Gq, G12/13, and Gs outputs but do not provide equally decisive Gi coupling evidence, so this entry should not be treated as direct support for LPAR5-Gi coupling.
+- id: Reactome:R-HSA-419389
+  title: LPA-binding receptors bind LPA
+  findings:
+  - statement: The cached Reactome summary describes LPA binding by the EDG-family LPA1-3 receptors, not LPAR5 specifically.
+    supporting_text: The LPA-binding EDG receptors all bind to the ligand lysophosphatidic acid (LPA), a phospholipid derivative that acts as a potent signaling molecule.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Reactome participant provenance supports placement of LPAR5 in this plasma-membrane ligand-binding event. The cached prose narrates LPA1-3 and supplies no LPAR5-specific mechanism, so direct LPAR5 ligand and structure papers remain the receptor-specific evidence.
+- id: Reactome:R-HSA-749448
+  title: Liganded Gq-activating GPCRs bind inactive heterotrimeric Gq
+  findings:
+  - statement: Reactome models the generic association of liganded GPCRs with heterotrimeric Gq.
+    supporting_text: Numerous functionally unrelated GPCRs couple with the Gq G-protein subtype.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Generic curated Gq-binding step consistent with direct LPAR5 functional and structural evidence; it does not independently establish the LPAR5-Gq complex.
+- id: Reactome:R-HSA-749452
+  title: The Ligand:GPCR:Gq complex dissociates
+  findings:
+  - statement: Reactome models separation of activated Gq alpha and beta-gamma into downstream signaling branches.
+    supporting_text: Activated G alpha (q) and the beta:gamma dimer then participate in separate signaling cascades.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Generic curated Gq-cycle context compatible with LPAR5 coupling; it is not direct LPAR5 experimental evidence.
+- id: Reactome:R-HSA-749454
+  title: The Ligand:GPCR:Gi complex dissociates
+  findings:
+  - statement: Reactome models separation of activated Gi alpha and beta-gamma into downstream signaling branches.
+    supporting_text: Activated G alpha (i) and the beta:gamma dimer then participate in separate signaling cascades.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Generic Gi-cycle provenance; direct LPAR5-Gi coupling was not established in the audited primary set, so this should not be elevated to receptor-specific mechanistic evidence.
+- id: Reactome:R-HSA-749456
+  title: Liganded Gi-activating GPCRs bind inactive heterotrimeric G-protein Gi
+  findings:
+  - statement: Reactome describes the canonical Gi consequence of reduced cAMP production.
+    supporting_text: The G-alpha (i) subunit inhibits the production of cAMP from ATP.
+    full_text_unavailable: false
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Generic Gi-binding pathway context. Human LPAR5 deorphanization studies instead report increased cAMP, so receptor-specific Gi use requires independent direct evidence before acceptance.
+- id: PMID:16651401
+  title: Lysophosphatidic acid binds to and activates GPR92, a G protein-coupled receptor highly expressed in gastrointestinal lymphocytes.
+  findings:
+  - statement: GPR92 bound LPA with nanomolar affinity and LPA activation increased phosphoinositide hydrolysis and cAMP production.
+    supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: The reported human tissue survey found GPR92 broadly expressed and particularly abundant in gastrointestinal intraepithelial cytotoxic T cells.
+    supporting_text: It is the most abundant GPCR activated by LPA found in the small intestinal intraepithelial CD8+ cytotoxic T cells.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Decisive primary deorphanization study with direct high-affinity LPA binding, phosphoinositide and cAMP outputs, and human gastrointestinal-lymphocyte expression context.
+- id: PMID:16774927
+  title: GPR92 as a new G12/13- and Gq-coupled lysophosphatidic acid receptor that increases cAMP, LPA5.
+  findings:
+  - statement: Heterologously expressed GPR92 showed specific membrane LPA binding and LPA-dependent internalization.
+    supporting_text: LPA-dependent receptor internalization following exposure to LPA but not related lysophospholipids was observed.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: LPA activated G12/13 and Gq through GPR92 and increased cAMP in the receptor-expression systems.
+    supporting_text: Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: LPAR5 expression was enriched in small intestine and sensory dorsal-root ganglia in the reported tissue survey.
+    supporting_text: Northern blot and reverse transcriptase-PCR studies indicated a broad low level of expression in many tissues including embryonic brain and enrichment in small intestine and sensory dorsal root ganglia, as well as embryonic stem cells.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Independent primary LPAR5 identification and coupling study using heterologous tagged-receptor systems; establishes receptor capability, not fixed native-human coupling weights.
+- id: PMID:18499677
+  title: Identification of farnesyl pyrophosphate and N-arachidonylglycine as endogenous ligands for GPR92.
+  findings:
+  - statement: FPP, N-arachidonylglycine, and LPA activated GPR92, with ligand-dependent differences in Gq/11 and Gs pathway use.
+    supporting_text: FPP and lysophosphatidic acid were able to activate both G(q/11)- and G(s)-mediated signaling pathways, whereas NAG activated only the G(q/11)-mediated signaling pathway.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: Mutagenesis implicated four GPR92 residues in recognition of FPP and N-arachidonylglycine.
+    supporting_text: Computer-simulated modeling combined with site-directed mutagenesis of GPR92 indicated that Thr(97), Gly(98), Phe(101), and Arg(267) of GPR92 are responsible for the interaction of GPR92 with FPP and NAG.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: GPR92 was detected in mouse and human dorsal-root ganglia with substantial TRPV1 colocalization.
+    supporting_text: Immunohistochemical analysis revealed that GPR92 is largely co-localized with TRPV1, a nonspecific cation channel that responds to noxious heat, in mouse and human DRG.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary alternative-ligand and mutagenesis study. It supports receptor activation by FPP and NAG in assay systems, but does not establish their dominant endogenous ligand status across human tissues.
+- id: PMID:19366702
+  title: Unique ligand selectivity of the GPR92/LPA5 lysophosphatidate receptor indicates role in human platelet activation.
+  findings:
+  - statement: Mutagenesis identified four residues required for full LPAR5 activation by LPA-related ligands.
+    supporting_text: &#39;Four residues involved in ligand recognition in LPA(5) were identified as follows: R2.60N mutant abolished receptor activation, whereas H4.64E, R6.62A, and R7.32A greatly reduced receptor activation.&#39;
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: LPAR5 preferred alkyl glycerol phosphate over LPA, farnesyl phosphates, and N-arachidonoylglycine in the reported structure-activity series.
+    supporting_text: SAR revealed that the rank order of agonists is alkyl glycerol phosphate &gt; LPA &gt; farnesyl phosphates &gt;&gt; N-arachidonoylglycine.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: Non-lipid LPAR5 antagonists inhibited human platelet activation.
+    supporting_text: Because LPA(5) transcripts are abundant in human platelets, we tested its antagonists on platelet activation and found that these non-lipid LPA(5) antagonists inhibit platelet activation.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary ligand-recognition, pharmacology, and human platelet study; antagonist effects support an LPAR5 contribution but are less definitive than receptor-selective genetic perturbation.
+- id: PMID:21106562
+  title: GPR92/LPA₅ lysophosphatidate receptor mediates megakaryocytic cell shape change induced by human atherosclerotic plaques.
+  findings:
+  - statement: LPA caused rapid Rho-kinase-dependent shape change in human megakaryocytic cell lines, with an LPA-species rank order resembling platelets.
+    supporting_text: &#39;They showed upon LPA stimulation a rapid, Rho-kinase-mediated shape change similar to that of human platelets.&#39;
+    full_text_unavailable: false
+    reference_section_type: ABSTRACT
+  - statement: Selective knockdown showed LPAR5, rather than the other assayed LPA receptors, mediated LPA activation of the megakaryocytic cells.
+    supporting_text: Knock-down of individual LPA receptors by siRNA showed that LPA-mediated activation of MK cells was mediated by LPA₅, but not by LPA₁₋₄,₆,₇.
+    full_text_unavailable: false
+    reference_section_type: ABSTRACT
+  - statement: LPAR5 silencing inhibited megakaryocytic-cell shape change induced by human atherosclerotic plaque material.
+    supporting_text: Importantly, we found that human atherosclerotic plaque and lipid-rich core induced shape change of Dami cells, and that this effect was inhibited after LPA₅ silencing.
+    full_text_unavailable: false
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text primary human megakaryocytic-cell and plaque study with receptor-selective knockdown; supports a platelet-lineage context but does not directly manipulate LPAR5 in anucleate platelets.
+- id: PMID:22461625
+  title: Targeted deletion of LPA5 identifies novel roles for lysophosphatidic acid signaling in development of neuropathic pain.
+  findings:
+  - statement: Lpar5-null mice lacked obvious baseline defects but were protected from neuropathic pain after partial sciatic nerve ligation.
+    supporting_text: Homozygous null mutants did not show obvious base-line phenotypic defects. However, following PSNL, LPA(5)-deficient mice were protected from developing neuropathic pain.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: Lpar5 loss reduced dorsal-horn phosphorylated CREB without preventing induction of other pain-associated markers.
+    supporting_text: They also showed reduced phosphorylated cAMP response element-binding protein expression within neurons of the dorsal horn despite continued up-regulation of the characteristic pain-related markers Caα(2)δ(1) and glial fibrillary acidic protein, results that were distinct from those previously observed for LPA(1) deletion.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary mouse knockout evidence for neuropathic-pain development and the key source underlying pain-related transfer; it is not direct evidence for a constitutive human pain role.
+- id: PMID:25294670
+  title: Down-regulation of LPA receptor 5 contributes to aberrant LPA signalling in EBV-associated nasopharyngeal carcinoma.
+  findings:
+  - statement: LPAR5 was downregulated in primary nasopharyngeal carcinoma, and reduced LPAR5 promoted LPA-induced migration in NPC cell lines.
+    supporting_text: Focusing on the first of these phenotypes, we show that one of the LPA receptors, LPA receptor 5 (LPAR5), is down-regulated in primary NPC tissues and that this down-regulation promotes the LPA-induced migration of NPC cell lines.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: EBV infection or its LMP2A protein was sufficient to reduce LPAR5 in NPC cells.
+    supporting_text: Furthermore, we found that EBV infection or ectopic expression of the EBV-encoded LMP2A was sufficient to down-regulate LPAR5 in NPC cell lines.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Primary human disease-tissue and cell-line evidence for context-dependent suppression of migration by LPAR5; it should not be generalized as a universal normal-tissue motility function.
+- id: PMID:42313925
+  title: Structural basis for lysophosphatidic acid recognition and atypical Gα(q) coupling by LPAR5.
+  findings:
+  - statement: A 2.96-Å cryo-EM structure captured LPAR5 bound to 1-oleoyl-LPA in complex with Gq.
+    supporting_text: Here, we report the cryo-EM structure of LPAR5 bound to 1-oleoyl-lysophosphatidic acid (LPA) in complex with Gq at 2.96 Å resolution, revealing a distinct mode of receptor activation and G protein coupling.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: LPA engages a polar headgroup site and a deep hydrophobic tail cavity in LPAR5, with functional support from mutagenesis.
+    supporting_text: The phosphate headgroup of LPA forms extensive polar interactions with residues from extracellular loop 2 and transmembrane helices TM5-TM7, while the lipid tail inserts into a deep hydrophobic cavity formed by TM3-TM5. Site-directed mutagenesis confirms the functional importance of these interactions.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  - statement: LPAR5 uses a noncanonical Gq interface oriented toward intracellular loop 1 and helix 8 rather than primarily engaging TM6.
+    supporting_text: Unlike previously reported GPCR-G protein structures in which the Gα C-terminal α5 helix (&#34;wavy hook&#34;) primarily engages TM6, the wavy hook in LPAR5 is positioned toward the intracellular loop 1-helix 8 interface.
+    full_text_unavailable: true
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Decisive primary structural and mutational evidence for human LPAR5 recognition of 1-oleoyl-LPA and direct Gq coupling; the deposited full text was not yet accessible through project tooling, so findings are abstract-bounded.
+core_functions:
+- description: &gt;-
+    Acts at the plasma membrane as an LPA-activated GPCR. Recombinant human LPAR5
+    activates Gq-linked phosphoinositide signaling, G12/13 signaling, and Gs-linked
+    cAMP production. LPA and FPP activate both Gq/11 and Gs branches, whereas NAG
+    activates Gq/11 in the tested systems, showing ligand-dependent signaling bias.
+    The LPA-bound LPAR5–Gq cryo-EM structure directly defines an activated coupling
+    state with a noncanonical G-alpha-q interface; it does not imply a constitutive
+    stable receptor–G-protein complex. Pain, platelet-lineage, immune, plaque, and
+    cancer phenotypes are bounded downstream outputs rather than additional core
+    molecular activities.
+  molecular_function:
+    id: GO:0070915
+    label: lysophosphatidic acid receptor activity
+  directly_involved_in:
+  - id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  - id: GO:0007189
+    label: adenylate cyclase-activating G protein-coupled receptor signaling pathway
+  - id: GO:0007200
+    label: phospholipase C-activating G protein-coupled receptor signaling pathway
+  - id: GO:0035025
+    label: positive regulation of Rho protein signal transduction
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:16651401
+    supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+  - reference_id: PMID:16774927
+    supporting_text: Furthermore, LPA induced concentration-dependent activation of G(12/13) and G(q) and increased cAMP levels.
+  - reference_id: PMID:18499677
+    supporting_text: FPP and lysophosphatidic acid were able to activate both G(q/11)- and G(s)-mediated signaling pathways, whereas NAG activated only the G(q/11)-mediated signaling pathway.
+  - reference_id: PMID:42313925
+    supporting_text: Here, we report the cryo-EM structure of LPAR5 bound to 1-oleoyl-lysophosphatidic acid (LPA) in complex with Gq at 2.96 Å resolution, revealing a distinct mode of receptor activation and G protein coupling.
+- description: &gt;-
+    Directly binds lysophosphatidic acid as the extracellular ligand-recognition
+    step of LPAR5 signaling. Nanomolar binding measurements, structure-activity
+    studies, mutagenesis, and the 1-oleoyl-LPA-bound structure establish a polar
+    phosphate-headgroup site and deep hydrophobic acyl-tail cavity. FPP and NAG are
+    assay-supported agonists, but their relative physiological contribution is not
+    established by these heterologous experiments.
+  molecular_function:
+    id: GO:0035727
+    label: lysophosphatidic acid binding
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:16651401
+    supporting_text: The binding of LPA to GPR92 was of high affinity (K(D) = 6.4 +/- 0.9 nM) and led to an increase in both phosphoinositide hydrolysis and cAMP production.
+  - reference_id: PMID:42313925
+    supporting_text: The phosphate headgroup of LPA forms extensive polar interactions with residues from extracellular loop 2 and transmembrane helices TM5-TM7, while the lipid tail inserts into a deep hydrophobic cavity formed by TM3-TM5. Site-directed mutagenesis confirms the functional importance of these interactions.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The quantitative Gq/11, G12/13, Gs, Gi/o, and beta-arrestin coupling profile of
+    endogenous human LPAR5 is unresolved across native cell types and ligands.
+  boundary: &gt;-
+    Heterologous assays establish Gq, G12/13, and Gs capability and ligand-dependent
+    branch use; the LPA-bound structure directly resolves Gq coupling. Seeded
+    Reactome Gi events are pathway models, while the audited primary studies do not
+    establish receptor-specific Gi coupling.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Native coupling weights determine how LPAR5 controls phosphoinositides, cAMP,
+    cytoskeletal signaling, and tissue-specific physiology.
+  resolution: &gt;-
+    Measure endogenous LPAR5 with parallel Gq/11, G12/13, Gs, Gi/o,
+    beta-arrestin, phosphoinositide, cAMP, calcium, and Rho biosensors across matched
+    LPA, FPP, and NAG dose and time courses.
+- gap_statement: &gt;-
+    The physiological competition and relative importance of LPA, FPP, NAG, and
+    alkyl glycerol phosphate as endogenous LPAR5 agonists are unknown.
+  boundary: &gt;-
+    Recombinant assays support all four ligand classes and reveal different potency
+    or pathway profiles, but do not establish their local concentrations, receptor
+    occupancy, or dominant native-tissue effects.
+  gap_kind:
+  - BIOLOGY
+  status: OPEN
+  significance: &gt;-
+    Physiological ligand identity may determine signaling bias and reconcile
+    divergent tissue phenotypes.
+  resolution: &gt;-
+    Combine quantitative lipidomics with endogenous LPAR5 knockout/rescue and
+    branch-resolved pharmacology in intestinal immune, sensory, and platelet-lineage
+    human cells.
+- gap_statement: &gt;-
+    The endogenous mechanism and consequences of LPA-induced LPAR5 internalization
+    are unresolved.
+  boundary: &gt;-
+    Tagged recombinant LPAR5 internalizes selectively after LPA exposure, but the
+    route, phosphorylation sites, arrestin dependence, recycling, degradation, and
+    native-cell kinetics have not been established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Trafficking controls signal duration and may vary with ligand and tissue context.
+  resolution: &gt;-
+    Endogenously tag LPAR5 and perturb candidate kinases, arrestins, and endocytic
+    machinery while quantifying ligand-specific internalization, recycling,
+    degradation, and signaling resensitization.
+- gap_statement: &gt;-
+    The conservation and human relevance of Lpar5-dependent neuropathic-pain
+    physiology remain uncertain.
+  boundary: &gt;-
+    Mouse Lpar5 deletion protects against injury-induced neuropathic pain without a
+    gross baseline phenotype, and human DRG expresses LPAR5, but causal human sensory
+    neuron evidence is lacking.
+  gap_kind:
+  - BIOLOGY
+  status: OPEN
+  significance: &gt;-
+    Establishing conservation is essential before assigning a constitutive human
+    pain role or pursuing receptor-directed analgesia.
+  resolution: &gt;-
+    Test LPAR5 loss and rescue in human sensory-neuron models with injury-associated
+    lipid mixtures and compare neuronal excitability and CREB-pathway outputs with
+    the mouse phenotype.
+- gap_statement: &gt;-
+    The native roles of LPAR5 in human platelet-lineage, intestinal immune, plaque,
+    and cancer contexts require further separation.
+  boundary: &gt;-
+    Megakaryocytic-cell knockdown supports receptor-specific LPA responses, whereas
+    mature platelet pharmacology is less genetically tractable. Intestinal T-cell
+    enrichment, plaque-induced shape change, and nasopharyngeal-carcinoma migration
+    each establish distinct contexts rather than a universal cellular function.
+  gap_kind:
+  - BIOLOGY
+  status: OPEN
+  significance: &gt;-
+    Context resolution will distinguish normal receptor physiology from disease- or
+    lineage-specific signaling.
+  resolution: &gt;-
+    Use endogenous knockout/rescue in primary or stem-cell-derived platelet,
+    intestinal immune, vascular-plaque, and epithelial tumor models with matched
+    ligand and coupling measurements.
+- gap_statement: &gt;-
+    Whether LPAR5 has functionally distinct endogenous protein isoforms or stable
+    receptor-specific partners is unknown.
+  boundary: &gt;-
+    Transcript databases list multiple accessions, but the reviewed protein record
+    and audited literature do not establish isoform-specific function. No decisive
+    stable endogenous receptor partner was identified; the LPA-bound Gq structure is
+    an activated signaling state, not evidence of constitutive complex membership.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  status: OPEN
+  significance: &gt;-
+    Unverified isoforms or partners should not be used to explain tissue-specific
+    signaling without direct evidence.
+  resolution: &gt;-
+    Reconcile full-length transcripts by long-read sequencing and proteomics, then
+    combine endogenous proximity labeling with genetic perturbation to identify
+    reproducible signaling or trafficking partners.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What are the endogenous Gq/11, G12/13, Gs, Gi/o, and beta-arrestin coupling
+    weights of human LPAR5 in its major native cell types?
+- question: &gt;-
+    Which of LPA, FPP, NAG, and alkyl glycerol phosphate occupies and activates
+    LPAR5 under physiological conditions?
+- question: &gt;-
+    How is ligand-specific LPAR5 internalization controlled, and does it alter
+    signaling bias or resensitization?
+- question: &gt;-
+    Is the Lpar5-dependent neuropathic-pain mechanism conserved in human sensory
+    neurons?
+- question: &gt;-
+    Which LPAR5 outputs are specific to platelet-lineage, intestinal immune, plaque,
+    or nasopharyngeal-carcinoma contexts?
+- question: &gt;-
+    Are any endogenous LPAR5 isoforms or stable regulatory partners functionally
+    distinct?
+suggested_experiments:
+- hypothesis: &gt;-
+    Native LPAR5 coupling weights and ligand bias differ across intestinal immune,
+    sensory-neuron, and platelet-lineage cells.
+  description: &gt;-
+    CRISPR-tag endogenous LPAR5 and measure Gq/11, G12/13, Gs, Gi/o,
+    beta-arrestin, phosphoinositide, cAMP, calcium, and Rho responses to LPA, FPP,
+    NAG, and alkyl glycerol phosphate with selective G-alpha knockout and rescue.
+  experiment_type: endogenous multiplexed coupling and ligand-bias analysis
+- hypothesis: &gt;-
+    Local lipid abundance determines which agonist class dominates native LPAR5.
+  description: &gt;-
+    Combine targeted extracellular and membrane lipidomics with LPAR5 knockout,
+    genomic rescue, and receptor-occupancy or functional competition assays in
+    native-expression human cells.
+  experiment_type: native ligand competition and lipidomics
+- hypothesis: &gt;-
+    LPA and alternative agonists produce distinct LPAR5 trafficking and
+    resensitization states.
+  description: &gt;-
+    Endogenously tag LPAR5, map agonist-dependent phosphorylation and arrestin
+    recruitment, and quantify internalization, recycling, degradation, and signaling
+    recovery after matched agonist pulses.
+  experiment_type: endogenous ligand-resolved receptor trafficking
+- hypothesis: &gt;-
+    Human sensory-neuron LPAR5 reproduces the injury-dependent CREB and excitability
+    program inferred from Lpar5-null mice.
+  description: &gt;-
+    Perturb LPAR5 in human iPSC-derived sensory neurons, apply injury-associated
+    lipid mixtures, and measure excitability, calcium, cAMP, Rho, and CREB responses
+    with genetic rescue and comparison to mouse neurons.
+  experiment_type: mouse-to-human pain-mechanism conservation
+- hypothesis: &gt;-
+    LPAR5 uses different coupling branches in platelet-lineage, intestinal immune,
+    and epithelial tumor cells.
+  description: &gt;-
+    Perform matched endogenous knockout/rescue and branch-resolved signaling in
+    primary or stem-cell-derived models, then connect proximal responses to shape
+    change, activation, immune effector behavior, plaque response, or migration.
+  experiment_type: lineage-resolved receptor physiology
+- hypothesis: &gt;-
+    Only one predominant LPAR5 proteoform is expressed, while a small set of
+    inducible partners controls tissue-specific signaling.
+  description: &gt;-
+    Reconcile transcripts by targeted long-read sequencing and proteomics, then use
+    endogenous proximity labeling before and after agonist exposure followed by
+    partner knockout and signaling/trafficking rescue assays.
+  experiment_type: proteoform reconciliation and endogenous interactome validation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
