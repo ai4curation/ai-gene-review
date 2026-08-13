@@ -196,7 +196,9 @@ GO:0005576 by `IEA / GO_REF:0000044`, exactly as *P. putida* does.
 
 **The corrected pattern is uniformity, not anti-correlation** — and it supports the same verdict
 by a cleaner argument. Every enolase checked, across six genera spanning soil saprophytes,
-enteric bacteria, cyanobacteria and pathogens, carries GO:0005576 from the same rule. A term
+enteric bacteria, cyanobacteria and pathogens, carries GO:0005576 as a rule-derived IEA with no
+organism-specific input: five of the six from `GO_REF:0000044`, and *Listeria innocua* (P64075)
+from `GO_REF:0000120`, as the output above shows. Both are family-rule pipelines. A term
 applied to every member of a family regardless of that member's biology carries **no
 organism-specific information**, which is the essence of the over-annotation. The pathogens
 where surface enolase is real are not distinguished from *P. putida* by this annotation, so the

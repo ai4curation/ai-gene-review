@@ -83,13 +83,21 @@ Written up with a reproducible checker in `eno-bioinformatics/check_ortholog_go_
 
 **Net effect on the review.** The verdict is unchanged and now better supported, but by
 *uniformity* rather than anti-correlation: every enolase checked across six genera carries the
-term from `GO_REF:0000044`, so it distinguishes nothing and cannot be evidence about *P. putida*.
+term as a rule-derived IEA with no organism-specific input — five of the six from
+`GO_REF:0000044`, and *Listeria innocua* (P64075) from `GO_REF:0000120` — so it distinguishes
+nothing and cannot be evidence about *P. putida*. (Earlier drafts of this note and of the review
+`reason` said all six came from `GO_REF:0000044`; the committed audit output at
+`eno-bioinformatics/RESULTS.md` shows otherwise. Corrected 2026-08-13. The argument is unaffected:
+what matters is that both references are family-rule pipelines, not organism-specific evidence.)
 
 One caution the run got backwards and worth keeping: it asserts no experimental GO:0005576 exists
 on any enolase. *E. coli* enolase carries `GO:0005576 EXP PMID:15003462`, on
-2-phosphoglycerate-dependent automodification and export. Non-classical enolase export is a live
-question, so the argument here stays organism-specific and must not be generalised into "bacterial
-enolases are not exported".
+2-phosphoglycerate-dependent automodification and export [PMID:15003462 "As reported for other
+bacteria, a significant fraction of E.coli enolase was found to be exported into the medium."].
+That paper is now cached in `publications/` and declared in the review's `references`, so the
+claim is wired rather than left as a lead. Non-classical enolase export is a live question, so the
+argument here stays organism-specific and must not be generalised into "bacterial enolases are not
+exported".
 
 **Method lesson.** A generated table of accessions is a claim about identity, and identity is
 cheap to check. The verdict survived verification; the evidence offered for it did not.
