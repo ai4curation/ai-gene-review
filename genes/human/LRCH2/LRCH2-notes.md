@@ -31,9 +31,9 @@ immune-cell function, or one constitutive LRCH2-DOCK8 complex.
 
 ## Paralogs, species, and CH-domain boundaries
 
-LRCH paralogs are functionally distinct. LRCH1 inhibition of DOCK8-Cdc42 signaling,
-LRCH3 participation in a MYO6-DOCK7-septin complex, and LRCH4 innate-immune/TLR
-biology must not be assigned to LRCH2. PMID:32203420 supports a physical and
+LRCH paralogs are functionally distinct. LRCH1 restricts DOCK8 GEF activity by
+competing with Cdc42 for its catalytic DHR-2 domain [PMID:28028151, “Next, we identified that LRCH1 competes with Cdc42 for binding to the catalytic DHR-2 domain of DOCK8 and restricts the GEF activity of DOCK8.”]. Functions reported for other
+LRCH paralogs must not be assigned to LRCH2. PMID:32203420 supports a physical and
 localization relationship between LRCH2 and DOCK8, but not the LRCH1 inhibitory
 mechanism.
 
