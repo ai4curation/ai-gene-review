@@ -68,4 +68,4 @@ represented as completed evidence.
 - [x] Built a species-neutral four-part module with molecular functions only on leaf annotons.
 - [x] Recorded incomplete OpenScientist artifact production without restarting research.
 - [x] Updated the batch Markdown and TSV.
-- [ ] Published as a draft pull request.
+- [x] Published as draft pull request [#2578](https://github.com/ai4curation/ai-gene-review/pull/2578).
