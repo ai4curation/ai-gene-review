@@ -22,9 +22,9 @@ bacteria.
 - [x] Fetch current UniProt and GOA records for PP_3117, imuB, and dnaE2.
 - [x] Start full-allowance OpenScientist research for the three uncured genes.
 - [x] Curate the three GOA sets and synthesize core functions.
-- [ ] Run and integrate reusable-module and PSEPK cassette research.
+- [x] Run and integrate reusable-module and PSEPK cassette research.
 - [x] Validate and render all new artifacts.
-- [ ] Open one draft PR for this module.
+- [x] Open one draft PR for this module.
 - [ ] Shepherd review and CI.
 
 ## Satisfiability
@@ -45,3 +45,8 @@ bacteria.
 - Do not assign catalytic molecular functions to ImuA or ImuB without direct evidence.
 
 Generated UTC: 2026-08-12
+
+2026-08-13: Review follow-up added direct P. putida evidence. The species data
+show that ImuB and DnaE2 have context-dependent, sometimes antagonistic effects
+on mutation accumulation, while ImuC/DnaE2 participates in alkylation-damage
+tolerance. ImuB is modeled as an adaptor rather than a polymerase contributor.
