@@ -1,0 +1,47 @@
+---
+title: "PSEPK 2-ketogluconate loop batch"
+maturity: DRAFT
+tags: [BIOLOGY_DOMAIN, PIPELINE]
+species: [PSEPK]
+genes: [gcd, PP_3382, PP_3383, PP_3384, kguT, kguK, kguE, ptxD]
+autolink_gene_symbols: false
+---
+
+# PSEPK periplasmic 2-ketogluconate loop
+
+## Workflow
+
+- [x] Fetch or reuse all eight selected gene-review inputs.
+- [x] Complete the requested OpenScientist calls and inspect available outputs.
+- [x] Reconcile generic module and PSEPK pathway evidence.
+- [x] Reconcile Gad architecture, KguE uncertainty, and PP_3376/KguD identity.
+- [x] Curate all GOA rows and consult the annotation reviewer.
+- [x] Validate and render the scoped genes, module, and batch page.
+- [ ] Open one draft PR and address automated review feedback.
+
+## Boundary
+
+- The loop runs from periplasmic glucose oxidation through cytoplasmic 6-phosphogluconate.
+- The reusable scope is Pseudomonas, not all Pseudomonadota.
+- PQQ biosynthesis, porin-mediated entry, PtxS regulation, the alternative GnuK route,
+  and the downstream Entner-Doudoroff trunk are excluded.
+- KguE is retained as a module-adjacent accessory candidate because its reaction is
+  unresolved; it is not used as the terminal reductase.
+- PP_3376/Q88HI1 is reviewed under its current `ptxD` symbol but resolved
+  conservatively as the KguD candidate from direct KT2440 genetics, locus context,
+  and KEGG K00032. No phosphite-dehydrogenase function is claimed.
+
+## Evidence reconciliation
+
+The combined pathway report initially treated PP_3376 as an unrelated phosphonate
+dehydrogenase by following its legacy name. That conclusion is superseded by the
+primary KT2440 mutant study (PMID:17483213) and the conserved Pseudomonas pathway
+order summarized in PMID:29607620. The separately completed phosphite-focused
+OpenScientist report was used only to retrieve candidate literature; its transfer
+of phosphite activity to Q88HI1 was adjudicated as unsupported target-level evidence.
+
+The seven requested gene-level OpenScientist clients and the generic-module client
+were allowed to finish without termination or replacement. They did not leave final
+report files in this worktree, so no absent report content was inferred or cited.
+
+2026-08-13: Started as module 18 of the current 20-module batch.
