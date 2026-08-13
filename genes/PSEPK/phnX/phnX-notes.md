@@ -9,7 +9,10 @@
   [UniProtKB:Q88KT1, "DR   InterPro; IPR006323; Phosphonoacetald_hydro."].
 - The TreeGrafter phosphoglycolate-phosphatase and DNA-repair annotations are
   inconsistent with the exact PhnX subfamily and reaction and are removed.
-- OpenScientist found direct PhnWX activity evidence in other P. putida strains,
-  but no direct biochemical assay of Q88KT1 from KT2440. The KT2440 assignment
-  therefore remains a strong family- and pathway-context inference rather than
+- Direct 2-aminoethylphosphonate:pyruvate aminotransferase and phosphonatase
+  activities were measured in *P. putida* NG2 and were induced by substrate
+  independently of phosphate status [PMID:9841125,
+  "phosphonoacetaldehyde hydrolase (phosphonatase) activities which were inducible"].
+  No direct biochemical assay of Q88KT1 from KT2440 was found, so its assignment
+  remains a strong family- and pathway-context inference rather than
   strain-specific experimental evidence.
