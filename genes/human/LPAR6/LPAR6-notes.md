@@ -1,0 +1,35 @@
+# LPAR6 literature notes
+
+## Scope and identity
+
+LPAR6 (historically P2RY5/P2Y5) is a 344-residue, seven-transmembrane human GPCR encoded as a nested gene in intron 17 of RB1. No alternative protein isoforms are documented in the reviewed UniProt record used for this review; variant-tested protein forms should therefore be treated as alleles/mutants, not isoforms. The direct literature establishes an LPA receptor whose strongest recurring coupling is G12/13–Rho, with additional Gi and Gq coupling depending on the assay system.
+
+The original human genetics/ligand paper identified oleoyl-LPA as a P2Y5 ligand by reporter and radioligand-binding assays: [PMID:18297070, "Furthermore, we identified oleoyl-L-alpha-lysophosphatidic acid (LPA), a bioactive lipid, as a ligand for P2Y5 in reporter gene and radioligand binding experiments."] The later receptor-deorphanization study independently concluded that p2y5 is an LPA receptor coupled to G13-Rho and found higher activity of 2-acyl- than 1-acyl-LPA: [PMID:19386608, "Here we report that p2y5 is a novel LPA receptor coupling to the G13-Rho signaling pathway."] [PMID:19386608, "We also found that 2-acyl-LPA had higher activity to p2y5 than 1-acyl-LPA."]
+
+## Coupling and downstream responses
+
+PMID:19386608 used human LPAR6 expressed in rat RH7777 and B103 receptor-null cells for most assays, plus endogenous knockdown in human umbilical-vein endothelial cells. The human-cell experiment provides a bounded physiological bridge: [PMID:19386608, "LPA-induced contraction of human umbilical vein endothelial cells was suppressed by small interfering RNA knockdown of endogenously expressed p2y5."]
+
+PMID:19679818 found Gi-sensitive calcium/ERK signaling and G12/13–Rho–ROCK-sensitive SRE reporter activation in heterologous CHO and rat intestinal hBRIE 380i systems: [PMID:19679818, "Together these indicate that P2Y5 activation by LPA induces an increase in [Ca(2+)](i) and ERK1/2 phosphorylation through G(alpha)(i)."] [PMID:19679818, "The activation of P2Y5 by LPA or FPP induced the activity of a serum response element (SRE)-linked luciferase reporter that was inhibited by the RGS domain of p115RhoGEF, C3 exotoxin, and Y-27632, suggesting the involvement of G(alpha)(12/13), Rho GTPase, and ROCK, respectively."] Its reduced-adhesion result is a model-specific response, not established human intestinal physiology: [PMID:19679818, "These observations correlate with our subsequent finding that P2Y5 activation by LPA, and not FPP, reduced intestinal cell adhesion."]
+
+The 2025 structural study resolved LPA-bound human LPAR6 with mini-G13 and mini-Gq and directly validated ligand- and coupling-contact residues by BRET mutagenesis: [PMID:39847322, "We resolved the structures of the LPA-bound LPAR6/G13 and LPA-bound LPAR6/Gq complexes at resolutions of 3.06 Å and 2.89 Å, respectively, using single particle cryo-EM analysis"] [PMID:39847322, "These mutant data corroborate our structural observations regarding LPAR6’s coupling with Gq and G13."] Important boundaries are that the construct was engineered for stability, expressed in insect cells, used mini-G proteins, and used 1-acyl-LPA for purification because 2-acyl-LPA was unstable. The paper nevertheless reports WT-like BRET behavior of its stabilizing mutations and stronger G13 than Gq dissociation.
+
+Reactome places LPAR6 in Gq pathway reactions and records LPA binding. These records are useful for database participant and membrane-location provenance, but their generic pathway summaries do not substitute for receptor-specific experiments. In particular, the displayed citation in R-HSA-417890 is historically problematic because it attributes P2Y5 ligand/coupling claims to Lee et al. 2006, before direct LPAR6 deorphanization; use the primary papers above for the mechanism.
+
+## Hair-follicle genetics and variant trafficking
+
+Two independent 2008 studies establish the human hair phenotype. PMID:18297070 found homozygous truncating P2RY5 variants in autosomal recessive hypotrichosis. PMID:18297072 identified pathogenic variants in six linked families with autosomal recessive woolly hair and localized expression to the hair-follicle inner root sheath: [PMID:18297072, "In all cases, we discovered pathogenic mutations in P2RY5, which encodes a G protein-coupled receptor and is a nested gene residing within intron 17 of the retinoblastoma 1 (RB1) gene."] [PMID:18297072, "P2RY5 is expressed in both Henle's and Huxley's layers of the inner root sheath of the hair follicle."] These studies support an essential role in human hair growth/texture, but do not alone specify which downstream signaling branch acts in each follicular cell type.
+
+PMID:36173926 functionally tested nine disease-associated missense forms. All but S3T failed to respond to LPA; D63V, G146R, N246D, L277P, and C278Y were retained in the ER and had impaired surface expression: [PMID:36173926, "In our exogenous expression experiments, all mutants except S3T failed to respond to LPA, indicating that they are loss-of-function mutants."] [PMID:36173926, "Among the nine mutants, five (D63V, G146R, N246D, L277P and C278Y) displayed impaired expression at the cell surface because of endoplasmic reticulum (ER) retention, indicating that these mutants are trafficking-defective, as reported in other disease-associated GPCRs."] Alkyl-OMPT rescued D63V and N246D surface expression, and rescued N246D was functional; this is a variant-specific cell-model pharmacoperone result, not evidence of a general or clinically demonstrated therapy.
+
+## Interaction-screen boundary
+
+The GOA/IntAct rows derived from the HuRI screen preserve four human binary partners for LPAR6: EMP1 (UniProtKB:P54849), SEC22A (UniProtKB:Q96IW7), SMIM3 (UniProtKB:Q9BZL3), and RPRM (UniProtKB:Q9NS64). PMID:32296183 describes an all-by-all human binary interaction map [PMID:32296183, "Here we present a human 'all-by-all' reference interactome map of human binary protein interactions, or 'HuRI'."] The cached narrative does not name the LPAR6 pairs; their exact identities come from GOA/IntAct provenance. These are screen-level pairwise detections and should not be promoted to stable complexes, trafficking partners, or core LPAR6 mechanisms without targeted validation and relevant co-expression/localization evidence.
+
+## Evidence boundaries and open questions
+
+- Human loss-of-function genetics strongly supports a hair-follicle role, while many downstream assays use heterologous rodent or insect-cell systems.
+- LPA is the established endogenous ligand class. FPP activation and alkyl-OMPT pharmacology are experimentally informative but should not be equated with demonstrated endogenous human ligands or therapies.
+- G13-Rho is the best-supported coupling axis; Gi and Gq are supported in defined systems. Relative coupling in native human inner-root-sheath cells remains unresolved.
+- Disease missense forms are alleles with distinct trafficking/signaling defects, not isoforms.
+- The HuRI partner set remains hypothesis-generating until individually validated in a physiological context.
