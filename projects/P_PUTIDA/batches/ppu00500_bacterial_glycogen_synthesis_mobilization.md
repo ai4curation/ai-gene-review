@@ -21,15 +21,17 @@ autolink_gene_symbols: false
 
 - The connected reusable module has two substantive arms: canonical bacterial
   glycogen synthesis and later glycogen mobilization.
-- Synthesis has two donor variants: canonical GlgC/ADP-glucose and a
-  Pseudomonas GalU/UDP-glucose route, followed by GlgB branch formation.
+- Canonical glycogen synthesis uses GlgC/ADP-glucose-dependent GlgA followed by
+  GlgB branch formation. The Pseudomonas GalU/UDP-glucose-dependent GlgA branch
+  forms linear alpha-glucan but is not connected directly to GlgB here.
 - Mobilization requires GlgP phosphorolysis and GlgX branch removal; glucose
   1-phosphate is the module output, so `pgm` is downstream context.
 - Exact KT2440 exemplars are `galU` (Q88GA4), `glgA` (Q88FN9), `glgB`
   (Q88FN1), `glgP` (Q88CY8), and `glgX` (Q88FN4).
 - No `glgC`/EC 2.7.7.27 candidate is present in the current KT2440 UniProt
-  metadata. Experimental work in the homologous PAO1 architecture establishes
-  a GalU/UDP-glucose GlgA variant, but Q88FN9 donor specificity remains open.
+  metadata. Experimental work in PAO1 supports UDP-glucose-dependent GlgA, but
+  GalU is only a candidate source of that shared metabolite pool and Q88FN9
+  donor specificity remains open.
 - TreY-TreZ trehalose synthesis and TreS-Mak-GlgE alpha-glucan synthesis remain
   separate neighboring modules. Cellulose synthesis, glucose isomerization,
   and broad KEGG ppu00500 membership do not define this module.
@@ -42,8 +44,8 @@ autolink_gene_symbols: false
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Start OpenScientist deep research for the four newly fetched genes.
 - [x] Curate each selected gene review.
-- [ ] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Validate module and gene reviews.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -80,3 +82,7 @@ validation remain authoritative.
 2026-08-12: Full-timeout OpenScientist jobs were started for the four newly
 fetched genes, the reusable module, and module + ppu00500 + PSEPK
 satisfiability. They are allowed to run for the documented provider timeout.
+
+2026-08-12: Annotation review corrected the Pseudomonas pathway boundary. The
+module no longer asserts a GalU-GlgA-GlgB shortcut; GlgA-derived linear glucan
+is treated as input to the neighboring TreY/TreZ and TreS-Mak-GlgE network.
