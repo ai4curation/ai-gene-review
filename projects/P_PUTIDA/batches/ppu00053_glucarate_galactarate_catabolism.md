@@ -35,7 +35,7 @@ autolink_gene_symbols: false
 | 1a | D-glucarate dehydration | `gudD` | Q88DR6 | Covered by the glucarate-specific entry branch |
 | 1b | D-galactarate dehydration | `garD` | Q88GW6 | Covered by the galactarate-specific entry branch |
 | 2 | 5-dehydro-4-deoxyglucarate dehydration | `PP_3599` | Q88GW8 | Covered by reviewed KDGDH |
-| 3 | 2,5-dioxovalerate oxidation to 2-oxoglutarate | `PP_3602` (leading candidate); `PP_1256`, `PP_2585` (alternatives) | Q88GW5; Q88NF5; Q88JR4 | Reaction covered at family level; paralog contribution and NAD+/NADP+ preference unresolved |
+| 3 | 2,5-dioxovalerate oxidation to 2-oxoglutarate | `PP_3602` | Q88GW5 | Covered by the locus-linked KGSADH candidate; NAD+/NADP+ preference unresolved |
 
 The reaction chain is satisfiable for both D-glucarate and D-galactarate in
 KT2440. The two entry reactions converge on
@@ -54,9 +54,9 @@ unique physiological paralog.
   GarD reaction; the direct D-galactarate process remains the core annotation.
 - Broad `lyase activity` mappings are marked as over-annotations when exact
   substrate-specific terms are well supported. For the three terminal
-  paralogs, GO:0016620 is retained as the defensible core molecular-function
-  class because no assay resolves NAD+ versus NADP+ preference; the
-  NADP+-specific GO:0047533 IEAs are left `UNDECIDED`.
+  paralogs, GO:0004030 is used as the current cofactor-neutral core MF and a
+  substrate-specific cofactor-neutral term is proposed. The NADP+-specific
+  GO:0047533 IEAs remain `UNDECIDED`.
 - No module-level molecular function or redundant cytoplasm/cytosol pair is
   asserted.
 
@@ -80,9 +80,10 @@ unique physiological paralog.
   activities because the local PAINT files do not contain those exact terms.
 - Transport, upstream uronate production, and downstream 2-oxoglutarate use are
   outside the pathway boundary.
-- The terminal leaf uses the cofactor-neutral GO:0016620 reaction class and
-  records both RHEA:11296 and RHEA:47152. Q88GW5, Q88NF5, and Q88JR4 are shown
-  as exact KT2440 family exemplars; this does not assert equal pathway usage.
+- The terminal leaf uses cofactor-neutral GO:0004030 while retaining the exact
+  substrate and both RHEA:11296 and RHEA:47152 in the reaction model. Only
+  locus-linked Q88GW5 and cross-species KgsD Q6FFQ0 are pathway exemplars;
+  Q88NF5 and Q88JR4 remain comparison paralogs outside the leaf.
 
 ## Research Status
 
@@ -99,6 +100,9 @@ than core reaction steps. These are retrieval-supported conclusions; exact
 reaction claims remain grounded in GO, Rhea, UniProt, PANTHER, and PAINT
 records. PP_1256 and PP_2585 remain unresolved without direct physiological
 evidence, and none of the three paralogs has a measured NAD+/NADP+ preference.
+Primary enzymology in *Azospirillum brasilense* establishes alphaKGSA
+specificity and pathway-linked NAD+ versus NADP+ KGSADH isozymes
+(PMID:17202142; PMID:16835232), but is not treated as direct KT2440 evidence.
 
 ## Validation
 
