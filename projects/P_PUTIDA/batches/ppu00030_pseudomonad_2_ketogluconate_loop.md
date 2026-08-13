@@ -17,7 +17,7 @@ autolink_gene_symbols: false
 - [x] Reconcile Gad architecture, KguE uncertainty, and PP_3376/KguD identity.
 - [x] Curate all GOA rows and consult the annotation reviewer.
 - [x] Validate and render the scoped genes, module, and batch page.
-- [ ] Open one draft PR and address automated review feedback.
+- [x] Open one draft PR and address automated review feedback.
 
 ## Boundary
 
@@ -43,5 +43,13 @@ of phosphite activity to Q88HI1 was adjudicated as unsupported target-level evid
 The seven requested gene-level OpenScientist clients and the generic-module client
 were allowed to finish without termination or replacement. They did not leave final
 report files in this worktree, so no absent report content was inferred or cited.
+
+The five initially header-only GOA exports were force-refetched from QuickGO and all
+12 recovered rows were reviewed: three for PP_3383, one for PP_3384, four for kguT,
+three for kguK, and one for kguE. Manual notes record the failed-report provenance.
+PMID:39770733 now supplies verbatim primary support for the KguT-KguK-KguD route and
+for retaining only a process-level KguE assignment. Reviewed UniProt exemplars
+O34213, O34214, and O34215 were verified as the third, flavoprotein, and cytochrome c
+Gad subunits, with Q88HH4, Q88HH5, and Q88HH6 as the exact KT2440 implementations.
 
 2026-08-13: Started as module 18 of the current 20-module batch.
