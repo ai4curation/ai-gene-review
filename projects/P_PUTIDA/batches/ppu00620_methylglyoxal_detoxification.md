@@ -14,7 +14,7 @@ autolink_gene_symbols: false
 - Correct boundary: two-step glutathione-dependent conversion of methylglyoxal to D-lactate
 - Broad ppu00620 candidates inspected: 54
 - Selected PSEPK proteins: 2 canonical enzymes plus 1 unresolved family candidate
-- Module/pathway/taxon provider: OpenScientist
+- Research status: pre-existing ppu00620 OpenScientist report reused; all required new OpenScientist attempts timed out
 
 ## Workflow
 
@@ -46,8 +46,9 @@ disposal; these are cross-module dependencies rather than additional parts.
 - The exact existing catalytic molecular functions for GloA and GloB are accepted.
 - Generic metal-ion binding on GloA is retained as non-core because metal
   dependence is real but the physiological Ni2+-versus-Zn2+ preference is unresolved.
-- Zinc ion binding is proposed as a non-core `NEW` annotation for GloB because
-  the reviewed HAMAP record specifies two zinc ions and their coordinating residues.
+- Generic metal ion binding is proposed as a non-core `NEW` annotation for
+  GloB. HAMAP projects two zinc ions and their coordinating residues, but this
+  is not an experimental determination of Q88FF3's physiological metal complement.
 - Valid `GO:0051596 methylglyoxal catabolic process` is added to GloA and
   accepted on GloB; obsolete route-specific GO:0019243 is not authored.
 - PP_0772 is a PTHR46233:SF3 metallo-beta-lactamase-superfamily protein, not a
