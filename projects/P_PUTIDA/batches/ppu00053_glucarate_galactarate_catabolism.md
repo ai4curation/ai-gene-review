@@ -10,7 +10,8 @@ autolink_gene_symbols: false
 
 - Reusable module: `modules/glucarate_galactarate_catabolism.yaml`
 - KEGG ppu00053 candidates inspected: 8
-- Selected pathway proteins: 4
+- Core pathway proteins: 4
+- Terminal-enzyme paralogs reviewed: 3
 - Substrate-entry branches: 2
 - Shared downstream reactions: 2
 - Module and PSEPK satisfiability provider: OpenScientist
@@ -19,8 +20,8 @@ autolink_gene_symbols: false
 
 - [x] Define a multi-step, species-neutral module boundary.
 - [x] Separate the aldarate route from KEGG-map spillover and paralogous routes.
-- [x] Fetch the four selected PSEPK genes.
-- [x] Review every GOA annotation for the selected genes.
+- [x] Fetch the four core PSEPK genes and the two alternative terminal-enzyme paralogs.
+- [x] Review every GOA annotation for all six proteins.
 - [x] Integrate the module/pathway/taxon OpenScientist report.
 - [x] Validate module and gene reviews.
 - [x] Render module, gene, and project pages.
@@ -34,11 +35,13 @@ autolink_gene_symbols: false
 | 1a | D-glucarate dehydration | `gudD` | Q88DR6 | Covered by the glucarate-specific entry branch |
 | 1b | D-galactarate dehydration | `garD` | Q88GW6 | Covered by the galactarate-specific entry branch |
 | 2 | 5-dehydro-4-deoxyglucarate dehydration | `PP_3599` | Q88GW8 | Covered by reviewed KDGDH |
-| 3 | 2,5-dioxovalerate oxidation to 2-oxoglutarate | `PP_3602` | Q88GW5 | Covered; NADP+ GO term accepted, NAD+ activity also predicted |
+| 3 | 2,5-dioxovalerate oxidation to 2-oxoglutarate | `PP_3602` (leading candidate); `PP_1256`, `PP_2585` (alternatives) | Q88GW5; Q88NF5; Q88JR4 | Reaction covered at family level; paralog contribution and NAD+/NADP+ preference unresolved |
 
-The route is satisfiable for both D-glucarate and D-galactarate in KT2440.
-The two entry reactions converge on 5-dehydro-4-deoxy-D-glucarate and use the
-same two downstream enzymes.
+The reaction chain is satisfiable for both D-glucarate and D-galactarate in
+KT2440. The two entry reactions converge on
+5-dehydro-4-deoxy-D-glucarate. PP_3602 is the strongest terminal-enzyme
+candidate by synteny, but the available evidence does not prove that it is the
+unique physiological paralog.
 
 ## Annotation Decisions
 
@@ -49,8 +52,11 @@ same two downstream enzymes.
 - The `garD` D-galacturonate-catabolism annotation is kept as non-core because
   characterized KT2440 Udh feeds D-galacturonate into D-galactarate before the
   GarD reaction; the direct D-galactarate process remains the core annotation.
-- Broad `lyase activity` and `oxidoreductase activity` mappings are marked as
-  over-annotations when exact substrate-specific molecular functions exist.
+- Broad `lyase activity` mappings are marked as over-annotations when exact
+  substrate-specific terms are well supported. For the three terminal
+  paralogs, GO:0016620 is retained as the defensible core molecular-function
+  class because no assay resolves NAD+ versus NADP+ preference; the
+  NADP+-specific GO:0047533 IEAs are left `UNDECIDED`.
 - No module-level molecular function or redundant cytoplasm/cytosol pair is
   asserted.
 
@@ -60,8 +66,8 @@ same two downstream enzymes.
 |---|---|
 | `udh` | Oxidizes hexuronates to aldarates upstream of the substrate-specific entry reactions; it is not required when glucarate or galactarate is supplied |
 | `udg` | UDP-glucose dehydrogenase belongs to nucleotide-sugar metabolism rather than this catabolic route |
-| `PP_1256` | A 2,5-dioxovalerate dehydrogenase in the hydroxyproline locus; reserved for the separate hydroxyproline module |
-| `PP_2585` | A paralogous 2,5-dioxovalerate dehydrogenase outside the local `garD`/KDGDH locus; OpenScientist found polyamine-associated neighborhood context, but its physiological route remains unverified |
+| `PP_1256` | KGSADH-family paralog beside characterized hydroxyproline genes; candidate for that route, not established as aldarate-specific |
+| `PP_2585` | KGSADH-family paralog outside the local `garD`/KDGDH locus; nearby amino-acid/polyamine genes suggest a hypothesis, not a demonstrated pathway assignment |
 
 ## Module Decisions
 
@@ -74,21 +80,29 @@ same two downstream enzymes.
   activities because the local PAINT files do not contain those exact terms.
 - Transport, upstream uronate production, and downstream 2-oxoglutarate use are
   outside the pathway boundary.
+- The terminal leaf uses the cofactor-neutral GO:0016620 reaction class and
+  records both RHEA:11296 and RHEA:47152. Q88GW5, Q88NF5, and Q88JR4 are shown
+  as exact KT2440 family exemplars; this does not assert equal pathway usage.
 
 ## Research Status
 
-The completed [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__glucarate_galactarate_catabolism__ppu00053-deep-research-openscientist.md)
-supports the three-stage boundary and all four selected PSEPK assignments. It
-also distinguishes the aldarate-locus PP_3602 from PP_1256 and PP_2585, finds no
+The completed OpenScientist
+[module-level report](../../../modules/bacterial_glucarate_and_galactarate_catabolism-deep-research-openscientist.md)
+supports the reusable three-stage boundary. The separate
+[module/pathway/taxon report](../deep-research/PSEPK__glucarate_galactarate_catabolism__ppu00053-deep-research-openscientist.md)
+identifies aldarate-locus PP_3602 as the leading terminal candidate. Its claim
+that PP_3602 is the uniquely correct paralog is stronger than the retrieved
+evidence and is not adopted here. The report finds no
 GarL-supported *E. coli*-type downstream branch, and identifies PP_3600,
 PP_4758, PP_3603, and PP_4759 as accessory transport/regulatory context rather
 than core reaction steps. These are retrieval-supported conclusions; exact
 reaction claims remain grounded in GO, Rhea, UniProt, PANTHER, and PAINT
-records, and PP_2585 remains unresolved without direct physiological evidence.
+records. PP_1256 and PP_2585 remain unresolved without direct physiological
+evidence, and none of the three paralogs has a measured NAD+/NADP+ preference.
 
 ## Validation
 
-All four gene reviews pass `just validate`. The module passes LinkML
+All six gene reviews pass `just validate`. The module passes LinkML
 `ModuleReview` validation and the dedicated semantic module validator. The
-module, four gene reviews, and project page render successfully; `git diff
+module, six gene reviews, and project page render successfully; `git diff
 --check` is clean.
