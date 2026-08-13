@@ -86,10 +86,15 @@ The 31-gene KEGG candidate inventory is retained in
 This ownership pass rechecked every current GOA row and qualifier for `gshA`,
 `gshB`, and `PP_3253`; the existing curation decisions remain biologically
 appropriate. PMID:40302248 adds direct P. putida KT2440 Tn-seq support for the
-identity and metal-stress phenotype of `gshA`. The same study reports a weaker
-`gshB` copper phenotype that did not pass its statistical threshold, so it is
-not used to infer a new response annotation. No organism-specific result in
-that paper establishes `PP_3253` as a physiological substitute for GshA.
+identity and an above-threshold copper/cobalt fitness phenotype of `gshA`. No
+metal-response BP is proposed because disrupting glutathione synthesis depletes
+a broadly protective metabolite: the pooled-mutant fitness result is consistent
+with indirect loss of glutathione buffering, not direct GshA involvement in a
+specific metal-response or detoxification process. The same study reports a
+weaker `gshB` copper phenotype that did not pass its statistical threshold, so
+it likewise is not used to infer a response annotation. No organism-specific
+result in that paper establishes `PP_3253` as a physiological substitute for
+GshA.
 
 All five requested OpenScientist jobs were launched and allowed to finish
 without manual termination. The `gshB` gene run completed after 1,001.73
