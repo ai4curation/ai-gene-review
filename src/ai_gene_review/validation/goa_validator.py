@@ -310,6 +310,15 @@ class GOAValidator:
             identity = (ann.go_id, parsed_qualifier, is_negated)
             goa_by_annotation_identity.setdefault(identity, []).append(ann)
 
+        corrected_go_ids = {
+            term.get("id", "")
+            for yaml_ann in yaml_annotations
+            if isinstance(yaml_ann, dict)
+            and isinstance((review := yaml_ann.get("review", {})), dict)
+            and review.get("action") in {"REMOVE", "MODIFY"}
+            and isinstance((term := yaml_ann.get("term", {})), dict)
+        }
+
         # Check each YAML annotation against GOA
         for yaml_ann in yaml_annotations:
             if not isinstance(yaml_ann, dict):
@@ -328,7 +337,7 @@ class GOAValidator:
                     go_id = term.get("id", "")
                     qualifier = self._parse_qualifier(yaml_ann.get("qualifier"))
                     negated = bool(yaml_ann.get("negated", False))
-                    if qualifier is None:
+                    if qualifier is None or go_id not in corrected_go_ids:
                         matching_annotations = [
                             ann
                             for ann in goa_by_go_id.get(go_id, [])
@@ -339,8 +348,10 @@ class GOAValidator:
                         matching_annotations = goa_by_annotation_identity.get(identity, [])
 
                     # Evidence/reference changes do not make an assertion novel, but
-                    # relation and negation changes do. This permits curators to replace
-                    # an incorrect `enables` assertion with `contributes_to`, for example.
+                    # relation and negation changes do when paired with an explicit
+                    # REMOVE/MODIFY correction for the same term. This permits curators
+                    # to replace an incorrect `enables` assertion with `contributes_to`
+                    # without making every relation difference look novel.
                     # Qualifier-less legacy YAML remains conservative and conflicts with
                     # any non-negated GOA assertion for the same term.
                     if matching_annotations:
@@ -357,9 +368,12 @@ class GOAValidator:
                         # This is an error - NEW annotation should not exist in GOA
                         # under any evidence/reference source, including TreeGrafter/IBA.
                         result.is_valid = False
+                        relation = qualifier or "unspecified"
+                        polarity = "negated" if negated else "positive"
                         result.error_message = (
                             f"Annotation with action=NEW exists in GOA: {go_id} "
-                            f"(GOA source(s): {source_summary})"
+                            f"(qualifier={relation}, assertion={polarity}; "
+                            f"GOA source(s): {source_summary})"
                         )
                 # Skip further validation for NEW annotations
                 continue

@@ -995,6 +995,48 @@ UniProtKB\tQ12345\tTEST\tenables\tGO:0016491\toxidoreductase activity\tMF\tECO:0
     goa_path.unlink()
 
 
+def test_unpaired_new_action_with_different_qualifier_fails():
+    """A relation difference alone is not enough to bypass duplicate checking."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE
+UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0050907\tdetection of chemical stimulus involved in sensory perception\tBP\tECO:0000318\tIBA\tGO_REF:0000033\tPTN000123456\tNCBITaxon:9606\tHomo sapiens\tGO_Central\tTest protein\t20260428"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "existing_annotations": [
+            {
+                "term": {
+                    "id": "GO:0050907",
+                    "label": "detection of chemical stimulus involved in sensory perception",
+                },
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:99999",
+                "qualifier": "acts_upstream_of_or_within",
+                "review": {"summary": "Unpaired relation change", "action": "NEW"},
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    result = validator.validate_against_goa(yaml_path, goa_path)
+
+    assert not result.is_valid
+    assert result.error_message is not None
+    assert "qualifier=acts_upstream_of_or_within" in result.error_message
+
+    yaml_path.unlink()
+    goa_path.unlink()
+
+
 def test_validate_gene_review_blocks_new_action_existing_in_goa():
     """Integrated best-practices validation should hard-fail NEW-vs-GOA conflicts."""
     with tempfile.TemporaryDirectory() as tmpdir:
