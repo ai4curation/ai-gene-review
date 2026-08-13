@@ -25,7 +25,8 @@ autolink_gene_symbols: false
 - [x] Curate every available QuickGO annotation row with no `PENDING` actions.
 - [x] Build and validate a reusable, species-neutral, multi-part module.
 - [x] Validate and render the gene, module, and project artifacts.
-- [ ] Open one draft PR and shepherd immediately visible feedback.
+- [x] Open one draft PR: [PR #2580](https://github.com/ai4curation/ai-gene-review/pull/2580).
+- [ ] Shepherd review and CI to merge readiness.
 
 ## Selected Genes
 
