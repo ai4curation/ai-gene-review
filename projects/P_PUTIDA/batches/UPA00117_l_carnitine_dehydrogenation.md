@@ -6,9 +6,10 @@ species: [PSEPK]
 autolink_gene_symbols: false
 ---
 
-# PSEPK UPA00117: UniPathway UPA00117
+# PSEPK L-carnitine catabolism through 3-dehydrocarnitine
 
-- Pathway seed: `l_carnitine_dehydrogenation` (single-step; no standalone module retained)
+- Pathway seed: `l_carnitine_dehydrogenation` (UPA00117), expanded into the
+  reusable multi-part `bacterial_l_carnitine_catabolism` module.
 - Candidate genes from membership table: 1
 - Primary bucket genes: 1
 - Existing review files: 1
@@ -24,6 +25,11 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate gene review; standalone module retired/deferred.
+- [x] Fetch the PP_0294-PP_0296 transporter, caiX/PP_0304, PP_0301, and
+  PP_0303.
+- [ ] Complete OpenScientist research for the six newly selected genes.
+- [ ] Research the expanded reusable module and its PSEPK instance.
+- [ ] Curate the multi-part module and all selected gene reviews.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
@@ -32,8 +38,21 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [x] | `lcdH` | PP_0302 | Q88R32 | unipathway:UPA00117 | PRESENT | CURATED | PRESENT | L-carnitine dehydrogenase (CDH) (L-CDH) (EC 1.1.1.108) |
+| [ ] | `cbcV` | PP_0294 | Q88R40 | pathway extension | PRESENT | PENDING | RUNNING | shared ABC-transporter ATP-binding subunit |
+| [ ] | `cbcW` | PP_0295 | Q88R39 | pathway extension | PRESENT | PENDING | RUNNING | shared ABC-transporter membrane subunit |
+| [ ] | `cbcX` | PP_0296 | Q88R38 | pathway extension | PRESENT | PENDING | RUNNING | choline/betaine/carnitine-binding component |
+| [ ] | `PP_0301` | PP_0301 | Q88R33 | pathway extension | PRESENT | PENDING | RUNNING | candidate betainyl-CoA thioesterase |
+| [ ] | `PP_0303` | PP_0303 | Q88R31 | pathway extension | PRESENT | PENDING | RUNNING | candidate 3-dehydrocarnitine cleavage enzyme |
+| [ ] | `caiX` | PP_0304 | Q88R30 | pathway extension | PRESENT | PENDING | RUNNING | uncertain alternative carnitine-binding component |
 
 ## Notes
+
+2026-08-13: Expanded the prior single UPA00117 reaction into the biologically
+coherent PP_0301-PP_0304 carnitine-utilization sequence: uptake, LcdH
+oxidation, 3-dehydrocarnitine cleavage, and betainyl-CoA hydrolysis. The
+PP_0294-PP_0296 CbcVWX complex has direct KT2440 fitness support for carnitine
+uptake; CaiX is retained as an uncertain alternative receptor. CdhR is
+regulatory context and is not a required catalytic part.
 
 Generated UTC: 2026-07-11T21:08:35.324367+00:00
 
