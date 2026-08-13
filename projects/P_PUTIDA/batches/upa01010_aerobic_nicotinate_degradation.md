@@ -54,13 +54,13 @@ biosynthesis/salvage and explicitly excludes nicotinate degradation; it
 therefore supports separation of these boundaries rather than the chemistry of
 this catabolic module.
 
-2026-08-13: Annotation re-review corrected the NicA/NicB complex-subunit
-relations, replaced broad monooxygenase retention with specific-term
-modifications for NicC, treated MaiA oligomerization as unresolved, and
-replaced overbroad pathway selectors with reaction-constrained ortholog
-selectors. The duplicate draft
-`bacterial_aerobic_nicotinate_maleamate_catabolism` was consolidated into this
-canonical module.
+2026-08-13: Annotation re-review retained the GOA-sourced `enables` relations
+for NicA and NicB while recording complex-level contribution semantics in the
+core functions. It also replaced broad monooxygenase retention with
+specific-term modifications for NicC, treated MaiA oligomerization as
+unresolved, and replaced overbroad pathway selectors with
+reaction-constrained ortholog selectors. PR #2571 records this refinement of
+the canonical module.
 
 ## Candidate Genes
 
