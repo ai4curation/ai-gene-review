@@ -22,7 +22,7 @@ The 2008 human-cell study established broad lysophospholipid acyltransferase act
 
 The 2026 full-text study resolves the positional chemistry that was not determined in the older work. It identifies LPLAT10/LPEAT2/LPCAT4 as the enzyme “responsible for generating PLs with an unsaturated FA at the sn-1 position” and shows incorporation into LPC, LPE, and LPS “selectively at the sn-1 position” [PMID:41740885]. In the controlled positional assay, LPC was preferred over LPE and LysoPS, sn-2-dominant lyso acceptors were preferred, and the authors concluded that “LPLAT10 is a novel sn-1 selective LPLAT that preferentially incorporates unsaturated FAs” [PMID:41740885]. Both saturated and unsaturated acyl-CoAs worked in vitro, but affinity favored unsaturated donors; DHA (C22:6-CoA) was a particularly effective substrate.
 
-The apparent differences between studies are bounded rather than collapsed. PMID:18458083 reported LPG activity, whereas PMID:41740885 found no LPG activity under its assay conditions. Both studies found no LPA acylation. Thus PC, PE, and PS remodeling are well supported; PG remodeling remains assay-dependent; generic AGPAT/LPAAT or phosphatidic-acid synthesis assignments are contradicted by the direct LPCAT4 assays.
+The LPG results resolve by acceptor position rather than by treating the studies as a generic assay conflict. PMID:18458083 reported LPG activity without resolving glycerol position, consistent with acylation of 1-acyl LPG at free sn-2. PMID:41740885 used position-defined sn-2-dominant LPG (2-acyl LPG, free sn-1) and reports, “LPLAT10 did not act on sn-2 dominant LPI, LPG, and LPA.” Thus the older result plausibly supports 1-acyl LPG→PG, whereas the 2-acyl LPG→PG reaction is directly contradicted. Both studies found no LPA acylation.
 
 ## Lipid remodeling and physiological boundaries
 
@@ -34,12 +34,12 @@ In hepatocellular carcinoma models, LPCAT4 was reported to enhance cell growth a
 
 ## Reactome reconciliation
 
-Cached Reactome reactions placing LPCAT4/LPEAT2 in LPC→PC, LPE→PE, and LPS→PS reactions are consistent with both direct biochemical papers. Reactome LPG→PG records match the older broad-substrate assay but conflict with the negative LPG result in PMID:41740885, so they remain disputed/context-sensitive. Reactome’s generic PA-synthesis and AGPAT/LPAAT records should not be treated as LPCAT4 evidence: PMID:18458083 and PMID:41740885 both report no appreciable LPA acylation.
+Cached Reactome reactions placing LPCAT4/LPEAT2 in LPC→PC, LPE→PE, and LPS→PS reactions are consistent with both direct biochemical papers. The 1-acyl LPG→PG record is consistent with the older LPG assay, while the 2-acyl LPG→PG record conflicts with the position-resolved negative result in PMID:41740885. Reactome’s generic PA-synthesis and AGPAT/LPAAT records should not be treated as LPCAT4 evidence: PMID:18458083 and PMID:41740885 both report no appreciable LPA acylation.
 
 ## Curation takeaways
 
 - Core molecular role: ER-membrane sn-1-selective lysophospholipid acyltransferase that remodels PC, PE, and PS and favors unsaturated acyl-CoAs, including DHA.
 - Do not infer LPAAT/AGPAT catalytic activity from the historical AGPAT7 name.
-- Preserve assay context for LPG/PG, which differs between the 2008 and 2026 studies.
+- Preserve positional context for LPG/PG: 1-acyl LPG remains plausible, whereas 2-acyl LPG is directly unsupported.
 - Preserve human-cell versus mouse-knockout and mouse-overexpression boundaries.
 - No supported alternative protein isoforms or isoform-specific functions were identified.
