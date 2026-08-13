@@ -35,7 +35,7 @@ autolink_gene_symbols: false
 - [x] Curate all selected gene reviews and every imported GOA row.
 - [x] Consult the annotation reviewer and module curator.
 - [x] Validate and render module, project, and gene reviews.
-- [ ] Open one draft PR for this module.
+- [x] Open draft PR [#2577](https://github.com/ai4curation/ai-gene-review/pull/2577) for this module.
 
 ## Selected Genes
 
