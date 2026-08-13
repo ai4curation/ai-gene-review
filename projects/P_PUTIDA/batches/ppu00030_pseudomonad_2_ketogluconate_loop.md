@@ -51,5 +51,10 @@ PMID:39770733 now supplies verbatim primary support for the KguT-KguK-KguD route
 for retaining only a process-level KguE assignment. Reviewed UniProt exemplars
 O34213, O34214, and O34215 were verified as the third, flavoprotein, and cytochrome c
 Gad subunits, with Q88HH4, Q88HH5, and Q88HH6 as the exact KT2440 implementations.
+The exact reviewed UniProt `ID`/`DE` lines are retained in
+`modules/pseudomonad_2_ketogluconate_loop-exemplar-verification.md` for offline QA.
+GO:0015128 was verified as gluconate-specific and therefore was not reused for
+2-dehydro-D-gluconate; GO:0046943 is used as the existing carboxylic-acid transport
+intermediate while exact transporter and catabolic-process terms are proposed.
 
 2026-08-13: Started as module 18 of the current 20-module batch.
