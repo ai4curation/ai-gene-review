@@ -33,8 +33,8 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Selection | GOA rows | Curation | Research | Module role |
 |---|---|---|---|---|---:|---|---|---|
 | [x] | `eutC` | PP_0542 | Q88QF2 | KEGG `ppu00564` | 7 | CURATED | PRESENT (OpenScientist) | EutBC small subunit |
-| [x] | `eutB` | PP_0543 | Q88QF1 | KEGG `ppu00564` | 0 | CURATED | MISSING | EutBC large subunit |
-| [x] | `PP_0544` | PP_0544 | Q88QF0 | locus extension | 0 | CURATED | MISSING | APC-family ethanolamine uptake candidate |
+| [x] | `eutB` | PP_0543 | Q88QF1 | KEGG `ppu00564` | 8 | CURATED | MISSING | EutBC large subunit |
+| [x] | `PP_0544` | PP_0544 | Q88QF0 | locus extension | 4 | CURATED | MISSING | APC-family ethanolamine uptake candidate |
 | [x] | `aldB-I` | PP_0545 | Q88QE9 | locus extension | 3 | CURATED | PRESENT (existing Asta) | non-acylating acetaldehyde oxidation candidate |
 
 ## Boundary
@@ -53,13 +53,15 @@ autolink_gene_symbols: false
 - Q88QF0 is an IPR004757/PTHR42770:SF7 APC-family transporter, not a classical
   EutH-family protein. `UniProtKB:P41796` is the verified classical EutH exemplar.
 - Q88QE9 is an EC 1.2.1.3/PTHR43111:SF1 non-acylating aldehyde dehydrogenase,
-  not acetylating EutE. `UniProtKB:Q9ZAA1` verifies the NAD-dependent
-  acetaldehyde-to-acetate activity; `UniProtKB:P41793` verifies classical EutE.
+  not acetylating EutE. Its generic NAD-dependent ALDH activity is retained;
+  acetaldehyde specificity and pathway participation remain hypotheses.
+  `UniProtKB:Q9ZAA1` verifies a non-acylating acetaldehyde route exemplar, and
+  `UniProtKB:P41793` verifies classical EutE.
 - EutB and EutC are active subunits of one enzyme complex. Molecular function
   and cobalamin-binding assertions therefore use `contributes_to` in gene reviews.
-- The two bacterial-microcompartment annotations on EutC were removed because
-  no recognizable shell proteins occur in the compact KT2440 locus; shell
-  encapsulation remains an optional organism-specific implementation context.
+- EutB and EutC microcompartment localizations are `UNDECIDED`. The compact
+  locus and EutB cytosol IEA raise doubt, but no reproducible species-level
+  shell inventory or direct localization currently resolves the assertions.
 - Q88QF2 GOA cites `PANTHER:PTN002446609` for complex membership. The local
   PTHR39330 PAINT record instead places `GO:0009350` at the verified ancestral
   node `PTN002217404`, seeded by P19636 and P19265; the module uses that canonical node.
@@ -80,7 +82,7 @@ its earlier Asta retrieval report as low-weight background.
   EutBC-derived acetaldehyde in vivo and to quantify its substrate preference.
 - Growth and expression tests should establish whether the compact locus supports
   ethanolamine use as carbon, nitrogen, or both under cobalamin-supplied conditions.
-- The absence of recognizable shell genes argues against a canonical Eut
-  microcompartment but does not exclude an unrecognized encapsulation mechanism.
+- Direct localization and a reproducible KT2440 shell-protein inventory are
+  needed to resolve the two transferred microcompartment annotations.
 
 2026-08-13: Started as module 19 of the current 20-module batch.
