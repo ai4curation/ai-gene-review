@@ -40,7 +40,7 @@ autolink_gene_symbols: false
 |---|---|---|---|---|---|
 | [x] | `fruB` | PP_0793 | Q88PQ5 | fused EI-HPr-EIIA phosphorelay | no artifact returned |
 | [x] | `fruK` | PP_0794 | Q88PQ4 | 1-phosphofructokinase | OpenScientist complete |
-| [x] | `fruA` | PP_0795 | Q88PQ3 | fructose-specific EIIB-EIIC transporter | no artifact returned |
+| [x] | `fruA` | PP_0795 | Q88PQ3 | fructose-specific EIIB'BC transporter | no artifact returned |
 
 ## Notes
 
@@ -60,3 +60,10 @@ exited without reports. Their curated reviews are retained on the strength of
 the completed generic and PSEPK pathway syntheses, direct UniProt/GOA evidence,
 primary literature, and the independent annotation-review pass; no missing
 gene-level report is claimed.
+
+2026-08-13: PR review follow-up retained GO:0090563 as a non-core mechanistic
+FruA sub-step, removed its duplicate core-function entry, grounded the
+phosphocysteine interpretation in the two PS51099 domains and their cysteine
+motifs, and linked the FruB EIIA-to-EIIB ontology gap from the module. The
+module now explicitly explains why its four curated parts differ from the
+three-part outline captured before review.
