@@ -53,7 +53,7 @@ showed that another reductase can support growth on aliphatic sulfonates.
 | `ssuA` | PP_0237 | Q88R96 | 0 | periplasmic binding unit | Added inference-supported complex, transport, and location annotations |
 | `ssuB` | PP_0240 | Q88R93 | 0 | ATP-coupling unit | Added ATPase, complex-level transporter contribution, process, complex, and location annotations |
 | `ssuC` | PP_0239 | Q88R94 | 0 | inner-membrane permease unit | Added complex-level transporter contribution, process, complex, and location annotations |
-| `ssuD` | PP_0238 | Q88R95 | 3 | FMNH2-dependent monooxygenase | Accepted exact MF/process; marked the broad oxygenase parent over-annotated |
+| `ssuD` | PP_0238 | Q88R95 | 3 | FMNH2-dependent monooxygenase | Accepted exact MF/process; modified the broad oxygenase parent to the existing exact MF |
 | `ssuE` | PP_0236 | Q88R97 | 0 | reduced-FMN supplier | Added exact reductase MF and pathway involvement without asserting universal indispensability |
 
 The focused inventory and report coverage are recorded in
