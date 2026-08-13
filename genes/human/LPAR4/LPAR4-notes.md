@@ -22,9 +22,12 @@
 ## Coupling is assay- and cell-context dependent
 
 - In the founding CHO-cell experiment, “1-oleoyl-LPA induced an increase in intracellular Ca2+ concentration and stimulated adenylyl cyclase activity.” [PMID:12724320, abstract] This supports calcium and Gs/adenylyl-cyclase outputs for recombinant human LPAR4 but does not establish their quantitative importance in every native human cell.
+- Lee et al. independently confirmed receptor identity with “LPA concentration-dependent responses and specific membrane binding.” Their mechanistic study reported “G(q) protein and pertussis toxin-sensitive calcium mobilization” together with “cAMP increases mediated by G(s)” and “G(12/13)- and Rho-mediated neurite retraction and stress fiber formation”. [PMID:17166850, abstract] Pertussis-toxin sensitivity supports a Gi/o contribution to calcium mobilization in that tagged-receptor system; it does not by itself establish a universal endogenous-human Gi/o output.
+- The same study reported “receptor internalization” among the LPA-dependent activities of epitope-tagged LPAR4. [PMID:17166850, abstract] This establishes internalization capability in that experimental system, while leaving the endogenous trafficking mechanism, kinetics, and regulators unresolved.
 - In rat B103 neuroblastoma transfectants, “we observed G(q/11)-dependent calcium mobilization, but LPA did not affect adenylyl cyclase activity.” [PMID:17172642, abstract] The difference from CHO cells is positive evidence that cyclic-nucleotide direction and coupling weights are context-sensitive.
-- The same B103 study concluded: “Thus, our results demonstrated that LPA(4) as well as LPA(1) couple to G(q/11) and G(12/13), whereas LPA(4) differs from LPA(1) in that it does not couple to G(i/o).” [PMID:17172642, abstract] This is strong heterologous coupling evidence, not a direct native-human Gi/o exclusion.
+- The same B103 study concluded: “Thus, our results demonstrated that LPA(4) as well as LPA(1) couple to G(q/11) and G(12/13), whereas LPA(4) differs from LPA(1) in that it does not couple to G(i/o).” [PMID:17172642, abstract] This conflicts with the pertussis-toxin-sensitive calcium component reported by PMID:17166850 and is therefore system-specific heterologous evidence, not a direct native-human Gi/o exclusion.
 - LPA also produced “neurite retraction, cell aggregation, and cadherin-dependent cell adhesion, which involved Rho-mediated signaling pathways” in those transfectants. [PMID:17172642, abstract] These cell behaviors support a G12/13-Rho branch in that system; the proposed neurodevelopmental role remains an inference from a rat cell line.
+- Reactome R-HSA-417820 cites Lee et al. 2007 (PMID:17166850), not the separate Yanagida et al. B103 study (PMID:17172642), for its statement that P2Y9/LPAR4 acts through multiple G proteins.
 
 ## Motility and developmental boundaries
 
@@ -46,7 +49,7 @@
 ## Reference-level conclusions for later annotation review
 
 - Core evidence supports an LPA-binding plasma-membrane GPCR with direct ligand binding and recombinant calcium/adenylyl-cyclase responses.
-- Gq/11 and G12/13-Rho coupling are well supported in heterologous cells; Gs/cAMP behavior varies by cellular system, and the rat B103 result must not be treated as a universal native-human Gi/o exclusion.
+- Gq/11, G12/13-Rho, and Gs/cAMP capability are supported in heterologous systems. Gi/o evidence differs between pertussis-toxin-sensitive calcium in PMID:17166850 and the B103 no-Gi/o conclusion in PMID:17172642; neither should be treated as a universal native-human coupling profile.
 - Motility suppression, cardiac progenitor differentiation, and mouse injury/development phenotypes are important bounded outputs, not additional receptor molecular activities.
 - RAMP1/2/3 are high-throughput interaction candidates. Functional consequences and endogenous human complexes remain open questions.
 - No reviewed isoform-specific function or experimentally reconciled functional variant was found; historical nucleotide-receptor names and sequence conflicts should not be overinterpreted.
