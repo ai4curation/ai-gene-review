@@ -390,6 +390,41 @@ Main curation conclusions from this batch:
 - PP_0922 AcpH and MazG are pathway-map spillover involved in carrier-protein
   turnover and nucleotide-pool turnover, respectively, not CoA synthesis.
 
+## Current batch: ppu00270 / bacterial cysteine biosynthesis via O-acetylserine
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00270_bacterial_cysteine_biosynthesis_via_o_acetylserine.tsv`
+- `projects/P_PUTIDA/batches/ppu00270_bacterial_cysteine_biosynthesis_via_o_acetylserine.md`
+
+Status as of 2026-08-11:
+
+- 3 target genes selected and curated: `cysE`/PP_0840, `cysK`/PP_4571,
+  and `cysM`/PP_1654.
+- Species-neutral module YAML seeded:
+  `modules/bacterial_cysteine_biosynthesis_via_o_acetylserine.yaml`.
+- OpenScientist gene retrieval is complete for `cysK`; `cysE` and `cysM`
+  retrieval remains active and is not a gate for the draft review.
+- OpenScientist generic-module and PSEPK pathway/taxon retrieval remain active.
+- Current UniProt records and full-text Pseudomonas literature independently
+  support the curated route and CysK/CysM variant boundary.
+
+Main curation conclusions from this batch:
+
+- The reusable module has two required biochemical parts: CysE-mediated serine
+  O-acetylation and CysK/CysM-mediated sulfide incorporation.
+- CysK and CysM are modeled as alternative family variants for the terminal
+  reaction, grounded with exact UniProt exemplars and CysK/CysM PANTHER
+  subfamilies. Thiosulfate use is not asserted for KT2440 CysM without direct
+  target evidence.
+- Sulfate activation and reduction supply sulfide but are upstream context,
+  outside this module boundary.
+- Other KT2440 serine acetyltransferase-like candidates remain a targeted
+  paralog-resolution question rather than speculative module leaves.
+- The obsolete route-specific GO term GO:0006535 is not authored; live
+  GO:0019344 is used with route specificity represented by the module parts and
+  exact reactions.
+
 ## Previous batch: ppu00622 / benzoate_upper_pathway
 
 Batch files:
