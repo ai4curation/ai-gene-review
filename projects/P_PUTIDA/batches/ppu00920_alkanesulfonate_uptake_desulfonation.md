@@ -43,7 +43,8 @@ showed that another reductase can support growth on aliphatic sulfonates.
 - [x] Reconcile paralog specificity and curate every GOA row.
 - [x] Apply annotation-reviewer and module-curation requirements.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR and complete `/review` follow-up.
+- [x] Open draft PR [#2590](https://github.com/ai4curation/ai-gene-review/pull/2590).
+- [ ] Complete `/review` follow-up.
 
 ## Focused Genes
 
