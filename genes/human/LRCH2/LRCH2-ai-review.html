@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRCH2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRCH2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5VUJ6" target="_blank" class="term-link">
+                        Q5VUJ6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRCH2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5VUJ6" data-a="DESCRIPTION: LRCH2 is a poorly characterized cytoplasmic-facing..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRCH2 is a poorly characterized cytoplasmic-facing protein built from an N-terminal leucine-rich-repeat region and a C-terminal calponin-homology domain. In heterologous MDCK and HEK293T expression systems, its leucine-rich repeats associate with DOCK8 and recruit DOCK8 toward the cell periphery, while its calponin-homology region shows cytochalasin-sensitive peripheral and actin-associated localization. These observations connect LRCH2 to spatial organization of a Rho guanine-nucleotide exchange factor, but they do not establish direct actin binding, regulation of DOCK8 catalytic activity, or a physiological cellular output. LRCH2 is expressed in Schwann-lineage cells and developing cerebellar cortex, and a p.Lys258Glu substitution was reported as a candidate in one family with congenital cerebellar hypoplasia and demyelinating polyneuropathy; the molecular effect and gene-disease relationship remain unresolved. Two splice isoforms are described, without demonstrated endogenous functional specialization.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24255178" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24255178
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction network of the mammalian Hippo pathway r...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5VUJ6" data-a="GO:0005515" data-r="PMID:24255178" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A mammalian Hippo-pathway interaction screen reported an LRCH2-DOCK8 contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IntAct IPI assertion preserves a screen-level physical association with DOCK8, but the abstract-only paper does not expose an LRCH2-specific functional consequence and GO:0005515 is not an informative molecular activity. The DOCK8-inhibitory mechanism established for LRCH1 must not be transferred to LRCH2 from this contact.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5VUJ6" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The BioPlex 2.0 affinity-purification network reported an LRCH2-DOCK8 co-association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This proteome-scale AP-MS record supports physical proximity or co-association in the tested human cell system but does not establish a direct interaction or a regulatory effect on DOCK8. Generic protein binding therefore overstates the functional information available for LRCH2.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32203420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32203420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systems analysis of RhoGEF and RhoGAP regulatory proteins re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5VUJ6" data-a="GO:0005515" data-r="PMID:32203420" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A family-wide RhoGEF/RhoGAP interactome study reported an LRCH2-DOCK8 association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The focused Rho-regulator survey makes the DOCK8 contact biologically relevant, but the accessible abstract does not demonstrate that LRCH2 alters DOCK8 nucleotide-exchange activity, GTPase signaling, or a cellular process. Retaining the dataset provenance does not justify generic protein binding as an informative LRCH2 activity or transfer of the LRCH1 mechanism.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5VUJ6" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell-line-specific proteome-scale interaction maps reported an LRCH2-DOCK8 co-association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BioPlex 3.0 is a large AP-MS interaction resource, and this dataset-level edge does not establish a direct biochemical activity or stable LRCH2-DOCK8 complex. GO:0005515 is uninformative, and the contact alone cannot support DOCK8 GEF inhibition or immune-cell functions for LRCH2.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24255178" target="_blank" class="term-link">
+                            PMID:24255178
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein interaction network of the mammalian Hippo pathway reveals mechanisms of kinase-phosphatase interactions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 2.0 is an affinity-purification mass-spectrometry interaction resource, so its LRCH2-DOCK8 record is screen-level co-association evidence.</div>
+
+                        <div class="finding-text">"Here we present BioPlex 2.0 (Biophysical Interactions of ORFeome-derived complexes), which uses robust affinity purification-mass spectrometry methodology to elucidate protein interaction networks and co-complexes nucleated by more than 25% of protein-coding genes from the human genome, and constitutes, to our knowledge, the largest such network so far."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32203420" target="_blank" class="term-link">
+                            PMID:32203420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systems analysis of RhoGEF and RhoGAP regulatory proteins reveals spatially organized RAC1 signalling from integrin adhesions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study systematically mapped substrate specificity, interactomes, and localization across human RhoGEF and RhoGAP regulators.</div>
+
+                        <div class="finding-text">"Through a family-wide characterization of substrate specificities, interactomes and localization, we reveal at the systems level how RhoGEFs and RhoGAPs contextualize and spatiotemporally control Rho signalling."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 3.0 provides cell-line-specific AP-MS interaction networks; its LRCH2- DOCK8 record is context-dependent screen evidence rather than a mechanism.</div>
+
+                        <div class="finding-text">"Through affinity-purification mass spectrometry, we have created two proteome-scale, cell-line-specific interaction networks."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35351988" target="_blank" class="term-link">
+                            PMID:35351988
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Novel genes bearing mutations in rare cases of early-onset ataxia with cerebellar hypoplasia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A hemizygous LRCH2 p.Lys258Glu variant in one family was proposed as a candidate cause of congenital ataxia, cerebellar hypoplasia, and demyelinating polyneuropathy.</div>
+
+                        <div class="finding-text">"In Family I, the unique missense mutation (p.Lys258Glu) was found in the LRCH2 gene inherited in an X-linked manner. p.Lys258Glu occurs in the evolutionarily invariant site of the leucine-rich repeat domain of LRCH2."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression analysis placed LRCH2 in Schwann-lineage cells and above its paralogs in the developing cerebellar cortex.</div>
+
+                        <div class="finding-text">"The LRCH2 gene for Family I patients (in which congenital cerebellar hypoplasia was associated with demyelinating polyneuropathy) is expressed in Schwann and precursor Schwann cells and predominantly over its paralogous genes in the developing cerebellar cortex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20805893" target="_blank" class="term-link">
+                            PMID:20805893
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRCH proteins: a novel family of cytoskeletal regulators.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sole Drosophila LRCH protein stabilizes the mitotic cortex, a family-level result that cannot be assigned specifically to human LRCH2.</div>
+
+                        <div class="finding-text">"Taking advantage of the existence of a single LRCH gene in flies, dLRCH, we explored its function in cultured cells, and show that dLRCH act to stabilize the cell cortex during cell division."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study establishes the shared LRR and CH architecture of four human LRCH paralogs, including LRCH2.</div>
+
+                        <div class="finding-text">"In human, only four highly-related proteins (hLRCH1-4) simultaneously harbor these two motifs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28028151" target="_blank" class="term-link">
+                            PMID:28028151
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRCH1 interferes with DOCK8-Cdc42-induced T cell migration and ameliorates experimental autoimmune encephalomyelitis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRCH1 binds the catalytic DHR-2 domain of DOCK8 and restricts its guanyl-nucleotide exchange activity, providing a paralog-specific boundary for LRCH2 interpretation.</div>
+
+                        <div class="finding-text">"Next, we identified that LRCH1 competes with Cdc42 for binding to the catalytic DHR-2 domain of DOCK8 and restricts the GEF activity of DOCK8."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LRCH2 alter DOCK8 exchange activity toward Cdc42 or another Rho GTPase, or does it act only as a localization factor?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: DOCK-family signaling experts, Rho GTPase experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="Q: Does endogenous LRCH2 alter DOCK8 exchange activit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the LRCH2 calponin-homology domain bind F-actin directly, and which peripheral cellular structure contains endogenous LRCH2?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Cytoskeleton experts, Cell-biological imaging experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="Q: Does the LRCH2 calponin-homology domain bind F-act..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which human tissues and cell states express each LRCH2 isoform, and do the isoforms differ in DOCK8 or TEX11 association?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Isoform biology experts, Human tissue-expression experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="Q: Which human tissues and cell states express each L..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does p.Lys258Glu disrupt the LRCH2 leucine-rich-repeat fold or DOCK8 recruitment, and does LRCH2 variation reproducibly cause cerebellar and peripheral-nerve disease?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Neurogenetics experts, Structural biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="Q: Does p.Lys258Glu disrupt the LRCH2 leucine-rich-re..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute DOCK8 nucleotide exchange with purified Cdc42, full-length LRCH2, LRCH1 as a positive comparator, and LRR-deletion variants. In parallel, edit an endogenous epitope tag into LRCH2 and DOCK8 in a human cell type that naturally expresses both proteins and quantify their localization and interaction before and after acute LRCH2 depletion.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRCH2 regulates DOCK8 spatially but does not reproduce the DOCK8 catalytic inhibition attributed to LRCH1.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative biochemistry and endogenous cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="EXPERIMENT: Reconstitute DOCK8 nucleotide exchange with purifi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test purified full-length LRCH2 and its isolated calponin-homology domain in F-actin co-sedimentation and quantitative binding assays, then rescue LRCH2-null cells with interface mutants and measure endogenous DOCK8 recruitment using super-resolution live-cell imaging.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The LRCH2 calponin-homology domain binds actin directly and anchors LRCH2-DOCK8 at an actin-rich peripheral structure.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cytoskeletal biochemistry and imaging</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="EXPERIMENT: Test purified full-length LRCH2 and its isolated c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine long-read RNA sequencing, isoform-specific targeted proteomics, and endogenous proximity labeling in human Schwann-lineage and cerebellar cell models, followed by isoform-specific rescue to compare localization, DOCK8 association, and Rho-GTPase activity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRCH2 isoforms have distinct tissue distributions or interaction profiles.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="EXPERIMENT: Combine long-read RNA sequencing, isoform-specific..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type and p.Lys258Glu LRCH2 for folding, stability, DOCK8 interaction, peripheral recruitment, and downstream Rho-GTPase activity in isogenic human Schwann-cell and cerebellar-lineage models, while pursuing segregation and replication in additional affected families.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The p.Lys258Glu substitution impairs the LRR-dependent recruitment of DOCK8.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: variant functional analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5VUJ6" data-a="EXPERIMENT: Compare wild-type and p.Lys258Glu LRCH2 for foldin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether LRCH2 changes the guanyl-nucleotide exchange activity, substrate selection, or signaling output of DOCK8 rather than only recruiting expressed DOCK8 toward the cell periphery.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is the central missing evidence needed to assign a molecular activity and distinguish LRCH2 from the inhibitory DOCK8 mechanism of LRCH1.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Direct binding of human LRCH2 to actin has not been demonstrated, and the contribution of its calponin-homology domain to endogenous localization and function is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Cytochalasin-sensitive association of an expressed domain does not distinguish direct actin binding from indirect recruitment to an actin-dependent peripheral structure.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The native cell types, subcellular sites, and physiological processes that use the LRCH2-DOCK8 association have not been established with endogenous proteins.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Endogenous evidence is required before heterologous recruitment can be connected to Rho-family GTPase signaling, cytoskeletal organization, migration, or another cellular process.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The expression, localization, and partner specificity of LRCH2 isoforms 1 and 2 have not been compared in endogenous human tissues.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform-resolved evidence would show whether the observed DOCK8 recruitment is shared and whether the reported isoform-2 TEX11 contact has physiological meaning.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The effect of the reported p.Lys258Glu leucine-rich-repeat substitution on LRCH2 folding, DOCK8 recruitment, cellular behavior, and human disease risk is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Functional and genetic replication are needed to move from a single-family candidate association to a mechanistic gene-disease relationship.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"In Family I, the unique missense mutation (p.Lys258Glu) was found in the LRCH2 gene inherited in an X-linked manner. p.Lys258Glu occurs in the evolutionarily invariant site of the leucine-rich repeat domain of LRCH2."</em> — PMID:35351988</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRCH2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5VUJ6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrch2-literature-notes">LRCH2 literature notes</h1>
+<h2 id="evidence-overview">Evidence overview</h2>
+<p>Human LRCH2 is a poorly characterized LRR/CH-domain protein. The strongest<br />
+LRCH2-specific mechanistic study in the seeded set is PMID:32203420. Its cached<br />
+record is abstract-only and describes a family-wide analysis of Rho regulators<br />
+[PMID:32203420, “Through a family-wide characterization of substrate specificities,<br />
+interactomes and localization, we reveal at the systems level how RhoGEFs and<br />
+RhoGAPs contextualize and spatiotemporally control Rho signalling.”]. Inspection<br />
+of the publisher-hosted article PDF confirms that expressed LRCH2 recruits DOCK8<br />
+to the cell periphery, that LRCH2 leucine-rich repeats mediate the interaction,<br />
+and that an LRCH2 CH-domain fragment has cytochalasin-sensitive actin association.<br />
+Those experiments used expressed constructs in MDCK and HEK293T cells. They do not<br />
+show direct actin binding by purified LRCH2, DOCK8 GEF regulation, an endogenous<br />
+stable complex, or a physiological cellular consequence.</p>
+<p>The other seeded LRCH2-DOCK8 annotations come from interaction maps. BioPlex 2.0<br />
+is explicitly an affinity-purification mass-spectrometry resource<br />
+[PMID:28514442, “Here we present BioPlex 2.0 (Biophysical Interactions of<br />
+ORFeome-derived complexes), which uses robust affinity purification-mass<br />
+spectrometry methodology to elucidate protein interaction networks and co-complexes<br />
+nucleated by more than 25% of protein-coding genes from the human genome, and<br />
+constitutes, to our knowledge, the largest such network so far.”]. BioPlex 3.0<br />
+likewise generated cell-line-specific AP-MS networks [PMID:33961781, “Through<br />
+affinity-purification mass spectrometry, we have created two proteome-scale,<br />
+cell-line-specific interaction networks.”]. PMID:24255178 is abstract-only and<br />
+does not expose the LRCH2-DOCK8 pair in its cached narrative. These datasets<br />
+corroborate co-association but cannot establish direct binding, GEF inhibition,<br />
+immune-cell function, or one constitutive LRCH2-DOCK8 complex.</p>
+<h2 id="paralogs-species-and-ch-domain-boundaries">Paralogs, species, and CH-domain boundaries</h2>
+<p>LRCH paralogs are functionally distinct. LRCH1 restricts DOCK8 GEF activity by<br />
+competing with Cdc42 for its catalytic DHR-2 domain [PMID:28028151, “Next, we identified that LRCH1 competes with Cdc42 for binding to the catalytic DHR-2 domain of DOCK8 and restricts the GEF activity of DOCK8.”]. Functions reported for other<br />
+LRCH paralogs must not be assigned to LRCH2. PMID:32203420 supports a physical and<br />
+localization relationship between LRCH2 and DOCK8, but not the LRCH1 inhibitory<br />
+mechanism.</p>
+<p>The evolutionary study identifies four human proteins that combine LRR and CH<br />
+domains [PMID:20805893, “In human, only four highly-related proteins (hLRCH1-4)<br />
+simultaneously harbor these two motifs.”]. Its functional experiments concern the<br />
+single Drosophila dLRCH, which stabilizes the cortex during cell division<br />
+[PMID:20805893, “Taking advantage of the existence of a single LRCH gene in flies,<br />
+dLRCH, we explored its function in cultured cells, and show that dLRCH act to<br />
+stabilize the cell cortex during cell division.”]. Fly cortical-blebbing,<br />
+spindle-positioning, fertility, stress, and Moesin findings are family context,<br />
+not direct human LRCH2 evidence. A CH domain is compatible with an actin-associated<br />
+role, but domain presence alone does not prove direct F-actin binding.</p>
+<h2 id="human-disease-and-expression-boundaries">Human disease and expression boundaries</h2>
+<p>PMID:35351988 reported a hemizygous LRCH2 p.Lys258Glu substitution in a single<br />
+family [PMID:35351988, “In Family I, the unique missense mutation (p.Lys258Glu)<br />
+was found in the LRCH2 gene inherited in an X-linked manner. p.Lys258Glu occurs<br />
+in the evolutionarily invariant site of the leucine-rich repeat domain of LRCH2.”].<br />
+The same study reported LRCH2 expression in Schwann-lineage cells and relative<br />
+predominance over its paralogs in developing cerebellar cortex<br />
+[PMID:35351988, “The LRCH2 gene for Family I patients (in which congenital<br />
+cerebellar hypoplasia was associated with demyelinating polyneuropathy) is<br />
+expressed in Schwann and precursor Schwann cells and predominantly over its<br />
+paralogous genes in the developing cerebellar cortex.”]. This is candidate-gene<br />
+evidence based on one family, conservation, and expression analysis, without direct<br />
+variant functional validation. It does not establish LRCH2 as a definitive disease<br />
+gene or reveal its normal molecular activity.</p>
+<h2 id="isoforms-and-open-questions">Isoforms and open questions</h2>
+<p>The reviewed UniProt record lists two splice isoforms, Q5VUJ6-1 and Q5VUJ6-2.<br />
+The four seeded DOCK8 rows are assigned to canonical LRCH2 and do not demonstrate<br />
+an isoform-specific mechanism. UniProt/IntAct separately lists an isoform-2 contact<br />
+with TEX11 isoform 3, but this is outside the seeded GOA set and no functional<br />
+consequence was established here.</p>
+<p>Key open questions are whether endogenous LRCH2 directly binds actin, whether its<br />
+DOCK8 interaction changes nucleotide-exchange activity or localization in a native<br />
+cell type, whether DOCK6/7 interactions occur physiologically, and whether the two<br />
+endogenous LRCH2 isoforms differ in tissue distribution or partner specificity.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5VUJ6
+gene_symbol: LRCH2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRCH2 is a poorly characterized cytoplasmic-facing protein built from an
+  N-terminal leucine-rich-repeat region and a C-terminal calponin-homology domain.
+  In heterologous MDCK and HEK293T expression systems, its leucine-rich repeats
+  associate with DOCK8 and recruit DOCK8 toward the cell periphery, while its
+  calponin-homology region shows cytochalasin-sensitive peripheral and actin-associated
+  localization. These observations connect LRCH2 to spatial organization of a Rho
+  guanine-nucleotide exchange factor, but they do not establish direct actin binding,
+  regulation of DOCK8 catalytic activity, or a physiological cellular output. LRCH2
+  is expressed in Schwann-lineage cells and developing cerebellar cortex, and a
+  p.Lys258Glu substitution was reported as a candidate in one family with congenital
+  cerebellar hypoplasia and demyelinating polyneuropathy; the molecular effect and
+  gene-disease relationship remain unresolved. Two splice isoforms are described,
+  without demonstrated endogenous functional specialization.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q5VUJ6-1
+- name: &#39;2&#39;
+  id: Q5VUJ6-2
+  sequence_note: VSP_044969
+existing_annotations:
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24255178
+  qualifier: enables
+  review:
+    summary: A mammalian Hippo-pathway interaction screen reported an LRCH2-DOCK8 contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The IntAct IPI assertion preserves a screen-level physical association with
+      DOCK8, but the abstract-only paper does not expose an LRCH2-specific functional
+      consequence and GO:0005515 is not an informative molecular activity. The
+      DOCK8-inhibitory mechanism established for LRCH1 must not be transferred to
+      LRCH2 from this contact.
+  supporting_entities:
+  - UniProtKB:Q8NF50
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: The BioPlex 2.0 affinity-purification network reported an LRCH2-DOCK8 co-association.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This proteome-scale AP-MS record supports physical proximity or co-association
+      in the tested human cell system but does not establish a direct interaction or
+      a regulatory effect on DOCK8. Generic protein binding therefore overstates the
+      functional information available for LRCH2.
+  supporting_entities:
+  - UniProtKB:Q8NF50
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32203420
+  qualifier: enables
+  review:
+    summary: A family-wide RhoGEF/RhoGAP interactome study reported an LRCH2-DOCK8 association.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The focused Rho-regulator survey makes the DOCK8 contact biologically relevant,
+      but the accessible abstract does not demonstrate that LRCH2 alters DOCK8
+      nucleotide-exchange activity, GTPase signaling, or a cellular process. Retaining
+      the dataset provenance does not justify generic protein binding as an informative
+      LRCH2 activity or transfer of the LRCH1 mechanism.
+  supporting_entities:
+  - UniProtKB:Q8NF50
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Cell-line-specific proteome-scale interaction maps reported an LRCH2-DOCK8 co-association.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      BioPlex 3.0 is a large AP-MS interaction resource, and this dataset-level edge
+      does not establish a direct biochemical activity or stable LRCH2-DOCK8 complex.
+      GO:0005515 is uninformative, and the contact alone cannot support DOCK8 GEF
+      inhibition or immune-cell functions for LRCH2.
+  supporting_entities:
+  - UniProtKB:Q8NF50
+references:
+- id: PMID:24255178
+  title: Protein interaction network of the mammalian Hippo pathway reveals mechanisms
+    of kinase-phosphatase interactions.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      PubMed metadata and the cached abstract were checked. The LRCH2-DOCK8 edge is
+      supplied by GOA/IntAct from this mammalian interaction screen, but the
+      abstract-only cache does not expose the pair or establish a functional
+      consequence.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings:
+  - statement: &gt;-
+      BioPlex 2.0 is an affinity-purification mass-spectrometry interaction resource,
+      so its LRCH2-DOCK8 record is screen-level co-association evidence.
+    supporting_text: &gt;-
+      Here we present BioPlex 2.0 (Biophysical Interactions of ORFeome-derived
+      complexes), which uses robust affinity purification-mass spectrometry
+      methodology to elucidate protein interaction networks and co-complexes
+      nucleated by more than 25% of protein-coding genes from the human genome, and
+      constitutes, to our knowledge, the largest such network so far.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata and full cached article were checked. GOA/IntAct assigns the
+      LRCH2-DOCK8 co-association to this human proteome-scale AP-MS dataset; it does
+      not demonstrate direct binding, GEF regulation, or a stable endogenous complex.
+- id: PMID:32203420
+  title: Systems analysis of RhoGEF and RhoGAP regulatory proteins reveals spatially
+    organized RAC1 signalling from integrin adhesions.
+  findings:
+  - statement: &gt;-
+      The study systematically mapped substrate specificity, interactomes, and
+      localization across human RhoGEF and RhoGAP regulators.
+    supporting_text: &gt;-
+      Through a family-wide characterization of substrate specificities,
+      interactomes and localization, we reveal at the systems level how RhoGEFs and
+      RhoGAPs contextualize and spatiotemporally control Rho signalling.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata, cached abstract, and the publisher-hosted article PDF were
+      checked. Figure 6 directly reports LRCH2-DOCK8 co-IP, LRR-dependent recruitment
+      of DOCK8, peripheral targeting by the LRCH2 CH domain, and cytochalasin-sensitive
+      actin association. The cache remains abstract-only, so these figure-level claims
+      are not represented as quotation-backed findings. Experiments used expressed
+      constructs in MDCK and HEK293T cells and do not establish direct actin binding,
+      DOCK8 GEF regulation, or an endogenous stable complex.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: &gt;-
+      BioPlex 3.0 provides cell-line-specific AP-MS interaction networks; its LRCH2-
+      DOCK8 record is context-dependent screen evidence rather than a mechanism.
+    supporting_text: &gt;-
+      Through affinity-purification mass spectrometry, we have created two
+      proteome-scale, cell-line-specific interaction networks.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata and full cached article were checked. GOA/IntAct assigns an
+      LRCH2-DOCK8 co-association to the BioPlex dataset, but the network edge alone
+      does not establish direct binding, regulatory activity, or cell-type-general
+      biology.
+- id: PMID:35351988
+  title: Novel genes bearing mutations in rare cases of early-onset ataxia with cerebellar
+    hypoplasia.
+  findings:
+  - statement: &gt;-
+      A hemizygous LRCH2 p.Lys258Glu variant in one family was proposed as a candidate
+      cause of congenital ataxia, cerebellar hypoplasia, and demyelinating polyneuropathy.
+    supporting_text: &gt;-
+      In Family I, the unique missense mutation (p.Lys258Glu) was found in the LRCH2
+      gene inherited in an X-linked manner. p.Lys258Glu occurs in the evolutionarily
+      invariant site of the leucine-rich repeat domain of LRCH2.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Expression analysis placed LRCH2 in Schwann-lineage cells and above its paralogs
+      in the developing cerebellar cortex.
+    supporting_text: &gt;-
+      The LRCH2 gene for Family I patients (in which congenital cerebellar hypoplasia
+      was associated with demyelinating polyneuropathy) is expressed in Schwann and
+      precursor Schwann cells and predominantly over its paralogous genes in the
+      developing cerebellar cortex.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      PubMed metadata and full cached article were checked. This is a single-family
+      candidate-gene report supported by conservation and expression analyses, without
+      segregation across multiple families or direct functional validation of
+      p.Lys258Glu. It informs tissue and disease hypotheses, not normal molecular
+      function or definitive gene-disease causality.
+- id: PMID:20805893
+  title: &#39;LRCH proteins: a novel family of cytoskeletal regulators.&#39;
+  findings:
+  - statement: &gt;-
+      The sole Drosophila LRCH protein stabilizes the mitotic cortex, a family-level
+      result that cannot be assigned specifically to human LRCH2.
+    supporting_text: &gt;-
+      Taking advantage of the existence of a single LRCH gene in flies, dLRCH, we
+      explored its function in cultured cells, and show that dLRCH act to stabilize
+      the cell cortex during cell division.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The study establishes the shared LRR and CH architecture of four human LRCH
+      paralogs, including LRCH2.
+    supporting_text: &gt;-
+      In human, only four highly-related proteins (hLRCH1-4) simultaneously harbor
+      these two motifs.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata and full cached article were checked. The functional work is on
+      the single fly dLRCH protein, while human experiments shown in this paper concern
+      LRCH3 localization. Mitotic cortex, spindle, actin, and Moesin phenotypes must
+      not be transferred directly to human LRCH2.
+- id: PMID:28028151
+  title: LRCH1 interferes with DOCK8-Cdc42-induced T cell migration and ameliorates
+    experimental autoimmune encephalomyelitis.
+  findings:
+  - statement: &gt;-
+      LRCH1 binds the catalytic DHR-2 domain of DOCK8 and restricts its guanyl-nucleotide
+      exchange activity, providing a paralog-specific boundary for LRCH2 interpretation.
+    supporting_text: &gt;-
+      Next, we identified that LRCH1 competes with Cdc42 for binding to the catalytic
+      DHR-2 domain of DOCK8 and restricts the GEF activity of DOCK8.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata and full cached article were checked. This paper directly
+      establishes the DOCK8-inhibitory mechanism for LRCH1 and is included only to
+      define a paralog boundary; it does not support the same molecular function for
+      LRCH2.
+core_functions: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    It is unknown whether LRCH2 changes the guanyl-nucleotide exchange activity,
+    substrate selection, or signaling output of DOCK8 rather than only recruiting
+    expressed DOCK8 toward the cell periphery.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    This is the central missing evidence needed to assign a molecular activity and
+    distinguish LRCH2 from the inhibitory DOCK8 mechanism of LRCH1.
+- gap_statement: &gt;-
+    Direct binding of human LRCH2 to actin has not been demonstrated, and the
+    contribution of its calponin-homology domain to endogenous localization and
+    function is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Cytochalasin-sensitive association of an expressed domain does not distinguish
+    direct actin binding from indirect recruitment to an actin-dependent peripheral
+    structure.
+- gap_statement: &gt;-
+    The native cell types, subcellular sites, and physiological processes that use
+    the LRCH2-DOCK8 association have not been established with endogenous proteins.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Endogenous evidence is required before heterologous recruitment can be connected
+    to Rho-family GTPase signaling, cytoskeletal organization, migration, or another
+    cellular process.
+- gap_statement: &gt;-
+    The expression, localization, and partner specificity of LRCH2 isoforms 1 and 2
+    have not been compared in endogenous human tissues.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Isoform-resolved evidence would show whether the observed DOCK8 recruitment is
+    shared and whether the reported isoform-2 TEX11 contact has physiological meaning.
+- gap_statement: &gt;-
+    The effect of the reported p.Lys258Glu leucine-rich-repeat substitution on LRCH2
+    folding, DOCK8 recruitment, cellular behavior, and human disease risk is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Functional and genetic replication are needed to move from a single-family
+    candidate association to a mechanistic gene-disease relationship.
+  provenance:
+  - reference_id: PMID:35351988
+    supporting_text: &gt;-
+      In Family I, the unique missense mutation (p.Lys258Glu) was found in the LRCH2
+      gene inherited in an X-linked manner. p.Lys258Glu occurs in the evolutionarily
+      invariant site of the leucine-rich repeat domain of LRCH2.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does endogenous LRCH2 alter DOCK8 exchange activity toward Cdc42 or another Rho
+    GTPase, or does it act only as a localization factor?
+  experts:
+  - DOCK-family signaling experts
+  - Rho GTPase experts
+- question: &gt;-
+    Does the LRCH2 calponin-homology domain bind F-actin directly, and which peripheral
+    cellular structure contains endogenous LRCH2?
+  experts:
+  - Cytoskeleton experts
+  - Cell-biological imaging experts
+- question: &gt;-
+    Which human tissues and cell states express each LRCH2 isoform, and do the isoforms
+    differ in DOCK8 or TEX11 association?
+  experts:
+  - Isoform biology experts
+  - Human tissue-expression experts
+- question: &gt;-
+    Does p.Lys258Glu disrupt the LRCH2 leucine-rich-repeat fold or DOCK8 recruitment,
+    and does LRCH2 variation reproducibly cause cerebellar and peripheral-nerve disease?
+  experts:
+  - Neurogenetics experts
+  - Structural biologists
+suggested_experiments:
+- hypothesis: &gt;-
+    LRCH2 regulates DOCK8 spatially but does not reproduce the DOCK8 catalytic
+    inhibition attributed to LRCH1.
+  description: &gt;-
+    Reconstitute DOCK8 nucleotide exchange with purified Cdc42, full-length LRCH2,
+    LRCH1 as a positive comparator, and LRR-deletion variants. In parallel, edit an
+    endogenous epitope tag into LRCH2 and DOCK8 in a human cell type that naturally
+    expresses both proteins and quantify their localization and interaction before
+    and after acute LRCH2 depletion.
+  experiment_type: comparative biochemistry and endogenous cell biology
+- hypothesis: &gt;-
+    The LRCH2 calponin-homology domain binds actin directly and anchors LRCH2-DOCK8 at
+    an actin-rich peripheral structure.
+  description: &gt;-
+    Test purified full-length LRCH2 and its isolated calponin-homology domain in
+    F-actin co-sedimentation and quantitative binding assays, then rescue LRCH2-null
+    cells with interface mutants and measure endogenous DOCK8 recruitment using
+    super-resolution live-cell imaging.
+  experiment_type: cytoskeletal biochemistry and imaging
+- hypothesis: &gt;-
+    LRCH2 isoforms have distinct tissue distributions or interaction profiles.
+  description: &gt;-
+    Combine long-read RNA sequencing, isoform-specific targeted proteomics, and
+    endogenous proximity labeling in human Schwann-lineage and cerebellar cell models,
+    followed by isoform-specific rescue to compare localization, DOCK8 association,
+    and Rho-GTPase activity.
+  experiment_type: isoform-resolved proteomics
+- hypothesis: &gt;-
+    The p.Lys258Glu substitution impairs the LRR-dependent recruitment of DOCK8.
+  description: &gt;-
+    Compare wild-type and p.Lys258Glu LRCH2 for folding, stability, DOCK8 interaction,
+    peripheral recruitment, and downstream Rho-GTPase activity in isogenic human
+    Schwann-cell and cerebellar-lineage models, while pursuing segregation and
+    replication in additional affected families.
+  experiment_type: variant functional analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

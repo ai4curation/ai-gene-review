@@ -1,0 +1,125 @@
+name: Approve generated-pages PR
+description: >-
+  Deterministically approve the exact generated commit pushed by the calling
+  workflow. Generated artifacts skip agentic review, but still satisfy the
+  independent-review requirement on protected main.
+
+inputs:
+  pr-number:
+    description: Exact generated PR created or updated by the calling workflow
+    required: true
+  branch-name:
+    description: Expected generated head branch
+    required: true
+  base-branch:
+    description: Expected PR base branch
+    required: false
+    default: main
+  expected-author:
+    description: GitHub author filter for the generated PR
+    required: false
+    default: app/ai4c-agent
+  app-id:
+    description: ai4c-reviewer GitHub App ID
+    required: true
+  private-key:
+    description: ai4c-reviewer GitHub App private key
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Generate narrowly scoped ai4c-reviewer token
+      id: reviewer-token
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        permission-pull-requests: write
+
+    - name: Approve exact generated head
+      shell: bash
+      env:
+        GH_TOKEN: ${{ steps.reviewer-token.outputs.token }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        BRANCH_NAME: ${{ inputs.branch-name }}
+        BASE_BRANCH: ${{ inputs.base-branch }}
+        EXPECTED_AUTHOR: ${{ inputs.expected-author }}
+      run: |
+        set -euo pipefail
+        built_sha="$(git rev-parse HEAD)"
+
+        # The PR API can briefly lag the push/create operation. Retry successful
+        # but stale reads as well as transient failures. Every identity field is
+        # checked before the exact commit is approved.
+        pr_head=""
+        pr_branch=""
+        pr_base=""
+        pr_author=""
+        pr_state=""
+        successful_reads=0
+        for attempt in 1 2 3; do
+          read_rc=0
+          pr_json="$(gh pr view "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json author,baseRefName,headRefName,headRefOid,state)" || read_rc=$?
+
+          if [ "$read_rc" -eq 0 ]; then
+            successful_reads=$((successful_reads + 1))
+            pr_head="$(jq -r '.headRefOid // empty' <<<"$pr_json")"
+            pr_branch="$(jq -r '.headRefName // empty' <<<"$pr_json")"
+            pr_base="$(jq -r '.baseRefName // empty' <<<"$pr_json")"
+            pr_author="$(jq -r '.author.login // empty' <<<"$pr_json")"
+            pr_state="$(jq -r '.state // empty' <<<"$pr_json")"
+            if [ "$pr_head" = "$built_sha" ] \
+              && [ "$pr_branch" = "$BRANCH_NAME" ] \
+              && [ "$pr_base" = "$BASE_BRANCH" ] \
+              && [ "$pr_author" = "$EXPECTED_AUTHOR" ] \
+              && [ "$pr_state" = "OPEN" ]; then
+              break
+            fi
+          else
+            echo "Attempt $attempt: failed to read the generated PR (rc=$read_rc)." >&2
+          fi
+
+          if [ "$attempt" -lt 3 ]; then
+            echo "Attempt $attempt: state=${pr_state:-<none>} author=${pr_author:-<none>} base=${pr_base:-<none>} branch=${pr_branch:-<none>} head=${pr_head:-<none>}; retrying in 5s."
+            sleep 5
+          fi
+        done
+
+        if [ "$successful_reads" -eq 0 ]; then
+          echo "Could not read the generated PR after three attempts." >&2
+          exit 1
+        fi
+        if [ "$pr_state" != "OPEN" ]; then
+          echo "PR #$PR_NUMBER is $pr_state, not OPEN; refusing approval." >&2
+          exit 1
+        fi
+        if [ "$pr_author" != "$EXPECTED_AUTHOR" ] \
+          || [ "$pr_base" != "$BASE_BRANCH" ] \
+          || [ "$pr_branch" != "$BRANCH_NAME" ]; then
+          echo "PR #$PR_NUMBER identity mismatch; refusing approval." >&2
+          exit 1
+        fi
+        if [ "$pr_head" != "$built_sha" ]; then
+          echo "PR #$PR_NUMBER moved to $pr_head; this run built $built_sha. Refusing approval." >&2
+          exit 1
+        fi
+
+        # Anchor the review to the exact commit instead of relying on the PR tip
+        # remaining unchanged between the read above and review submission.
+        printf -v review_body '%s\n' \
+          '✅ **Automated approval — generated-pages PR**' \
+          '' \
+          "Deterministic approval of \`$built_sha\`, produced and pushed by this" \
+          "generation run. The workflow's staged-path allowlist guarantees that the" \
+          'commit contains derived static assets only; agentic review is intentionally' \
+          'skipped for this branch.'
+        gh api \
+          --method POST \
+          "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews" \
+          -f event=APPROVE \
+          -f commit_id="$built_sha" \
+          -f body="$review_body" \
+          >/dev/null

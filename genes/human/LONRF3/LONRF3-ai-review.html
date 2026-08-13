@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LONRF3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LONRF3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q496Y0" target="_blank" class="term-link">
+                        Q496Y0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LONRF3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q496Y0" data-a="DESCRIPTION: LONRF3 is a poorly characterized LONRF-family prot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LONRF3 is a poorly characterized LONRF-family protein predicted to function as a RING-type ubiquitin E3 ligase on the basis of phylogenetic annotation and two conserved RING-type zinc-finger regions. It also contains four TPR repeats and a C-terminal region homologous to the substrate-binding N-terminal domain of Lon proteases. LONRF3 lacks the AAA+ ATPase and proteolytic domains of complete Lon peptidases; its isolated Lon-domain homology therefore does not confer the complete architecture of a Lon peptidase. Direct ubiquitin-transfer activity, E2 partners, physiological substrates, biological process, and native subcellular location have not been established. Seven candidate partners have been recovered by systematic binary- interaction screens, but none is validated as a substrate, cofactor, or stable-complex component. Two alternative isoforms alter the TPR or C-terminal Lon-domain architecture, but their functions have not been compared.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                                    GO:0061630
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q496Y0" data-a="GO:0061630" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference supports LONRF3 as a RING-type ubiquitin E3 ligase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is the only informative catalytic annotation for LONRF3 and is consistent with its conserved LONRF-family placement and two annotated RING-type zinc-finger regions. No direct LONRF3 ubiquitin-transfer assay or substrate is available, so the broad ligase term is retained without transferring the protein-quality-control substrates or neuronal biology established for the paralog LONRF2.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1920209</span>
+
+                                    &middot; mouse Lonrf1
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">A mammalian LONRF-family donor supports conservation of broad RING E3 activity, not LONRF3-specific substrates or processes.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN009070514</span>
+
+                                    &middot; LONRF-family RING E3 node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The family node is appropriately scoped to the broad ubiquitin ligase activity.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PomBase:SPAC6B12.07c</span>
+
+                                    &middot; fission-yeast LONRF-family protein
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The distant fungal donor supports only the conserved broad RING E3 activity.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q496Y0" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro maps the RING-finger signature to broad metal ion binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source signature is a C3HC4 RING-type zinc-finger signature, so structural zinc coordination is the informative activity implied by the mapping. Generic metal ion binding is not false, but it discards the relevant ion specificity and should be replaced by the current term zinc ion binding.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR018957</span>
+
+                                    &middot; RING-type zinc-finger signature
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The signature supports structural zinc binding, but its mapping to unspecified metal binding is unnecessarily broad.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    zinc ion binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20195357
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A comprehensive resource of interacting protein regions for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q496Y0" data-a="GO:0005515" data-r="PMID:20195357" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A large-scale mRNA-display interaction-region screen reported an interaction between LONRF3 and prohibitin-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source is a high-throughput in vitro interaction-resource study rather than a focused functional analysis of LONRF3. The edge is valid source evidence, but generic protein binding is uninformative and does not establish prohibitin-1 as a physiological substrate, cofactor, or stable-complex partner.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link">
+                                        PMID:20195357
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we present the first large-scale IR data set obtained using mRNA display for 50 human transcription factors (TFs), including 12 transcription-related proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q496Y0" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A proteome-scale binary-interactome screen reported LONRF3 interactions with NOTCH2NLA and APPBP2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These systematic screen edges are useful candidate relationships but do not define a specific molecular function or establish either partner as an endogenous LONRF3 substrate or cofactor. The generic protein-binding term therefore overstates the functional information available from the assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q496Y0" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The HuRI reference map reported four LONRF3 binary partners: CYSRT1, desmin, CTAG1B, and TRAF2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HuRI is a systematic proteome-wide binary-interaction resource. Its LONRF3 edges are hypothesis-generating physical associations, but generic protein binding does not identify a specific activity and cannot make the partners substrates, cofactors, or members of one physiological complex without targeted validation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted RING-type ubiquitin protein ligase activity. The assignment rests on the accepted IBA annotation and two predicted RING-type zinc-finger regions, but remains inference-grade because ubiquitin transfer by LONRF3 itself has not been demonstrated and no E2 enzyme, substrate, ubiquitin-chain product, biological process, active location, or stable complex is known.</h3>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="FUNCTION: Predicted RING-type ubiquitin protein ligase activ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061630" target="_blank" class="term-link">
+                            ubiquitin protein ligase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">Both regions retain dense Cys/His patterns and are strongly conserved in reviewed mouse Lonrf3, supporting intact rather than degenerate RING-family architecture:</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link">
+                            PMID:20195357
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A comprehensive resource of interacting protein regions for refining human transcription factor networks.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study used large-scale in vitro mRNA display to map interacting regions for human transcription-factor-related proteins; therefore, the reported LONRF3-PHB1 association is a screen-derived binary interaction rather than evidence that PHB1 is a LONRF3 substrate.</div>
+
+                        <div class="finding-text">"Here we present the first large-scale IR data set obtained using mRNA display for 50 human transcription factors (TFs), including 12 transcription-related proteins."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reported 70% verification rate applies to the screen&#39;s core data set and does not establish that the individual LONRF3-PHB1 pair was independently validated or has an in-cell functional consequence.</div>
+
+                        <div class="finding-text">"The core data set (966 IRs; 943 PPIs) displays a verification rate of 70%."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This study generated a systematic human binary-interaction map; its LONRF3 associations with APPBP2 and NOTCH2NLA are candidate direct contacts, not evidence that either protein is a LONRF3 substrate.</div>
+
+                        <div class="finding-text">"Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI is an all-by-all systematic reference map of binary interactions; its LONRF3 associations with CYSRT1, desmin, CTAG1B and TRAF2 remain screen-derived candidate contacts without demonstrated LONRF3-dependent ubiquitylation or degradation.</div>
+
+                        <div class="finding-text">"Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The map is designed as a broad reference network rather than a gene-specific mechanistic characterization.</div>
+
+                        <div class="finding-text">"HuRI is a systematic proteome-wide reference that links genomic variation to phenotypic outcomes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LONRF3 comparative domain analysis results</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Both predicted LONRF3 RING regions retain dense Cys/His patterns and are strongly conserved in the reviewed mouse ortholog, supporting intact RING-family architecture.</div>
+
+                        <div class="finding-text">"Both regions retain dense Cys/His patterns and are strongly conserved in reviewed mouse Lonrf3, supporting intact rather than degenerate RING-family architecture:"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LONRF3 lacks the AAA+ ATPase and protease-domain machinery found in the LONP1 control, so its isolated Lon N-terminal domain does not support peptidase activity.</div>
+
+                        <div class="finding-text">"More decisively, the targeted presence matrix finds no AAA+ ATPase domain/core (IPR003593/IPR003959), Lon protease family call (IPR004815), peptidase S16 active site (IPR008268), or Lon proteolytic domain (IPR008269) in LONRF3. All five are present in the LONP1 control."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23898208" target="_blank" class="term-link">
+                            PMID:23898208
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Induction of IL-17 and nonclassical T-cell activation by HIV-Tat protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LONRF3/LONRF3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q496Y0 (LONF3_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does full-length LONRF3 directly catalyze ubiquitin transfer, which E2 enzymes support it, and do both RING regions contribute to the reaction?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="Q: Does full-length LONRF3 directly catalyze ubiquiti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which endogenous proteins are direct LONRF3 substrates, and does their modification alter degradation, localization, interaction, or activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="Q: Which endogenous proteins are direct LONRF3 substr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where does endogenous LONRF3 function, and which of the seven screen-derived partners, if any, are reproducible cofactors or substrates rather than assay-context contacts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="Q: Where does endogenous LONRF3 function, and which o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the isoform-2 TPR4 deletion and isoform-3 Lon-domain truncation alter substrate recognition or regulation relative to the canonical product?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="Q: Do the isoform-2 TPR4 deletion and isoform-3 Lon-d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify sequence-verified full-length LONRF3 and reconstitute ubiquitination with an E1, ubiquitin, and an E2 panel. Measure E2~ubiquitin discharge, autoubiquitination, and free chain formation, comparing wild type with separate and combined zinc-coordinating- residue mutants of the two RING regions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LONRF3 is an active RING-type E3 ligase whose activity requires one or both intact RING regions and a restricted subset of human E2 enzymes.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: reconstituted ubiquitination assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="EXPERIMENT: Purify sequence-verified full-length LONRF3 and re..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Engineer an acute degron at the endogenous LONRF3 locus, then perform matched diGly ubiquitin-remnant proteomics, total proteomics, and pulse-chase turnover analysis. Rescue candidate changes with wild-type versus RING-disrupted LONRF3 and test direct modification in a purified reaction.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Acute loss of LONRF3 changes ubiquitination and abundance of a limited set of direct physiological substrates.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: acute perturbation and ubiquitin proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="EXPERIMENT: Engineer an acute degron at the endogenous LONRF3 ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Introduce a minimally disruptive endogenous fluorescent or proximity-labeling tag, map localization and proximal proteins under basal and proteotoxic-stress conditions, and validate high-confidence partners by reciprocal endogenous co-immunoprecipitation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LONRF3 occupies a regulated cellular compartment and engages a limited local network not resolved by systematic binary screens.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous localization and proximity proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="EXPERIMENT: Introduce a minimally disruptive endogenous fluore..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express sequence-verified isoforms from the same genomic landing site at matched levels and compare localization, E2 binding, ubiquitination activity, proximity interactomes, and modification of substrates identified in endogenous loss-of-function studies.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Isoforms 2 and 3 retain potential RING ligase activity but differ from the canonical product in substrate or partner selection because of their altered TPR or Lon-domain architecture.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-comparative functional analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q496Y0" data-a="EXPERIMENT: Express sequence-verified isoforms from the same g..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Intrinsic ubiquitin protein ligase activity by LONRF3 has not been demonstrated, and its E2 requirements, active RING region or regions, and ubiquitin-chain products are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> An IBA supports broad ubiquitin ligase activity, and UniProt predicts two RING-type zinc fingers; neither source is a direct LONRF3 ubiquitin-transfer experiment.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct catalysis is required to distinguish an active E3 ligase from a RING-containing interaction scaffold and to determine whether one or both RING regions contribute.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute sequence-verified full-length LONRF3 with an E1, a panel of human E2 enzymes, and ubiquitin; measure E2~ubiquitin discharge, autoubiquitination, and chain formation while comparing wild type with structure-guided mutants in each RING region.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The sequence evidence strongly disfavors degeneration of either RING region across the human–mouse comparison, but it cannot prove zinc occupancy or ligase activity."</em> — file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md</li>
+
+                <li><em>"RING-type 1"</em> — file:human/LONRF3/LONRF3-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No physiological LONRF3 substrate or biological process has been established.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Seven proteins occur as candidate partners in three systematic interaction resources, but those binary edges do not demonstrate LONRF3-dependent ubiquitination, degradation, or another substrate outcome; LONRF2 substrates and protein-quality- control biology are paralog-specific evidence.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Substrate identity is necessary to connect the inferred ligase activity to a cellular pathway and to determine whether LONRF3 resembles or diverges from other LONRF paralogs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combine acute endogenous LONRF3 depletion with diGly ubiquitin-remnant proteomics and quantitative protein-turnover measurements, then require rescue by wild-type but not RING-disrupted LONRF3 and validate prioritized substrates in a purified reaction.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;."</em> — PMID:32296183</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The native subcellular location of active LONRF3 and any regulated cofactor assembly are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt carries only electronic cytoplasmic localization, while the interaction resources do not establish endogenous co-localization or a physiological stable complex.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Compartment and transient cofactors constrain which E2 enzymes and substrates can encounter LONRF3 and prevent screen-derived partners from being interpreted as one complex.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LONRF3 and combine quantitative imaging, biochemical fractionation, and proximity labeling under basal and proteotoxic-stress conditions, validating candidate cofactors by reciprocal endogenous interaction assays.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Here we present the first large-scale IR data set obtained using mRNA display for 50 human transcription factors (TFs), including 12 transcription-related proteins."</em> — PMID:20195357</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the three annotated LONRF3 isoforms differ in ligase activity, substrate selection, localization, or stability is unknown, and the isoform used for each interaction-screen edge is not established in the cached main texts.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Isoform 2 removes most of TPR4 while retaining both RING regions and the C-terminal Lon-domain homolog; isoform 3 retains both RING regions but truncates most of the C-terminal Lon-domain homolog. These architectural differences have not been tested functionally.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The altered TPR and putative substrate-binding architectures could change partner or substrate selection without eliminating the retained RING regions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Compare sequence-verified isoforms expressed at matched endogenous levels for E2 engagement, ubiquitination activity, partner selection, stability, localization, and rescue of any substrate or phenotype discovered after LONRF3 loss.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"IsoId=Q496Y0-3; Sequence=VSP_023081, VSP_023082;"</em> — file:human/LONRF3/LONRF3-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LONRF3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q496Y0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lonrf3-reference-audit">LONRF3 reference audit</h1>
+<h2 id="evidence-blockers-and-core-boundary">Evidence blockers and core boundary</h2>
+<ul>
+<li>No direct LONRF3 biochemical study was identified. The current evidence does not demonstrate intrinsic E2-dependent ubiquitin-transfer activity, LONRF3 autoubiquitylation, ubiquitylation or degradation of a substrate, ubiquitin-chain linkage, or a RING-mutant requirement. The GO:0061630 annotation is IBA phylogenetic inference, not direct LONRF3 experimentation.</li>
+<li>The direct LONRF2 protein-quality-control results must not be transferred to LONRF3. LONRF2's abnormal TDP-43, hnRNP M and ALDOA substrates are paralog-specific evidence unless LONRF3 is independently tested.</li>
+<li>No experimentally supported LONRF3 subcellular localization was found. UniProt lists cytoplasm only as an electronic ARBA annotation; none of the three GOA interaction papers localizes endogenous LONRF3.</li>
+<li>No physiological LONRF3 complex is established. The seven GOA partners come from three systematic binary-interaction resources and should not be treated as substrates, stable-complex members, or pathway assignments without orthogonal endogenous evidence.</li>
+<li>The PubMed-indexed HIV-Tat paper (PMID:23898208) is associated with an NCBI GeneRIF stating that Tat downregulates LONRF3 in primary T cells, but <code>publications/PMID_23898208.md</code> contains no LONRF3/RNF127 occurrence. The relevant result appears to depend on uncached supplementary expression data, so it is not used as functional evidence here.</li>
+<li>A PubMed search for <code>LONRF3 OR RNF127</code> returned recent prognostic/transcriptomic association studies but no gene-specific biochemical characterization. These association studies do not establish molecular function.</li>
+</ul>
+<h2 id="interaction-screen-evidence-and-limitations">Interaction-screen evidence and limitations</h2>
+<ul>
+<li>PMID:20195357 used in vitro mRNA display: [PMID:20195357, "Here we present the first large-scale IR data set obtained using mRNA display for 50 human transcription factors (TFs), including 12 transcription-related proteins."] GOA associates LONRF3 with PHB1. The paper reports an overall property of the screen—[PMID:20195357, "The core data set (966 IRs; 943 PPIs) displays a verification rate of 70%."]—but the cached article does not establish individual orthogonal validation or functional consequence for LONRF3-PHB1.</li>
+<li>PMID:25416956 is a proteome-scale binary map: [PMID:25416956, "Here, we describe a systematic map of ?14,000 high-quality human binary protein-protein interactions."] GOA assigns APPBP2 and NOTCH2NLA as LONRF3 partners. Neither is shown to be a LONRF3 ubiquitination substrate or an endogenous complex member.</li>
+<li>PMID:32296183 describes HuRI as [PMID:32296183, "Here we present a human 'all-by-all' reference interactome map of human binary protein interactions, or 'HuRI'."] GOA assigns CYSRT1, DES, CTAG1B and TRAF2 as LONRF3 partners. The paper's own framing—[PMID:32296183, "HuRI is a systematic proteome-wide reference that links genomic variation to phenotypic outcomes."]—supports using these as hypothesis-generating binary contacts, not gene-specific mechanism.</li>
+</ul>
+<h2 id="protein-architecture-isoforms-and-the-lon-peptidase-hazard">Protein architecture, isoforms and the Lon-peptidase hazard</h2>
+<ul>
+<li>UniProt Q496Y0 describes a 759-aa canonical protein with TPR repeats at 67-100, 243-276, 278-310 and 312-344; RING-type zinc fingers at 158-196 and 467-505; and a predicted Lon N-terminal domain at 546-755.</li>
+<li>The name “LON peptidase N-terminal domain and RING finger protein 3” must not be interpreted as evidence of peptidase or ATP-dependent protease activity. LONRF3 contains the Lon <strong>N-terminal substrate-binding</strong> module but lacks the AAA+ ATPase and protease catalytic domains of complete Lon proteases. No proteolysis assay for LONRF3 was found.</li>
+<li>Isoform 2 (Q496Y0-2) lacks residues 313-353. This essentially removes TPR4 while retaining TPR1-3, both RING fingers, and the C-terminal Lon N-terminal domain.</li>
+<li>Isoform 3 (Q496Y0-3) replaces residues 605-610 and lacks residues 611-759. It retains all four TPR repeats and both RING fingers but truncates most of the Lon N-terminal domain.</li>
+<li>None of the cached interaction papers identifies the tested LONRF3 isoform in its main text, and no isoform-specific functional comparison was found. An annotation to a specific isoform would therefore require checking the exact construct in supplementary interaction data.</li>
+</ul>
+<h2 id="curation-implications">Curation implications</h2>
+<ul>
+<li><code>ubiquitin protein ligase activity</code> is plausible from two RING domains and supported by IBA, but remains inferred for LONRF3; it should not be summarized as experimentally demonstrated intrinsic activity.</li>
+<li><code>metal ion binding</code> is a defensible domain-based electronic inference for RING zinc coordination, not a measured free-metal-binding function.</li>
+<li>Generic <code>protein binding</code> annotations preserve the outputs of the interaction resources but are not informative core molecular functions. The named partners are candidates for follow-up, not substrates.</li>
+<li>The decisive unresolved experiments are an E2-dependent reconstituted ubiquitination assay with wild-type and RING-mutant LONRF3, endogenous substrate discovery with rescue controls, and endogenous localization/proximity mapping across isoforms.</li>
+</ul>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q496Y0" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lonrf3-comparative-domain-analysis-results">LONRF3 comparative domain analysis results</h1>
+<h2 id="conclusion">Conclusion</h2>
+<p>Reviewed human LONRF3 Q496Y0 contains two InterPro RING-type zinc-finger regions (IPR001841; residues 158–195 and 466–505), and both overlap an InterPro RING conserved-site call (IPR017907; 173–182 and 482–491). The first is additionally assigned the C3HC4 RING-type entry IPR018957. Both regions retain dense Cys/His patterns and are strongly conserved in reviewed mouse Lonrf3, supporting intact rather than degenerate RING-family architecture:</p>
+<ul>
+<li>The first human region contains nine Cys/His residues with the calculated pattern <code>C-X2-C-H-X10-C-X1-H-X2-C-X2-C-X10-C-X2-C</code>. It is 94.74% identical to the mouse ortholog region, and its conserved-site segment is 100% identical.</li>
+<li>The second human region contains ten Cys/His residues with the pattern <code>C-X2-C-X11-C-X1-H-X2-C-X2-C-X3-C-X2-H-X3-C-X2-C</code>. It is 97.50% identical to the mouse ortholog region, and its conserved-site segment is also 100% identical.</li>
+<li>Relative to family and control proteins, the first region is 55.56% identical to the first LONRF1 RING and 36.84% identical to the RNF4 RING. The second is 80.00% identical to the second LONRF1 RING, 87.50% identical to the stronger LONRF2 RING, and 42.50% identical to RNF4.</li>
+</ul>
+<p>These results provide strong computational support for structural zinc-binding RING domains and are compatible with GO:0046872 (metal ion binding). They are also compatible with RING E3 architecture, but sequence conservation alone does not establish GO:0061630 (ubiquitin protein ligase activity): no ubiquitin transfer, E2 recruitment, or substrate-dependent ligase activity was measured here. LONRF3-specific experimental evidence should remain necessary for a confident activity annotation.</p>
+<p>Q496Y0 also contains an InterPro Lon protease N-terminal domain (IPR003111; residues 546–756), which is 94.31% identical to the mouse ortholog, 61.43% identical to LONRF1, 62.86% identical to LONRF2, and 28.79% identical to the corresponding region of active human LONP1. More decisively, the targeted presence matrix finds no AAA+ ATPase domain/core (IPR003593/IPR003959), Lon protease family call (IPR004815), peptidase S16 active site (IPR008268), or Lon proteolytic domain (IPR008269) in LONRF3. All five are present in the LONP1 control. The isolated N-terminal substrate-binding-domain homology is therefore not evidence of ATPase or peptidase activity.</p>
+<h2 id="direct-evidence-trail">Direct evidence trail</h2>
+<ul>
+<li><code>outputs/direct/uniprot_metadata.tsv</code>: all six inputs resolved as reviewed UniProtKB/Swiss-Prot records. Q496Y0 was entry version 167, annotated 2026-06-10.</li>
+<li><code>outputs/direct/target_domain_presence.tsv</code>: explicit presence/absence and coordinates for nine targeted InterPro features.</li>
+<li><code>outputs/direct/domain_architecture.tsv</code>: one row per observed target region.</li>
+<li><code>outputs/direct/ring_ligand_patterns.tsv</code>: Cys/His counts, residue coordinates, and spacings calculated from downloaded sequences.</li>
+<li><code>outputs/direct/domain_pairwise_identity.tsv</code>: global pairwise identities among like InterPro-defined regions.</li>
+<li><code>outputs/direct/domain_regions.fasta</code>: exact sequence segments used in alignments.</li>
+<li><code>outputs/raw/uniprot/</code> and <code>outputs/raw/interpro/</code>: official API responses and UniProt-derived FASTA files used to generate all direct outputs.</li>
+</ul>
+<h2 id="scope-and-uncertainty">Scope and uncertainty</h2>
+<p>This is a domain-conservation analysis, not a biochemical assay. InterPro calls integrate computational signatures, and the ligand-pattern calculation describes residues within those calls rather than independently predicting a fold. The sequence evidence strongly disfavors degeneration of either RING region across the human–mouse comparison, but it cannot prove zinc occupancy or ligase activity. Likewise, absence of the complete Lon catalytic architecture strongly argues against inferring Lon peptidase activity from the N-terminal domain alone, but does not test every conceivable unrelated catalytic activity.</p>
+<p>Reported pairwise identities use aligned non-gap residue pairs as the denominator; this can overstate similarity when compared regions differ in length, so length-mismatched values should be interpreted with that limitation.</p>
+<h2 id="reproducibility-checklist">Reproducibility checklist</h2>
+<ul>
+<li>[x] Scripts do not use hardcoded input accessions or output paths; inputs and paths are command-line parameters and the accession set is in <code>inputs/proteins.tsv</code>.</li>
+<li>[x] Scripts were tested on proteins outside the LONRF family: reviewed RNF4 P78317 and LONP1 P36776 controls.</li>
+<li>[x] Analyses completed as expected with <code>uv sync --locked &amp;&amp; just all</code>.</li>
+<li>[x] Direct results are present in <code>outputs/direct/</code>.</li>
+<li>[x] Raw official-source responses are present in <code>outputs/raw/</code>.</li>
+<li>[x] Summary includes detailed provenance and uncertainty.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q496Y0
+gene_symbol: LONRF3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LONRF3 is a poorly characterized LONRF-family protein predicted to function as a
+  RING-type ubiquitin E3 ligase on the basis of phylogenetic annotation and two
+  conserved RING-type zinc-finger regions. It also contains four TPR repeats and a
+  C-terminal region homologous to the substrate-binding N-terminal domain of Lon
+  proteases. LONRF3 lacks the AAA+ ATPase and proteolytic domains of complete Lon
+  peptidases; its isolated Lon-domain homology therefore does not confer the complete
+  architecture of a Lon peptidase. Direct ubiquitin-transfer activity, E2 partners, physiological
+  substrates, biological process, and native subcellular location have not been
+  established. Seven candidate partners have been recovered by systematic binary-
+  interaction screens, but none is validated as a substrate, cofactor, or stable-complex
+  component. Two alternative isoforms alter the TPR or C-terminal Lon-domain architecture, but
+  their functions have not been compared.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q496Y0-1
+- name: &#39;2&#39;
+  id: Q496Y0-2
+  sequence_note: VSP_023080
+- name: &#39;3&#39;
+  id: Q496Y0-3
+  sequence_note: VSP_023081, VSP_023082
+existing_annotations:
+- term:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - MGI:MGI:1920209
+  - PANTHER:PTN009070514
+  - PomBase:SPAC6B12.07c
+  review:
+    summary: Phylogenetic inference supports LONRF3 as a RING-type ubiquitin E3 ligase.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA is the only informative catalytic annotation for LONRF3 and is consistent
+      with its conserved LONRF-family placement and two annotated RING-type zinc-finger
+      regions. No direct LONRF3 ubiquitin-transfer assay or substrate is available, so
+      the broad ligase term is retained without transferring the protein-quality-control
+      substrates or neuronal biology established for the paralog LONRF2.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: MGI:MGI:1920209
+        source_label: mouse Lonrf1
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          A mammalian LONRF-family donor supports conservation of broad RING E3 activity,
+          not LONRF3-specific substrates or processes.
+      - source_id: PANTHER:PTN009070514
+        source_label: LONRF-family RING E3 node
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The family node is appropriately scoped to the broad ubiquitin ligase activity.
+      - source_id: PomBase:SPAC6B12.07c
+        source_label: fission-yeast LONRF-family protein
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The distant fungal donor supports only the conserved broad RING E3 activity.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR018957
+  review:
+    summary: InterPro maps the RING-finger signature to broad metal ion binding.
+    action: MODIFY
+    reason: &gt;-
+      The source signature is a C3HC4 RING-type zinc-finger signature, so structural
+      zinc coordination is the informative activity implied by the mapping. Generic
+      metal ion binding is not false, but it discards the relevant ion specificity and
+      should be replaced by the current term zinc ion binding.
+    proposed_replacement_terms:
+    - id: GO:0008270
+      label: zinc ion binding
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: InterPro:IPR018957
+        source_label: RING-type zinc-finger signature
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The signature supports structural zinc binding, but its mapping to unspecified
+          metal binding is unnecessarily broad.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20195357
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P35232
+  review:
+    summary: &gt;-
+      A large-scale mRNA-display interaction-region screen reported an interaction
+      between LONRF3 and prohibitin-1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The source is a high-throughput in vitro interaction-resource study rather than a
+      focused functional analysis of LONRF3. The edge is valid source evidence, but generic
+      protein binding is uninformative and does not establish prohibitin-1 as a physiological
+      substrate, cofactor, or stable-complex partner.
+    supported_by:
+    - reference_id: PMID:20195357
+      supporting_text: &gt;-
+        Here we present the first large-scale IR data set obtained using mRNA display for 50
+        human transcription factors (TFs), including 12 transcription-related proteins.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q7Z3S9
+  - UniProtKB:Q92624
+  review:
+    summary: &gt;-
+      A proteome-scale binary-interactome screen reported LONRF3 interactions with
+      NOTCH2NLA and APPBP2.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      These systematic screen edges are useful candidate relationships but do not define
+      a specific molecular function or establish either partner as an endogenous LONRF3
+      substrate or cofactor. The generic protein-binding term therefore overstates the
+      functional information available from the assay.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: &gt;-
+        Here, we describe a systematic map of ?14,000 high-quality human binary
+        protein-protein interactions.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:A8MQ03
+  - UniProtKB:P17661
+  - UniProtKB:P78358
+  - UniProtKB:Q12933
+  review:
+    summary: &gt;-
+      The HuRI reference map reported four LONRF3 binary partners: CYSRT1, desmin,
+      CTAG1B, and TRAF2.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      HuRI is a systematic proteome-wide binary-interaction resource. Its LONRF3 edges
+      are hypothesis-generating physical associations, but generic protein binding does
+      not identify a specific activity and cannot make the partners substrates, cofactors,
+      or members of one physiological complex without targeted validation.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        Here we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:20195357
+  title: A comprehensive resource of interacting protein regions for refining human
+    transcription factor networks.
+  findings:
+  - statement: The study used large-scale in vitro mRNA display to map interacting
+      regions for human transcription-factor-related proteins; therefore, the reported
+      LONRF3-PHB1 association is a screen-derived binary interaction rather than evidence
+      that PHB1 is a LONRF3 substrate.
+    supporting_text: Here we present the first large-scale IR data set obtained using
+      mRNA display for 50 human transcription factors (TFs), including 12 transcription-related
+      proteins.
+    reference_section_type: ABSTRACT
+  - statement: The reported 70% verification rate applies to the screen&#39;s core data
+      set and does not establish that the individual LONRF3-PHB1 pair was independently
+      validated or has an in-cell functional consequence.
+    supporting_text: The core data set (966 IRs; 943 PPIs) displays a verification
+      rate of 70%.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Correct source for the GOA LONRF3-PHB1 protein-binding record. The
+      paper reports a high-throughput in vitro interaction-region map, not LONRF3
+      ubiquitin-ligase activity, PHB1 ubiquitylation, a physiological complex, or
+      a cellular role.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: This study generated a systematic human binary-interaction map; its
+      LONRF3 associations with APPBP2 and NOTCH2NLA are candidate direct contacts,
+      not evidence that either protein is a LONRF3 substrate.
+    supporting_text: Here, we describe a systematic map of ?14,000 high-quality human
+      binary protein-protein interactions.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Correct source for the GOA LONRF3-APPBP2 and LONRF3-NOTCH2NLA
+      protein-binding records. The proteome-scale binary map does not establish
+      endogenous co-localization, a stable complex, ubiquitylation, degradation,
+      or LONRF3 core function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: HuRI is an all-by-all systematic reference map of binary interactions;
+      its LONRF3 associations with CYSRT1, desmin, CTAG1B and TRAF2 remain screen-derived
+      candidate contacts without demonstrated LONRF3-dependent ubiquitylation or
+      degradation.
+    supporting_text: Here we present a human &#39;all-by-all&#39; reference interactome map
+      of human binary protein interactions, or &#39;HuRI&#39;.
+    reference_section_type: ABSTRACT
+  - statement: The map is designed as a broad reference network rather than a gene-specific
+      mechanistic characterization.
+    supporting_text: HuRI is a systematic proteome-wide reference that links genomic
+      variation to phenotypic outcomes.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Correct source for four GOA LONRF3 protein-binding records. These
+      systematic binary interactions do not establish substrate status, physiological
+      complexes, subcellular location, or E3 mechanism.
+- id: file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md
+  title: LONRF3 comparative domain analysis results
+  findings:
+  - statement: &gt;-
+      Both predicted LONRF3 RING regions retain dense Cys/His patterns and are strongly
+      conserved in the reviewed mouse ortholog, supporting intact RING-family architecture.
+    supporting_text: &gt;-
+      Both regions retain dense Cys/His patterns and are strongly conserved in reviewed
+      mouse Lonrf3, supporting intact rather than degenerate RING-family architecture:
+  - statement: &gt;-
+      LONRF3 lacks the AAA+ ATPase and protease-domain machinery found in the LONP1
+      control, so its isolated Lon N-terminal domain does not support peptidase activity.
+    supporting_text: &gt;-
+      More decisively, the targeted presence matrix finds no AAA+ ATPase domain/core
+      (IPR003593/IPR003959), Lon protease family call (IPR004815), peptidase S16 active
+      site (IPR008268), or Lon proteolytic domain (IPR008269) in LONRF3. All five are
+      present in the LONP1 control.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reproducible comparison using reviewed mouse Lonrf3, LONRF paralogs, RNF4, and
+      LONP1 controls. It supports domain architecture and presence/absence conclusions
+      only; it does not directly demonstrate ubiquitin transfer, zinc occupancy, or a
+      biological substrate.
+- id: PMID:23898208
+  title: Induction of IL-17 and nonclassical T-cell activation by HIV-Tat protein.
+  findings: []
+  reference_review:
+    relevance: NONE
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      NCBI associates this paper with a GeneRIF that Tat downregulates LONRF3, but the
+      cached full text contains no LONRF3 or RNF127 occurrence. The apparent expression
+      result may reside in uncached supplementary data and is not used as functional
+      evidence here.
+- id: file:human/LONRF3/LONRF3-uniprot.txt
+  title: UniProtKB entry Q496Y0 (LONF3_HUMAN)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Curated source for three annotated isoforms and predicted domain
+      architecture. Canonical LONRF3 has four TPR repeats, two RING-type zinc fingers,
+      and a C-terminal Lon N-terminal substrate-binding domain. Isoform 2 deletes
+      residues 313-353, essentially removing TPR4 while retaining both RING fingers
+      and the Lon N-terminal domain. Isoform 3 changes residues 605-610 and lacks
+      residues 611-759, truncating most of the Lon N-terminal domain while retaining
+      both RING fingers. UniProt provides no direct LONRF3 activity, substrate, complex,
+      or experimental localization evidence.
+core_functions:
+- description: &gt;-
+    Predicted RING-type ubiquitin protein ligase activity. The assignment rests on the
+    accepted IBA annotation and two predicted RING-type zinc-finger regions, but remains
+    inference-grade because ubiquitin transfer by LONRF3 itself has not been demonstrated
+    and no E2 enzyme, substrate, ubiquitin-chain product, biological process, active
+    location, or stable complex is known.
+  molecular_function:
+    id: GO:0061630
+    label: ubiquitin protein ligase activity
+  supported_by:
+  - reference_id: GO_REF:0000033
+  - reference_id: file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      Both regions retain dense Cys/His patterns and are strongly conserved in reviewed
+      mouse Lonrf3, supporting intact rather than degenerate RING-family architecture:
+knowledge_gaps:
+- gap_statement: &gt;-
+    Intrinsic ubiquitin protein ligase activity by LONRF3 has not been demonstrated, and
+    its E2 requirements, active RING region or regions, and ubiquitin-chain products are
+    unknown.
+  boundary: &gt;-
+    An IBA supports broad ubiquitin ligase activity, and UniProt predicts two RING-type
+    zinc fingers; neither source is a direct LONRF3 ubiquitin-transfer experiment.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Direct catalysis is required to distinguish an active E3 ligase from a RING-containing
+    interaction scaffold and to determine whether one or both RING regions contribute.
+  resolution: &gt;-
+    Reconstitute sequence-verified full-length LONRF3 with an E1, a panel of human E2
+    enzymes, and ubiquitin; measure E2~ubiquitin discharge, autoubiquitination, and chain
+    formation while comparing wild type with structure-guided mutants in each RING region.
+  provenance:
+  - reference_id: file:human/LONRF3/LONRF3-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      The sequence evidence strongly disfavors degeneration of either RING region across
+      the human–mouse comparison, but it cannot prove zinc occupancy or ligase activity.
+  - reference_id: file:human/LONRF3/LONRF3-uniprot.txt
+    supporting_text: RING-type 1
+- gap_statement: &gt;-
+    No physiological LONRF3 substrate or biological process has been established.
+  boundary: &gt;-
+    Seven proteins occur as candidate partners in three systematic interaction resources,
+    but those binary edges do not demonstrate LONRF3-dependent ubiquitination,
+    degradation, or another substrate outcome; LONRF2 substrates and protein-quality-
+    control biology are paralog-specific evidence.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Substrate identity is necessary to connect the inferred ligase activity to a cellular
+    pathway and to determine whether LONRF3 resembles or diverges from other LONRF paralogs.
+  resolution: &gt;-
+    Combine acute endogenous LONRF3 depletion with diGly ubiquitin-remnant proteomics and
+    quantitative protein-turnover measurements, then require rescue by wild-type but not
+    RING-disrupted LONRF3 and validate prioritized substrates in a purified reaction.
+  provenance:
+  - reference_id: PMID:32296183
+    supporting_text: &gt;-
+      Here we present a human &#39;all-by-all&#39; reference interactome map of human binary
+      protein interactions, or &#39;HuRI&#39;.
+- gap_statement: &gt;-
+    The native subcellular location of active LONRF3 and any regulated cofactor assembly
+    are unknown.
+  boundary: &gt;-
+    UniProt carries only electronic cytoplasmic localization, while the interaction
+    resources do not establish endogenous co-localization or a physiological stable
+    complex.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Compartment and transient cofactors constrain which E2 enzymes and substrates can
+    encounter LONRF3 and prevent screen-derived partners from being interpreted as one
+    complex.
+  resolution: &gt;-
+    Endogenously tag LONRF3 and combine quantitative imaging, biochemical fractionation,
+    and proximity labeling under basal and proteotoxic-stress conditions, validating
+    candidate cofactors by reciprocal endogenous interaction assays.
+  provenance:
+  - reference_id: PMID:20195357
+    supporting_text: &gt;-
+      Here we present the first large-scale IR data set obtained using mRNA display for 50
+      human transcription factors (TFs), including 12 transcription-related proteins.
+- gap_statement: &gt;-
+    Whether the three annotated LONRF3 isoforms differ in ligase activity, substrate
+    selection, localization, or stability is unknown, and the isoform used for each
+    interaction-screen edge is not established in the cached main texts.
+  boundary: &gt;-
+    Isoform 2 removes most of TPR4 while retaining both RING regions and the C-terminal
+    Lon-domain homolog; isoform 3 retains both RING regions but truncates most of the
+    C-terminal Lon-domain homolog. These architectural differences have not been tested
+    functionally.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    The altered TPR and putative substrate-binding architectures could change partner or
+    substrate selection without eliminating the retained RING regions.
+  resolution: &gt;-
+    Compare sequence-verified isoforms expressed at matched endogenous levels for E2
+    engagement, ubiquitination activity, partner selection, stability, localization, and
+    rescue of any substrate or phenotype discovered after LONRF3 loss.
+  provenance:
+  - reference_id: file:human/LONRF3/LONRF3-uniprot.txt
+    supporting_text: IsoId=Q496Y0-3; Sequence=VSP_023081, VSP_023082;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does full-length LONRF3 directly catalyze ubiquitin transfer, which E2 enzymes support
+    it, and do both RING regions contribute to the reaction?
+- question: &gt;-
+    Which endogenous proteins are direct LONRF3 substrates, and does their modification
+    alter degradation, localization, interaction, or activity?
+- question: &gt;-
+    Where does endogenous LONRF3 function, and which of the seven screen-derived partners,
+    if any, are reproducible cofactors or substrates rather than assay-context contacts?
+- question: &gt;-
+    Do the isoform-2 TPR4 deletion and isoform-3 Lon-domain truncation alter substrate
+    recognition or regulation relative to the canonical product?
+suggested_experiments:
+- hypothesis: &gt;-
+    LONRF3 is an active RING-type E3 ligase whose activity requires one or both intact
+    RING regions and a restricted subset of human E2 enzymes.
+  description: &gt;-
+    Purify sequence-verified full-length LONRF3 and reconstitute ubiquitination with an E1,
+    ubiquitin, and an E2 panel. Measure E2~ubiquitin discharge, autoubiquitination, and free
+    chain formation, comparing wild type with separate and combined zinc-coordinating-
+    residue mutants of the two RING regions.
+  experiment_type: reconstituted ubiquitination assay
+- hypothesis: &gt;-
+    Acute loss of LONRF3 changes ubiquitination and abundance of a limited set of direct
+    physiological substrates.
+  description: &gt;-
+    Engineer an acute degron at the endogenous LONRF3 locus, then perform matched diGly
+    ubiquitin-remnant proteomics, total proteomics, and pulse-chase turnover analysis.
+    Rescue candidate changes with wild-type versus RING-disrupted LONRF3 and test direct
+    modification in a purified reaction.
+  experiment_type: acute perturbation and ubiquitin proteomics
+- hypothesis: &gt;-
+    LONRF3 occupies a regulated cellular compartment and engages a limited local network
+    not resolved by systematic binary screens.
+  description: &gt;-
+    Introduce a minimally disruptive endogenous fluorescent or proximity-labeling tag,
+    map localization and proximal proteins under basal and proteotoxic-stress conditions,
+    and validate high-confidence partners by reciprocal endogenous co-immunoprecipitation.
+  experiment_type: endogenous localization and proximity proteomics
+- hypothesis: &gt;-
+    Isoforms 2 and 3 retain potential RING ligase activity but differ from the canonical
+    product in substrate or partner selection because of their altered TPR or Lon-domain
+    architecture.
+  description: &gt;-
+    Express sequence-verified isoforms from the same genomic landing site at matched levels
+    and compare localization, E2 binding, ubiquitination activity, proximity interactomes,
+    and modification of substrates identified in endogenous loss-of-function studies.
+  experiment_type: isoform-comparative functional analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,14 +1,15 @@
 # uvrD curation notes
 
-## 2026-08-08 pathway pass
+Q88C31 (PP_5352) has the UvrD-family architecture and exact EC 5.6.2.4
+directional helicase assignment. A direct P. putida deletion study found
+elevated mutation frequencies but also reported that "NER or MMR pathways are
+not completely abolished in UvrD-deficient P. putida" [PMID:30292721].
+The positive mutant evidence is the elevated-mutation and DNA-damage-survival
+phenotype [PMID:30292721 "UvrD helicase is essential to prevent the emergence
+of mutations"]; a P. aeruginosa uvrD allele independently showed defective
+mismatch repair [PMID:11952911 "showing defective mismatch repair activity."].
 
-Q88C31 is assigned to the UvrD helicase subfamily, and its target record states
-that ATP hydrolysis is coupled to duplex-DNA unwinding with 3'-5' translocation
-[file:PSEPK/uvrD/uvrD-uniprot.txt, "Reaction=Couples ATP hydrolysis with the
-unwinding of duplex DNA by"]. The broad DNA-helicase annotation is therefore
-valid but secondary to GO:0043138 rather than an over-annotation.
-
-The nucleotide-excision-repair process annotation is an ISS proposal from the
-reviewed E. coli UvrD exemplar UniProtKB:P03018 plus the exact target subfamily
-assignment. UvrD is shared with other genome-maintenance pathways, so NER is not
-treated as an exclusive role.
+Mismatch repair and nucleotide-excision repair were therefore added as direct
+IMP-supported processes, with wording that preserves the observed redundancy.
+Generic helicase, hydrolase, and nucleotide-binding parents were marked
+over-annotated rather than duplicated in the core function.

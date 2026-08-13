@@ -1,0 +1,3708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRATD2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRATD2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96KN1" target="_blank" class="term-link">
+                        Q96KN1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRATD2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96KN1" data-a="DESCRIPTION: LRATD2 (FAM84B/BCMP101) is a cytoplasmic, peripher..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRATD2 (FAM84B/BCMP101) is a cytoplasmic, peripheral membrane-associated LRAT-like protein implicated in selective secretory cargo transport. Human-cell imaging places LRATD2 in cytoplasmic and juxtanuclear Golgi pools, and LRATD2 promotes ER-to-Golgi transport of EGFR without detectably affecting the tested ShhN or IGF2 cargoes. A mixed-species budding assay using human donor membranes and rat liver cytosol recovered LRATD2 in vesicle fractions in a GTP-dependent manner. Cross-link-dependent coimmunoprecipitation with AP1gamma1 and SEC23A/B places LRATD2 near vesicle-coat machinery, although its direct molecular activity and the composition of its endogenous trafficking assemblies remain unresolved. LRATD2 is an NMT1/2 substrate whose Gly2 is required for chemical detection of N-myristoylation. Its LRAT-like region lacks the conserved catalytic cysteine of related phospholipase/acyltransferase enzymes, and no retinoid acyltransferase or phospholipase activity has been demonstrated. Alpha-catenin and NPM1 interactions have been reported in breast- and esophageal-cancer models, respectively, while amplification or perturbation of LRATD2 alters growth, migration, invasion, and signaling in several tumor-cell contexts.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRATD2 has a cytoplasmic pool in breast-cancer and epithelial-cell proteomic studies.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ARBA cytoplasm assignment agrees with two target-specific experimental cytoplasm annotations, including localization work in the E-cadherin interactome study and the earlier breast-cancer membrane-proteomics study. The mapping is conservative and does not imply a soluble-only protein.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ARBA:ARBA00026971</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The ARBA source supports the conservative cytoplasmic localization and agrees with direct target evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A proteome-scale binary-interaction map reported an LRATD2-UROD candidate contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The screen contact is retained as exact participant provenance, but it does not establish an endogenous LRATD2 mechanism or any role in porphyrin metabolism, and generic protein binding is not an informative molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25640309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25640309
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification of molecular links between core an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:25640309" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A breast-cancer interaction screen reported LRATD2 contacts with CHEK2 and RAD51 in a nuclear assay context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The two merged screen contacts and their occurs_in nucleus extension are preserved, but the study does not establish an endogenous LRATD2 DNA-damage mechanism, nuclear residence, or a coherent partner-specific molecular function. Generic protein binding is therefore over-annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An interactome-network study reported an LRATD2-NMT2 candidate interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The contact is biologically compatible with later evidence that LRATD2 is an NMT1/2 substrate, but a screen IPI does not make LRATD2 an N-myristoyltransferase or establish a stable endogenous complex. The generic binding term is not sufficiently informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A variant-sensitive interactome screen reported an LRATD2-UROD candidate contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This high-throughput contact is retained as assay provenance but does not establish a functional LRATD2-UROD mechanism; generic protein binding is uninformative and must not be interpreted as metabolic pathway evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HuRI screening reported LRATD2 contacts with UROD, TAX1BP1, DDIT4L, and AP1M1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The four partners span unrelated enzymes, signaling proteins, and trafficking machinery, so the merged binary-screen assertions cannot be refined to one coherent molecular activity. They are retained as participant provenance without promoting generic protein binding to core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cell-specific interactome map reported an LRATD2-NMT2 candidate contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The contact may reflect LRATD2 recognition as an NMT substrate, but the screen does not establish the molecular consequence or an obligate complex, and generic protein binding is not an informative LRATD2 activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25468996" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25468996
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    E-cadherin interactome complexity and robustness resolved by...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005737" data-r="PMID:25468996" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GFP-tagged candidate localization in an E-cadherin interactome study supports cytoplasmic LRATD2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The full study localized a selected panel of putative E-cadherin-proximal proteins and curators assigned LRATD2 to cytoplasm. The paper is accessible, and there is no evidence contradicting this conservative cellular compartment assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477722" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477722
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic analysis of breast cancer cell membr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005515" data-r="PMID:12477722" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The focused breast-cancer membrane-proteomics study identified alpha-catenin as an LRATD2 binding partner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The partner is P35221, alpha-catenin, so GO:0045294 alpha-catenin binding precisely captures the interaction and is more informative than generic protein binding. The annotation does not by itself establish membership in the entire cadherin-catenin complex.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045294" target="_blank" class="term-link">
+                                    alpha-catenin binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477722" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477722
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic analysis of breast cancer cell membr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005737" data-r="PMID:12477722" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Breast-cancer-cell membrane proteomics and follow-up characterization support cytoplasmic LRATD2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:12477722 is abstract-only in the cache, but the study specifically followed previously uncharacterized proteins from a membrane-enriched proteome and the curator had access to the full localization experiments. Cytoplasm is retained with curator deference and is compatible with peripheral membrane recruitment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477722" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477722
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comprehensive proteomic analysis of breast cancer cell membr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005886" data-r="PMID:12477722" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Breast-cancer-cell membrane proteomics and follow-up characterization support a contextual plasma-membrane pool of LRATD2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This localization derives from plasma-membrane-enriched breast-cancer-cell fractions and follow-up characterization in PMID:12477722. The full text is inaccessible locally, so the experimental curator&#39;s assignment is retained, but the contextual plasma-membrane pool is non-core and is not part of the cytoplasm/Golgi/vesicle trafficking core established by PMID:34433667. The annotation does not imply that LRATD2 is an integral membrane protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006888" target="_blank" class="term-link">
+                                    GO:0006888
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum to Golgi vesicle-mediated transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34433667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An in vitro vesicle formation assay reveals cargo clients an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0006888" data-r="PMID:34433667" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human LRATD2 participates in ER-to-Golgi vesicle-mediated transport of EGFR in a cargo-selective trafficking assay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LRATD2 depletion delayed EGFR transport from the ER to the Golgi, and an siRNA-resistant LRATD2 construct rescued the defect. Together with its GTP-dependent recovery in vesicle fractions and association with coat machinery, this supports physical participation in the transport process without requiring a directional regulatory annotation. Unaffected ShhN and IGF2 transport bounds the annotation to selective cargo handling rather than general secretion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link">
+                                        PMID:34433667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix, Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34433667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An in vitro vesicle formation assay reveals cargo clients an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96KN1" data-a="GO:0005794" data-r="PMID:34433667" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tagged human LRATD2 localizes to a juxtanuclear Golgi pool in HEK293T cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging places HA-tagged LRATD2 in a juxtanuclear Golgi area marked by TGN46. GO:0005794 is used conservatively because the text describes a Golgi area rather than explicitly assigning LRATD2 to the trans-Golgi network.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link">
+                                        PMID:34433667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HA-tagged FAM84B/LRATD2 (FAM84B-HA) was partially located at the cytoplasm and partially located at the juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cargo-selective participant in ER-to-Golgi vesicle-mediated transport. Golgi localization, cross-link-dependent association with AP1gamma1 and SEC23A/B, and LRATD2 loss-and-rescue experiments support a role in EGFR transport in human HEK293T cells. Recovery in vesicle fractions in a mixed human-donor-membrane and rat-cytosol budding assay is corroborative but is not treated as direct human vesicle-localization evidence. The data do not yet establish a direct cargo-adaptor molecular activity or stable coat-complex membership.</h3>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="FUNCTION: Cargo-selective participant in ER-to-Golgi vesicle..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006888" target="_blank" class="term-link">
+                                endoplasmic reticulum to Golgi vesicle-mediated transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                Golgi apparatus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link">
+                                PMID:34433667
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Western blot analysis confirmed that FAM84B/LRATD2 was significantly enhanced in the vesicle fraction when the incubation was conducted in the presence of GMPPNP (Fig. 3A, compare lanes 2 and 3). HA-tagged FAM84B/LRATD2 (FAM84B-HA) was partially located at the cytoplasm and partially located at the juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link">
+                                PMID:34433667
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix, Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12477722" target="_blank" class="term-link">
+                            PMID:12477722
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comprehensive proteomic analysis of breast cancer cell membranes reveals unique proteins with potential roles in clinical cancer.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25468996" target="_blank" class="term-link">
+                            PMID:25468996
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">E-cadherin interactome complexity and robustness resolved by quantitative proteomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25640309" target="_blank" class="term-link">
+                            PMID:25640309
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic identification of molecular links between core and candidate genes in breast cancer.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34433667" target="_blank" class="term-link">
+                            PMID:34433667
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An in vitro vesicle formation assay reveals cargo clients and factors that mediate vesicular trafficking.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRATD2 associates with vesicle membranes in a GTP-dependent manner and occupies cytoplasmic, juxtanuclear Golgi, and peripheral membrane-associated pools in HEK293T assays.</div>
+
+                        <div class="finding-text">"Western blot analysis confirmed that FAM84B/LRATD2 was significantly enhanced in the vesicle fraction when the incubation was conducted in the presence of GMPPNP (Fig. 3A, compare lanes 2 and 3). HA-tagged FAM84B/LRATD2 (FAM84B-HA) was partially located at the cytoplasm and partially located at the juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cross-linked coimmunoprecipitation detected LRATD2 with AP1gamma1 and Sec23A/B, but not Sar1A.</div>
+
+                        <div class="finding-text">"FAM84B-HA coimmunoprecipitated with AP1γ1 and Sec23A/B, but not Sar1A in the presence of a cross-linker (Fig. 3B)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 knockdown selectively delayed ER-to-Golgi transport of EGFR and was rescued by siRNA-resistant LRATD2, while ShhN and IGF2 transport was unaffected.</div>
+
+                        <div class="finding-text">"Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix, Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34956690" target="_blank" class="term-link">
+                            PMID:34956690
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Binding Affinity Determines Substrate Specificity and Enables Discovery of Substrates for N-Myristoyltransferases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chemical-proteomic labeling identified LRATD2, LRATD1, and ERICH5 as candidate substrates of human NMT1/2.</div>
+
+                        <div class="finding-text">"However, three proteins LRATD1 (LRAT domain-containing 1, also called FAM84A or neurological sensory protein 1 NSE1), LRATD2 (FAM84B/NSE2), and ERICH5 (glutamate-rich protein 5) demonstrated clear fluorescence signals in the Alk12 treated samples compared to the control without Alk12 treatment, and the signals were hydroxylamine-resistant, suggesting that they are potentially N-myristoylated."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NMT inhibition and loss of labeling in Gly2-to-Ala mutants confirmed LRATD2 and LRATD1 separately as NMT1/2 substrates.</div>
+
+                        <div class="finding-text">"Alk12 labeling signals decreased with the treatment of NMT inhibitor in LRATD1, LRATD2, and ERICH5 and were completely removed in G2A mutants, confirming LRATD1, LRATD2, and ERICH5 as substrates of NMT1/2 (Figure 4C)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31205500" target="_blank" class="term-link">
+                            PMID:31205500
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAM84B promotes prostate tumorigenesis through a network alteration.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length LRATD2, but not a construct deleting the LRAT/HRASLS-homologous region, increased DU145 invasion and anchorage-independent growth.</div>
+
+                        <div class="finding-text">"FAM84B but not FAM84B (ΔHRASLS) increased DU145 cell invasion and growth in soft agar."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Tagged full-length and deletion constructs co-precipitated and colocalized, suggesting self-association under overexpression conditions.</div>
+
+                        <div class="finding-text">"Co-immunoprecipitation and co-localization analyses revealed an interaction between FAM84B and FAM84B (ΔHRASLS), suggesting an intramolecular association among FAM84B molecules."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors inferred from loss of the catalytic cysteine that LRATD2 is unlikely to retain HRASLS phospholipase or O-acyltransferase activity.</div>
+
+                        <div class="finding-text">"Since the catalytic residue Cys is not conserved (Figure 2), FAM84B is unlikely to have either enzymatic activities, which implies that FAM84B facilitates Ras signaling."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35396552" target="_blank" class="term-link">
+                            PMID:35396552
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Elevated FAM84B promotes cell proliferation via interacting with NPM1 in esophageal squamous cell carcinoma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 perturbation altered proliferation and cell-cycle status in ESCC cells, with NPM1 implicated as the mediator.</div>
+
+                        <div class="finding-text">"Furthermore, we found that the forced expression change of FAM84B can influence ESCC cell proliferation and cell-cycle status, which is probably mediated by NPM1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 directly interacted with the NPM1 C terminus and increased nuclear NPM1 in the ESCC model.</div>
+
+                        <div class="finding-text">"A direct interaction between FAM84B and the C-terminal (189-294aa) of NPM1 was identified, which increased the NPM1 nuclear expression."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32291380" target="_blank" class="term-link">
+                            PMID:32291380
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAM84B, amplified in pancreatic ductal adenocarcinoma, promotes tumorigenesis through the Wnt/β-catenin pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 knockdown suppressed proliferation, mitochondrial function, and glycolysis in PDAC cell lines, whereas overexpression produced opposite effects.</div>
+
+                        <div class="finding-text">"FAM84B knockdown also suppressed mitochondrial function and glycolysis of PDAC cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 perturbation altered nuclear beta-catenin and downstream readouts, and a Wnt/beta-catenin inhibitor blocked the overexpression phenotypes.</div>
+
+                        <div class="finding-text">"On the contrary, FAM84B overexpression displayed reversed effects in cell proliferation, apoptosis, mitochondrial function, and glycolysis, which was blocked by the Wnt/β-catenin pathway inhibitor (XAV939)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26759717" target="_blank" class="term-link">
+                            PMID:26759717
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic analyses reveal FAM84B and the NOTCH pathway are associated with the progression of esophageal squamous cell carcinoma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 was recurrently amplified and overexpressed in ESCC and preclinical lesions.</div>
+
+                        <div class="finding-text">"In particular, the FAM84B gene was amplified and overexpressed in preclinical and ESCC tumors."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRATD2 knockdown reduced growth, migration, and invasion in ESCC cell lines.</div>
+
+                        <div class="finding-text">"Knockdown of FAM84B in ESCC cell lines significantly reduced in vitro cell growth, migration and invasion."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LRATD2 directly recognize EGFR or a cargo receptor, and what feature explains its selectivity over the tested ShhN and IGF2 cargoes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="Q: Does LRATD2 directly recognize EGFR or a cargo rec..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which coat machinery and small GTPase recruit LRATD2 to vesicles, and are the AP1gamma1 and SEC23A/B contacts direct and endogenous?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="Q: Which coat machinery and small GTPase recruit LRAT..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is endogenous LRATD2 constitutively N-myristoylated, and is this modification required for Golgi/vesicle association and EGFR transport?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="Q: Is endogenous LRATD2 constitutively N-myristoylate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do alpha-catenin and NPM1 represent tissue-specific LRATD2 mechanisms, or cancer-state interactions secondary to amplification or overexpression?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="Q: Do alpha-catenin and NPM1 represent tissue-specifi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute binding and vesicle recruitment with purified LRATD2, EGFR cargo regions or candidate cargo receptors, AP-1, SEC23/24, and candidate small GTPases; quantify nucleotide dependence and direct stoichiometry.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRATD2 directly couples EGFR-containing carriers to a defined coat component.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Biochemical reconstitution and quantitative binding</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="EXPERIMENT: Reconstitute binding and vesicle recruitment with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Create an endogenous LRATD2 knockout or degron line and compare rescue by expression-matched wild-type and G2A LRATD2 using RUSH cargo kinetics, membrane/cytosol fractionation, and live-cell Golgi localization.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Gly2 N-myristoylation is required for LRATD2 membrane recruitment and selective EGFR ER-to-Golgi transport.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Genetic rescue and live-cell trafficking</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="EXPERIMENT: Create an endogenous LRATD2 knockout or degron lin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LRATD2 and perform time-resolved proximity labeling and cross-linking mass spectrometry during synchronized EGFR export, with ShhN and IGF2 as cargo controls and partner knockdowns to test causality.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRATD2 forms transient, cargo-dependent contacts with coat machinery rather than a constitutive stable complex.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Endogenous interactomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="EXPERIMENT: Endogenously tag LRATD2 and perform time-resolved ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perturb LRATD2 in nontransformed human epithelial organoids from tissues with endogenous expression, profile secretory cargo flux, and test whether any trafficking defect precedes changes in proliferation, migration, or signaling.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRATD2 has a conserved physiological trafficking role outside amplified cancer cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Human organoid functional genomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96KN1" data-a="EXPERIMENT: Perturb LRATD2 in nontransformed human epithelial ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular activity by which LRATD2 selects or advances EGFR cargo is unknown, including whether it binds EGFR, a cargo receptor, a coat component, or a regulatory GTPase directly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LRATD2 depletion selectively delays EGFR ER-to-Golgi transport and rescue restores it, while ShhN and IGF2 transport are unaffected in the same human-cell system.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the direct activity is necessary to distinguish a cargo adaptor from a coat regulator or another class of trafficking factor.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Purified-component binding and reconstitution assays with LRATD2, EGFR cytosolic regions, cargo receptors, AP-1, COPII components, and candidate small GTPases.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix, Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I)."</em> — PMID:34433667</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous composition, stoichiometry, and lifetime of LRATD2-containing trafficking assemblies are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Tagged LRATD2 coimmunoprecipitates with AP1gamma1 and SEC23A/B only under the reported cross-linking conditions; this supports proximity but not a stable, stoichiometric complex.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Endogenous interaction architecture would locate LRATD2 within AP-1-, COPII-, or other transport machinery without overinterpreting tagged cross-linking assays.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous tagging followed by quantitative affinity purification, proximity labeling, cross-linking mass spectrometry, and perturbation of individual partners.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"FAM84B-HA coimmunoprecipitated with AP1γ1 and Sec23A/B, but not Sar1A in the presence of a cross-linker (Fig. 3B)."</em> — PMID:34433667</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous occupancy and trafficking consequence of LRATD2 N-myristoylation are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Chemical labeling, NMT inhibition, and Gly2 mutation establish overexpressed LRATD2 as an NMT1/2 substrate in human cells, but do not define how the modification affects membrane recruitment or EGFR transport.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> N-myristoylation could provide the missing physical basis for regulated vesicle association.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Quantify endogenous LRATD2 myristoylation and compare wild-type and Gly2-mutant proteins for membrane partitioning, coat proximity, and EGFR transport rescue.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Alk12 labeling signals decreased with the treatment of NMT inhibitor in LRATD1, LRATD2, and ERICH5 and were completely removed in G2A mutants, confirming LRATD1, LRATD2, and ERICH5 as substrates of NMT1/2 (Figure 4C)."</em> — PMID:34956690</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The normal tissue-level physiological role of LRATD2 and the relationship between its trafficking function and tumor-associated phenotypes remain unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LRATD2 amplification or perturbation changes proliferation, migration, invasion, and signaling in several human cancer-cell models, whereas direct trafficking evidence is currently centered on a reconstituted HEK293T cargo assay.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This distinction is needed to separate an endogenous trafficking function from context-dependent consequences of cancer amplification and overexpression.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Analyze endogenous LRATD2 loss in nontransformed, tissue-relevant human models and connect cargo-trafficking defects to cellular and organismal phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Knockdown of FAM84B in ESCC cell lines significantly reduced in vitro cell growth, migration and invasion."</em> — PMID:26759717</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The structural function of the catalytically divergent LRAT-like region is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The region is required for LRATD2-driven invasion and anchorage-independent growth in DU145 cells, but its conserved catalytic cysteine is absent and enzymatic activity has not been demonstrated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A structural explanation could reveal whether the domain mediates membrane, cargo, or protein contacts rather than catalysis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Determine the LRATD2 structure and map separation-of-function mutations across the LRAT-like region in trafficking and partner-binding assays.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Since the catalytic residue Cys is not conserved (Figure 2), FAM84B is unlikely to have either enzymatic activities, which implies that FAM84B facilitates Ras signaling."</em> — PMID:31205500</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRATD2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96KN1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lratd2-literature-notes">LRATD2 literature notes</h1>
+<h2 id="search-and-identity-boundaries">Search and identity boundaries</h2>
+<p>Primary literature was searched manually in PubMed through 2026-08-13 using LRATD2,<br />
+FAM84B, BCMP101, and NSE2 names. Provider deep research was skipped as permitted; no<br />
+provider file was created. The most direct mechanistic studies found address vesicular<br />
+trafficking, N-myristoylation, an LRAT-like-region deletion, and NPM1 binding. Much of<br />
+the remaining literature concerns amplified tumor-cell contexts rather than normal<br />
+physiology.</p>
+<p>LRATD2 is FAM84B/BCMP101 and has historically been called NSE2. The NSE2 alias is not<br />
+evidence that LRATD2 is NSMCE2/MMS21, the SUMO-ligase subunit of the SMC5/6 complex.<br />
+This collision has propagated into the LRATD2 cancer literature: PMID:26759717 states<br />
+that FAM84B forms DNA-repair complexes, but provides no LRATD2-specific experiment for<br />
+that claim. DNA-repair/SUMO-ligase functions must not be assigned to LRATD2 on this<br />
+basis.</p>
+<p>LRATD1/FAM84A is a paralog, not an interchangeable name or functional donor. A direct<br />
+chemical-proteomics study tested both separately [PMID:34956690, "Alk12 labeling<br />
+signals decreased with the treatment of NMT inhibitor in LRATD1, LRATD2, and ERICH5<br />
+and were completely removed in G2A mutants, confirming LRATD1, LRATD2, and ERICH5 as<br />
+substrates of NMT1/2 (Figure 4C)."] LRATD1 morphology, motility, Ser38, localization,<br />
+or tissue-expression claims therefore cannot be transferred to LRATD2.</p>
+<p>UniProtKB Q96KN1 has no curated named alternative protein isoforms. Multiple Ensembl<br />
+transcripts alone do not establish expressed or functionally distinct LRATD2 protein<br />
+isoforms, and the reviewed functional papers do not provide an isoform comparison.</p>
+<h2 id="direct-cellular-role-vesicular-trafficking">Direct cellular role: vesicular trafficking</h2>
+<p>The strongest focused functional study places human LRATD2 among cytosolic proteins<br />
+that associate with vesicle membranes in a GTP-dependent manner. Tagged LRATD2 was<br />
+partly cytoplasmic and partly at a juxtanuclear Golgi region [PMID:34433667, "HA-tagged<br />
+FAM84B/LRATD2 (FAM84B-HA) was partially located at the cytoplasm and partially located<br />
+at the juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A)."] In<br />
+cross-linked co-IP it associated with AP1gamma1 and Sec23A/B but not Sar1A<br />
+[PMID:34433667, "FAM84B-HA coimmunoprecipitated with AP1γ1 and Sec23A/B, but not<br />
+Sar1A in the presence of a cross-linker (Fig. 3B)."] These assays used tagged protein<br />
+in HEK293T cells and do not by themselves prove a stable endogenous coat complex.</p>
+<p>Knockdown and rescue provide stronger functional evidence: [PMID:34433667, "Knockdown<br />
+of FAM84B/LRATD2 caused a significant delay of EGFR transport from the ER to the Golgi<br />
+in the RUSH transport system (Fig. 3C and SI Appendix, Fig. S3 A and B). The defects<br />
+were rescued by expressing a siRNA-resistant construct of FAM84B-HA (Fig. 3 D and E)."]<br />
+The lack of defects for ShhN and IGF2 demonstrates cargo selectivity rather than a<br />
+universal secretory-pathway requirement. The initial in vitro vesicle-discovery assay<br />
+used rat liver cytosol with permeabilized human HEK293T donor membranes, whereas the<br />
+cellular knockdown/rescue evidence concerns human LRATD2 in HEK293T cells.</p>
+<h2 id="n-myristoylation-and-lrat-like-domain-boundaries">N-myristoylation and LRAT-like domain boundaries</h2>
+<p>LRATD2 is a substrate of human NMT1/2 in HEK293T chemical-labeling assays. Labeling was<br />
+hydroxylamine-resistant, reduced by NMT inhibition, and abolished by the Gly2-to-Ala<br />
+mutation [PMID:34956690, "However, three proteins LRATD1 (LRAT domain-containing 1,<br />
+also called FAM84A or neurological sensory protein 1 NSE1), LRATD2 (FAM84B/NSE2), and<br />
+ERICH5 (glutamate-rich protein 5) demonstrated clear fluorescence signals in the Alk12<br />
+treated samples compared to the control without Alk12 treatment, and the signals were<br />
+hydroxylamine-resistant, suggesting that they are potentially N-myristoylated."]. This<br />
+is a modification received by LRATD2, not lipid-metabolic catalysis performed by it.<br />
+Endogenous modification occupancy and its effect on membrane recruitment or trafficking<br />
+remain untested.</p>
+<p>LRATD2 contains a sequence-classified LRAT-like domain, but no LRAT/HRASLS catalytic<br />
+reaction has been demonstrated. The prostate-cancer study notes that the catalytic<br />
+cysteine is absent and therefore infers loss of HRASLS phospholipase/O-acyltransferase<br />
+activities [PMID:31205500, "Since the catalytic residue Cys is not conserved (Figure<br />
+2), FAM84B is unlikely to have either enzymatic activities, which implies that FAM84B<br />
+facilitates Ras signaling."]. The final Ras-signaling clause is speculation, not direct<br />
+mechanistic evidence.</p>
+<p>Deleting the LRAT/HRASLS-homologous region abolished overexpression-dependent invasion<br />
+and soft-agar growth in DU145 prostate-cancer cells [PMID:31205500, "FAM84B but not<br />
+FAM84B (ΔHRASLS) increased DU145 cell invasion and growth in soft agar."]. This supports<br />
+a structural requirement in that assay, not catalytic activity. Tagged full-length and<br />
+deletion constructs also co-precipitated, suggesting self-association under<br />
+overexpression conditions; endogenous oligomeric state and stoichiometry remain open.</p>
+<h2 id="cancer-context-partners-and-phenotypes">Cancer-context partners and phenotypes</h2>
+<p>In ESCC models, LRATD2 directly interacted with the NPM1 C terminus and increased<br />
+nuclear NPM1 [PMID:35396552, "A direct interaction between FAM84B and the C-terminal<br />
+(189-294aa) of NPM1 was identified, which increased the NPM1 nuclear expression."].<br />
+This is focused partner evidence, but the amplified/perturbed cancer context prevents<br />
+assuming a universal normal-tissue complex.</p>
+<p>LRATD2 amplification and perturbation repeatedly affect tumor-cell behavior. ESCC<br />
+knockdown reduced growth, migration, and invasion [PMID:26759717, "Knockdown of FAM84B<br />
+in ESCC cell lines significantly reduced in vitro cell growth, migration and invasion."].<br />
+In PDAC, knockdown affected mitochondrial function and glycolysis [PMID:32291380,<br />
+"FAM84B knockdown also suppressed mitochondrial function and glycolysis of PDAC cells."].<br />
+These are downstream, disease-context phenotypes. They do not establish LRATD2 as a<br />
+metabolic enzyme, a direct Wnt/beta-catenin component, or a normal motility factor.</p>
+<p>The seeded interactome sources report AP1M1, CHEK2, DDIT4L, NMT2, RAD51, TAX1BP1, and<br />
+UROD screen contacts. NMT2 is biologically reconciled by the direct substrate study;<br />
+the other high-throughput contacts lack focused endogenous validation. In particular,<br />
+CHEK2/RAD51 screen contacts do not rescue the NSE2/NSMCE2 naming problem or establish<br />
+DNA-repair-complex membership.</p>
+<h2 id="evidence-weighted-conclusion">Evidence-weighted conclusion</h2>
+<p>LRATD2 is best supported as a cytosolic/peripheral, N-myristoylatable protein that<br />
+participates in cargo-selective anterograde trafficking of EGFR in a human-cell assay.<br />
+Its LRAT-like region is required for several cancer-cell phenotypes but has no<br />
+demonstrated catalytic activity. NPM1 binding and diverse tumor phenotypes are useful<br />
+contextual evidence, while normal-tissue physiology, endogenous complex composition,<br />
+isoform diversity, and the functional consequence of myristoylation remain unresolved.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96KN1
+gene_symbol: LRATD2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRATD2 (FAM84B/BCMP101) is a cytoplasmic, peripheral membrane-associated
+  LRAT-like protein implicated in selective secretory cargo transport. Human-cell
+  imaging places LRATD2 in cytoplasmic and juxtanuclear Golgi pools, and LRATD2
+  promotes ER-to-Golgi transport of EGFR without detectably affecting the tested
+  ShhN or IGF2 cargoes. A mixed-species budding assay using human donor membranes
+  and rat liver cytosol recovered LRATD2 in vesicle fractions in a GTP-dependent
+  manner. Cross-link-dependent coimmunoprecipitation with AP1gamma1 and SEC23A/B
+  places LRATD2 near vesicle-coat machinery, although its direct molecular activity
+  and the composition of its endogenous trafficking assemblies remain unresolved.
+  LRATD2 is an NMT1/2 substrate whose Gly2 is
+  required for chemical detection of N-myristoylation. Its LRAT-like region
+  lacks the conserved catalytic cysteine of related phospholipase/acyltransferase
+  enzymes, and no retinoid acyltransferase or phospholipase activity has been
+  demonstrated. Alpha-catenin and NPM1 interactions have been reported in
+  breast- and esophageal-cancer models, respectively, while amplification or
+  perturbation of LRATD2 alters growth, migration, invasion, and signaling in
+  several tumor-cell contexts.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: LRATD2 has a cytoplasmic pool in breast-cancer and epithelial-cell proteomic studies.
+    action: ACCEPT
+    reason: &gt;-
+      The ARBA cytoplasm assignment agrees with two target-specific experimental
+      cytoplasm annotations, including localization work in the E-cadherin
+      interactome study and the earlier breast-cancer membrane-proteomics study.
+      The mapping is conservative and does not imply a soluble-only protein.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: ARBA:ARBA00026971
+        source_status: SUPPORTS_TRANSFER
+        comment: The ARBA source supports the conservative cytoplasmic localization and agrees with direct target evidence.
+  supporting_entities:
+  - ARBA:ARBA00026971
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: A proteome-scale binary-interaction map reported an LRATD2-UROD candidate contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The screen contact is retained as exact participant provenance, but it does
+      not establish an endogenous LRATD2 mechanism or any role in porphyrin
+      metabolism, and generic protein binding is not an informative molecular
+      function.
+  supporting_entities:
+  - UniProtKB:P06132
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25640309
+  qualifier: enables
+  review:
+    summary: A breast-cancer interaction screen reported LRATD2 contacts with CHEK2 and RAD51 in a nuclear assay context.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The two merged screen contacts and their occurs_in nucleus extension are
+      preserved, but the study does not establish an endogenous LRATD2 DNA-damage
+      mechanism, nuclear residence, or a coherent partner-specific molecular
+      function. Generic protein binding is therefore over-annotation.
+  supporting_entities:
+  - UniProtKB:O96017
+  - UniProtKB:Q06609
+  extensions:
+  - predicate: BFO:0000066
+    term:
+      id: GO:0005634
+      label: nucleus
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: An interactome-network study reported an LRATD2-NMT2 candidate interaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The contact is biologically compatible with later evidence that LRATD2 is
+      an NMT1/2 substrate, but a screen IPI does not make LRATD2 an
+      N-myristoyltransferase or establish a stable endogenous complex. The generic
+      binding term is not sufficiently informative.
+  supporting_entities:
+  - UniProtKB:O60551
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: A variant-sensitive interactome screen reported an LRATD2-UROD candidate contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This high-throughput contact is retained as assay provenance but does not
+      establish a functional LRATD2-UROD mechanism; generic protein binding is
+      uninformative and must not be interpreted as metabolic pathway evidence.
+  supporting_entities:
+  - UniProtKB:P06132
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: HuRI screening reported LRATD2 contacts with UROD, TAX1BP1, DDIT4L, and AP1M1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The four partners span unrelated enzymes, signaling proteins, and trafficking
+      machinery, so the merged binary-screen assertions cannot be refined to one
+      coherent molecular activity. They are retained as participant provenance
+      without promoting generic protein binding to core function.
+  supporting_entities:
+  - UniProtKB:P06132
+  - UniProtKB:Q86VP1
+  - UniProtKB:Q96D03
+  - UniProtKB:Q9BXS5
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: A cell-specific interactome map reported an LRATD2-NMT2 candidate contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The contact may reflect LRATD2 recognition as an NMT substrate, but the
+      screen does not establish the molecular consequence or an obligate complex,
+      and generic protein binding is not an informative LRATD2 activity.
+  supporting_entities:
+  - UniProtKB:O60551
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:25468996
+  qualifier: located_in
+  review:
+    summary: GFP-tagged candidate localization in an E-cadherin interactome study supports cytoplasmic LRATD2.
+    action: ACCEPT
+    reason: &gt;-
+      The full study localized a selected panel of putative E-cadherin-proximal
+      proteins and curators assigned LRATD2 to cytoplasm. The paper is accessible,
+      and there is no evidence contradicting this conservative cellular
+      compartment assignment.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12477722
+  qualifier: enables
+  review:
+    summary: The focused breast-cancer membrane-proteomics study identified alpha-catenin as an LRATD2 binding partner.
+    action: MODIFY
+    reason: &gt;-
+      The partner is P35221, alpha-catenin, so GO:0045294 alpha-catenin binding
+      precisely captures the interaction and is more informative than generic
+      protein binding. The annotation does not by itself establish membership in
+      the entire cadherin-catenin complex.
+    proposed_replacement_terms:
+    - id: GO:0045294
+      label: alpha-catenin binding
+  supporting_entities:
+  - UniProtKB:P35221
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:12477722
+  qualifier: located_in
+  review:
+    summary: Breast-cancer-cell membrane proteomics and follow-up characterization support cytoplasmic LRATD2.
+    action: ACCEPT
+    reason: &gt;-
+      PMID:12477722 is abstract-only in the cache, but the study specifically
+      followed previously uncharacterized proteins from a membrane-enriched
+      proteome and the curator had access to the full localization experiments.
+      Cytoplasm is retained with curator deference and is compatible with
+      peripheral membrane recruitment.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:12477722
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Breast-cancer-cell membrane proteomics and follow-up characterization support
+      a contextual plasma-membrane pool of LRATD2.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This localization derives from plasma-membrane-enriched breast-cancer-cell
+      fractions and follow-up characterization in PMID:12477722. The full text is
+      inaccessible locally, so the experimental curator&#39;s assignment is retained,
+      but the contextual plasma-membrane pool is non-core and is not part of the
+      cytoplasm/Golgi/vesicle trafficking core established by PMID:34433667. The
+      annotation does not imply that LRATD2 is an integral membrane protein.
+- term:
+    id: GO:0006888
+    label: endoplasmic reticulum to Golgi vesicle-mediated transport
+  evidence_type: IMP
+  original_reference_id: PMID:34433667
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Human LRATD2 participates in ER-to-Golgi vesicle-mediated transport of EGFR
+      in a cargo-selective trafficking assay.
+    action: NEW
+    reason: &gt;-
+      LRATD2 depletion delayed EGFR transport from the ER to the Golgi, and an
+      siRNA-resistant LRATD2 construct rescued the defect. Together with its
+      GTP-dependent recovery in vesicle fractions and association with coat
+      machinery, this supports physical participation in the transport process
+      without requiring a directional regulatory annotation. Unaffected ShhN and
+      IGF2 transport bounds the annotation to selective cargo handling rather than
+      general secretion.
+    supported_by:
+    - reference_id: PMID:34433667
+      supporting_text: &gt;-
+        Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from
+        the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix,
+        Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant
+        construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of
+        FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of
+        SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IDA
+  original_reference_id: PMID:34433667
+  qualifier: located_in
+  review:
+    summary: Tagged human LRATD2 localizes to a juxtanuclear Golgi pool in HEK293T cells.
+    action: NEW
+    reason: &gt;-
+      Direct imaging places HA-tagged LRATD2 in a juxtanuclear Golgi area marked by
+      TGN46. GO:0005794 is used conservatively because the text describes a Golgi
+      area rather than explicitly assigning LRATD2 to the trans-Golgi network.
+    supported_by:
+    - reference_id: PMID:34433667
+      supporting_text: &gt;-
+        HA-tagged FAM84B/LRATD2 (FAM84B-HA) was partially located at the cytoplasm
+        and partially located at the juxtanuclear Golgi area colocalized with TGN46
+        (SI Appendix, Fig. S1A).
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is method provenance for the electronic cytoplasm annotation, not
+      independent biological evidence about LRATD2. The mapping role agrees with
+      the seeded GOA record.
+- id: PMID:12477722
+  title: Comprehensive proteomic analysis of breast cancer cell membranes reveals
+    unique proteins with potential roles in clinical cancer.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and abstract are verified. This is the curator-cited source for
+      BCMP101/FAM84B plasma-membrane and cytoplasm localization and an alpha-catenin
+      interaction, but the abstract does not name the individual protein and the
+      full text is unavailable locally. Detailed assertions therefore require
+      curator deference rather than reconstruction from the abstract.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. This proteome-scale binary
+      interaction map supplies the LRATD2-UROD screen contact; the paper text does
+      not discuss LRATD2 individually or establish an endogenous mechanism.
+- id: PMID:25468996
+  title: E-cadherin interactome complexity and robustness resolved by quantitative
+    proteomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. This is large-scale
+      E-cadherin-interactome evidence used for a cytoplasm annotation, not focused
+      functional characterization of LRATD2.
+- id: PMID:25640309
+  title: Systematic identification of molecular links between core and candidate genes
+    in breast cancer.
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. The CHEK2 and RAD51 contacts
+      come from a systematic breast-cancer interaction screen and do not establish
+      DNA-repair function or stable-complex membership for LRATD2. Only the abstract
+      is cached and it does not discuss LRATD2 individually.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. The screen reports NMT2 as an
+      LRATD2 partner; later direct chemical-proteomic evidence in PMID:34956690
+      establishes the biologically coherent interpretation that LRATD2 is an NMT
+      substrate, not that this screen alone defines its function.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. This variant-aware interaction
+      screen includes LRATD2-UROD but offers no focused endogenous or functional
+      validation of the contact.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. HuRI supplies candidate contacts
+      with UROD, TAX1BP1, DDIT4L, and AP1M1; these unrelated screen hits are partner
+      provenance, not evidence for a single endogenous LRATD2 mechanism.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The PMID/title and GOA provenance are verified. The cell-specific interaction
+      screen corroborates an LRATD2-NMT2 contact, whose substrate interpretation is
+      independently tested in PMID:34956690; the screen itself does not establish
+      modification occupancy or consequences.
+- id: PMID:34433667
+  title: An in vitro vesicle formation assay reveals cargo clients and factors that
+    mediate vesicular trafficking.
+  findings:
+  - statement: &gt;-
+      Human LRATD2 associates with vesicle membranes in a GTP-dependent manner and
+      occupies cytoplasmic, juxtanuclear Golgi, and peripheral membrane-associated
+      pools in HEK293T assays.
+    supporting_text: &gt;-
+      Western blot analysis confirmed that FAM84B/LRATD2 was significantly enhanced
+      in the vesicle fraction when the incubation was conducted in the presence of
+      GMPPNP (Fig. 3A, compare lanes 2 and 3). HA-tagged FAM84B/LRATD2 (FAM84B-HA)
+      was partially located at the cytoplasm and partially located at the
+      juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Cross-linked coimmunoprecipitation detected LRATD2 with AP1gamma1 and
+      Sec23A/B, but not Sar1A.
+    supporting_text: &gt;-
+      FAM84B-HA coimmunoprecipitated with AP1γ1 and Sec23A/B, but not Sar1A in
+      the presence of a cross-linker (Fig. 3B).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      LRATD2 knockdown selectively delayed ER-to-Golgi transport of EGFR and was
+      rescued by siRNA-resistant LRATD2, while ShhN and IGF2 transport was unaffected.
+    supporting_text: &gt;-
+      Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from
+      the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix,
+      Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant
+      construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of
+      FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of
+      SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. This is the strongest focused
+      evidence for a direct cellular role of human LRATD2. The knockdown/rescue and
+      cargo selectivity support anterograde EGFR trafficking, while localization and
+      co-IP used tagged protein in HEK293T cells and the discovery assay included rat
+      liver cytosol, which limits claims about a native stable coat complex.
+- id: PMID:34956690
+  title: Binding Affinity Determines Substrate Specificity and Enables Discovery of
+    Substrates for N-Myristoyltransferases.
+  findings:
+  - statement: &gt;-
+      Chemical-proteomic labeling identified LRATD2, LRATD1, and ERICH5 as candidate
+      substrates of human NMT1/2.
+    supporting_text: &gt;-
+      However, three proteins LRATD1 (LRAT domain-containing 1, also called FAM84A or
+      neurological sensory protein 1 NSE1), LRATD2 (FAM84B/NSE2), and ERICH5
+      (glutamate-rich protein 5) demonstrated clear fluorescence signals in the Alk12
+      treated samples compared to the control without Alk12 treatment, and the signals
+      were hydroxylamine-resistant, suggesting that they are potentially N-myristoylated.
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      NMT inhibition and loss of labeling in Gly2-to-Ala mutants confirmed LRATD2
+      and LRATD1 separately as NMT1/2 substrates.
+    supporting_text: &gt;-
+      Alk12 labeling signals decreased with the treatment of NMT inhibitor in LRATD1,
+      LRATD2, and ERICH5 and were completely removed in G2A mutants, confirming
+      LRATD1, LRATD2, and ERICH5 as substrates of NMT1/2 (Figure 4C).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. This directly establishes
+      overexpressed human LRATD2 as an NMT substrate in HEK293T cells, not as a lipid-
+      metabolic enzyme. LRATD1 was tested separately, so its phenotypes cannot be
+      transferred to LRATD2.
+- id: PMID:31205500
+  title: FAM84B promotes prostate tumorigenesis through a network alteration.
+  findings:
+  - statement: &gt;-
+      Full-length LRATD2, but not a construct deleting the LRAT/HRASLS-homologous
+      region, increased DU145 invasion and anchorage-independent growth.
+    supporting_text: &gt;-
+      FAM84B but not FAM84B (ΔHRASLS) increased DU145 cell invasion and growth in
+      soft agar.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Tagged full-length and deletion constructs co-precipitated and colocalized,
+      suggesting self-association under overexpression conditions.
+    supporting_text: &gt;-
+      Co-immunoprecipitation and co-localization analyses revealed an interaction
+      between FAM84B and FAM84B (ΔHRASLS), suggesting an intramolecular association
+      among FAM84B molecules.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The authors inferred from loss of the catalytic cysteine that LRATD2 is
+      unlikely to retain HRASLS phospholipase or O-acyltransferase activity.
+    supporting_text: &gt;-
+      Since the catalytic residue Cys is not conserved (Figure 2), FAM84B is unlikely
+      to have either enzymatic activities, which implies that FAM84B facilitates Ras
+      signaling.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. This links the LRAT-like region
+      to prostate-cancer cell phenotypes and suggests self-association, but does not
+      demonstrate a normal physiological role or catalytic activity. The no-catalysis
+      conclusion is sequence-based and the self-association assays used tagged
+      overexpressed constructs.
+- id: PMID:35396552
+  title: Elevated FAM84B promotes cell proliferation via interacting with NPM1 in esophageal
+    squamous cell carcinoma.
+  findings:
+  - statement: &gt;-
+      LRATD2 perturbation altered proliferation and cell-cycle status in ESCC cells,
+      with NPM1 implicated as the mediator.
+    supporting_text: &gt;-
+      Furthermore, we found that the forced expression change of FAM84B can influence
+      ESCC cell proliferation and cell-cycle status, which is probably mediated by
+      NPM1.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LRATD2 directly interacted with the NPM1 C terminus and increased nuclear NPM1
+      in the ESCC model.
+    supporting_text: &gt;-
+      A direct interaction between FAM84B and the C-terminal (189-294aa) of NPM1 was
+      identified, which increased the NPM1 nuclear expression.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. This is focused partner-level
+      evidence with functional consequences, but it is bounded to amplified/perturbed
+      ESCC models and does not establish NPM1 binding as a universal normal-tissue role.
+- id: PMID:32291380
+  title: FAM84B, amplified in pancreatic ductal adenocarcinoma, promotes tumorigenesis
+    through the Wnt/β-catenin pathway.
+  findings:
+  - statement: &gt;-
+      LRATD2 knockdown suppressed proliferation, mitochondrial function, and
+      glycolysis in PDAC cell lines, whereas overexpression produced opposite effects.
+    supporting_text: &gt;-
+      FAM84B knockdown also suppressed mitochondrial function and glycolysis of PDAC
+      cells.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LRATD2 perturbation altered nuclear beta-catenin and downstream readouts, and a
+      Wnt/beta-catenin inhibitor blocked the overexpression phenotypes.
+    supporting_text: &gt;-
+      On the contrary, FAM84B overexpression displayed reversed effects in cell
+      proliferation, apoptosis, mitochondrial function, and glycolysis, which was
+      blocked by the Wnt/β-catenin pathway inhibitor (XAV939).
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. The work supports cancer-
+      context metabolic and signaling consequences of LRATD2 perturbation, but does
+      not show that LRATD2 is itself a glycolytic enzyme, Wnt component, or direct
+      beta-catenin partner.
+- id: PMID:26759717
+  title: Genomic analyses reveal FAM84B and the NOTCH pathway are associated with the
+    progression of esophageal squamous cell carcinoma.
+  findings:
+  - statement: &gt;-
+      LRATD2 was recurrently amplified and overexpressed in ESCC and preclinical
+      lesions.
+    supporting_text: &gt;-
+      In particular, the FAM84B gene was amplified and overexpressed in preclinical
+      and ESCC tumors.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LRATD2 knockdown reduced growth, migration, and invasion in ESCC cell lines.
+    supporting_text: &gt;-
+      Knockdown of FAM84B in ESCC cell lines significantly reduced in vitro cell
+      growth, migration and invasion.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text, title, and exact quotes are verified. The knockdown result supports
+      tumor-cell phenotypes, but the genomic association is disease-context evidence.
+      The paper&#39;s statement that FAM84B forms DNA-repair complexes appears to inherit
+      the NSE2 naming collision with NSMCE2 and is not accepted as LRATD2 function.
+core_functions:
+- description: &gt;-
+    Cargo-selective participant in ER-to-Golgi vesicle-mediated transport.
+    Golgi localization, cross-link-dependent association with AP1gamma1 and SEC23A/B,
+    and LRATD2 loss-and-rescue experiments support a role in EGFR transport in human
+    HEK293T cells. Recovery in vesicle fractions in a mixed human-donor-membrane and
+    rat-cytosol budding assay is corroborative but is not treated as direct human
+    vesicle-localization evidence. The data do not yet establish a direct
+    cargo-adaptor molecular activity or stable coat-complex membership.
+  directly_involved_in:
+  - id: GO:0006888
+    label: endoplasmic reticulum to Golgi vesicle-mediated transport
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005794
+    label: Golgi apparatus
+  supported_by:
+  - reference_id: PMID:34433667
+    supporting_text: &gt;-
+      Western blot analysis confirmed that FAM84B/LRATD2 was significantly enhanced
+      in the vesicle fraction when the incubation was conducted in the presence of
+      GMPPNP (Fig. 3A, compare lanes 2 and 3). HA-tagged FAM84B/LRATD2 (FAM84B-HA)
+      was partially located at the cytoplasm and partially located at the
+      juxtanuclear Golgi area colocalized with TGN46 (SI Appendix, Fig. S1A).
+  - reference_id: PMID:34433667
+    supporting_text: &gt;-
+      Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from
+      the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix,
+      Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant
+      construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of
+      FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of
+      SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular activity by which LRATD2 selects or advances EGFR cargo is
+    unknown, including whether it binds EGFR, a cargo receptor, a coat component,
+    or a regulatory GTPase directly.
+  boundary: &gt;-
+    LRATD2 depletion selectively delays EGFR ER-to-Golgi transport and rescue restores
+    it, while ShhN and IGF2 transport are unaffected in the same human-cell system.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving the direct activity is necessary to distinguish a cargo adaptor from a
+    coat regulator or another class of trafficking factor.
+  resolution: &gt;-
+    Purified-component binding and reconstitution assays with LRATD2, EGFR cytosolic
+    regions, cargo receptors, AP-1, COPII components, and candidate small GTPases.
+  provenance:
+  - reference_id: PMID:34433667
+    supporting_text: &gt;-
+      Knockdown of FAM84B/LRATD2 caused a significant delay of EGFR transport from
+      the ER to the Golgi in the RUSH transport system (Fig. 3C and SI Appendix,
+      Fig. S3 A and B). The defects were rescued by expressing a siRNA-resistant
+      construct of FAM84B-HA (Fig. 3 D and E). In contrast, knockdown of
+      FAM84B/LRATD2 did not cause defects in the ER-to-Golgi transport of
+      SBP-EGFP-ShhN and SBP-EGFP-IGF2-HA (Fig. 3 F–I).
+- gap_statement: &gt;-
+    The endogenous composition, stoichiometry, and lifetime of LRATD2-containing
+    trafficking assemblies are unknown.
+  boundary: &gt;-
+    Tagged LRATD2 coimmunoprecipitates with AP1gamma1 and SEC23A/B only under the
+    reported cross-linking conditions; this supports proximity but not a stable,
+    stoichiometric complex.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Endogenous interaction architecture would locate LRATD2 within AP-1-, COPII-, or
+    other transport machinery without overinterpreting tagged cross-linking assays.
+  resolution: &gt;-
+    Endogenous tagging followed by quantitative affinity purification, proximity
+    labeling, cross-linking mass spectrometry, and perturbation of individual partners.
+  provenance:
+  - reference_id: PMID:34433667
+    supporting_text: &gt;-
+      FAM84B-HA coimmunoprecipitated with AP1γ1 and Sec23A/B, but not Sar1A in
+      the presence of a cross-linker (Fig. 3B).
+- gap_statement: &gt;-
+    The endogenous occupancy and trafficking consequence of LRATD2 N-myristoylation
+    are unknown.
+  boundary: &gt;-
+    Chemical labeling, NMT inhibition, and Gly2 mutation establish overexpressed
+    LRATD2 as an NMT1/2 substrate in human cells, but do not define how the
+    modification affects membrane recruitment or EGFR transport.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    N-myristoylation could provide the missing physical basis for regulated vesicle
+    association.
+  resolution: &gt;-
+    Quantify endogenous LRATD2 myristoylation and compare wild-type and Gly2-mutant
+    proteins for membrane partitioning, coat proximity, and EGFR transport rescue.
+  provenance:
+  - reference_id: PMID:34956690
+    supporting_text: &gt;-
+      Alk12 labeling signals decreased with the treatment of NMT inhibitor in LRATD1,
+      LRATD2, and ERICH5 and were completely removed in G2A mutants, confirming
+      LRATD1, LRATD2, and ERICH5 as substrates of NMT1/2 (Figure 4C).
+- gap_statement: &gt;-
+    The normal tissue-level physiological role of LRATD2 and the relationship between
+    its trafficking function and tumor-associated phenotypes remain unresolved.
+  boundary: &gt;-
+    LRATD2 amplification or perturbation changes proliferation, migration, invasion,
+    and signaling in several human cancer-cell models, whereas direct trafficking
+    evidence is currently centered on a reconstituted HEK293T cargo assay.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    This distinction is needed to separate an endogenous trafficking function from
+    context-dependent consequences of cancer amplification and overexpression.
+  resolution: &gt;-
+    Analyze endogenous LRATD2 loss in nontransformed, tissue-relevant human models and
+    connect cargo-trafficking defects to cellular and organismal phenotypes.
+  provenance:
+  - reference_id: PMID:26759717
+    supporting_text: &gt;-
+      Knockdown of FAM84B in ESCC cell lines significantly reduced in vitro cell
+      growth, migration and invasion.
+- gap_statement: &gt;-
+    The structural function of the catalytically divergent LRAT-like region is unknown.
+  boundary: &gt;-
+    The region is required for LRATD2-driven invasion and anchorage-independent growth
+    in DU145 cells, but its conserved catalytic cysteine is absent and enzymatic
+    activity has not been demonstrated.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    A structural explanation could reveal whether the domain mediates membrane,
+    cargo, or protein contacts rather than catalysis.
+  resolution: &gt;-
+    Determine the LRATD2 structure and map separation-of-function mutations across
+    the LRAT-like region in trafficking and partner-binding assays.
+  provenance:
+  - reference_id: PMID:31205500
+    supporting_text: &gt;-
+      Since the catalytic residue Cys is not conserved (Figure 2), FAM84B is unlikely
+      to have either enzymatic activities, which implies that FAM84B facilitates Ras
+      signaling.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does LRATD2 directly recognize EGFR or a cargo receptor, and what feature explains
+    its selectivity over the tested ShhN and IGF2 cargoes?
+- question: &gt;-
+    Which coat machinery and small GTPase recruit LRATD2 to vesicles, and are the
+    AP1gamma1 and SEC23A/B contacts direct and endogenous?
+- question: &gt;-
+    Is endogenous LRATD2 constitutively N-myristoylated, and is this modification
+    required for Golgi/vesicle association and EGFR transport?
+- question: &gt;-
+    Do alpha-catenin and NPM1 represent tissue-specific LRATD2 mechanisms, or
+    cancer-state interactions secondary to amplification or overexpression?
+suggested_experiments:
+- hypothesis: &gt;-
+    LRATD2 directly couples EGFR-containing carriers to a defined coat component.
+  description: &gt;-
+    Reconstitute binding and vesicle recruitment with purified LRATD2, EGFR cargo
+    regions or candidate cargo receptors, AP-1, SEC23/24, and candidate small GTPases;
+    quantify nucleotide dependence and direct stoichiometry.
+  experiment_type: Biochemical reconstitution and quantitative binding
+- hypothesis: &gt;-
+    Gly2 N-myristoylation is required for LRATD2 membrane recruitment and selective
+    EGFR ER-to-Golgi transport.
+  description: &gt;-
+    Create an endogenous LRATD2 knockout or degron line and compare rescue by
+    expression-matched wild-type and G2A LRATD2 using RUSH cargo kinetics,
+    membrane/cytosol fractionation, and live-cell Golgi localization.
+  experiment_type: Genetic rescue and live-cell trafficking
+- hypothesis: &gt;-
+    LRATD2 forms transient, cargo-dependent contacts with coat machinery rather than
+    a constitutive stable complex.
+  description: &gt;-
+    Endogenously tag LRATD2 and perform time-resolved proximity labeling and
+    cross-linking mass spectrometry during synchronized EGFR export, with ShhN and
+    IGF2 as cargo controls and partner knockdowns to test causality.
+  experiment_type: Endogenous interactomics
+- hypothesis: &gt;-
+    LRATD2 has a conserved physiological trafficking role outside amplified cancer
+    cells.
+  description: &gt;-
+    Perturb LRATD2 in nontransformed human epithelial organoids from tissues with
+    endogenous expression, profile secretory cargo flux, and test whether any
+    trafficking defect precedes changes in proliferation, migration, or signaling.
+  experiment_type: Human organoid functional genomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

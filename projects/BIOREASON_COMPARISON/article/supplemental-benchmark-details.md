@@ -119,12 +119,12 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,960 | 1,040 | 11.7 |
-| Retained/replacement AIGR annotations | 2,710 | 848 | 9.6 |
+| Retained/replacement/proposed-new AIGR annotations | 2,767 | 859 | 9.7 |
 | All GO-valued AIGR core-function slots | 1,224 | 349 | 3.9 |
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Five of the 11 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005737`, `GO:0005829`, and `GO:0005576`), so the 9.7% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
@@ -140,6 +140,6 @@ GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene)
 - `../cafa-style/argo139_cafa_style_summary.csv`: propagated and exact precision/recall/F1 summary.
 - `../cafa-style/argo139_cafa_style_per_gene_aspect.csv`: per-gene/per-aspect score components.
 - `../cafa-style/argo139_prediction_goa_overlap.csv`: per-prediction exact and propagated GOA-overlap diagnostics.
-- `../../../scripts/gogpt_compare_levels.py`: deterministic canonical-gene GO-GPT overlap scorer across raw GOA, retained/replacement annotations, and all GO-valued AIGR core-function slots.
+- `../../../scripts/gogpt_compare_levels.py`: deterministic canonical-gene GO-GPT overlap scorer across raw GOA, retained/replacement/proposed-new annotations, and all GO-valued AIGR core-function slots.
 - `../../../reports/gogpt-comparison-levels.json`: per-gene output and aggregates from the canonicalized GO-GPT overlap scorer.
 - `../notebooks/02_prediction_assessments.ipynb`: executable SFT term-assessment notebook.

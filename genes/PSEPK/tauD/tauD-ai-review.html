@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tauD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tauD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RA3" target="_blank" class="term-link">
+                        Q88RA3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tauD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RA3" data-a="DESCRIPTION: TauD is an Fe(II)- and 2-oxoglutarate-dependent ta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TauD is an Fe(II)- and 2-oxoglutarate-dependent taurine dioxygenase. It oxidatively cleaves taurine to aminoacetaldehyde and sulfite while converting 2-oxoglutarate and oxygen to succinate and carbon dioxide; the KT2440 enzyme forms a homotetramer.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                                    GO:0000908
+                                </a>
+                            </span>
+                            <span class="term-label">taurine dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0000908" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct substrate-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biochemical and kinetic characterization of the exact KT2440 protein establishes taurine hydroxylation with sulfite and aminoacetaldehyde release.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                                        PMID:22221834
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct expected location for the soluble bacterial enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TauD is a soluble 2-oxoglutarate-dependent dioxygenase without membrane or export features.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006790" target="_blank" class="term-link">
+                                    GO:0006790
+                                </a>
+                            </span>
+                            <span class="term-label">sulfur compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0006790" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broader than the experimentally supported taurine catabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace the broad sulfur-metabolism term with the substrate-specific catabolic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019529" target="_blank" class="term-link">
+                                    taurine catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformative oxidoreductase parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact taurine dioxygenase activity is available.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                                    taurine dioxygenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016706" target="_blank" class="term-link">
+                                    GO:0016706
+                                </a>
+                            </span>
+                            <span class="term-label">2-oxoglutarate-dependent dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0016706" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mechanistically correct but less informative than the substrate-specific activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0000908 identifies the physiological sulfonate substrate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                                    taurine dioxygenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22221834
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0042802" data-r="PMID:22221834" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tetramerization is directly established but is not the enzyme&#39;s core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the experimentally demonstrated self-association as non-core alongside the catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                                        PMID:22221834
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">show that both TauD(Pp) and TauD(Ec) are tetramers in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000907" target="_blank" class="term-link">
+                                    GO:0000907
+                                </a>
+                            </span>
+                            <span class="term-label">sulfonate dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22221834
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0000907" data-r="PMID:22221834" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct sulfonate-dioxygenase parent but redundant with the exact substrate term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The same experiment directly supports taurine dioxygenase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                                    taurine dioxygenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                                    GO:0000908
+                                </a>
+                            </span>
+                            <span class="term-label">taurine dioxygenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22221834
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0000908" data-r="PMID:22221834" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct substrate-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biochemical and kinetic characterization of the exact KT2440 protein establishes taurine hydroxylation with sulfite and aminoacetaldehyde release.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                                        PMID:22221834
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22221834
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0005506" data-r="PMID:22221834" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct catalytic cofactor-binding property.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact record and structural study establish one Fe(II) ion per subunit, but cofactor binding is not the core reaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tauD/tauD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Fe(2+) ion per subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044273" target="_blank" class="term-link">
+                                    GO:0044273
+                                </a>
+                            </span>
+                            <span class="term-label">sulfur compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22221834
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RA3" data-a="GO:0044273" data-r="PMID:22221834" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct catabolic context but broader than the available taurine-specific process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact experiment supports taurine catabolism, so use GO:0019529 instead of the broad sulfur-compound parent.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019529" target="_blank" class="term-link">
+                                    taurine catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                                        PMID:22221834
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Oxidatively cleaves taurine to aminoacetaldehyde and sulfite using 2-oxoglutarate, oxygen, and Fe(II).</h3>
+                <span class="vote-buttons" data-g="Q88RA3" data-a="FUNCTION: Oxidatively cleaves taurine to aminoacetaldehyde a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000908" target="_blank" class="term-link">
+                            taurine dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019529" target="_blank" class="term-link">
+                                taurine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                                PMID:22221834
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tauD/tauD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=taurine + 2-oxoglutarate + O2 = aminoacetaldehyde + sulfite +</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22221834" target="_blank" class="term-link">
+                            PMID:22221834
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenases from Pseudomonas putida and Escherichia coli are tetramers.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TauD catalyzes taurine hydroxylation with sulfite and aminoacetaldehyde production.</div>
+
+                        <div class="finding-text">"catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The P. putida and E. coli TauD enzymes are tetramers.</div>
+
+                        <div class="finding-text">"show that both TauD(Pp) and TauD(Ec) are tetramers in"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tauD/tauD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RA3 for Pseudomonas putida KT2440 tauD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record identifies the exact KT2440 taurine dioxygenase.</div>
+
+                        <div class="finding-text">"RecName: Full=Alpha-ketoglutarate-dependent taurine dioxygenase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The assigned reaction releases aminoacetaldehyde and sulfite.</div>
+
+                        <div class="finding-text">"Reaction=taurine + 2-oxoglutarate + O2 = aminoacetaldehyde + sulfite +"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The enzyme is a homotetramer.</div>
+
+                        <div class="finding-text">"SUBUNIT: Homotetramer; dimer of dimers."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which other aliphatic sulfonates, if any, are physiologically relevant substrates of KT2440 TauD?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RA3" data-a="Q: Which other aliphatic sulfonates, if any, are phys..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified TauD kinetics across taurine and alternative sulfonates, then quantify sulfur-source growth and sulfite release in a tauD deletion.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RA3" data-a="EXPERIMENT: Compare purified TauD kinetics across taurine and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tauD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RA3" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *tauD* (Q88RA3) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T17:04:27.601219</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tauD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tauD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-taud-q88ra3-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>tauD</em> (Q88RA3) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>tauD</em> (synonym <em>atsK</em>; ordered locus PP_0230)<br />
+<strong>Protein:</strong> Alpha-ketoglutarate-dependent taurine dioxygenase (TauD)<br />
+<strong>UniProt:</strong> Q88RA3 · <strong>EC:</strong> 1.14.11.17 · <strong>Length:</strong> 277 aa · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><em>tauD</em> encodes a soluble, cytoplasmic <strong>Fe(II)/α-ketoglutarate (2-oxoglutarate)-dependent taurine dioxygenase</strong> (EC 1.14.11.17). Its primary function is to catalyze the O₂- and α-ketoglutarate-dependent <strong>hydroxylation of taurine (2-aminoethanesulfonate)</strong> at its C1 carbon; the resulting unstable 1-hydroxy intermediate spontaneously decomposes to release <strong>inorganic sulfite</strong> plus aminoacetaldehyde, while the co-substrate α-ketoglutarate is oxidatively decarboxylated to succinate and CO₂. The enzyme's biological role is <strong>organosulfonate → sulfur assimilation</strong>: it liberates sulfite for cysteine biosynthesis when preferred sulfur sources (sulfate, cysteine) are scarce. This exact protein (TauD_Pp, PP_0230) has been directly characterized biochemically, kinetically, and crystallographically (Knauer et al., 2012, PMID 22221834).</p>
+<hr />
+<h2 id="2-identity-verification-critical-check">2. Identity Verification (Critical Check)</h2>
+<p>The target was cross-checked against UniProt Q88RA3 and the primary literature:</p>
+<ul>
+<li><strong>Gene symbol match:</strong> UniProt lists <code>Name=tauD</code>, <code>Synonyms=atsK</code>, <code>OrderedLocusNames=PP_0230</code>. The recommended protein name is "Alpha-ketoglutarate-dependent taurine dioxygenase," consistent with the target description.</li>
+<li><strong>Organism match:</strong> <em>Pseudomonas putida</em> KT2440 confirmed.</li>
+<li><strong>Family/domain match:</strong> Belongs to the <strong>TfdA/TauD dioxygenase family</strong> (Pfam PF02668 "TauD"; InterPro IPR003819 TauD/TfdA-like, IPR042098 TauD-like superfamily). This matches the enzymology in the literature.</li>
+<li><strong>Direct experimental confirmation:</strong> Knauer et al. (2012) explicitly purified, kinetically characterized, and solved three apo crystal structures of the taurine dioxygenase <strong>from <em>P. putida</em> KT2440 (TauD_Pp)</strong> — i.e., this exact protein — and showed it closely mirrors <em>E. coli</em> TauD in spectra, structure, and kinetics (PMID 22221834).</li>
+</ul>
+<p><strong>Note on the <em>atsK</em> synonym (potential source of confusion):</strong> The genome-annotation synonym <em>atsK</em> refers to a paralogous 2-oxoglutarate-dependent <strong>alkylsulfatase</strong> biochemically characterized in a <em>different</em> strain, <em>P. putida</em> <strong>S-313</strong> (Kahnert &amp; Kertesz, 2000, PMID 10913158; Müller et al., 2004/2005, PMID 15023059/15542595). AtsK cleaves alkyl <strong>sulfate esters</strong> (C4–C12), whereas the KT2440 PP_0230 product was directly shown to be a bona fide <strong>taurine sulfonate</strong> dioxygenase. The two are homologous members of the same superfamily (~38% identity between AtsK and <em>E. coli</em> TauD) with the same fold and chemistry, but distinct substrate specificity. The AtsK work is therefore used here for <strong>mechanistic/structural inference</strong>, while function of Q88RA3 itself rests on the KT2440-specific study.</p>
+<hr />
+<h2 id="3-primary-function-reaction-and-substrate-specificity">3. Primary Function: Reaction and Substrate Specificity</h2>
+<h3 id="reaction-catalyzed-ec-1141117">Reaction catalyzed (EC 1.14.11.17)</h3>
+<blockquote>
+<p><strong>taurine + 2-oxoglutarate + O₂ → aminoacetaldehyde + sulfite + succinate + CO₂ + H⁺</strong></p>
+</blockquote>
+<p>TauD is a <strong>dioxygenase</strong> that splits molecular O₂: one oxygen atom is incorporated into succinate (via oxidative decarboxylation of α-ketoglutarate) and the other is used to hydroxylate the substrate. Hydroxylation occurs at <strong>C1 of taurine</strong>, producing an unstable 1-hydroxy-2-aminoethanesulfonate that decomposes non-enzymatically to <strong>sulfite + aminoacetaldehyde</strong> (UniProt FUNCTION, ECO:0000269 PMID 22221834; Knauer et al. 2012).</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<ul>
+<li><strong>Primary substrate:</strong> taurine (2-aminoethanesulfonate), a naturally abundant aminosulfonate. TauD "preferentially liberates sulfite from taurine" (van der Ploeg et al., 2001, PMID 11479697).</li>
+<li><strong>Co-substrate:</strong> α-ketoglutarate (2-oxoglutarate), consumed stoichiometrically and converted to succinate + CO₂.</li>
+<li><strong>Cofactor:</strong> one catalytic <strong>Fe(II)</strong> ion per subunit (UniProt COFACTOR, PMID 22221834); activity requires O₂ and is stimulated by ascorbate (a common feature of this family that re-reduces adventitiously oxidized iron).</li>
+<li>The homologous alkylsulfatase AtsK, by contrast, accepts <strong>alkyl sulfate esters</strong> and even a range of α-keto-acid co-substrates, illustrating how small active-site differences retune substrate scope within this superfamily (Kahnert &amp; Kertesz, 2000, PMID 10913158).</li>
+</ul>
+<hr />
+<h2 id="4-catalytic-mechanism-structural-spectroscopic-evidence">4. Catalytic Mechanism (Structural &amp; Spectroscopic Evidence)</h2>
+<p>TauD is the <strong>paradigm system</strong> for the Fe(II)/αKG dioxygenase superfamily:</p>
+<ul>
+<li><strong>Active-site iron</strong> is held by the canonical <strong>2-His-1-carboxylate "facial triad"</strong> (Nam et al., 2014, PMID 24524675). Residue-level mapping of Q88RA3 (from its crystal structures, UniProt feature table) assigns this triad to <strong>His97, Asp99 and His253</strong> (the diagnostic HXD…H motif). The co-substrate 2-oxoglutarate is coordinated by <strong>Thr124, His253 (bidentate to Fe), Arg264 and Arg268</strong>, and the <strong>taurine/sulfonate pocket</strong> is formed by <strong>His68, Tyr71, Asn93, Val100 and Arg268</strong> — providing a structural basis for taurine substrate specificity. Three apo crystal structures of this exact protein are deposited: <strong>PDB 3PVJ, 3V15, 3V17</strong> (Knauer et al., 2012, PMID 22221834).</li>
+<li><strong>Catalytic cycle:</strong> Fe(II) binds α-ketoglutarate and then O₂; oxidative decarboxylation of α-ketoglutarate produces CO₂, succinate, and a highly reactive <strong>high-valent Fe(IV)=O (ferryl) intermediate</strong>. TauD was the <strong>first enzyme in which a mononuclear nonheme iron(IV)-oxo intermediate was spectroscopically characterized (2003)</strong> (Nam et al., 2014, PMID 24524675). The ferryl species abstracts a hydrogen atom from taurine C1, and oxygen rebound yields the hydroxylated product.</li>
+<li><strong>Self-inactivation control:</strong> In the closely related AtsK, non-productive O₂ activation is quenched by <strong>self-hydroxylation of an active-site tyrosine (Tyr168)</strong> that coordinates iron — a built-in protective mechanism against harmful side reactions (Müller et al., 2005, PMID 15542595). This structural insight extends to TauD-family enzymes generally.</li>
+<li><strong>Fold:</strong> The AtsK/TauD fold is a double-stranded β-helix (cupin/jelly-roll) "distorted barrel" typical of the superfamily; the AtsK structure is "closely related to that of the taurine/α-ketoglutarate dioxygenase TauD" (Müller et al., 2004, PMID 15023059).</li>
+</ul>
+<hr />
+<h2 id="5-quaternary-structure">5. Quaternary Structure</h2>
+<p>The <em>P. putida</em> KT2440 TauD is a <strong>homotetramer (dimer of dimers)</strong>, binding one Fe(II) per subunit (UniProt SUBUNIT/COFACTOR, PMID 22221834; Knauer et al. 2012 title: the taurine dioxygenases from <em>P. putida</em> and <em>E. coli</em> "are tetramers"). This oligomeric state — shared with the homotetrameric AtsK (Kahnert &amp; Kertesz, 2000, PMID 10913158) — is unusual for the superfamily, whose members are more often monomeric or dimeric.</p>
+<hr />
+<h2 id="6-subcellular-localization">6. Subcellular Localization</h2>
+<p>TauD is a <strong>cytoplasmic, soluble enzyme</strong>. Evidence/inference:<br />
+- <strong>Bioinformatic check (this work):</strong> the Q88RA3 sequence carries <strong>no signal peptide and no transmembrane segment</strong> (no Sec/Tat export or membrane-anchoring features), and the N-terminus (MSLTITPLSPALGA…) is not a cleavable signal — consistent with a soluble cytoplasmic protein.<br />
+- The protein was purified as a soluble crystallizable tetramer (PMID 22221834), consistent with cytoplasmic residence.<br />
+- <strong>Pathway logic:</strong> Taurine is first imported across the inner membrane by the <strong>TauABC ABC transporter</strong>, after which the intracellular TauD desulfonates it (van der Ploeg et al., 2001, PMID 11479697). Desulfonation therefore occurs <strong>inside the cell, in the cytoplasm</strong>, where the liberated sulfite feeds the cysteine-biosynthetic (sulfate assimilation) branch.</p>
+<hr />
+<h2 id="7-pathway-and-physiological-context">7. Pathway and Physiological Context</h2>
+<ul>
+<li><strong>Pathway:</strong> Aerobic <strong>organosulfonate (taurine) catabolism for sulfur assimilation</strong>. TauD provides the desulfonation step that converts an organic sulfonate into inorganic <strong>sulfite (SO₃²⁻)</strong>, which is reduced to sulfide and incorporated into cysteine.</li>
+<li><strong>Genetic organization / regulation:</strong> In the model <em>E. coli</em> system, <em>tauD</em> is the fourth gene of the <strong>tauABCD operon</strong> (TauABC = ABC importer; TauD = desulfonase). Expression is induced under <strong>sulfate/cysteine starvation</strong> and requires the <strong>LysR-type regulators CysB (master sulfur regulator) and Cbl</strong> (van der Ploeg et al., 2001, PMID 11479697). The homologous <em>P. putida</em> αKG-dependent sulfonatase system (AtsK) is likewise "only expressed under sulfur starvation conditions, providing a selective advantage for bacterial growth in soils and rhizosphere" (Müller et al., 2004, PMID 15023059).</li>
+<li><strong>Strain-specific genomic evidence (this work):</strong> In the <em>P. putida</em> KT2440 genome, <em>tauD</em> (PP_0230) is directly clustered with a complete taurine ABC-transporter operon — <strong>PP_0231 <em>tauC</em></strong> (permease), <strong>PP_0232 <em>tauB</em></strong> (ATP-binding), <strong>PP_0233 <em>tauA</em></strong> (periplasmic taurine-binding protein) — i.e. the PP_0230–PP_0233 module recapitulates the <em>E. coli</em> <em>tauABCD</em> architecture. Immediately adjacent lies the parallel <strong>ssuEADCB</strong> cluster (PP_0236–PP_0240: SsuE FMN reductase, SsuA binding protein, SsuD alkanesulfonate monooxygenase, SsuC permease, SsuB ATPase) for FMNH₂-dependent desulfonation of other aliphatic sulfonates, and the master regulator <strong>CysB</strong> is encoded elsewhere (PP_2327). This confirms — <em>in the actual target organism</em> — that TauD works within an intact import-and-desulfonation module rather than by inference from <em>E. coli</em> alone: periplasmic <strong>TauA</strong> captures taurine, <strong>TauBC</strong> import it across the inner membrane, and cytoplasmic <strong>TauD</strong> liberates sulfite.</li>
+<li><strong>Ecological role:</strong> For a soil/rhizosphere organism like <em>P. putida</em> KT2440, the ability to mine sulfur from abundant environmental sulfonates (taurine and related compounds) when inorganic sulfate is limiting is a competitive advantage.</li>
+</ul>
+<hr />
+<h2 id="8-supported-and-refuted-hypotheses">8. Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Verdict</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q88RA3 is a taurine/αKG dioxygenase (EC 1.14.11.17)</td>
+<td><strong>Supported</strong></td>
+<td>UniProt + direct characterization of KT2440 TauD (PMID 22221834)</td>
+</tr>
+<tr>
+<td>Reaction yields sulfite + aminoacetaldehyde (+ succinate + CO₂)</td>
+<td><strong>Supported</strong></td>
+<td>UniProt catalytic activity; PMID 22221834</td>
+</tr>
+<tr>
+<td>Uses mononuclear nonheme Fe(II), 2-His-1-carboxylate triad, ferryl intermediate</td>
+<td><strong>Supported</strong></td>
+<td>PMID 24524675; superfamily mechanism</td>
+</tr>
+<tr>
+<td>Homotetramer, 1 Fe(II)/subunit</td>
+<td><strong>Supported</strong></td>
+<td>UniProt; PMID 22221834</td>
+</tr>
+<tr>
+<td>Functions cytoplasmically in sulfur-starvation-induced sulfonate assimilation</td>
+<td><strong>Supported</strong></td>
+<td>Pathway logic + PMID 11479697, 15023059</td>
+</tr>
+<tr>
+<td>KT2440 possesses an intact tauABCD-type import/desulfonation module around PP_0230</td>
+<td><strong>Supported</strong></td>
+<td>Genomic clustering PP_0230–PP_0233 (tauD-tauCBA) + adjacent ssuEADCB, this work</td>
+</tr>
+<tr>
+<td>The gene product is the S-313 alkylsulfatase AtsK (alkyl sulfate esters)</td>
+<td><strong>Refuted for this protein</strong></td>
+<td>AtsK is a paralog from a different strain; KT2440 PP_0230 was shown to be a taurine dioxygenase (PMID 22221834). <em>atsK</em> is only a genome-annotation synonym.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-limitations-and-future-directions">9. Limitations and Future Directions</h2>
+<ul>
+<li><strong>Substrate range not exhaustively mapped for KT2440 TauD:</strong> while taurine is the confirmed physiological substrate, quantitative kinetics for alternative sulfonates/α-keto-acids in the KT2440 enzyme specifically were not fully detailed; broader specificity is inferred from <em>E. coli</em> TauD and <em>P. putida</em> AtsK.</li>
+<li><strong>Localization is inferred</strong> (soluble/cytoplasmic) from sequence features and pathway logic rather than an explicit fractionation experiment for Q88RA3.</li>
+<li><strong>Direct regulatory data in KT2440</strong> (CysB/Cbl control of PP_0230) is extrapolated from <em>E. coli</em>; although the <em>tauABCD</em> and <em>ssuEADCB</em> gene clusters and <em>cysB</em> are all present in the KT2440 genome (this work), strain-specific transcriptional/promoter confirmation would further strengthen the model.</li>
+<li>Future work: substrate-bound/holo crystal structures of TauD_Pp, in-vivo growth phenotypes of a KT2440 <em>tauD</em> deletion on taurine as sole sulfur source, and quantitative regulon mapping.</li>
+</ul>
+<hr />
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>Knauer SH, Hartl-Spiegelhauer O, Schwarzinger S, Hänzelmann P, Dobbek H. <em>The Fe(II)/α-ketoglutarate-dependent taurine dioxygenases from Pseudomonas putida and Escherichia coli are tetramers.</em> FEBS J, 2012. <strong>PMID 22221834.</strong> <em>(Direct characterization of the target protein.)</em></li>
+<li>van der Ploeg JR, Eichhorn E, Leisinger T. <em>Sulfonate-sulfur metabolism and its regulation in Escherichia coli.</em> Arch Microbiol, 2001. <strong>PMID 11479697.</strong> <em>(Pathway and regulation.)</em></li>
+<li>Nam W, Lee YM, Fukuzumi S. <em>Tuning reactivity and mechanism in oxidation reactions by mononuclear nonheme iron(IV)-oxo complexes.</em> Acc Chem Res, 2014. <strong>PMID 24524675.</strong> <em>(Ferryl intermediate; 2-His-1-carboxylate triad.)</em></li>
+<li>Kahnert A, Kertesz MA. <em>Characterization of a sulfur-regulated oxygenative alkylsulfatase from Pseudomonas putida S-313.</em> J Biol Chem, 2000. <strong>PMID 10913158.</strong> <em>(Homologous AtsK; substrate scope; tetramer.)</em></li>
+<li>Müller I, et al. <em>Crystal structure of the alkylsulfatase AtsK...</em> J Mol Biol, 2004. <strong>PMID 15023059.</strong> <em>(Fold, mechanism, sulfur-starvation induction.)</em></li>
+<li>Müller I, et al. <em>Succinate complex crystal structures of ... AtsK: steric aspects of enzyme self-hydroxylation.</em> J Mol Biol, 2005. <strong>PMID 15542595.</strong> <em>(Self-hydroxylation protection.)</em></li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tauD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tauD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tauD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RA3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="taud-curation-notes">tauD curation notes</h1>
+<ul>
+<li>PMID:22221834 directly studies KT2440 TauD and reports that it "catalyzes the<br />
+  hydroxylation of taurine yielding sulfite and aminoacetaldehyde."</li>
+<li>The reviewed exact record gives the complete 2-oxoglutarate-dependent<br />
+  reaction [file:PSEPK/tauD/tauD-uniprot.txt, "Reaction=taurine +<br />
+  2-oxoglutarate + O2 = aminoacetaldehyde + sulfite +"].</li>
+<li>The enzyme is tetrameric [PMID:22221834, "show that both TauD(Pp) and<br />
+  TauD(Ec) are tetramers in"], but <code>identical protein binding</code> is too generic<br />
+  to represent that assembly as a core function.</li>
+<li>Iron binding and broad dioxygenase/oxidoreductase terms are mechanistically<br />
+  correct but subordinate to the substrate-specific taurine dioxygenase term.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RA3
+gene_symbol: tauD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: TauD is an Fe(II)- and 2-oxoglutarate-dependent taurine dioxygenase. It oxidatively cleaves
+  taurine to aminoacetaldehyde and sulfite while converting 2-oxoglutarate and oxygen to succinate and
+  carbon dioxide; the KT2440 enzyme forms a homotetramer.
+existing_annotations:
+- term:
+    id: GO:0000908
+    label: taurine dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct substrate-specific molecular function.
+    action: ACCEPT
+    reason: Biochemical and kinetic characterization of the exact KT2440 protein establishes taurine hydroxylation
+      with sulfite and aminoacetaldehyde release.
+    supported_by:
+    - reference_id: PMID:22221834
+      supporting_text: catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.
+      full_text_unavailable: true
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Correct expected location for the soluble bacterial enzyme.
+    action: ACCEPT
+    reason: TauD is a soluble 2-oxoglutarate-dependent dioxygenase without membrane or export features.
+- term:
+    id: GO:0006790
+    label: sulfur compound metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct but broader than the experimentally supported taurine catabolic process.
+    action: MODIFY
+    reason: Replace the broad sulfur-metabolism term with the substrate-specific catabolic process.
+    proposed_replacement_terms:
+    - id: GO:0019529
+      label: taurine catabolic process
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but uninformative oxidoreductase parent.
+    action: MODIFY
+    reason: The exact taurine dioxygenase activity is available.
+    proposed_replacement_terms:
+    - id: GO:0000908
+      label: taurine dioxygenase activity
+- term:
+    id: GO:0016706
+    label: 2-oxoglutarate-dependent dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Mechanistically correct but less informative than the substrate-specific activity.
+    action: MODIFY
+    reason: GO:0000908 identifies the physiological sulfonate substrate.
+    proposed_replacement_terms:
+    - id: GO:0000908
+      label: taurine dioxygenase activity
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22221834
+  qualifier: enables
+  review:
+    summary: Tetramerization is directly established but is not the enzyme&#39;s core catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the experimentally demonstrated self-association as non-core alongside the catalytic
+      activity.
+    supported_by:
+    - reference_id: PMID:22221834
+      supporting_text: show that both TauD(Pp) and TauD(Ec) are tetramers in
+      full_text_unavailable: true
+- term:
+    id: GO:0000907
+    label: sulfonate dioxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22221834
+  qualifier: enables
+  review:
+    summary: Correct sulfonate-dioxygenase parent but redundant with the exact substrate term.
+    action: MODIFY
+    reason: The same experiment directly supports taurine dioxygenase activity.
+    proposed_replacement_terms:
+    - id: GO:0000908
+      label: taurine dioxygenase activity
+- term:
+    id: GO:0000908
+    label: taurine dioxygenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22221834
+  qualifier: enables
+  review:
+    summary: Correct substrate-specific molecular function.
+    action: ACCEPT
+    reason: Biochemical and kinetic characterization of the exact KT2440 protein establishes taurine hydroxylation
+      with sulfite and aminoacetaldehyde release.
+    supported_by:
+    - reference_id: PMID:22221834
+      supporting_text: catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.
+      full_text_unavailable: true
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:22221834
+  qualifier: enables
+  review:
+    summary: Correct catalytic cofactor-binding property.
+    action: KEEP_AS_NON_CORE
+    reason: The exact record and structural study establish one Fe(II) ion per subunit, but cofactor binding
+      is not the core reaction annotation.
+    supported_by:
+    - reference_id: file:PSEPK/tauD/tauD-uniprot.txt
+      supporting_text: Binds 1 Fe(2+) ion per subunit
+- term:
+    id: GO:0044273
+    label: sulfur compound catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:22221834
+  qualifier: involved_in
+  review:
+    summary: Correct catabolic context but broader than the available taurine-specific process term.
+    action: MODIFY
+    reason: The exact experiment supports taurine catabolism, so use GO:0019529 instead of the broad
+      sulfur-compound parent.
+    proposed_replacement_terms:
+    - id: GO:0019529
+      label: taurine catabolic process
+    supported_by:
+    - reference_id: PMID:22221834
+      supporting_text: catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22221834
+  title: The Fe(II)/alpha-ketoglutarate-dependent taurine dioxygenases from Pseudomonas putida and Escherichia
+    coli are tetramers.
+  findings:
+  - statement: TauD catalyzes taurine hydroxylation with sulfite and aminoacetaldehyde production.
+    supporting_text: catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.
+    reference_section_type: ABSTRACT
+  - statement: The P. putida and E. coli TauD enzymes are tetramers.
+    supporting_text: show that both TauD(Pp) and TauD(Ec) are tetramers in
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed identity and cached abstract claims verified; the paper directly studies the
+      exact KT2440 enzyme, but full text is unavailable locally.
+- id: file:PSEPK/tauD/tauD-uniprot.txt
+  title: UniProtKB entry Q88RA3 for Pseudomonas putida KT2440 tauD
+  findings:
+  - statement: The reviewed record identifies the exact KT2440 taurine dioxygenase.
+    supporting_text: &#39;RecName: Full=Alpha-ketoglutarate-dependent taurine dioxygenase&#39;
+    reference_section_type: RESULTS
+  - statement: The assigned reaction releases aminoacetaldehyde and sulfite.
+    supporting_text: Reaction=taurine + 2-oxoglutarate + O2 = aminoacetaldehyde + sulfite +
+    reference_section_type: RESULTS
+  - statement: The enzyme is a homotetramer.
+    supporting_text: &#39;SUBUNIT: Homotetramer; dimer of dimers.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact reviewed UniProtKB accession, primary-study cross-reference, Rhea reaction, Fe(II)
+      cofactor, structures, and oligomeric state verified.
+core_functions:
+- description: Oxidatively cleaves taurine to aminoacetaldehyde and sulfite using 2-oxoglutarate, oxygen,
+    and Fe(II).
+  molecular_function:
+    id: GO:0000908
+    label: taurine dioxygenase activity
+  directly_involved_in:
+  - id: GO:0019529
+    label: taurine catabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:22221834
+    supporting_text: catalyzes the hydroxylation of taurine yielding sulfite and aminoacetaldehyde.
+    full_text_unavailable: true
+  - reference_id: file:PSEPK/tauD/tauD-uniprot.txt
+    supporting_text: Reaction=taurine + 2-oxoglutarate + O2 = aminoacetaldehyde + sulfite +
+suggested_questions:
+- question: Which other aliphatic sulfonates, if any, are physiologically relevant substrates of KT2440
+    TauD?
+suggested_experiments:
+- description: Compare purified TauD kinetics across taurine and alternative sulfonates, then quantify
+    sulfur-source growth and sulfite release in a tauD deletion.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

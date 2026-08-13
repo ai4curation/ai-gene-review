@@ -236,7 +236,11 @@ class Publication:
         if self.full_text:
             body_parts.append(f"\n## Full Text\n\n{self.full_text}\n")
 
-        return f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        markdown = f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        # PubMed's plain-text records can contain spaces before line breaks.
+        # Generated caches intentionally do not preserve Markdown hard-break
+        # whitespace; keep their content and indentation clean for Git tooling.
+        return re.sub(r"[ \t]+(?=\r?$)", "", markdown, flags=re.MULTILINE)
 
 
 def extract_pmid(pmid_str: str) -> str:

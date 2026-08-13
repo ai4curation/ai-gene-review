@@ -13,6 +13,7 @@ Example:
 """
 
 import argparse
+import re
 from pathlib import Path
 
 from ai_gene_review.etl.arba import ARBAClient
@@ -54,6 +55,12 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if re.fullmatch(r"ARBA[0-9]{8}", args.rule_id) is None:
+        parser.error(
+            f"unsupported rule ID {args.rule_id!r}; post-enrichment analysis "
+            "currently supports ARBA######## IDs only"
+        )
 
     rule_id = args.rule_id
     output_dir = args.output_dir

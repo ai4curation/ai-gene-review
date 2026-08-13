@@ -296,13 +296,28 @@ class GOAValidator:
         goa_tuples = set()
         goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
         goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
+        goa_by_annotation_identity: Dict[
+            Tuple[str, str, bool], List[GOAAnnotation]
+        ] = {}
         for ann in goa_annotations:
             qualifier = getattr(ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
+            parsed_qualifier = self._parse_qualifier(qualifier) or ""
             tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
             goa_tuples.add(tuple_key)
             goa_by_tuple[tuple_key] = ann
             goa_by_go_id.setdefault(ann.go_id, []).append(ann)
+            identity = (ann.go_id, parsed_qualifier, is_negated)
+            goa_by_annotation_identity.setdefault(identity, []).append(ann)
+
+        corrected_go_ids = {
+            term.get("id", "")
+            for yaml_ann in yaml_annotations
+            if isinstance(yaml_ann, dict)
+            and isinstance((review := yaml_ann.get("review", {})), dict)
+            and review.get("action") in {"REMOVE", "MODIFY"}
+            and isinstance((term := yaml_ann.get("term", {})), dict)
+        }
 
         # Check each YAML annotation against GOA
         for yaml_ann in yaml_annotations:
@@ -320,13 +335,30 @@ class GOAValidator:
                 term = yaml_ann.get("term", {})
                 if isinstance(term, dict):
                     go_id = term.get("id", "")
+                    qualifier = self._parse_qualifier(yaml_ann.get("qualifier"))
+                    negated = bool(yaml_ann.get("negated", False))
+                    if qualifier is None or go_id not in corrected_go_ids:
+                        matching_annotations = [
+                            ann
+                            for ann in goa_by_go_id.get(go_id, [])
+                            if self._qualifier_is_negated(ann.qualifier) == negated
+                        ]
+                    else:
+                        identity = (go_id, qualifier, negated)
+                        matching_annotations = goa_by_annotation_identity.get(identity, [])
 
-                    # Check if this GO term exists in GOA under any source.
-                    if go_id in goa_by_go_id:
+                    # Evidence/reference changes do not make an assertion novel, but
+                    # relation and negation changes do when paired with an explicit
+                    # REMOVE/MODIFY correction for the same term. This permits curators
+                    # to replace an incorrect `enables` assertion with `contributes_to`
+                    # without making every relation difference look novel.
+                    # Qualifier-less legacy YAML remains conservative and conflicts with
+                    # any non-negated GOA assertion for the same term.
+                    if matching_annotations:
                         sources = sorted(
                             {
                                 f"{ann.evidence_code}, {ann.reference}"
-                                for ann in goa_by_go_id[go_id]
+                                for ann in matching_annotations
                             }
                         )
                         source_summary = "; ".join(sources[:3])
@@ -336,9 +368,12 @@ class GOAValidator:
                         # This is an error - NEW annotation should not exist in GOA
                         # under any evidence/reference source, including TreeGrafter/IBA.
                         result.is_valid = False
+                        relation = qualifier or "unspecified"
+                        polarity = "negated" if negated else "positive"
                         result.error_message = (
                             f"Annotation with action=NEW exists in GOA: {go_id} "
-                            f"(GOA source(s): {source_summary})"
+                            f"(qualifier={relation}, assertion={polarity}; "
+                            f"GOA source(s): {source_summary})"
                         )
                 # Skip further validation for NEW annotations
                 continue

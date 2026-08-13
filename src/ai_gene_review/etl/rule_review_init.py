@@ -4,9 +4,12 @@ This module provides functions to create initial rule review YAML files
 that include all necessary fields and TODO placeholders for AI-assisted review.
 """
 
+import shlex
 from pathlib import Path
 from typing import Union
+
 import yaml
+
 from ai_gene_review.etl.arba import ARBAClient
 from ai_gene_review.etl.unirule import UniRuleClient
 from ai_gene_review.etl.rule_enrichment import enrich_rule_json
@@ -95,11 +98,29 @@ def init_rule_review(
 
     print(f"✓ Created {review_path}")
     print("\nNext steps:")
-    print(f"  1. Run: just analyze-rule {rule_id}")
-    print(f"  2. Run: just sync-rule-review-single {rule_id}")
-    print(f"  3. Run: just rules-deep-research-perplexity {rule_id}")
-    print(f"  4. Edit {review_path} to fill in TODO placeholders")
-    print(f"  5. Run: just render-rule {rule_id}")
+    if rule_type == 'ARBA':
+        cache_text = str(cache_dir)
+        analyze_command = shlex.join(
+            ["just", "analyze-rule", rule_id, "--cache-dir", cache_text]
+        )
+        sync_command = shlex.join(
+            ["just", "sync-rule-review-single", rule_id, cache_text]
+        )
+        render_command = shlex.join(
+            ["just", "render-rule", rule_id, cache_text]
+        )
+        print(f"  1. Run: {analyze_command}")
+        print(f"  2. Run: {sync_command}")
+        print(f"  3. Run: just rules-deep-research-perplexity {rule_id}")
+        print(f"  4. Edit {review_path} to fill in TODO placeholders")
+        print(f"  5. Run: {render_command}")
+    else:
+        print(f"  1. Run: just rules-deep-research-perplexity {rule_id}")
+        print(f"  2. Edit {review_path} to fill in TODO placeholders")
+        print(
+            "  Note: Post-enrichment analysis-dependent workflows currently "
+            "support ARBA IDs only."
+        )
 
     return review_path
 

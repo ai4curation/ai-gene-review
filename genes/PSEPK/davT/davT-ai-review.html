@@ -1,0 +1,2545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>davT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>davT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RB9" target="_blank" class="term-link">
+                        Q88RB9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "davT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RB9" data-a="DESCRIPTION: DavT is a pyridoxal-phosphate-dependent 5-aminoval..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DavT is a pyridoxal-phosphate-dependent 5-aminovalerate aminotransferase. It transfers the amino group of 5-aminovalerate to 2-oxoglutarate, producing 5-oxopentanoate and L-glutamate in the Dav route of L-lysine catabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                    GO:0019477
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0019477" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological-process assignment supported by mutant phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Disruption prevents growth on lysine and 5-aminovalerate but not glutarate, placing DavT in the lysine-catabolic segment before glutarate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                        PMID:11679348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mutant was unable to grow on lysine or
+delta-aminovalerate as carbon sources, which indicates that the affected
+function is involved in the pathway for lysine catabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding property but not the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DavT belongs to the PLP-dependent class III aminotransferase family; the substrate-specific transaminase term is more informative.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/davT/davT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034386" target="_blank" class="term-link">
+                                    GO:0034386
+                                </a>
+                            </span>
+                            <span class="term-label">4-aminobutyrate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0034386" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-based GABA transaminase assignment is not established for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct genetic evidence supports 5-aminovalerate transamination. The available sources do not test whether DavT also accepts 4-aminobutyrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                        PMID:11679348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sets of data suggest that the product of this gene has delta-aminovalerate
+aminotransferase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0042802" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic self-association annotation does not define DavT function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No mechanistic complex role is supplied, and the substrate-specific catalytic activity is the informative annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047589" target="_blank" class="term-link">
+                                    GO:0047589
+                                </a>
+                            </span>
+                            <span class="term-label">5-aminovalerate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0047589" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct enzyme-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mutant phenotype, sequence class, and authors&#39; interpretation directly support 5-aminovalerate aminotransferase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                        PMID:11679348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sets of data suggest that the product of this gene has delta-aminovalerate
+aminotransferase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                    GO:0019477
+                                </a>
+                            </span>
+                            <span class="term-label">L-lysine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11679348
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of a Pseudomonas putida aminotransferase involved...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0019477" data-r="PMID:11679348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct biological-process assignment supported by mutant phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Disruption prevents growth on lysine and 5-aminovalerate but not glutarate, placing DavT in the lysine-catabolic segment before glutarate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                        PMID:11679348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mutant was unable to grow on lysine or
+delta-aminovalerate as carbon sources, which indicates that the affected
+function is involved in the pathway for lysine catabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047589" target="_blank" class="term-link">
+                                    GO:0047589
+                                </a>
+                            </span>
+                            <span class="term-label">5-aminovalerate:2-oxoglutarate transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11679348
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of a Pseudomonas putida aminotransferase involved...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RB9" data-a="GO:0047589" data-r="PMID:11679348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct enzyme-specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mutant phenotype, sequence class, and authors&#39; interpretation directly support 5-aminovalerate aminotransferase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                        PMID:11679348
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sets of data suggest that the product of this gene has delta-aminovalerate
+aminotransferase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transaminates 5-aminovalerate with 2-oxoglutarate to form 5-oxopentanoate and L-glutamate during L-lysine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88RB9" data-a="FUNCTION: Transaminates 5-aminovalerate with 2-oxoglutarate ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047589" target="_blank" class="term-link">
+                            5-aminovalerate:2-oxoglutarate transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019477" target="_blank" class="term-link">
+                                L-lysine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                                PMID:11679348
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">sets of data suggest that the product of this gene has delta-aminovalerate
+aminotransferase activity.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                                PMID:31064836
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11679348" target="_blank" class="term-link">
+                            PMID:11679348
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of a Pseudomonas putida aminotransferase involved in lysine catabolism is induced in the rhizosphere.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The interrupted gene is required for growth on lysine and 5-aminovalerate but not glutarate.</div>
+
+                        <div class="finding-text">"The mutant was unable to grow on lysine or
+delta-aminovalerate as carbon sources, which indicates that the affected
+function is involved in the pathway for lysine catabolism."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The genetic and sequence evidence supports 5-aminovalerate aminotransferase activity.</div>
+
+                        <div class="finding-text">"sets of data suggest that the product of this gene has delta-aminovalerate
+aminotransferase activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/davT/davT-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RB9 for Pseudomonas putida KT2440 davT</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record identifies DavT as 5-aminovalerate aminotransferase.</div>
+
+                        <div class="finding-text">"RecName: Full=5-aminovalerate aminotransferase DavT"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record assigns pyridoxal 5&#39;-phosphate as cofactor.</div>
+
+                        <div class="finding-text">"Name=pyridoxal 5&#39;-phosphate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31064836" target="_blank" class="term-link">
+                            PMID:31064836
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Massively Parallel Fitness Profiling Reveals Multiple Novel Enzymes in Pseudomonas putida Lysine Metabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Independent fitness profiling connects davT to growth on both 5AVA and L-lysine.</div>
+
+                        <div class="finding-text">"Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO), and all three have been previously implicated in 5AVA metabolism"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DavT abundance responds most strongly to 5AVA.</div>
+
+                        <div class="finding-text">"As previously observed, DavT and DavD were most strongly upregulated on 5AVA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 DavT have physiologically relevant GABA transaminase activity, or is that annotation solely a family-level transfer?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RB9" data-a="Q: Does KT2440 DavT have physiologically relevant GAB..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified DavT kinetics with 5-aminovalerate and GABA, then test a davT deletion on each substrate as sole carbon source.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RB9" data-a="EXPERIMENT: Compare purified DavT kinetics with 5-aminovalerat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(davT-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RB9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">DavT (PP_0214, Q88RB9): 5-Aminovalerate Aminotransferase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">4 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-25T15:37:14.527528</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="davT-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="davT-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="davt-pp_0214-q88rb9-5-aminovalerate-aminotransferase-in-pseudomonas-putida-kt2440">DavT (PP_0214, Q88RB9): 5-Aminovalerate Aminotransferase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>DavT (gene <em>davT</em>, ordered locus PP_0214, UniProt Q88RB9) is a pyridoxal-5′-phosphate (PLP)-dependent, class-III aminotransferase (EC 2.6.1.48) that catalyzes the penultimate step of the aminovalerate branch of L-lysine catabolism in <em>Pseudomonas putida</em> KT2440.</strong> The enzyme transfers the ω-amino group of 5-aminovalerate (δ-aminovalerate) onto the 2-oxo acid acceptor 2-oxoglutarate, producing glutarate-5-semialdehyde (glutarate semialdehyde) and L-glutamate. This transamination reaction converts a linear C5 ω-amino acid into a C5 semialdehyde that is subsequently oxidized by the neighboring enzyme DavD (glutarate semialdehyde dehydrogenase) to glutarate — the key metabolic node at which lysine-derived carbon and nitrogen enter central (TCA) metabolism.</p>
+<p>The gene is organized in the <strong>davDT operon</strong>, transcribed from a single σ⁷⁰-dependent promoter and induced specifically by the pathway intermediate 5-aminovalerate rather than by lysine itself. Two upstream enzymes generate DavT's substrate: DavB (lysine 2-monooxygenase) oxidizes L-lysine to 5-aminovaleramide, and DavA (δ-aminovaleramidase) hydrolyzes that amide to 5-aminovalerate. The DavT step therefore sits at the heart of a well-defined four-enzyme route (DavB → DavA → DavT → DavD) that enables <em>P. putida</em> to use L-lysine as a sole carbon and nitrogen source. Because this pathway produces the industrially valuable C5 platform chemicals 5-aminovalerate and glutarate, DavT has been widely transplanted into engineered <em>Escherichia coli</em> and <em>Corynebacterium glutamicum</em> production strains.</p>
+<p>The identity of the target is unambiguous: the gene symbol <em>davT</em>, the organism (<em>P. putida</em> KT2440), the EC number (2.6.1.48), and the class-III PLP aminotransferase domain architecture all align consistently across UniProt annotation and multiple primary studies. The enzyme's subcellular localization is cytoplasmic, consistent with its role in a soluble catabolic pathway and the absence of signal/transmembrane features. The chief remaining knowledge gap is the lack of a dedicated in-vitro kinetic and structural characterization of the <em>P. putida</em> DavT enzyme itself; its homodimeric fold, ping-pong bi-bi mechanism, and ω-amino-acid active-site specificity are inferred from robust family membership rather than from a solved structure or purified-enzyme assay.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting the research, the target identity was verified against the UniProt record and the primary literature. All descriptors are mutually consistent — there is no evidence of gene-symbol ambiguity or cross-organism confusion for this protein.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Verified against</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UniProt accession</strong></td>
+<td>Q88RB9</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td><strong>Gene symbol</strong></td>
+<td><em>davT</em></td>
+<td>PMID 30144560, 15150230</td>
+</tr>
+<tr>
+<td><strong>Locus tag</strong></td>
+<td>PP_0214</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td><strong>Protein</strong></td>
+<td>5-aminovalerate aminotransferase (δ-aminovalerate transaminase)</td>
+<td>PMID 30144560</td>
+</tr>
+<tr>
+<td><strong>EC number</strong></td>
+<td>2.6.1.48</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td><strong>Organism</strong></td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+<td>PMID 15150230, 16237033</td>
+</tr>
+<tr>
+<td><strong>Family</strong></td>
+<td>Class-III PLP-dependent aminotransferase</td>
+<td>UniProt domains (IPR004632, IPR005814, IPR049704, IPR050103, IPR015424)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>davT</em> matches the protein description (5-aminovalerate transaminase); the organism is confirmed as <em>P. putida</em> KT2440 in multiple primary studies; and the protein family/domain content aligns with the class-III PLP aminotransferase mechanism described in the literature. <strong>Verification passed — research proceeds on the correct gene.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-davt-is-5-aminovalerate2-oxoglutarate-aminotransferase-ec-26148">Finding 1 — DavT is 5-aminovalerate:2-oxoglutarate aminotransferase (EC 2.6.1.48)</h3>
+<p>DavT (PP_0214) is definitively identified as <strong>5-aminovalerate transaminase</strong> operating within the L-lysine aminovalerate catabolic pathway. Kim et al. (2019), in reconstructing a glutaric-acid biosynthesis pathway in <em>C. glutamicum</em>, state explicitly that the "<em>Pseudomonas putida davT and davD genes encoding 5-aminovalerate transaminase and glutarate semialdehyde dehydrogenase, respectively</em>" were used, with <em>davB</em> (lysine 2-monooxygenase) and <em>davA</em> (δ-aminovaleramidase) supplying the upstream steps <a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">PMID: 30144560</a>. This places DavT unambiguously as the third of four enzymes converting L-lysine to glutarate.</p>
+<p>The molecular function is corroborated by the UniProt annotation for Q88RB9, which assigns <strong>EC 2.6.1.48</strong> and identifies the protein as a class-III PLP-dependent aminotransferase. The diagnostic domain content — Aminotrans_3 (IPR005814), the bacterial 4-aminobutyrate-aminotransferase-like subfamily signature 4NH2But_aminotransferase_bac (IPR004632), the Aminotrans_3 PLP-attachment site (IPR049704), the class-III PLP-dependent aminotransferase family (IPR050103), and the PLP-dependent transferase fold (IPR015424) — is exactly the architecture expected for an ω-amino-acid:2-oxo-acid aminotransferase. The reaction catalyzed is:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">5</span><span class="o">-</span><span class="n">aminovalerate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2</span><span class="o">-</span><span class="n">oxoglutarate</span><span class="w">  </span><span class="err">⇌</span><span class="w">  </span><span class="n">glutarate</span><span class="o">-</span><span class="mf">5</span><span class="o">-</span><span class="n">semialdehyde</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">glutamate</span>
+</code></pre></div>
+
+<p>The amino group is transferred from the terminal (δ, ω) carbon of the linear C5 amino acid to the α-keto acceptor, regenerating L-glutamate and leaving a reactive C5 semialdehyde for downstream oxidation.</p>
+<h3 id="finding-2-davt-lies-in-the-davdt-operon-induced-by-5-aminovalerate">Finding 2 — <em>davT</em> lies in the davDT operon, induced by 5-aminovalerate</h3>
+<p>Revelles et al. (2004) demonstrated that <em>davD</em> and <em>davT</em> form a single transcriptional unit — the <strong>davDT operon</strong> — transcribed from one σ⁷⁰-dependent promoter: "<em>We show that the davDT genes form an operon transcribed from a single sigma70-dependent promoter</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/15150230/">PMID: 15150230</a>. Basal expression from the PdavD promoter rose roughly four-fold in the presence of exogenous lysine, but the physiologically relevant inducer proved to be the pathway intermediate itself. In a mutant blocked in converting lysine to δ-aminovalerate, δ-aminovalerate — but not lysine — activated the operon: "<em>the true inducer of this operon seems to be delta-aminovaleric acid because in a mutant unable to metabolize lysine to delta-aminovaleric acid, this compound, but not lysine, acted as an effector</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/15150230/">PMID: 15150230</a>.</p>
+<p>This regulatory logic is elegant: DavT is synthesized precisely when its substrate accumulates, coupling enzyme expression to substrate availability. Efficient induction by lysine additionally required ABC-transporter-mediated lysine uptake, meaning the signal must be internalized and metabolically converted to 5-aminovalerate before the operon responds. The operonic organization also co-regulates DavT with its immediate downstream partner DavD, ensuring the reactive semialdehyde intermediate is efficiently handed off and oxidized.</p>
+<h3 id="finding-3-the-aminovalerate-route-is-one-of-two-interconnected-lysine-catabolic-pathways-converging-on-glutarate">Finding 3 — The aminovalerate route is one of two interconnected lysine-catabolic pathways converging on glutarate</h3>
+<p>Revelles et al. (2005) used L-[U-¹³C,U-¹⁵N]lysine isotopic tracing to show that <em>P. putida</em> KT2440 runs the <strong>aminovalerate and aminoadipate pathways simultaneously</strong> as parallel routes of L-lysine catabolism <a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>. The aminovalerate branch begins when "<em>the davB and davA genes that encode the enzymes involved in the oxidation of L-lysine to delta-aminovaleramide and the hydrolysis of the latter to delta-aminovalerate</em>" generate DavT's substrate. Crucially, the two pathways interconnect at their lower ends: "<em>there is yet another interconnection at the lower end of the pathways in which aminoadipate is channeled to yield glutarate</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>.</p>
+<p>Glutarate — the product formed immediately downstream of the DavT/DavD steps — is thus the <strong>metabolic convergence point</strong> of lysine catabolism. Mutants disrupted in either pathway failed to grow on L-lysine as a sole carbon and nitrogen source, confirming both routes are physiologically operative and that the glutarate node is essential for full lysine utilization. This situates DavT not as an isolated enzyme but as a committed step feeding a shared metabolic funnel.</p>
+<h3 id="finding-4-davt-connects-l-lysine-to-central-metabolism-via-glutarate-validated-by-genome-wide-fitness-profiling">Finding 4 — DavT connects L-lysine to central metabolism via glutarate; validated by genome-wide fitness profiling</h3>
+<p>Thompson et al. (2019) applied massively parallel random-barcode transposon sequencing (RB-TnSeq) fitness profiling to resolve the genetic and biochemical links between lysine metabolism and central metabolism in <em>P. putida</em>, noting that "<em>Despite intensive study for 50 years, the biochemical and genetic links between lysine metabolism and central metabolism in</em>" this organism had remained incompletely resolved <a href="https://pubmed.ncbi.nlm.nih.gov/31064836/">PMID: 31064836</a>. Their high-throughput approach confirmed and extended the aminovalerate route (DavB/DavA/DavT/DavD → glutarate) and mapped the downstream glutarate-catabolic enzymes that feed the TCA cycle.</p>
+<p>This complements the isotope-tracing work of Revelles et al. (2005), which showed both lysine pathways converge on glutarate: "<em>there is yet another interconnection at the lower end of the pathways in which aminoadipate is channeled to yield glutarate</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">PMID: 16237033</a>. Together the two orthogonal methods — targeted isotope tracing and genome-wide fitness profiling — establish that the DavT-generated semialdehyde, once oxidized to glutarate, is the gateway through which lysine-derived carbon and nitrogen enter central metabolism, enabling growth on lysine as a sole C/N source.</p>
+<h3 id="finding-5-davt-is-inferred-to-be-a-homodimeric-fold-type-i-plp-enzyme-using-a-ping-pong-mechanism-specific-for-c5-amino-acids">Finding 5 — DavT is inferred to be a homodimeric fold-type-I PLP enzyme using a ping-pong mechanism specific for C5 ω-amino acids</h3>
+<p>Structurally, DavT (Q88RB9) carries the full diagnostic complement of a <strong>class-III PLP-dependent aminotransferase</strong>: the Aminotrans_3 domain (IPR005814), the Aminotrans_3 PLP-attachment site containing the catalytic PLP-binding lysine (IPR049704), the PLP-dependent transferase fold (IPR015424), and the bacterial 4-aminobutyrate-aminotransferase-like subfamily signature (IPR004632). From this family membership, the enzyme is inferred to (i) assemble as a homodimer with active sites at the subunit interface, (ii) operate by a <strong>ping-pong bi-bi mechanism</strong> in which the PLP cofactor cycles to pyridoxamine-5′-phosphate (PMP) and back as the amino group shuttles between amino-donor and 2-oxo-acid acceptor, and (iii) possess an active site adapted to bind linear C5 ω-amino acids such as 5-aminovalerate.</p>
+<p>Importantly, <strong>no experimental crystal structure or in-vitro kinetic study of the <em>P. putida</em> DavT enzyme was located in the retrieved literature.</strong> Searches for a solved structure or purified-enzyme kinetic characterization returned nothing specific to this protein. Consequently the oligomeric state, mechanism, and active-site substrate specificity described here are strong bioinformatic inferences from a well-characterized enzyme family (which includes GABA aminotransferases and ornithine aminotransferases), not direct measurements on DavT itself. This is the principal experimental gap in the current annotation.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-aminovalerate-pathway-of-l-lysine-catabolism">The aminovalerate pathway of L-lysine catabolism</h3>
+<p>DavT catalyzes the third of four sequential reactions that dismantle L-lysine into glutarate. The pathway, and DavT's precise position within it, is summarized below.</p>
+<div class="codehilite"><pre><span></span><code>  DavB                 DavA                  DavT                    DavD
+ L-lysine ──────────────────► 5-amino- ─────────────► 5-amino- ──────────────► glutarate- ───────────► glutarate
+   (C6)    lysine 2-mono-      valeramide δ-amino-      valerate  5-aminovalerate  5-semi-   glutarate     (C5
+   oxygenase           (amide)    valeramidase  (C5 ω-    aminotransferase aldehyde  semialdehyde  dicarb-
+   (+O2, -CO2)                     (hydrolysis, amino     (EC 2.6.1.48)             dehydrogenase  oxylate)
+                           -NH3)        acid)     +2-oxoglutarate           (+NAD(P)+)
+                                                  -L-glutamate
+</code></pre></div>
+
+<p>The specific chemistry of the DavT step:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role in the DavT reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Amino donor (substrate)</strong></td>
+<td>5-aminovalerate (δ-aminovalerate), a linear C5 ω-amino acid</td>
+</tr>
+<tr>
+<td><strong>Amino acceptor (co-substrate)</strong></td>
+<td>2-oxoglutarate (α-ketoglutarate)</td>
+</tr>
+<tr>
+<td><strong>Cofactor</strong></td>
+<td>Pyridoxal-5′-phosphate (PLP), covalently tethered via an active-site lysine</td>
+</tr>
+<tr>
+<td><strong>Product 1</strong></td>
+<td>Glutarate-5-semialdehyde (glutarate semialdehyde)</td>
+</tr>
+<tr>
+<td><strong>Product 2</strong></td>
+<td>L-glutamate (regenerated from 2-oxoglutarate)</td>
+</tr>
+<tr>
+<td><strong>Downstream fate of product 1</strong></td>
+<td>Oxidized by DavD to glutarate, then routed into central metabolism</td>
+</tr>
+<tr>
+<td><strong>EC class</strong></td>
+<td>2.6.1.48 (ω-amino-acid:2-oxoglutarate aminotransferase)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-the-operon-and-inducer-logic-matter">Why the operon and inducer logic matter</h3>
+<p>The <strong>davDT operon</strong> links DavT's expression to DavD's expression and to the accumulation of 5-aminovalerate. This achieves two things simultaneously. First, co-transcription of <em>davT</em> and <em>davD</em> guarantees that the reactive glutarate-5-semialdehyde produced by DavT is immediately handled by DavD, minimizing accumulation of a potentially cytotoxic aldehyde. Second, because 5-aminovalerate itself is the true inducer, the cell only invests in the transaminase/dehydrogenase pair when the substrate is actually present — a just-in-time expression strategy typical of catabolic operons under σ⁷⁰ control.</p>
+<h3 id="the-glutarate-node-and-entry-into-central-metabolism">The glutarate node and entry into central metabolism</h3>
+<p>DavT's biological significance derives from what happens two steps downstream. Both the aminovalerate pathway (via DavT/DavD) and the parallel aminoadipate pathway converge on <strong>glutarate</strong>. Glutarate is then further catabolized (as mapped by both isotope tracing and RB-TnSeq fitness profiling) to feed the TCA cycle, allowing lysine-derived carbon and nitrogen to fuel growth. In this framing, DavT is best understood as the <strong>committed transamination step that liberates the lysine ω-nitrogen (onto glutamate) while delivering the carbon skeleton toward the shared glutarate funnel.</strong></p>
+<h3 id="localization">Localization</h3>
+<p>All evidence indicates DavT functions in the <strong>cytoplasm</strong>: it is a soluble PLP enzyme of a catabolic pathway whose substrate (5-aminovalerate) is generated intracellularly from imported lysine, its operon partner DavD is a soluble dehydrogenase, and the protein lacks any signal peptide or transmembrane segment characteristic of secreted or membrane-associated proteins. This is fully consistent with the class-III aminotransferase family, whose members are cytosolic enzymes.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30144560/">30144560</a></td>
+<td><em>Metabolic engineering of C. glutamicum for the production of glutaric acid</em> (Kim et al., 2019)</td>
+<td>Directly names <em>davT</em> as "5-aminovalerate transaminase" and <em>davD</em> as "glutarate semialdehyde dehydrogenase," situating DavT downstream of DavB/DavA and upstream of DavD. Primary basis for <strong>Finding 1</strong>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15150230/">15150230</a></td>
+<td><em>The davDT operon of P. putida is induced by delta-aminovaleric acid</em> (Revelles et al., 2004)</td>
+<td>Establishes operon structure (single σ⁷⁰ promoter) and identifies 5-aminovalerate as the true inducer. Basis for <strong>Finding 2</strong>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16237033/">16237033</a></td>
+<td><em>Multiple and interconnected pathways for L-lysine catabolism in P. putida KT2440</em> (Revelles et al., 2005)</td>
+<td>¹³C/¹⁵N isotope tracing defining the upstream DavB/DavA steps that generate DavT's substrate and demonstrating convergence on glutarate. Basis for <strong>Findings 3 and 4</strong>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31064836/">31064836</a></td>
+<td><em>Massively Parallel Fitness Profiling Reveals Multiple Novel Enzymes</em> (Thompson et al., 2019)</td>
+<td>Genome-wide RB-TnSeq fitness profiling confirming and extending the lysine → aminovalerate → glutarate → central-metabolism route. Basis for <strong>Finding 4</strong>.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25012259/">25012259</a></td>
+<td><em>Enzymatic production of 5-aminovalerate from L-lysine</em> (2014)</td>
+<td>Confirms DavB and DavA convert L-lysine to 5-aminovalerate (DavT's substrate) and describes the aminovalerate pathway of <em>P. putida</em>. Context for the upstream steps.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27717386/">27717386</a></td>
+<td><em>Metabolic engineering of C. glutamicum for enhanced 5-aminovaleric acid production</em> (2016)</td>
+<td>Reinforces the roles of DavB (lysine 2-monooxygenase) and DavA (δ-aminovaleramidase) upstream of DavT, and shows glutarate as a downstream byproduct — consistent with the DavT/DavD → glutarate route.</td>
+</tr>
+</tbody>
+</table>
+<p>The convergence of these independent lines of evidence — a targeted metabolic-engineering reconstitution (30144560), promoter/operon genetics (15150230), stable-isotope tracing (16237033), and genome-scale fitness profiling (31064836) — gives high confidence in DavT's identity and pathway placement. No retrieved study contradicts the annotation. The class-III PLP domain architecture (UniProt Q88RB9) independently supports the enzymatic mechanism.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct structural or kinetic characterization of <em>P. putida</em> DavT.</strong> Searches returned no crystal structure and no purified-enzyme kinetic study specific to Q88RB9. The homodimeric fold-type-I assembly, the ping-pong bi-bi mechanism, the identity of the catalytic PLP-binding lysine, and the quantitative substrate specificity (Km/kcat for 5-aminovalerate vs. related ω-amino acids) are all <strong>inferred from family membership</strong>, not measured. This is the single largest gap.</p>
+</li>
+<li>
+<p><strong>Substrate promiscuity is uncharacterized.</strong> Class-III aminotransferases (e.g., GABA-AT, ornithine-AT) often accept multiple ω-amino-acid substrates. Whether DavT can also transaminate GABA, 4-aminobutyrate, putrescine-derived intermediates, or longer/shorter ω-amino acids has not been directly tested for the <em>P. putida</em> enzyme. The observed cross-reactivity of a <em>C. glutamicum</em> GabT with this chemistry (PMID 27717386) hints at overlap but does not resolve DavT's own specificity spectrum.</p>
+</li>
+<li>
+<p><strong>Cofactor preference of the downstream step is not pinned down here.</strong> DavD is annotated as a glutarate semialdehyde dehydrogenase, but whether it uses NAD⁺ or NADP⁺ in vivo — which affects the redox accounting of the pathway — was not established in the retrieved literature and is tangential to DavT itself.</p>
+</li>
+<li>
+<p><strong>Reliance on annotation transfer for EC and localization.</strong> The EC number (2.6.1.48) and cytoplasmic localization rest on sequence-based annotation plus pathway logic rather than a biochemical assay of the isolated protein. This is standard and well-supported here, but remains inference.</p>
+</li>
+<li>
+<p><strong>Directionality and physiological reversibility</strong> of the transamination in vivo (5-aminovalerate → semialdehyde vs. the reverse) were not experimentally quantified for DavT.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Purify and kinetically characterize recombinant DavT.</strong> Express Q88RB9 with an affinity tag in <em>E. coli</em>, purify, and measure steady-state kinetics (Km, kcat, kcat/Km) for 5-aminovalerate with 2-oxoglutarate as acceptor. Confirm PLP dependence spectroscopically (420 nm internal aldimine) and by apoenzyme reconstitution.</p>
+</li>
+<li>
+<p><strong>Map substrate specificity.</strong> Assay DavT against a panel of ω-amino acids (GABA, 4-aminobutyrate, 6-aminohexanoate, putrescine, ornithine) and alternative amino acceptors (pyruvate, oxaloacetate) to define the specificity profile and test for promiscuity relevant to metabolic engineering.</p>
+</li>
+<li>
+<p><strong>Solve the structure.</strong> Determine a crystal or cryo-EM structure (or a high-confidence AlphaFold model validated against family templates) to identify the catalytic PLP-binding lysine, the substrate-binding pocket residues conferring C5 ω-amino-acid selectivity, and the dimer interface.</p>
+</li>
+<li>
+<p><strong>Confirm localization directly.</strong> Use fluorescent-fusion or fractionation/proteomics to verify cytoplasmic localization experimentally rather than by inference.</p>
+</li>
+<li>
+<p><strong>Test in-vivo reversibility and flux.</strong> Use ¹³C/¹⁵N tracing in <em>P. putida</em> under defined nitrogen conditions to quantify net flux through DavT and the fate of the transferred amino group (regenerated glutamate), and to determine how DavT flux partitions between the aminovalerate and aminoadipate routes.</p>
+</li>
+<li>
+<p><strong>Engineering-oriented mutagenesis.</strong> Rational active-site mutagenesis to improve kcat/Km or broaden/narrow specificity, supporting the use of DavT in bioproduction of glutarate, valerolactam, and 1,5-pentanediol precursors — the applied context in which this enzyme is most exploited (PMIDs 30144560, 25012259, 27717386).</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>DavT (PP_0214, Q88RB9) is the <strong>5-aminovalerate:2-oxoglutarate aminotransferase (EC 2.6.1.48)</strong> of <em>Pseudomonas putida</em> KT2440 — a cytoplasmic, PLP-dependent class-III aminotransferase that transaminates 5-aminovalerate to glutarate-5-semialdehyde (with L-glutamate as co-product) as the penultimate step of the aminovalerate branch of L-lysine catabolism. Encoded in the substrate-inducible davDT operon, it is functionally coupled to DavD, whose oxidation of the semialdehyde yields glutarate, the convergence node channeling lysine-derived carbon and nitrogen into central metabolism. The identification is robust and mutually consistent across metabolic-engineering, genetic, isotope-tracing, and genome-scale fitness studies; the outstanding need is a direct structural and kinetic characterization of the enzyme itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="davT-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="davT-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:30144560</li>
+<li>PMID:15150230</li>
+<li>PMID:16237033</li>
+<li>PMID:31064836</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(davT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RB9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="davt-curation-notes">davT curation notes</h1>
+<ul>
+<li>The mutant phenotype places DavT between 5-aminovalerate and glutarate<br />
+  [PMID:11679348, "The mutant was unable to grow on lysine or<br />
+  delta-aminovalerate as carbon sources"].</li>
+<li>The cached abstract directly supports the aminotransferase assignment<br />
+  [PMID:11679348, "sets of data suggest that the product of this gene has<br />
+  delta-aminovalerate aminotransferase activity"].</li>
+<li>Independent KT2440 profiling found shared fitness defects for <code>davT</code> and<br />
+<code>davD</code> on 5AVA and L-lysine [PMID:31064836, "Only 3 genes shared fitness<br />
+  defects between 5AVA and l-lysine (davT, davD, and lghO)"].</li>
+<li>The InterPro-derived GABA transaminase annotation remains undecided because<br />
+  the available study does not test GABA as a substrate.</li>
+<li>UniProt also carries the corresponding InterPro transfer to GABA metabolic<br />
+  process, but it is absent from the fetched GOA and is not added as a new<br />
+  annotation for the same reason: no available experiment tests DavT in GABA<br />
+  metabolism [file:PSEPK/davT/davT-uniprot.txt,<br />
+  "GO; GO:0009448; P:gamma-aminobutyric acid metabolic process; IEA:InterPro."].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RB9
+gene_symbol: davT
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: DavT is a pyridoxal-phosphate-dependent 5-aminovalerate aminotransferase. It transfers the
+  amino group of 5-aminovalerate to 2-oxoglutarate, producing 5-oxopentanoate and L-glutamate in the Dav
+  route of L-lysine catabolism.
+existing_annotations:
+- term:
+    id: GO:0019477
+    label: L-lysine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Correct biological-process assignment supported by mutant phenotype.
+    action: ACCEPT
+    reason: Disruption prevents growth on lysine and 5-aminovalerate but not glutarate, placing DavT in
+      the lysine-catabolic segment before glutarate.
+    supported_by:
+    - reference_id: PMID:11679348
+      supporting_text: &#34;The mutant was unable to grow on lysine or \ndelta-aminovalerate as carbon sources,\
+        \ which indicates that the affected \nfunction is involved in the pathway for lysine catabolism.&#34;
+      full_text_unavailable: true
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding property but not the core catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: DavT belongs to the PLP-dependent class III aminotransferase family; the substrate-specific
+      transaminase term is more informative.
+    supported_by:
+    - reference_id: file:PSEPK/davT/davT-uniprot.txt
+      supporting_text: Name=pyridoxal 5&#39;-phosphate
+- term:
+    id: GO:0034386
+    label: 4-aminobutyrate:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Family-based GABA transaminase assignment is not established for this protein.
+    action: UNDECIDED
+    reason: The direct genetic evidence supports 5-aminovalerate transamination. The available sources
+      do not test whether DavT also accepts 4-aminobutyrate.
+    supported_by:
+    - reference_id: PMID:11679348
+      supporting_text: &#34;sets of data suggest that the product of this gene has delta-aminovalerate \n\
+        aminotransferase activity.&#34;
+      full_text_unavailable: true
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Generic self-association annotation does not define DavT function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: No mechanistic complex role is supplied, and the substrate-specific catalytic activity is
+      the informative annotation.
+- term:
+    id: GO:0047589
+    label: 5-aminovalerate:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct enzyme-specific molecular function.
+    action: ACCEPT
+    reason: The mutant phenotype, sequence class, and authors&#39; interpretation directly support 5-aminovalerate
+      aminotransferase activity.
+    supported_by:
+    - reference_id: PMID:11679348
+      supporting_text: &#34;sets of data suggest that the product of this gene has delta-aminovalerate \n\
+        aminotransferase activity.&#34;
+      full_text_unavailable: true
+- term:
+    id: GO:0019477
+    label: L-lysine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:11679348
+  qualifier: involved_in
+  review:
+    summary: Correct biological-process assignment supported by mutant phenotype.
+    action: ACCEPT
+    reason: Disruption prevents growth on lysine and 5-aminovalerate but not glutarate, placing DavT in
+      the lysine-catabolic segment before glutarate.
+    supported_by:
+    - reference_id: PMID:11679348
+      supporting_text: &#34;The mutant was unable to grow on lysine or \ndelta-aminovalerate as carbon sources,\
+        \ which indicates that the affected \nfunction is involved in the pathway for lysine catabolism.&#34;
+      full_text_unavailable: true
+- term:
+    id: GO:0047589
+    label: 5-aminovalerate:2-oxoglutarate transaminase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11679348
+  qualifier: enables
+  review:
+    summary: Correct enzyme-specific molecular function.
+    action: ACCEPT
+    reason: The mutant phenotype, sequence class, and authors&#39; interpretation directly support 5-aminovalerate
+      aminotransferase activity.
+    supported_by:
+    - reference_id: PMID:11679348
+      supporting_text: &#34;sets of data suggest that the product of this gene has delta-aminovalerate \n\
+        aminotransferase activity.&#34;
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11679348
+  title: Expression of a Pseudomonas putida aminotransferase involved in lysine catabolism is induced
+    in the rhizosphere.
+  findings:
+  - statement: The interrupted gene is required for growth on lysine and 5-aminovalerate but not glutarate.
+    supporting_text: &#34;The mutant was unable to grow on lysine or \ndelta-aminovalerate as carbon sources,\
+      \ which indicates that the affected \nfunction is involved in the pathway for lysine catabolism.&#34;
+    reference_section_type: ABSTRACT
+  - statement: The genetic and sequence evidence supports 5-aminovalerate aminotransferase activity.
+    supporting_text: &#34;sets of data suggest that the product of this gene has delta-aminovalerate \naminotransferase\
+      \ activity.&#34;
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed identity and cached abstract claims verified; full text is unavailable locally.
+- id: file:PSEPK/davT/davT-uniprot.txt
+  title: UniProtKB entry Q88RB9 for Pseudomonas putida KT2440 davT
+  findings:
+  - statement: The reviewed record identifies DavT as 5-aminovalerate aminotransferase.
+    supporting_text: &#39;RecName: Full=5-aminovalerate aminotransferase DavT&#39;
+    reference_section_type: RESULTS
+  - statement: The record assigns pyridoxal 5&#39;-phosphate as cofactor.
+    supporting_text: Name=pyridoxal 5&#39;-phosphate
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact reviewed UniProtKB accession, product, reaction, and cofactor verified.
+- id: PMID:31064836
+  title: Massively Parallel Fitness Profiling Reveals Multiple Novel Enzymes in Pseudomonas putida Lysine
+    Metabolism.
+  findings:
+  - statement: Independent fitness profiling connects davT to growth on both 5AVA and L-lysine.
+    supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO),
+      and all three have been previously implicated in 5AVA metabolism
+    reference_section_type: RESULTS
+  - statement: DavT abundance responds most strongly to 5AVA.
+    supporting_text: As previously observed, DavT and DavD were most strongly upregulated on 5AVA
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text KT2440 fitness and proteomics study; identifier and quoted claims verified.
+core_functions:
+- description: Transaminates 5-aminovalerate with 2-oxoglutarate to form 5-oxopentanoate and L-glutamate
+    during L-lysine catabolism.
+  molecular_function:
+    id: GO:0047589
+    label: 5-aminovalerate:2-oxoglutarate transaminase activity
+  directly_involved_in:
+  - id: GO:0019477
+    label: L-lysine catabolic process
+  supported_by:
+  - reference_id: PMID:11679348
+    supporting_text: &#34;sets of data suggest that the product of this gene has delta-aminovalerate \naminotransferase\
+      \ activity.&#34;
+    full_text_unavailable: true
+  - reference_id: PMID:31064836
+    supporting_text: Only 3 genes shared fitness defects between 5AVA and l-lysine (davT, davD, and lghO),
+      and all three have been previously implicated in 5AVA metabolism
+suggested_questions:
+- question: Does KT2440 DavT have physiologically relevant GABA transaminase activity, or is that annotation
+    solely a family-level transfer?
+suggested_experiments:
+- description: Compare purified DavT kinetics with 5-aminovalerate and GABA, then test a davT deletion
+    on each substrate as sole carbon source.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

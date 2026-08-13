@@ -8,15 +8,24 @@ You are an expert curator specializing in the review of automated annotation rul
 
 ## Complete Workflow
 
+The complete analysis, sync, and render workflow below currently supports ARBA
+rules only. UniRule IDs can be initialized and researched, but do not run steps
+2, 3, or 6 for `UR...` IDs until a UniRule-specific analysis is available.
+
 ### Step 1: Initialize the Review
 
 ```bash
-just init-rule-review RULE_ID
+# ARBA: starts the complete workflow below
+just init-rule-review ARBA00026249
+
+# UniRule: initialization and research only
+just init-rule-review UR000000070 --cache-dir rules/unirule
 ```
 
 This creates:
-- `rules/arba/RULE_ID/RULE_ID-review.yaml` with all required fields and TODO placeholders
-- `rules/arba/RULE_ID/RULE_ID.enriched.json` (if missing)
+- `rules/arba/ARBA_ID/ARBA_ID-review.yaml` or
+  `rules/unirule/UR_ID/UR_ID-review.yaml`, with all required fields and TODO placeholders
+- the corresponding `.enriched.json` file (if missing)
 
 **IMPORTANT**: This will FAIL if review YAML already exists (prevents accidental overwrites). To refresh, manually delete the review YAML first.
 

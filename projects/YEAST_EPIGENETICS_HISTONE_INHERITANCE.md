@@ -43,7 +43,7 @@ This project reviews *Saccharomyces cerevisiae* genes central to **epigenetic me
 
 # STATUS
 
-Last updated: 2025-12-30
+Last updated: 2026-08-12
 
 ## Genes to Review
 
@@ -56,7 +56,7 @@ Last updated: 2025-12-30
 ### Histone Deacetylases (HDACs)
 - [ ] RPD3 - Reduced potassium dependency (HDAC, class I)
 - [ ] HDA1 - Histone deacetylase (HDAC, class II)
-- [ ] HST1 - Histone deacetylase sirtuin (NAD+-dependent, class III)
+- [x] HST1 - Histone deacetylase sirtuin (NAD+-dependent, class III)
 - [ ] HST2 - Histone deacetylase sirtuin (NAD+-dependent)
 - [ ] SIR2 - Silent information regulator (NAD+-dependent deacetylase, master regulator)
 
@@ -243,7 +243,7 @@ Last updated: 2025-12-30
 ### Issues Identified & Notes
 - **CAF1 nomenclature collision**: Repository contains POP2 (mRNA deadenylase) under "CAF1" name, not chromatin assembly factor histone chaperone - requires clarification for future use
 - **SAS2/SAS3 substrate corrections**: Successfully corrected project description errors (H3K9 → H4K16/H3K14)
-- **HST1 nomenclature error**: P50111 is ZDS1 kinase, not sirtuin - noted in Phase 2
+- **HST1 nomenclature error corrected and canonical review completed**: P50111/YMR273C is the PP2A-Cdc55 regulator ZDS1, not the sirtuin HST1; its review was moved to `genes/yeast/ZDS1/`. Canonical HST1 (P53685/YOL068C) now has a separate literature-backed review.
 
 ## 2025-12-31
 
@@ -272,13 +272,18 @@ Last updated: 2025-12-30
 **Phase 2 - Histone Deacetylases (HDACs)**
 - RPD3: 160 annotations → 85 ACCEPT (53%)
 - HDA1: 38 annotations → 27 ACCEPT (71%)
-- HST1: 40 annotations → 26 ACCEPT (65%) [Note: P50111 is ZDS1 kinase, not sirtuin]
+- ZDS1 (formerly misfiled as HST1): 27 consolidated review entries → 9 ACCEPT,
+  11 KEEP_AS_NON_CORE, 7 MARK_AS_OVER_ANNOTATED. The corrected review retains
+  direct ZDS1 evidence for PP2A-Cdc55 inhibition and secondary heterochromatin effects,
+  and synthesizes a PP2A-Cdc55 spatial-regulation core function; these
+  results do not represent the sirtuin HST1.
+- HST1 (canonical P53685/YOL068C): 38 annotations → 15 ACCEPT, 8 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 2 REMOVE, 2 UNDECIDED. The review distinguishes native Sum1-Rfm1-Hst1 promoter repression from conditional Sum1-1 mating-type silencing and rejects Sir2-derived telomeric inferences.
 - HST2: 26 annotations → 21 ACCEPT (81%)
 - SIR2: 79 annotations → 50 ACCEPT (63%)
 
 ### Critical Corrections Made
 1. SAS2/SAS3 substrate specificity: Corrected from H3K9 to H4K16/H3K14
-2. HST1 nomenclature: Identified P50111 as ZDS1 kinase, not histone deacetylase
+2. HST1 nomenclature and function: Identified P50111/YMR273C as ZDS1, then reviewed canonical HST1/P53685 as a locus-specific NAD-dependent deacetylase whose main context is the Sum1-Rfm1-Hst1 repressor rather than Sir2-like regional silencing
 3. Generic protein binding annotations: Systematically marked as non-core
 4. Phylogenetic inference errors: Corrected SAS2 complex assignment
 

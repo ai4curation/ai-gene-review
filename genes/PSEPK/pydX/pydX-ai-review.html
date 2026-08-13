@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pydX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pydX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FQ1" target="_blank" class="term-link">
+                        Q88FQ1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">PP_4037</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pydX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FQ1" data-a="DESCRIPTION: pydX (PP_4037) encodes the partner subunit of the ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pydX (PP_4037) encodes the partner subunit of the bacterial heteromeric dihydropyrimidine dehydrogenase in reductive pyrimidine catabolism. PydX is an iron-sulfur- and flavin-associated redox protein that works with adjacent PydA to reduce uracil or thymine to 5,6-dihydrouracil or 5,6-dihydrothymine. Its primary role is NADH oxidation and internal electron transfer within the assembled PydXA enzyme, not an independently established whole-enzyme activity. Whether Q88FQ1 binds FAD or FMN has not been resolved directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004159" target="_blank" class="term-link">
+                                    GO:0004159
+                                </a>
+                            </span>
+                            <span class="term-label">dihydropyrimidine dehydrogenase (NAD+) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ1" data-a="GO:0004159" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The term is correct for the assembled PydXA DPD, but PydX is the electron-input subunit rather than an independently active dihydropyrimidine dehydrogenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the term but change the relation from enables to contributes_to; PydX supplies reducing equivalents to the PydA pyrimidine-reduction site.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004159" target="_blank" class="term-link">
+                                    dihydropyrimidine dehydrogenase (NAD+) activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydX/pydX-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ1" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic oxidoreductase activity is true but does not identify the heteromeric DPD reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific DPD activity and iron-sulfur cofactor role are more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003954" target="_blank" class="term-link">
+                                    GO:0003954
+                                </a>
+                            </span>
+                            <span class="term-label">NADH dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/pydX/pydX-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ1" data-a="GO:0003954" data-r="file:PSEPK/pydX/pydX-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PydX performs the NADH-oxidizing input half-reaction and relays reducing equivalents to the PydA catalytic subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003954 captures the catalytic NADH-to-acceptor reaction enabled by PydX, while GO:0004159 remains a contributes_to function of the assembled PydXA enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21169495" target="_blank" class="term-link">
+                                        PMID:21169495
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pydX/pydX-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ1" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PydX sequence carries the iron-sulfur-binding family signature used by the paired bacterial DPD electron-transfer system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a mechanistically informative cofactor-binding function of the subunit.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072529" target="_blank" class="term-link">
+                                    GO:0072529
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine-containing compound catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22782928" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22782928
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pseudomonas putida PydR, a RutR-like transcriptional regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FQ1" data-a="GO:0072529" data-r="PMID:22782928" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PydX is the tandem partner of PydA in the reductive pyrimidine-catabolic DPD locus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The paired-enzyme architecture and locus assignment support the pathway role even though the reported KT2440 deletion phenotype is for pydA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22782928" target="_blank" class="term-link">
+                                        PMID:22782928
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridine-nucleotide/flavin and iron-sulfur electron-input subunit contributing to heteromeric PydXA dihydropyrimidine dehydrogenase in reductive pyrimidine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88FQ1" data-a="FUNCTION: Pyridine-nucleotide/flavin and iron-sulfur electro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003954" target="_blank" class="term-link">
+                            NADH dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072529" target="_blank" class="term-link">
+                                pyrimidine-containing compound catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydX/pydX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   GO; GO:0051536; F:iron-sulfur cluster binding; IEA:InterPro.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydX/pydX-notes.md
+
+                        </span>
+
+                        <div class="finding-text">The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pydX/pydX-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21169495" target="_blank" class="term-link">
+                            PMID:21169495
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Escherichia coli dihydropyrimidine dehydrogenase is a novel NAD-dependent heterotetramer essential for the production of 5,6-dihydrouracil.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The characterized E. coli homolog establishes an NADH-dependent iron-sulfur flavoenzyme architecture for bacterial heteromeric DPD.</div>
+
+                        <div class="finding-text">"dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22782928" target="_blank" class="term-link">
+                            PMID:22782928
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pseudomonas putida PydR, a RutR-like transcriptional regulator, represses the dihydropyrimidine dehydrogenase gene in the pyrimidine reductive catabolic pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The paper identifies pydX and pydA as tandem KT2440 DPD genes.</div>
+
+                        <div class="finding-text">"The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydX/pydX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for pydX (Q88FQ1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record assigns EC 1.3.1.1, FMN, and iron-sulfur cluster binding to PydX.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydX/pydX-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual evidence notes for pydX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PMID:22782928 identifies tandem pydX and pydA as the putative KT2440 DPD genes.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pydX/pydX-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for pydX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies PydX as the PreT-like electron-input subunit of the heteromeric PydXA dihydropyrimidine dehydrogenase.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pydX-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FQ1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *pydX* (PP_4037, UniProt Q88FQ1) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-26T21:06:37.853665</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="pydX-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="pydX-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pydx-pp_4037-uniprot-q88fq1-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>pydX</em> (PP_4037, UniProt Q88FQ1) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>pydX</strong> (ordered locus name <strong>PP_4037</strong>; UniProt <strong>Q88FQ1</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes the <strong>electron-input (PreT-type) subunit of dihydropyrimidine dehydrogenase (DPD; EC 1.3.1.1)</strong>, an NADH-dependent iron–sulfur flavoenzyme. DPD catalyzes the committed, first step of the <strong>reductive pyrimidine catabolic pathway</strong>, reducing the pyrimidine bases uracil and thymine to their 5,6-dihydro derivatives (5,6-dihydrouracil and 5,6-dihydrothymine, respectively) at the expense of NADH. The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.</p>
+<p>The functional enzyme is a <strong>heterotetramer of stoichiometry 2·PydA : 2·PydX</strong> (equivalent to the <em>E. coli</em> 2·PreA : 2·PreT architecture). PydX carries a <strong>C-terminal FAD/NAD(H)-binding Rossmann fold</strong> that oxidizes NADH and reduces its bound flavin, and an <strong>N-terminal helical ferredoxin domain harbouring tandem [4Fe-4S] clusters</strong> that shuttle electrons onward to the FMN/pyrimidine active site on the catalytic subunit PydA. This wiring—NADH → FAD (on PydX) → [4Fe-4S] clusters → FMN → pyrimidine (on PydA)—defines DPD as a member of a distinctive NADH-dependent subclass of iron–sulfur flavoenzymes. The reaction takes place in the <strong>cytoplasm</strong>.</p>
+<p>Biologically, this pathway allows <em>P. putida</em> to use pyrimidines primarily as a <strong>nitrogen source</strong>: uracil/thymine are reduced by DPD, the ring is opened by dihydropyrimidinase (PydB), and the product is hydrolyzed by β-alanine synthase (HyuC), ultimately liberating NH₃ and CO₂ and yielding β-alanine. The genes are organized in a contiguous <strong>pyd cluster (PP_4034–PP_4039)</strong> that also encodes a pyrimidine transporter (PydP) and a TetR/RutR-family repressor (<strong>PydR</strong>) that controls expression. Genetic evidence (a <em>pydA</em>-null mutant that cannot grow on uracil or thymine as sole nitrogen source) confirms the physiological essentiality of the DPD step, and derepression in a <em>pydR</em> mutant confirms the regulatory logic.</p>
+<hr />
+<h2 id="geneprotein-identity-verified">Gene/Protein Identity — Verified</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><strong>pydX</strong></td>
+</tr>
+<tr>
+<td>Ordered locus name</td>
+<td><strong>PP_4037</strong></td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td><strong>Q88FQ1</strong></td>
+</tr>
+<tr>
+<td>Length</td>
+<td>455 amino acids</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>1.3.1.1</td>
+</tr>
+<tr>
+<td>Protein role</td>
+<td>Electron-input (PreT-type) subunit of dihydropyrimidine dehydrogenase</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <strong>pydX</strong> correctly matches the UniProt protein description (dihydrouracil dehydrogenase, EC 1.3.1.1) and the target organism. The InterPro domains listed in the research prompt (4Fe4S_Fe-S-bd IPR017896; DPD_II IPR028261; FAD/NAD-bd_sf IPR036188; FAD/NAD-binding_dom IPR023753; Helical_ferredxn IPR009051) align exactly with the electron-input subunit of DPD. Literature on the target organism (Hidese et al. 2012) explicitly names pydX/pydA as the <em>P. putida</em> DPD genes, so there is no ambiguity of identity.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pydx-encodes-a-subunit-of-nadh-dependent-dihydropyrimidine-dehydrogenase-ec-1311">F001 — pydX encodes a subunit of NADH-dependent dihydropyrimidine dehydrogenase (EC 1.3.1.1)</h3>
+<p>UniProt entry <strong>Q88FQ1</strong> describes a 455-amino-acid protein encoded by gene <strong>pydX</strong> / ordered locus name <strong>PP_4037</strong>, annotated as "dihydrouracil dehydrogenase (NAD(+))" with <strong>EC 1.3.1.1</strong>. The catalyzed reactions correspond to Rhea <strong>RHEA:20189</strong> (5,6-dihydrouracil + NAD⁺ = uracil + NADH + H⁺) and <strong>RHEA:28791</strong> (5,6-dihydrothymine + NAD⁺ = thymine + NADH + H⁺). Although the reference reaction is written in the oxidative direction (as is conventional for EC 1.3.1.1), <em>in vivo</em> the enzyme operates in the <strong>reductive</strong> direction, consuming NADH to convert uracil → 5,6-dihydrouracil and thymine → 5,6-dihydrothymine.</p>
+<p>The physiological requirement for this activity is demonstrated genetically: a <em>P. putida</em> <strong>pydA-null mutant fails to grow on minimal medium containing uracil or thymine as the sole nitrogen source</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a>). This directly ties the DPD genes—explicitly named in that study as <strong>pydX and pydA, "tandemly arranged in the <em>Pseudomonas putida</em> genome"</strong>—to pyrimidine utilization. Since pydX and pydA encode the two subunits of a single enzyme, loss of the enzyme's function abolishes the committed first step and blocks pyrimidine catabolism.</p>
+<blockquote>
+<p>"The putative DPD genes, pydX and pydA, are tandemly arranged in the <em>Pseudomonas putida</em> genome." — <a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a></p>
+<p>"a pydA strain of <em>P. putida</em> fails to grow on a minimal media containing uracil or thymine as a sole nitrogen source, demonstrating the physiological importance of DPD in the reductive pathway" — <a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a></p>
+</blockquote>
+<h3 id="f002-dpd-is-an-ironsulfur-flavoenzyme-heterotetramer-pydx-is-the-fadnadh-electron-input-subunit">F002 — DPD is an iron–sulfur flavoenzyme heterotetramer; pydX is the FAD/NAD(H) electron-input subunit</h3>
+<p>The domain architecture of <strong>Q88FQ1 (pydX, 455 aa)</strong> comprises: a <strong>Pyr_redox_2 FAD/NAD-binding domain</strong> (PF07992; IPR023753/IPR036188), a <strong>DPD domain II</strong> (IPR028261), a <strong>4Fe-4S Fe-S binding domain</strong> (IPR017896; Fer4_20 / PF14691), and a <strong>helical ferredoxin domain</strong> (IPR009051). The UniProt cofactor annotation includes FMN, and the SUBUNIT annotation specifies a <strong>heterotetramer of two PreA and two PreT subunits</strong>. The partner protein, <strong>Q88FQ0 (pydA, 424 aa, PP_4038)</strong>, contains the <strong>dihydroorotate-dehydrogenase-like catalytic TIM-barrel</strong> (IPR005720) plus a <strong>4Fe-4S</strong> cluster domain (IPR017896/IPR017900)—i.e., the pyrimidine-reducing catalytic subunit.</p>
+<p>This organization matches the biochemically characterized <em>E. coli</em> ortholog, which was shown to be "the first member of a <strong>novel NADH-dependent subclass of iron–sulfur flavoenzymes</strong> catalyzing the conversion of uracil to 5,6-dihydrouracil <em>in vivo</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/21169495/">PMID: 21169495</a>). In this two-subunit design, PydX supplies the electron-input chain (NADH-oxidizing flavin + iron–sulfur relay) and PydA supplies the pyrimidine-reducing active site.</p>
+<blockquote>
+<p>"<em>E. coli</em> dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron–sulfur flavoenzymes catalyzing the conversion of uracil to 5,6-dihydrouracil <em>in vivo</em>." — <a href="https://pubmed.ncbi.nlm.nih.gov/21169495/">PMID: 21169495</a></p>
+</blockquote>
+<h3 id="f003-pydx-lies-in-the-pyd-operon-and-is-regulated-by-the-rutr-homolog-repressor-pydr">F003 — pydX lies in the pyd operon and is regulated by the RutR-homolog repressor PydR</h3>
+<p>The gene neighborhood in <em>P. putida</em> KT2440 places pydX within a functionally coherent operon: <strong>PP_4035 pydP</strong> (an NCS1-family nucleoside/pyrimidine transporter, Q88FQ2), <strong>PP_4036 pydB</strong> (D-hydantoinase/dihydropyrimidinase, A0A140FWK2), <strong>PP_4037 pydX</strong>, and <strong>PP_4038 pydA</strong>, with <strong>pydR</strong> encoded nearby. Hidese et al. (<a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a>) showed that <strong>pydA expression and DPD activity are elevated in a <em>pydR</em> mutant</strong>, establishing PydR as a <strong>repressor</strong> of the pathway; PydR is homologous to <em>E. coli</em> RutR. Consistent with inducible control, earlier work in <em>Pseudomonas</em> found that <strong>all three reductive-pathway enzymes are induced by uracil</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/1903745/">PMID: 1903745</a>).</p>
+<p>The three-enzyme logic of the pathway is stated directly:</p>
+<blockquote>
+<p>"The pathway is controlled by three enzymes: dihydropyrimidine dehydrogenase (DPD), dihydropyrimidinase and β-alanine synthase." — <a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a></p>
+<p>"we show that PydR acts as a repressor of the pyrimidine reductive pathway in <em>P. putida</em>" — <a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a></p>
+<p>"Induction of pyrimidine catabolism by uracil was observed in this pseudomonad." — <a href="https://pubmed.ncbi.nlm.nih.gov/1903745/">PMID: 1903745</a></p>
+</blockquote>
+<h3 id="f004-the-complete-reductive-pyrimidine-catabolic-gene-cluster-pp_4034pp_4039-surrounds-pydx">F004 — The complete reductive pyrimidine catabolic gene cluster (PP_4034–PP_4039) surrounds pydX</h3>
+<p>Mapping the KEGG/UniProt loci in KT2440 reveals a contiguous cluster encoding the full pathway plus transport and regulation:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Product / role</th>
+<th>Pathway step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4034</td>
+<td>hyuC</td>
+<td>Q88FQ3</td>
+<td>N-carbamoyl-β-alanine amidohydrolase (β-alanine synthase)</td>
+<td>Step 3</td>
+</tr>
+<tr>
+<td>PP_4035</td>
+<td>pydP</td>
+<td>Q88FQ2</td>
+<td>NCS1 nucleoside/pyrimidine transporter</td>
+<td>Substrate uptake</td>
+</tr>
+<tr>
+<td>PP_4036</td>
+<td>pydB</td>
+<td>A0A140FWK2</td>
+<td>D-hydantoinase / dihydropyrimidinase</td>
+<td>Step 2</td>
+</tr>
+<tr>
+<td>PP_4037</td>
+<td><strong>pydX</strong></td>
+<td><strong>Q88FQ1</strong></td>
+<td><strong>DPD electron-input subunit (PreT-type)</strong></td>
+<td><strong>Step 1</strong></td>
+</tr>
+<tr>
+<td>PP_4038</td>
+<td>pydA</td>
+<td>Q88FQ0</td>
+<td>DPD catalytic subunit (PreA-type)</td>
+<td>Step 1</td>
+</tr>
+<tr>
+<td>PP_4039</td>
+<td>rutR/pydR</td>
+<td>A0A140FWK3</td>
+<td>TetR/RutR-family transcriptional repressor</td>
+<td>Regulation</td>
+</tr>
+</tbody>
+</table>
+<p>This physical co-localization of transporter, all three catabolic enzymes, and the regulator provides strong genomic-context support that pydX functions in reductive pyrimidine degradation rather than in an unrelated redox process.</p>
+<h3 id="f005-structuraldomain-evidence-pydx-is-a-two-4fe-4s-ferredoxin-module-fused-to-an-fadnadp-binding-rossmann-domain">F005 — Structural/domain evidence: pydX is a two-[4Fe-4S] ferredoxin module fused to an FAD/NAD(P)-binding Rossmann domain</h3>
+<p>InterPro/CATH mapping of Q88FQ1 (455 aa) resolves a clear two-module architecture:</p>
+<ul>
+<li><strong>N-terminal α-helical ferredoxin domain</strong> (IPR009051; CATH G3DSA:1.10.1060.10; ~res 6–138/151), overlapping <strong>DPD domain II</strong> (IPR028261 / PF14691; ~res 20–127) and a <strong>4Fe-4S ferredoxin-type cluster-binding site</strong> (IPR017896 / PS51379; ~res 32–65).</li>
+<li><strong>C-terminal FAD/NAD(P)-binding Rossmann fold</strong> in two subdomains (IPR023753 / PF07992 Pyr_redox_2; ~res 142–437; CATH G3DSA:3.50.50.60 across res 139–260 and 274–455), further supported by the PRINTS signature PR00368 (FAD-dependent pyridine nucleotide reductase).</li>
+</ul>
+<p>At the sequence level, residues 32–65 (<code>RQAALESARCLYCYDAPCVNACPSEIDIPSFIHR</code>) contain the canonical <strong>CxxCxxCP ferredoxin [4Fe-4S] motif</strong> (Cys41/44/49/53), and a second cysteine cluster (Cys88/92/98/102/110) indicates a <strong>second [4Fe-4S] site</strong>. PANTHER classifies the entire protein as dihydropyrimidine dehydrogenase (PTHR43073; res 16–449). Together these features are precisely those expected of an electron-input subunit: a flavin/pyridine-nucleotide oxidase fused to an iron–sulfur electron-relay.</p>
+<p>The structural role of these N-terminal [4Fe-4S] clusters is further illuminated by comparative work on glutamate synthase, in which four conserved N-terminal cysteines were shown to be essential not only for electron transfer but also for subunit association — a study that explicitly references "the three-dimensional structure of dihydropyrimidine dehydrogenase, an enzyme containing an N-terminal β-subunit-like domain" (<a href="https://pubmed.ncbi.nlm.nih.gov/15797248/">PMID: 15797248</a>). This supports a model in which PydX's N-terminal ferredoxin/[4Fe-4S] module is both an electron conduit and a structural interface for heterotetramer assembly.</p>
+<h3 id="f006-pydx-is-specifically-the-pret-type-subunit-ortholog-of-e-coli-pret">F006 — pydX is specifically the PreT-type subunit (ortholog of <em>E. coli</em> PreT)</h3>
+<p>The InterPro domain set of pydX/Q88FQ1—{IPR028261 DPD_II; IPR023753 &amp; IPR036188 FAD/NAD-binding; IPR009051 helical ferredoxin}—is <strong>identical to that of <em>E. coli<em> PreT</em>* (P76440, b2146, 412 aa; "NAD-dependent dihydropyrimidine dehydrogenase subunit PreT"). Reciprocally, the partner pydA/Q88FQ0 domain set—{IPR017896/IPR017900 4Fe-4S; IPR013785 aldolase TIM; IPR005720 dihydroorotate DH catalytic}—matches </em></strong>E. coli<em> PreA</em><em> (P25889, b2147, 411 aa; cofactor [4Fe-4S]). Thus the assignment is unambiguous: </em><em>pydX = PreT</em><em> (electron input) and </em><em>pydA = PreA</em><em> (catalytic), assembling into the </em><em>2 PreA : 2 PreT</em>* heterotetramer.</p>
+<p>The physiological orientation of the pathway toward nitrogen scavenging is supported by growth physiology in <em>E. coli</em> B (<a href="https://pubmed.ncbi.nlm.nih.gov/3553866/">PMID: 3553866</a>), where reductive-pathway intermediates support growth roughly <strong>14-fold better as a sole nitrogen source than as a sole carbon source</strong>:</p>
+<blockquote>
+<p>"dihydrouracil, N-carbamoyl-beta-alanine, beta-alanine, dihydrothymine and beta-aminoisobutyric acid could sustain the growth of the bacterial cells as sole nitrogen sources by at least a fourteen-fold greater level than that observed if they were included as sole carbon sources" — <a href="https://pubmed.ncbi.nlm.nih.gov/3553866/">PMID: 3553866</a></p>
+</blockquote>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-enzyme-and-its-electron-path">The enzyme and its electron path</h3>
+<p>Dihydropyrimidine dehydrogenase in <em>P. putida</em> is a bipartite iron–sulfur flavoenzyme. PydX (PreT) is the <strong>electron-input subunit</strong> and PydA (PreA) is the <strong>catalytic subunit</strong>. In the physiologically relevant reductive direction, electrons flow from NADH through PydX's flavin and iron–sulfur relay into PydA's active site, where the pyrimidine ring is reduced across the C5–C6 double bond:</p>
+<div class="codehilite"><pre><span></span><code>     ┌───────────────── PydX (PreT, electron input) ─────────────────┐
+   NADH  →   FAD/NAD Rossmann domain  →  [4Fe-4S]  →  [4Fe-4S]  ────────────┐
+     (C-terminal, res ~142-437)   (N-terminal ferredoxin, res ~6-138)│
+                                                             ▼
+     ┌───────────────── PydA (PreA, catalytic) ──────────────────────┐
+     [4Fe-4S]  →  FMN  →  pyrimidine (uracil / thymine)
+                          │
+                          ▼
+          5,6-dihydrouracil / 5,6-dihydrothymine
+</code></pre></div>
+
+<p>Assembled stoichiometry: <strong>2 × PydA : 2 × PydX</strong> heterotetramer, operating in the <strong>cytoplasm</strong>.</p>
+<h3 id="the-pathway-and-its-physiological-purpose">The pathway and its physiological purpose</h3>
+<p>DPD catalyzes step 1 of a three-enzyme reductive route that dismantles the pyrimidine ring, primarily to release nitrogen (and secondarily carbon):</p>
+<div class="codehilite"><pre><span></span><code> uracil ──DPD (PydX/PydA)──▶ 5,6-dihydrouracil ──dihydropyrimidinase (PydB)──▶
+   N-carbamoyl-β-alanine ──β-alanine synthase (HyuC)──▶ β-alanine + NH3 + CO2
+
+ thymine ─DPD─▶ 5,6-dihydrothymine ─PydB─▶ N-carbamoyl-β-aminoisobutyrate
+              ─HyuC─▶ β-aminoisobutyrate + NH3 + CO2
+</code></pre></div>
+
+<p>Substrates enter the cell via the NCS1-family transporter <strong>PydP</strong> (PP_4035), and the whole operon is held under negative control by the RutR-like repressor <strong>PydR</strong> (PP_4039), being derepressed/induced when pyrimidines are available. The ~14-fold preference for pyrimidine intermediates as nitrogen versus carbon source (<a href="https://pubmed.ncbi.nlm.nih.gov/3553866/">PMID: 3553866</a>) frames the biological "why": this is a <strong>nitrogen-scavenging</strong> pathway, and PydX's role is to power the committed reductive step.</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<p>The enzyme is specific for the <strong>pyrimidine bases uracil and thymine</strong> (and, correspondingly, is active on their dihydro forms in the oxidative direction). It reduces the C5=C6 double bond of the pyrimidine ring. Cytosine is not a direct substrate of this pathway (deamination to uracil is required upstream). The two documented Rhea reactions (RHEA:20189 uracil/dihydrouracil; RHEA:28791 thymine/dihydrothymine) capture this specificity.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution</th>
+<th>Support / Challenge</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">22782928</a></td>
+<td><em>Pseudomonas putida PydR represses DPD gene</em></td>
+<td>Names <strong>pydX/pydA</strong> as the <em>P. putida</em> DPD genes; establishes PydR repressor; <em>pydA</em> mutant cannot use uracil/thymine as N source</td>
+<td><strong>Strongly supports</strong> F001, F003, F004 — the only study explicitly on the target organism/genes</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21169495/">21169495</a></td>
+<td><em>E. coli DPD is a novel NAD-dependent heterotetramer</em></td>
+<td>Defines the enzyme class: NADH-dependent iron–sulfur flavoenzyme heterotetramer producing 5,6-dihydrouracil</td>
+<td><strong>Supports</strong> F002, F006 — biochemical basis for the ortholog</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/1903745/">1903745</a></td>
+<td><em>Pyrimidine catabolism in P. aeruginosa</em></td>
+<td>Reductive-pathway enzymes present and <strong>uracil-inducible</strong> in <em>Pseudomonas</em></td>
+<td><strong>Supports</strong> F003 — regulation/induction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3553866/">3553866</a></td>
+<td><em>Degradation of uracil and thymine by E. coli B</em></td>
+<td>Pathway intermediates support growth ~14× better as N than C source</td>
+<td><strong>Supports</strong> F006 — nitrogen-scavenging role</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15797248/">15797248</a></td>
+<td><em>Structural role of glutamate synthase [4Fe-4S] clusters</em></td>
+<td>Shows N-terminal β-subunit [4Fe-4S] clusters are structural and reference the 3D structure of DPD as a model</td>
+<td><strong>Contextual support</strong> for F005 — role of N-terminal [4Fe-4S]/ferredoxin module in a homologous enzyme</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence is a combination of: (i) <strong>direct genetic evidence in the target organism</strong> (the <em>pydA</em> growth phenotype and <em>pydR</em> derepression, <a href="https://pubmed.ncbi.nlm.nih.gov/22782928/">PMID: 22782928</a>); (ii) <strong>biochemical characterization of the close <em>E. coli</em> ortholog</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21169495/">PMID: 21169495</a>); (iii) <strong>bioinformatic/structural inference</strong> from InterPro/CATH domain mapping and conserved cysteine motifs (F005, F006); and (iv) <strong>physiological/comparative context</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/1903745/">PMID: 1903745</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/3553866/">PMID: 3553866</a>).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No purified-enzyme kinetics for the <em>P. putida</em> protein specifically.</strong> Substrate specificity, kinetic parameters (Kₘ, kcat), and cofactor content have not been reported for the KT2440 DPD (Q88FQ1/Q88FQ0). The mechanistic model is inferred from the <em>E. coli</em> PreA/PreT ortholog.</li>
+<li><strong>Subunit assignment for PydX is confirmed genetically and bioinformatically, not by direct in-organism biochemistry.</strong> The critical growth phenotype was reported for a <em>pydA</em> mutant; a dedicated <em>pydX</em> knockout phenotype is not documented in the reviewed literature, though the heterotetramer requires both subunits.</li>
+<li><strong>No experimental 3D structure of the <em>P. putida</em> enzyme.</strong> The [4Fe-4S] cluster count and ligation, and the flavin (FAD on PydX vs. FMN on PydA) assignments, rest on domain homology and conserved cysteine motifs rather than a crystal structure of this protein.</li>
+<li><strong>Cofactor ambiguity in annotation.</strong> UniProt lists FMN as a cofactor for Q88FQ1, whereas the electron-input subunit of characterized orthologs is expected to bind FAD (with FMN on the catalytic subunit). The precise flavin composition of each <em>P. putida</em> subunit should be verified experimentally.</li>
+<li><strong>Operon structure/transcription not directly mapped in KT2440.</strong> The precise transcript boundaries, promoter(s), and PydR operator sites in <em>P. putida</em> have not been experimentally delineated in the reviewed sources.</li>
+<li><strong>Localization is inferred.</strong> Cytoplasmic localization is the expected and consistent assignment for a soluble NADH-dependent metabolic enzyme but was not directly demonstrated for this protein.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant co-expression and purification</strong> of PydX (Q88FQ1) with PydA (Q88FQ0) from <em>P. putida</em> KT2440, followed by confirmation of the 2:2 heterotetramer by size-exclusion chromatography / native mass spectrometry.</li>
+<li><strong>Steady-state kinetics</strong> with uracil and thymine (and their dihydro forms) using NADH/NAD⁺, to measure substrate specificity and kinetic constants, and to confirm the enzyme's directional preference (NADH-consuming reduction) <em>in vitro</em>.</li>
+<li><strong>Cofactor determination</strong>: quantify flavin content (FAD vs. FMN per subunit) and iron/sulfide content, plus EPR/UV–vis spectroscopy to count and characterize the [4Fe-4S] clusters, testing the predicted tandem N-terminal clusters on PydX.</li>
+<li><strong>Targeted mutagenesis</strong> of the conserved cysteine motifs (Cys41/44/49/53 and Cys88/92/98/102/110) to test their role in cluster ligation and electron transfer, analogous to the glutamate-synthase study (<a href="https://pubmed.ncbi.nlm.nih.gov/15797248/">PMID: 15797248</a>).</li>
+<li><strong>Dedicated <em>pydX</em> deletion mutant</strong> in KT2440 with growth assays on uracil/thymine as sole N (and C) source, to establish the standalone phenotype and complementation.</li>
+<li><strong>Transcriptional mapping</strong>: define the <em>pyd</em> operon promoter/transcript boundaries and PydR operator by RNA-seq/primer extension and EMSA/ChIP, and confirm uracil-dependent derepression.</li>
+<li><strong>Structural determination</strong> (X-ray or cryo-EM) of the <em>P. putida</em> DPD heterotetramer to validate the electron-relay path from NADH → FAD → [4Fe-4S] → FMN → pyrimidine.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene symbol <strong>pydX</strong> is correctly matched to the target: it is the <em>P. putida</em> KT2440 gene (PP_4037, UniProt Q88FQ1) for the <strong>electron-input (PreT-type) subunit of dihydropyrimidine dehydrogenase (EC 1.3.1.1)</strong>. All lines of evidence—organism-specific genetics, ortholog biochemistry, genomic context, and domain/structural bioinformatics—converge on a single, coherent function: PydX supplies NADH-derived reducing equivalents, via an FAD/NAD Rossmann domain and tandem [4Fe-4S] clusters, to the catalytic subunit PydA, enabling the cytoplasmic reduction of uracil and thymine as the committed first step of the reductive pyrimidine catabolic pathway that <em>P. putida</em> uses chiefly to acquire nitrogen.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pydX-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="pydX-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:22782928</li>
+<li>PMID:21169495</li>
+<li>PMID:1903745</li>
+<li>PMID:15797248</li>
+<li>PMID:3553866</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pydX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FQ1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pydx-review-notes">pydX review notes</h1>
+<h2 id="identity-and-scope">Identity and scope</h2>
+<ul>
+<li>Target: <code>pydX</code>, PP_4037, UniProt Q88FQ1, <em>Pseudomonas putida</em> KT2440.</li>
+<li>Reviewed files: <code>pydX-ai-review.yaml</code>, <code>pydX-goa.tsv</code>, and <code>pydX-uniprot.txt</code>.</li>
+<li>Retrieval date for external sources: 2026-07-26.</li>
+</ul>
+<h2 id="exact-provenance">Exact provenance</h2>
+<h3 id="uniprot-record">UniProt record</h3>
+<p>Source: <code>file:PSEPK/pydX/pydX-uniprot.txt</code>.</p>
+<ul>
+<li><code>"DE   RecName: Full=dihydrouracil dehydrogenase (NAD(+))"</code></li>
+<li><code>"GN   OrderedLocusNames=PP_4037"</code></li>
+<li><code>"CC       Name=FMN; Xref=ChEBI:CHEBI:58210;"</code></li>
+<li><code>"DR   GO; GO:0051536; F:iron-sulfur cluster binding; IEA:InterPro."</code></li>
+</ul>
+<p>These statements are electronic family/rule inferences, not a purified-protein assay.</p>
+<h3 id="kt2440-pathway-evidence">KT2440 pathway evidence</h3>
+<p>Source: Hidese et al., 2012, PMID:22782928, DOI:10.1093/jb/mvs079. Abstract retrieved from NCBI E-utilities.</p>
+<ul>
+<li><code>"The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome."</code></li>
+<li><code>"The pathway is controlled by three enzymes: dihydropyrimidine dehydrogenase (DPD), dihydropyrimidinase and beta-alanine synthase."</code></li>
+</ul>
+<p>The direct deletion phenotype reported in the abstract is for pydA, not pydX. PydX assignment therefore rests on the tandem paired-enzyme architecture, sequence family, and the bacterial heteromeric DPD classification.</p>
+<h3 id="heteromeric-enzyme-context">Heteromeric enzyme context</h3>
+<p>Source: Hidese et al., 2011, PMID:21169495, DOI:10.1128/JB.01178-10.</p>
+<ul>
+<li><code>"E. coli dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes"</code></li>
+</ul>
+<p>The cached abstract directly supports the bacterial NADH-dependent<br />
+iron-sulfur-flavoenzyme architecture. It does not identify the P. putida<br />
+accessions or assign the two subunit roles, so those points are not attributed<br />
+to this paper.</p>
+<h3 id="openscientist-report">OpenScientist report</h3>
+<p>Source: <code>file:PSEPK/pydX/pydX-deep-research-openscientist.md</code>.</p>
+<ul>
+<li>The report identifies PydX as the PreT-like electron-input subunit and PydA as the pyrimidine-reduction subunit of the heteromeric DPD.</li>
+<li>Its assignment of electron-relay function agrees with the paired-gene evidence and domain architecture.</li>
+<li>The report notes a flavin ambiguity: UniProt assigns FMN to Q88FQ1, whereas characterized electron-input orthologs are expected to carry FAD. The review therefore does not assert a resolved subunit-specific flavin identity.</li>
+</ul>
+<h2 id="curation-conclusions">Curation conclusions</h2>
+<ul>
+<li>Accept DPD activity as a contribution to the assembled PydXA enzyme, with a qualifier caveat.</li>
+<li>Add GO:0003954 NADH dehydrogenase activity for the PydX electron-input half-reaction.</li>
+<li>Accept iron-sulfur cluster binding as an informative subunit-level function.</li>
+<li>Do not elevate generic oxidoreductase activity to core status.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FQ1
+gene_symbol: pydX
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  pydX (PP_4037) encodes the partner subunit of the bacterial heteromeric
+  dihydropyrimidine dehydrogenase in reductive pyrimidine catabolism. PydX is an
+  iron-sulfur- and flavin-associated redox protein that works with adjacent PydA to
+  reduce uracil or thymine to 5,6-dihydrouracil or 5,6-dihydrothymine. Its
+  primary role is NADH oxidation and internal electron transfer within the
+  assembled PydXA enzyme, not an independently established whole-enzyme
+  activity. Whether Q88FQ1 binds FAD or FMN has not been resolved directly.
+existing_annotations:
+- term:
+    id: GO:0004159
+    label: dihydropyrimidine dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The term is correct for the assembled PydXA DPD, but PydX is the electron-input subunit rather than an independently active dihydropyrimidine dehydrogenase.
+    action: MODIFY
+    reason: &gt;-
+      Retain the term but change the relation from enables to contributes_to;
+      PydX supplies reducing equivalents to the PydA pyrimidine-reduction site.
+    proposed_replacement_terms:
+    - id: GO:0004159
+      label: dihydropyrimidine dehydrogenase (NAD+) activity
+    supported_by:
+    - reference_id: file:PSEPK/pydX/pydX-deep-research-openscientist.md
+      supporting_text: &#34;The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Generic oxidoreductase activity is true but does not identify the heteromeric DPD reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The specific DPD activity and iron-sulfur cofactor role are more informative.
+- term:
+    id: GO:0003954
+    label: NADH dehydrogenase activity
+  evidence_type: IC
+  original_reference_id: file:PSEPK/pydX/pydX-deep-research-openscientist.md
+  qualifier: enables
+  supporting_entities:
+  - GO:0004159
+  review:
+    summary: PydX performs the NADH-oxidizing input half-reaction and relays reducing equivalents to the PydA catalytic subunit.
+    action: NEW
+    reason: &gt;-
+      GO:0003954 captures the catalytic NADH-to-acceptor reaction enabled by
+      PydX, while GO:0004159 remains a contributes_to function of the assembled
+      PydXA enzyme.
+    supported_by:
+    - reference_id: PMID:21169495
+      supporting_text: &#34;dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes&#34;
+    - reference_id: file:PSEPK/pydX/pydX-deep-research-openscientist.md
+      supporting_text: &#34;The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.&#34;
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The PydX sequence carries the iron-sulfur-binding family signature used by the paired bacterial DPD electron-transfer system.
+    action: ACCEPT
+    reason: Retain as a mechanistically informative cofactor-binding function of the subunit.
+- term:
+    id: GO:0072529
+    label: pyrimidine-containing compound catabolic process
+  evidence_type: IC
+  original_reference_id: PMID:22782928
+  qualifier: involved_in
+  review:
+    summary: PydX is the tandem partner of PydA in the reductive pyrimidine-catabolic DPD locus.
+    action: NEW
+    reason: &gt;-
+      The paired-enzyme architecture and locus assignment support the pathway
+      role even though the reported KT2440 deletion phenotype is for pydA.
+    supported_by:
+    - reference_id: PMID:22782928
+      supporting_text: &#34;The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome.&#34;
+references:
+- id: PMID:21169495
+  title: Escherichia coli dihydropyrimidine dehydrogenase is a novel NAD-dependent heterotetramer essential for the production of 5,6-dihydrouracil.
+  full_text_unavailable: true
+  findings:
+  - statement: The characterized E. coli homolog establishes an NADH-dependent iron-sulfur flavoenzyme architecture for bacterial heteromeric DPD.
+    supporting_text: &#34;dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes&#34;
+- id: PMID:22782928
+  title: Pseudomonas putida PydR, a RutR-like transcriptional regulator, represses the dihydropyrimidine dehydrogenase gene in the pyrimidine reductive catabolic pathway.
+  findings:
+  - statement: The paper identifies pydX and pydA as tandem KT2440 DPD genes.
+    supporting_text: &#34;The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome.&#34;
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pydX/pydX-uniprot.txt
+  title: UniProt record for pydX (Q88FQ1)
+  findings:
+  - statement: The record assigns EC 1.3.1.1, FMN, and iron-sulfur cluster binding to PydX.
+- id: file:PSEPK/pydX/pydX-notes.md
+  title: Manual evidence notes for pydX
+  findings:
+  - statement: PMID:22782928 identifies tandem pydX and pydA as the putative KT2440 DPD genes.
+- id: file:PSEPK/pydX/pydX-deep-research-openscientist.md
+  title: OpenScientist deep research report for pydX
+  findings:
+  - statement: The report identifies PydX as the PreT-like electron-input subunit of the heteromeric PydXA dihydropyrimidine dehydrogenase.
+aliases:
+- PP_4037
+core_functions:
+- description: &gt;-
+    Pyridine-nucleotide/flavin and iron-sulfur electron-input subunit
+    contributing to heteromeric PydXA dihydropyrimidine dehydrogenase in
+    reductive pyrimidine catabolism.
+  molecular_function:
+    id: GO:0003954
+    label: NADH dehydrogenase activity
+  contributes_to_molecular_function:
+    id: GO:0004159
+    label: dihydropyrimidine dehydrogenase (NAD+) activity
+  directly_involved_in:
+  - id: GO:0072529
+    label: pyrimidine-containing compound catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/pydX/pydX-uniprot.txt
+    supporting_text: &#34;DR   GO; GO:0051536; F:iron-sulfur cluster binding; IEA:InterPro.&#34;
+  - reference_id: file:PSEPK/pydX/pydX-notes.md
+    supporting_text: &#34;The putative DPD genes, pydX and pydA, are tandemly arranged in the Pseudomonas putida genome.&#34;
+  - reference_id: file:PSEPK/pydX/pydX-deep-research-openscientist.md
+    supporting_text: &#34;The 455-amino-acid PydX polypeptide is not the catalytic centre itself; rather, it provides the pyridine-nucleotide oxidation and intramolecular electron-relay machinery that feeds reducing equivalents to the pyrimidine-reducing active site housed on its partner subunit, PydA.&#34;
+  knowledge_gaps:
+  - gap_statement: Direct cofactor analysis has not resolved whether KT2440 PydX binds FAD or the FMN assigned by UniProt.
+    significance: No subunit-specific flavin-binding GO term is proposed in this first-pass review.
+proposed_new_terms: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
