@@ -354,7 +354,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 
 | # | Category | Genes | Decision pattern |
 |---|----------|-------|------------------|
-| 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | MODIFY → GO:0044183; holdase NTR pending; SSZ1 over-annotated |
+| 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | MODIFY → GO:0044183; holdase NTR pending; SSZ1 retains GO:0044183 under the pragmatic co-chaperone convention |
 | 2 | **HSP90 system** | AHSA1, PTGES3, AIP (human); HSP82, HSC82, CPR6, CPR7, CDC37 (yeast); CDC37 (C. albicans); Hsp83 (fly) | MODIFY or OVER_ANNOTATED |
 | 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1, APJ1 (yeast); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 (interim); holdase-type → holdase NTR |
 | 4 | **sHSPs/holdases** | CRYAA, CRYAB, HSPB6 (human); CLU, SCG5 (human); CRYAA (bovine); cryaa/cryaba/cryabb (zebrafish); HSP26 (yeast); Hsp22/23/26/27 (fly); HSP17.7 (Arabidopsis); HSPH1 (hamster) | MODIFY → holdase NTR; retain GO:0051082 until NTR created |
@@ -565,7 +565,7 @@ established:
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
 | SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0044183 | Ribosome-associated HSP70 paralog of SSB1 |
 | SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0140662 | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5 |
-| SSZ1 | *S. cerevisiae* | P38788 | 30 | MARK_AS_OVER_ANNOTATED | Atypical RAC HSP70-like regulator; enables Zuo1/Ssb rather than acting as an autonomous foldase |
+| SSZ1 | *S. cerevisiae* | P38788 | 30 | ACCEPT GO:0044183 | Atypical RAC HSP70-like regulator; pragmatic co-chaperone term, not an ATPase claim |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
 | TCP1 | *S. cerevisiae* | P12612 | 23 | MODIFY → GO:0044183 | TRiC subunit |
 | TIM9 | *S. cerevisiae* | O74700 | 30 | MODIFY → GO:0140309 | Carrier-holdase |

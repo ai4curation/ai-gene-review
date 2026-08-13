@@ -12,10 +12,10 @@
   principal molecular contribution is to enable Zuo1 to stimulate the ATPase of
   the canonical nascent-chain Hsp70 Ssb1/2; neither Ssz1 ATP binding nor
   hydrolysis is required for this role.
-- GO:0044183 and GO:0042026 are family-level overextensions when assigned as
-  Ssz1's own autonomous foldase/refolding activity. The core-function model uses
-  heat shock protein binding for the stable Zuo1 partnership and records a
-  contribution to ATP-dependent chaperone activity at the RAC-Ssb system level.
+- GO:0044183 is retained as the project's pragmatic co-chaperone MF for Ssz1's
+  regulatory contribution to the RAC-Ssb folding system; unlike GO:0140662, it
+  does not assert Ssz1 ATP hydrolysis. GO:0042026 remains an unsafe family-level
+  transfer because classical post-translational refolding is not supported.
 - The IMP unfolded-protein-binding annotation is marked over-annotated rather
   than removed: the peptide-binding domain is dispensable and classical Hsp70
   substrate binding is unsupported, but transient nascent-chain contacts within
