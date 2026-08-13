@@ -25,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Curate a species-neutral five-part module with MF only on annotons.
 - [x] Validate and render all scoped artifacts.
 - [x] Open draft PR [#2579](https://github.com/ai4curation/ai-gene-review/pull/2579) for this module.
-- [ ] Address CI and reviewer feedback.
+- [x] Address the initial CI and reviewer feedback.
 
 ## Satisfiability
 
@@ -53,7 +53,9 @@ architectures into one organism.
 - `argD`: retain plausible acetylornithine activity as non-core, but assign the
   primary AstC-like GO:0043825 reaction and L-arginine catabolism as new
   orthology/context-supported terms. P59319 is in PTHR11986:SF113 with reviewed
-  AstC/AruC exemplars O30508 and P77581.
+  AstC/AruC exemplars O30508 and P77581. Retain L-arginine biosynthesis as a
+  non-core role because prior pathway-level research identifies P59319 as a
+  promiscuous alternative contributor to biosynthetic step 4.
 - `astD`: accept GO:0043824 and the catabolic process; mark generic
   oxidoreductase activity as over-annotated.
 - `astE`: accept GO:0009017 and the catabolic process, retain zinc binding and
@@ -78,6 +80,12 @@ Q88EI3, Q88EI2, Q88EI5, P59319, Q88EI4, Q88EI7, P80357, P80358,
 P0AE37, P76216, O30508, P77581, P76217, and P76215. The selected proteins map
 to PTHR30420:SF1 (AstA chains), PTHR30420:SF2 (AstB), PTHR11986:SF113
 (AstC-like P59319), PTHR11699 (AstD), and PTHR15162:SF7 (AstE).
+Because PTHR30420:SF1 does not distinguish the split-chain architecture,
+InterPro IPR017651 and IPR017650 are used as the alpha- and beta-chain module
+selectors, corroborated by NCBIfam TIGR03245 and TIGR03244 in the exact UniProt
+records. PTHR11699 has no populated subfamily for Q88EI4 or P76217 in the local
+member snapshot, so the broad family is constrained by the exact AstD function
+and verified exemplars.
 
 GOA uses PTN002279553 for broad PLP/self-binding annotations on P59319 and
 PTN002309601 for the broad amide-hydrolase annotation on Q88EI7. Both IDs were
@@ -91,6 +99,9 @@ with Biopython `PairwiseAligner`. Q88EI2 is 85.8% identical across aligned
 residues to alpha-chain P80357 but 40.4% to beta-chain P80358; Q88EI3 is 85.6%
 identical to P80358 but 38.0% to P80357. The module therefore describes Q88EI2
 as alpha-like and Q88EI3 as beta-like while retaining the native KT2440 symbols.
+The analysis is reproducible with
+`genes/PSEPK/astA-I/astA-I-bioinformatics/compare_astA_chains.py`, and its
+results are recorded in the adjacent `RESULTS.md`.
 
 ## Research Provenance
 
