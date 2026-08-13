@@ -45,18 +45,21 @@ GO:0009898. That PTN is recorded as evidence provenance but is not used as the
 module selector: the fetched PTHR42862:SF1 family contains many stand-alone
 P5C dehydrogenases and does not safely identify the fused two-domain PutA
 architecture.
+The refreshed putP rows cite PANTHER:PTN005155986, and the exact UniProt record
+assigns Q88D81 to PTHR48086:SF3; the fetched PTHR48086 family data corroborate
+the broader sodium:solute-symporter family context.
 
-QuickGO returned 14 source rows for putA and no rows for putP. All 14 putA rows
-have explicit decisions. The supported PutP molecular function, process, and
-location are represented as NEW review entries rather than being presented as
-pre-existing GOA.
+QuickGO returned 14 source rows for putA. A forced putP refresh corrected the
+initial header-only artifact and returned 11 source rows covering five distinct
+UniProt-displayed terms plus six additional current inference rows. All 25
+source rows now have explicit decisions; no putP term is misrepresented as NEW.
 
 ## Notes
 
 2026-08-13: Started as module 17 of the current 20-module batch. The selector
 requires orthology to full-length PSEPK PutA to avoid conflating fused PutA with
 stand-alone P5C dehydrogenases in PTHR42862:SF1. OpenScientist produced the
-putA report and artifact bundle. The putP run exited without an output file.
+putA report and artifact bundle. The putP research run exited without an output file.
 The generic-module and module+pathway+taxon wrappers exited, and their detached
 provider clients later exited naturally without publishing report artifacts.
 They were not restarted or terminated. The curation therefore uses the
