@@ -563,7 +563,7 @@ established:
 | SSA3 | *S. cerevisiae* | P09435 | 26 | MODIFY → GO:0044183 | HSP70 |
 | SSA4 | *S. cerevisiae* | P22202 | 25 | MODIFY → GO:0044183 | HSP70 |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
-| SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0044183 | Ribosome-associated HSP70 paralog of SSB1 |
+| SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0140662 | Ribosome-associated HSP70 paralog of SSB1; ATP-driven nascent-chain folding |
 | SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0140662 | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5 |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | ACCEPT GO:0044183 | Atypical RAC HSP70-like regulator; pragmatic co-chaperone term, not an ATPase claim |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
