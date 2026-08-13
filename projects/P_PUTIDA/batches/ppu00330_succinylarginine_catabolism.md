@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Verify exact UniProt exemplars, PANTHER families, and GOA PTNs.
 - [x] Curate a species-neutral five-part module with MF only on annotons.
 - [x] Validate and render all scoped artifacts.
-- [ ] Open one draft PR for this module.
+- [x] Open draft PR [#2579](https://github.com/ai4curation/ai-gene-review/pull/2579) for this module.
 - [ ] Address CI and reviewer feedback.
 
 ## Satisfiability
