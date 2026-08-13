@@ -12,3 +12,8 @@
   and GTPase gating in the orthologous system.
 - The first OpenScientist submission was rejected before execution with HTTP
   429 and is being retried with the full provider timeout.
+
+## 2026-08-12
+
+- Final review removes the unsupported nickel-binding transfer and records
+  UreG GTPase regulation as the defining orthology-supported function.

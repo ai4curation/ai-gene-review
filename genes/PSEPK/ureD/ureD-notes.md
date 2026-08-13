@@ -15,3 +15,8 @@
 - Nickel binding remains `UNDECIDED`: the orthologous MBP fusion bound both Ni
   and more tightly bound Zn, and Q88J07 has not been tested directly. It is not
   promoted to the core function or generalized to nickel homeostasis.
+
+## 2026-08-12
+
+- Final review retains ortholog-supported nickel binding as `KEEP_AS_NON_CORE`,
+  while the apoprotein-chaperone activity is the defining molecular function.

@@ -76,14 +76,14 @@ so the module does not present orthologous Klebsiella evidence as a target-gene 
 - PMID:10500143 localizes the GTP-hydrolysis requirement to UreG in the
   UreDFG-apourease activation complex.
 - PMID:8318889 establishes nickel binding and proposes donor behavior for UreE.
+- PMID:22369361 establishes the UreF-UreG interaction surface and UreF's role
+  in activation fidelity, documents orthologous UreD and UreG metal binding,
+  and assigns primary nickel delivery to UreE rather than UreF.
 
 Current GO lacks a specific biological-process term for urease activation or
 metallocenter assembly. The UreE review therefore proposes `urease metallocenter
 assembly` for the direct UreD/E/F/G stage; `GO:0043419 urea catabolic process`
 remains the closest existing pathway-level term but is mechanistically indirect.
-- PMID:22369361 establishes the UreF-UreG interaction surface and UreF's role
-  in activation fidelity, documents orthologous UreD and UreG metal binding,
-  and assigns primary nickel delivery to UreE rather than UreF.
 
 The source table, including explicit out-of-boundary rows, is retained at
 [`urease_biogenesis_urea_hydrolysis.tsv`](urease_biogenesis_urea_hydrolysis.tsv).
