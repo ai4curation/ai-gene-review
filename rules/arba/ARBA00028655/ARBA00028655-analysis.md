@@ -139,19 +139,37 @@ lipid metabolism.
 
 ### Human subset (taxonId=9606): 169 annotations
 
+Regenerate with `--taxon 9606`, which enumerates the human hit set exhaustively (169 is
+small enough to page through in full) and counts by primary gene name, falling back to
+protein name for the TrEMBL entries that carry no gene name:
+
+```
+uv run python rules/arba/ARBA00028655/scripts/census_arba00028655.py --taxon 9606
+```
+
 | Gene | n | Gene | n |
 |---|---:|---|---:|
-| FIG4 | 28 | MTMR2 | 6 |
-| SACM1L | 16 | SYNJ2 | 5 |
-| MTMR1 | 16 | MTMR4 | 5 |
-| MTM1 | 15 | PITPNM1 | 5 |
-| INPP5F | 12 | INPPL1 | 5 |
-| SYNJ1 | 9 | PITPNM2 | 4 |
-| MTMR3 | 9 | PLEKHA3 | 4 |
-| PLEKHA8 | 6 | MTMR7 | 3 |
-| **CDIPT** | **2** | INPP5D | 1 |
+| FIG4 | 28 | PITPNM2 | 4 |
+| SACM1L | 16 | PLEKHA3 | 4 |
+| MTMR1 | 16 | MTMR7 | 3 |
+| MTM1 | 15 | **CDIPT** | **2** |
+| INPP5F | 12 | INPP5D | 1 |
+| SYNJ1 | 9 | *(unnamed TrEMBL entries)* | 18 |
+| MTMR3 | 9 | | |
+| PLEKHA8 | 6 | | |
+| MTMR2 | 6 | | |
+| SYNJ2 | 5 | | |
+| MTMR4 | 5 | | |
+| PITPNM1 | 5 | | |
+| INPPL1 | 5 | | |
 
-**2 of 169 human annotations (1.2%) are CDIPT.** Every other human gene hit by this rule
+The table sums to 169. The 18 unnamed entries are TrEMBL cDNA-clone records
+(`A8K0L6`, `B4DG94`, `B7Z499`, …) with no primary gene name; by protein name they are 17
+phosphoinositide phosphatases / transfer proteins plus one further PI synthase (`Q53HA5`,
+"CDP-diacylglycerol--inositol 3-phosphatidyltransferase").
+
+**3 of 169 human annotations (1.8%) are PI synthase** — the two named CDIPT entries plus
+that one unnamed TrEMBL PI-synthase record. Every other human entry hit by this rule
 is a phosphoinositide phosphatase, a lipid-transfer/PH-domain protein, or an inositol
 polyphosphate 5-phosphatase.
 
@@ -189,7 +207,7 @@ on locally while the rule remains unchanged.
 | 14 | 1.10.1070.11:FF:000013 + 1.25.40.70:FF:000010 | Glires | PIK3C2G (class II) | → PI3P / PI(3,4)P2 | **INCORRECT** (concept-duplicate of CS6) | GO:0046854 |
 | 15 | 1.10.287.1490:FF:000001 + 1.10.555.10:FF:000035 | Rodentia | **PIK3R1 / p85α — REGULATORY subunit** | non-catalytic | **INCORRECT — NON-CATALYTIC** | delete (MF GO:0035014 if anything) |
 | 16 | 3.30.505.10:FF:000035 + 3.60.10.10:FF:000005 | Homo | INPPL1 / INPP5D (SHIP) | PIP3 → PI(3,4)P2 | **INCORRECT** | GO:0046856 |
-| 17 | 1.10.1070.11:FF:000019 ("PI 4-kinase beta 1") | **Viridiplantae** | PI4K | PI → PI4P | **INCORRECT + inconsistent taxon** | GO:0046854 |
+| 17 | 1.10.1070.11:FF:000019 ("PI 4-kinase beta 1") | **Viridiplantae** | PI4K (plant PI4Kβ) | PI → PI4P | **INCORRECT** | GO:0046854 |
 | **18** | **1.20.120.1760:FF:000003** | **Vertebrata** | **CDIPT / PIS (EC 2.7.8.11)** | **CDP-DAG + myo-inositol → PI** | **CORRECT — RETAIN** | GO:0006661 |
 | **19** | **1.20.120.1760:FF:000021** | **Fungi** | **PIS** | **CDP-DAG + myo-inositol → PI** | **CORRECT — RETAIN** | GO:0006661 |
 | 20 | 2.60.40.150:FF:000148 | Euteleostomi | **UVRAG — non-catalytic VPS34 complex II subunit** | regulatory/targeting | **INCORRECT — NON-CATALYTIC** | delete (macroautophagy/endosomal terms) |
@@ -226,8 +244,11 @@ behaviour unpredictable: the sets with **no** taxon constraint (notably CS25/DPM
 CS11/Its3) fire across all of UniProt, which is exactly how *S. pombe* dpm1 acquired the
 annotation that prompted issue #5835.
 
-CS17 is internally inconsistent in a diagnostic way: a FunFam labelled "Phosphatidylinositol
-4-kinase beta 1" paired with a Viridiplantae restriction.
+CS17 is not an example of this: a Viridiplantae-restricted FunFam labelled
+"Phosphatidylinositol 4-kinase beta 1" is biologically coherent, since plants have genuine
+PI4Kβ enzymes (*Arabidopsis* PI4Kβ1/PI4Kβ2) and CATH FunFam names take a representative
+member. CS17 is wrong for the ordinary reason all the kinase sets are wrong — PI4K makes
+PI4P, not PI — not because of its taxon.
 
 Separately, the deep research notes that "PI synthesis is not eukaryote-exclusive" (PI/PIP
 synthases occur in mycobacteria and in archaea with inositol ether lipids), so the two
