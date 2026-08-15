@@ -78,18 +78,18 @@ go-ontology#32418.
 
 | # | Gene product | Symbol | Taxon | Evidence | Reference | Assigned by | Qualifier |
 |---|---|---|---|---|---|---|---|
-| 1 | UniProtKB:A6NK58 | LIPT2 | NCBITaxon:9606 (human) | IMP | PMID:28757203 | FlyBase | involved_in |
-| 2 | UniProtKB:O32129 | lipA | NCBITaxon:224308 (*B. subtilis* 168) | IGI | PMID:19820084 | UniProt | involved_in |
-| 3 | UniProtKB:O32174 | gcvH | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338421 | UniProt | involved_in |
-| 4 | UniProtKB:P32463 | ACP1 | NCBITaxon:559292 (*S. cerevisiae*) | IMP | PMID:9187370 | SGD | involved_in |
-| 5 | UniProtKB:P39648 | lipL | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338420 | UniProt | involved_in |
-| 6 | UniProtKB:P39648 | lipL | NCBITaxon:224308 (*B. subtilis* 168) | IDA | PMID:21338421 | UniProt | involved_in |
-| 7 | UniProtKB:P54511 | lipM | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338420 | UniProt | involved_in |
-| 8 | UniProtKB:P60716 | lipA | NCBITaxon:83333 (*E. coli* K-12) | IMP | PMID:8444795 | EcoliWiki | acts_upstream_of_or_within |
-| 9 | UniProtKB:P60720 | lipB | NCBITaxon:83333 (*E. coli* K-12) | IMP | PMID:8444795 | EcoliWiki | acts_upstream_of_or_within |
-| 10 | UniProtKB:P9WK83 | lipB | NCBITaxon:83332 (*M. tuberculosis* H37Rv) | IMP | PMID:16735476 | MTBBASE | involved_in |
-| 11 | UniProtKB:Q7JQW6 | Las | NCBITaxon:7227 (*D. melanogaster*) | IMP | PMID:32648369 | FlyBase | involved_in |
-| 12 | UniProtKB:Q99M04 | Lias | NCBITaxon:10090 (mouse) | IGI | PMID:11389890 | MGI | acts_upstream_of_or_within |
+| 1 | UniProtKB:A6NK58 | `LIPT2` | NCBITaxon:9606 (human) | IMP | PMID:28757203 | FlyBase | involved_in |
+| 2 | UniProtKB:O32129 | `lipA` | NCBITaxon:224308 (*B. subtilis* 168) | IGI | PMID:19820084 | UniProt | involved_in |
+| 3 | UniProtKB:O32174 | `gcvH` | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338421 | UniProt | involved_in |
+| 4 | UniProtKB:P32463 | `ACP1` | NCBITaxon:559292 (*S. cerevisiae*) | IMP | PMID:9187370 | SGD | involved_in |
+| 5 | UniProtKB:P39648 | `lipL` | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338420 | UniProt | involved_in |
+| 6 | UniProtKB:P39648 | `lipL` | NCBITaxon:224308 (*B. subtilis* 168) | IDA | PMID:21338421 | UniProt | involved_in |
+| 7 | UniProtKB:P54511 | `lipM` | NCBITaxon:224308 (*B. subtilis* 168) | IMP | PMID:21338420 | UniProt | involved_in |
+| 8 | UniProtKB:P60716 | `lipA` | NCBITaxon:83333 (*E. coli* K-12) | IMP | PMID:8444795 | EcoliWiki | acts_upstream_of_or_within |
+| 9 | UniProtKB:P60720 | `lipB` | NCBITaxon:83333 (*E. coli* K-12) | IMP | PMID:8444795 | EcoliWiki | acts_upstream_of_or_within |
+| 10 | UniProtKB:P9WK83 | `lipB` | NCBITaxon:83332 (*M. tuberculosis* H37Rv) | IMP | PMID:16735476 | MTBBASE | involved_in |
+| 11 | UniProtKB:Q7JQW6 | `Las` | NCBITaxon:7227 (*D. melanogaster*) | IMP | PMID:32648369 | FlyBase | involved_in |
+| 12 | UniProtKB:Q99M04 | `Lias` | NCBITaxon:10090 (mouse) | IGI | PMID:11389890 | MGI | acts_upstream_of_or_within |
 
 Notes on this list:
 
@@ -100,8 +100,8 @@ Notes on this list:
 - Five of the twelve are *B. subtilis* (`lipA`, `gcvH`, `lipL` ×2, `lipM`),
   reflecting the Cronan lab's dissection of the GcvH-relay route
   (PMID:21338420, PMID:21338421). That route is exactly the case the merge is
-  meant to clarify: LipM octanoylates GcvH, LipL *transfers* the octanoyl group
-  to other lipoyl domains, and LipA sulfurates — no free lipoate is ever made,
+  meant to clarify: `LipM` octanoylates `GcvH`, `LipL` *transfers* the octanoyl
+  group to other lipoyl domains, and `LipA` sulfurates — no free lipoate is ever made,
   so "biosynthetic process" is a misnomer for every step.
 - The two EcoliWiki and one MGI annotation use `acts_upstream_of_or_within`,
   which will also want revisiting to `involved_in` when the terms are merged.
@@ -179,7 +179,7 @@ role, which the broadened definition makes unambiguously correct.
 ### Related in-repo work
 
 `modules/endogenous_protein_lipoylation.yaml` is grounded on `GO:0009249` as its
-source term and models the direct LipB–LipA route plus the Bacillus GcvH-relay
+source term and models the direct `LipB`–`LipA` route plus the Bacillus `GcvH`-relay
 and human variants. The broadened definition **strengthens** that module's
 framing; no change is required, but the module is the natural place to record
 the merge. See also
@@ -211,7 +211,7 @@ Listed in priority order.
    which is upstream item #12, so these move together.
 3. **PSEPK/lipA** (Q88DM5) — already reviewed; `existing_annotations` only, no
    `core_functions` change needed.
-4. **B. subtilis lipM (P54511), lipL (P39648), gcvH (O32174)** — not yet in the
+4. **B. subtilis `lipM` (P54511), `lipL` (P39648), `gcvH` (O32174)** — not yet in the
    repo. Four of the twelve upstream experimental annotations sit on these three
    proteins, and together they define the GcvH-relay route that motivates the
    merge. Reviewing them would give this repo the clearest worked example of why
@@ -219,7 +219,7 @@ Listed in priority order.
 5. **human LIPT2 (A6NK58)** — not yet in the repo. Human octanoyltransferase;
    PMID:28757203 is a disease-gene paper, and human LIPT1/LIPT2/LIAS are a
    coherent trio for a future human lipoylation review set.
-6. **E. coli lipA (P60716) / lipB (P60720)** — not yet in the repo. The
+6. **E. coli `lipA` (P60716) / `lipB` (P60720)** — not yet in the repo. The
    canonical two-step pathway; both annotations use
    `acts_upstream_of_or_within` and would benefit from a relation review at the
    same time.
@@ -237,7 +237,7 @@ Listed in priority order.
    BACSU/lipA) and re-run `just validate` for each; then re-fetch GOA for the
    five affected genes so `existing_annotations` picks up the merged term.
 4. **Optionally extend coverage** to the *B. subtilis* GcvH-relay trio
-   (lipM, lipL, gcvH), which is the most instructive untouched cluster on the
+   (`lipM`, `lipL`, `gcvH`), which is the most instructive untouched cluster on the
    upstream list.
 
 ## Priority
