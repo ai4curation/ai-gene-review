@@ -33,12 +33,29 @@ the expected GO branch: molecular-function slots (``function`` and
 cellular-location slots (``locations`` and context cellular components), and
 protein-complex slots. Generic descriptor terms remain ID/label-only checked.
 
-For PANTHER/PAINT ancestral nodes declared in ``family.ancestral_nodes``, this
-validator checks local ``interpro/panther/*/*-paint.tsv`` slices directly: a
-declared PTN must be a well-formed exact PTN id and must have a positive,
-non-negated IBD row. GO overlap, family consistency, GO_REF evidence, and
-representative seed overlap are currently advisory warnings so the validator can
-surface curation drift without making module validation brittle.
+PANTHER grounding is checked on three independent axes, because no single one is
+sufficient:
+
+* **Family/subfamily identity and label** (``PTHR12345``, ``PTHR12345:SF7``) are
+  resolved through ``interpro/panther/panther.obo``, built from PANTHER's own HMM
+  classifications (see ``ai_gene_review.etl.panther_families``). PANTHER offers no
+  term-lookup service and InterPro indexes only families, so without this local
+  artifact subfamily ids cannot be checked at all.
+* **Ancestral nodes** in ``family.ancestral_nodes`` are checked against local
+  ``interpro/panther/*/*-paint.tsv`` slices: a declared PTN must be a well-formed
+  exact PTN id with a positive, non-negated IBD row. PTNs *cited as evidence*
+  ``source_id`` are also checked, but only for attestation (PAINT slice or a
+  machine-fetched ``*-goa.tsv``), since IRD/IKR nodes are legitimate provenance.
+* **Family membership**: a descriptor's declared family must actually contain the
+  protein it names in ``representative_members``, per PANTHER's sequence
+  classification (``interpro/panther/panther-members.tsv``). This is the only
+  check that separates a *mis-grounded* family from a merely *mislabelled* one --
+  label checking alone cannot tell an invented label on the right family from a
+  plausible label on the wrong one.
+
+GO overlap, cross-family scope, GO_REF evidence, seed overlap, and partial member
+agreement remain advisory warnings so the validator surfaces curation drift
+without making module validation brittle.
 
 Module taxon context is also checked for scope/provenance conflation: taxa must
 name in-vivo taxa or clades, not experimental systems such as cell lines. Cell
@@ -67,6 +84,12 @@ from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 import yaml
 
+from ai_gene_review.etl.panther_families import (
+    label_drift,
+    load_member_index,
+    load_subfamily_counts,
+)
+
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
 # status is "ok" when the id resolved, "not_found" when the ontology was
 # consulted but the id is absent, and "unavailable" when the ontology itself
@@ -80,6 +103,7 @@ Resolver = Callable[[str], Tuple[str, Optional[str], Set[str]]]
 BranchResolver = Callable[[str, str], str]
 
 PTN_ID_RE = re.compile(r"^PANTHER:PTN\d+$")
+BARE_PTN_RE = re.compile(r"PTN\d+")
 PANTHER_FAMILY_RE = re.compile(r"^PANTHER:(PTHR\d+)(?::SF\d+)?$")
 TAXON_EXPERIMENTAL_SYSTEM_RE = re.compile(
     r"\b("
@@ -103,6 +127,11 @@ TAXON_EXPERIMENTAL_SYSTEM_RE = re.compile(
 
 PaintIndex = Dict[str, List["PaintAnnotationRow"]]
 _PAINT_INDEX_CACHE: Dict[Path, PaintIndex] = {}
+_GOA_PTN_CACHE: Dict[Path, Set[str]] = {}
+# OAK adapters are expensive to build (the PANTHER OBO is ~14 MB), and the CLI
+# validates many files per process, so cache them for the process lifetime.
+_ADAPTER_CACHE: Dict[str, object] = {}
+_FAILED_ADAPTERS: Set[str] = set()
 
 
 @dataclass(frozen=True)
@@ -232,6 +261,22 @@ def iter_terms(obj: object) -> Iterator[Tuple[str, str]]:
     >>> list(iter_terms({"id": "some_node", "label": "a node"}))
     []
     """
+    for _path, curie, label in iter_terms_with_paths(obj):
+        yield (curie, label)
+
+
+def iter_terms_with_paths(
+    obj: object, path: str = "$"
+) -> Iterator[Tuple[str, str, str]]:
+    """Yield ``(yaml_path, id, label)`` for every ontology term descriptor.
+
+    Same selection rules as :func:`iter_terms`, but carrying the YAML path so a
+    caller can act on one specific descriptor. Paths are built exactly as in
+    :func:`iter_family_member_uses`, so the two can be cross-referenced.
+
+    >>> list(iter_terms_with_paths({"a": {"term": {"id": "GO:1", "label": "x"}}}))
+    [('$.a.term', 'GO:1', 'x')]
+    """
     if isinstance(obj, dict):
         for key, value in obj.items():
             if (
@@ -240,19 +285,23 @@ def iter_terms(obj: object) -> Iterator[Tuple[str, str]]:
                 and isinstance(value.get("id"), str)
                 and isinstance(value.get("label"), str)
             ):
-                yield (value["id"], value["label"])
+                yield (f"{path}.term", value["id"], value["label"])
             if key == "family_terms":
-                for item in _as_list(value):
+                for index, item in enumerate(_as_list(value)):
                     if (
                         isinstance(item, dict)
                         and isinstance(item.get("id"), str)
                         and isinstance(item.get("label"), str)
                     ):
-                        yield (item["id"], item["label"])
-            yield from iter_terms(value)
+                        yield (
+                            f"{path}.family_terms[{index}]",
+                            item["id"],
+                            item["label"],
+                        )
+            yield from iter_terms_with_paths(value, f"{path}.{key}")
     elif isinstance(obj, list):
-        for item in obj:
-            yield from iter_terms(item)
+        for index, item in enumerate(obj):
+            yield from iter_terms_with_paths(item, f"{path}[{index}]")
 
 
 def _as_list(value: object) -> List[object]:
@@ -522,6 +571,22 @@ def load_paint_index(panther_dir: Path) -> PaintIndex:
     return index
 
 
+def _is_panther_subfamily(curie: str) -> bool:
+    """True for a subfamily CURIE such as ``PANTHER:PTHR13337:SF6``.
+
+    The prefix colon makes a naive ``":" in curie`` test useless here.
+
+    >>> _is_panther_subfamily("PANTHER:PTHR13337:SF6")
+    True
+    >>> _is_panther_subfamily("PANTHER:PTHR13337")
+    False
+    """
+    match = PANTHER_FAMILY_RE.match(curie)
+    if match is None:
+        return False
+    return curie != f"PANTHER:{match.group(1)}"
+
+
 def _panther_family_base(curie: Optional[str]) -> Optional[str]:
     """Return the PTHR family id from a PANTHER family/subfamily CURIE."""
     if curie is None:
@@ -540,9 +605,34 @@ def _format_limited(values: Set[str], limit: int = 8) -> str:
     return ", ".join(ordered[:limit]) + f", ... (+{len(ordered) - limit} more)"
 
 
+GoAncestors = Callable[[str], Set[str]]
+
+
+def _go_terms_agree(
+    asserted: Tuple[ModuleGoAssertion, ...],
+    supported: Set[Tuple[str, str]],
+    go_ancestors: Optional[GoAncestors],
+) -> bool:
+    """True if any asserted term is equal to, or related by ancestry to, a node term."""
+    for assertion in asserted:
+        for aspect, go_id in supported:
+            if aspect != assertion.aspect:
+                continue
+            if go_id == assertion.curie:
+                return True
+            if go_ancestors is None:
+                continue
+            if assertion.curie in go_ancestors(go_id):
+                return True
+            if go_id in go_ancestors(assertion.curie):
+                return True
+    return False
+
+
 def validate_paint_ptns(
     uses: List[AncestralNodeUse],
     paint_index: PaintIndex,
+    go_ancestors: Optional[GoAncestors] = None,
 ) -> Tuple[List[str], List[str]]:
     """Validate module PTN declarations against local PAINT IBD TSV rows."""
     errors: List[str] = []
@@ -577,6 +667,39 @@ def validate_paint_ptns(
             errors.append(
                 f"{use.path}: {use.ptn_curie} has no positive non-negated IBD "
                 f"row in local PAINT TSVs; found {evidence_seen or 'no rows'}"
+            )
+            continue
+
+        # A node may record that a function was LOST on this lineage (IRD/IKR, or
+        # an explicit NOT). Inheriting the very term PAINT struck out inverts the
+        # evolutionary inference: pseudoenzymes are exactly the case where the
+        # ancestral activity is gone while the fold and the family membership
+        # remain, so this must block rather than advise.
+        lost = {
+            (row.aspect, row.go_id)
+            for row in rows
+            if (row.negated or row.evidence in ("IRD", "IKR")) and row.go_id
+        }
+        contradicted = [
+            assertion
+            for assertion in use.asserted_go_terms
+            if (assertion.aspect, assertion.curie) in lost
+        ]
+        if contradicted:
+            struck = _format_limited(
+                {f"{a.aspect}:{a.curie}" for a in contradicted}
+            )
+            retained = _format_limited(
+                {
+                    f"{row.aspect}:{row.go_id}"
+                    for row in positive_ibd_rows
+                    if row.go_id
+                }
+            )
+            errors.append(
+                f"{use.path}: the module asserts {struck} but PAINT records that "
+                f"term as LOST (IRD/IKR) at {use.ptn_curie}, so this node cannot "
+                f"support inheriting it. Terms the node does retain: {retained}."
             )
             continue
 
@@ -620,22 +743,35 @@ def validate_paint_ptns(
                 for row in positive_ibd_rows
                 if row.aspect and row.go_id
             }
-            exact_matches = [
-                assertion
+            asserted = {
+                f"{assertion.aspect}:{assertion.curie}"
                 for assertion in use.asserted_go_terms
-                if (assertion.aspect, assertion.curie) in supported
-            ]
-            if not exact_matches:
-                asserted = {
-                    f"{assertion.aspect}:{assertion.curie}"
-                    for assertion in use.asserted_go_terms
-                }
-                ibd_terms = {f"{aspect}:{go_id}" for aspect, go_id in supported}
-                warnings.append(
-                    f"{use.path}: {use.ptn_curie} has no exact GO overlap with "
-                    f"nearby module GO assertions ({_format_limited(asserted)}); "
-                    f"positive IBD rows support {_format_limited(ibd_terms)}"
-                )
+            }
+            ibd_terms = {f"{aspect}:{go_id}" for aspect, go_id in supported}
+            # Exact equality is too strict: a node annotated to a child term does
+            # support a parent claim (and vice versa is a documented
+            # generalisation), so only a term with no ancestry relation at all is
+            # worth surfacing.
+            if not _go_terms_agree(use.asserted_go_terms, supported, go_ancestors):
+                asserted_aspects = {a.aspect for a in use.asserted_go_terms}
+                node_aspects = {aspect for aspect, _ in supported}
+                missing_aspects = asserted_aspects - node_aspects
+                if missing_aspects:
+                    # The commonest shape: the node attests the pathway role but
+                    # nothing in the molecular-function aspect being claimed.
+                    warnings.append(
+                        f"{use.path}: {use.ptn_curie} attests nothing in GO aspect "
+                        f"{'/'.join(sorted(missing_aspects))}, so it cannot be the "
+                        f"evidence for {_format_limited(asserted)}; its IBD rows "
+                        f"cover {_format_limited(ibd_terms)}. The claim needs "
+                        "separate support."
+                    )
+                else:
+                    warnings.append(
+                        f"{use.path}: {use.ptn_curie} supports "
+                        f"{_format_limited(ibd_terms)}, which has no ancestry "
+                        f"relation to the module's {_format_limited(asserted)}"
+                    )
 
         if use.representative_uniprot_accessions:
             seed_accessions: Set[str] = set()
@@ -650,6 +786,336 @@ def validate_paint_ptns(
                 )
 
     return errors, warnings
+
+
+@dataclass(frozen=True)
+class FamilyMemberUse:
+    """A module family descriptor together with its representative members."""
+
+    path: str
+    declared_family_curies: frozenset[str]
+    representative_accessions: frozenset[str]
+    ancestral_node_curies: frozenset[str] = frozenset()
+
+
+def iter_family_member_uses(
+    obj: object, path: str = "$"
+) -> Iterator[FamilyMemberUse]:
+    """Yield every family descriptor that names representative UniProt members.
+
+    Only descriptors carrying both a PANTHER family/subfamily id and at least one
+    ``representative_members`` UniProtKB accession are yielded; anything else
+    cannot be cross-checked.
+    """
+    if isinstance(obj, dict):
+        family_curies = {
+            curie
+            for curie in _family_term_curies(obj)
+            if _panther_family_base(curie) is not None
+        }
+        accessions = _representative_uniprot_accessions(obj)
+        if family_curies and accessions:
+            nodes = set()
+            for node_descriptor in _as_list(obj.get("ancestral_nodes")):
+                if not isinstance(node_descriptor, dict):
+                    continue
+                term = node_descriptor.get("term")
+                if isinstance(term, dict) and isinstance(term.get("id"), str):
+                    if PTN_ID_RE.match(term["id"]):
+                        nodes.add(term["id"])
+            yield FamilyMemberUse(
+                path=f"{path}.term",
+                declared_family_curies=frozenset(family_curies),
+                representative_accessions=frozenset(accessions),
+                ancestral_node_curies=frozenset(nodes),
+            )
+        for key, value in obj.items():
+            yield from iter_family_member_uses(value, f"{path}.{key}")
+    elif isinstance(obj, list):
+        for index, item in enumerate(obj):
+            yield from iter_family_member_uses(item, f"{path}[{index}]")
+
+
+# A family split into at least this many subfamilies tells you little about any
+# individual member, so grounding a specific functional claim on it is imprecise
+# even when the id is correct. Advisory only -- narrowing to the subfamily is a
+# curation judgement, not a correctness fix.
+HETEROGENEOUS_FAMILY_SUBFAMILIES = 20
+
+KnownBadKey = Tuple[str, str, str]
+KNOWN_BAD_HEADER = [
+    "module",
+    "declared_family",
+    "members",
+    "member_real_family",
+    "kind",
+    "note",
+]
+
+
+def known_bad_key(module_id: str, declared_curie: str, members) -> KnownBadKey:
+    """Build the register key for one family descriptor.
+
+    Keyed on the members as well as the family so that a file declaring the same
+    family twice -- once correctly, once not -- registers only the bad one.
+    """
+    return (module_id, declared_curie, "|".join(sorted(members)))
+
+
+def load_known_bad_groundings(path: Path) -> Dict[KnownBadKey, str]:
+    """Load the register of mis-groundings already known and awaiting curation.
+
+    This is a *shrinking* backlog, not a suppression switch: each row names one
+    specific descriptor, so a new mis-grounding anywhere else still fails. Rows
+    are removed by fixing the grounding, never by widening a pattern.
+    """
+    path = Path(path)
+    if not path.exists():
+        return {}
+    register: Dict[KnownBadKey, str] = {}
+    for line in path.read_text().splitlines():
+        line = line.rstrip("\n")
+        if not line.strip() or line.startswith("#"):
+            continue
+        columns = line.split("\t")
+        if len(columns) < 3:
+            continue
+        module_id, declared, members = columns[0], columns[1], columns[2]
+        # The header may sit anywhere after the explanatory comment block, so
+        # recognise it by content rather than by line number.
+        if module_id == KNOWN_BAD_HEADER[0]:
+            continue
+        note = columns[5] if len(columns) > 5 else ""
+        register[(module_id, declared, members)] = note
+    return register
+
+
+def _paint_corroborated_families(
+    use: FamilyMemberUse, paint_index: Optional[PaintIndex]
+) -> Set[str]:
+    """Families that PAINT itself assigns to this descriptor's ancestral nodes."""
+    if not paint_index:
+        return set()
+    families: Set[str] = set()
+    for node_curie in use.ancestral_node_curies:
+        for row in paint_index.get(node_curie, []):
+            if row.family:
+                families.add(row.family)
+    return families
+
+
+def validate_family_members(
+    uses: List[FamilyMemberUse],
+    member_index: Dict[str, str],
+    paint_index: Optional[PaintIndex] = None,
+    known_bad: Optional[Dict[KnownBadKey, str]] = None,
+    module_id: Optional[str] = None,
+    matched_known_bad: Optional[Set[KnownBadKey]] = None,
+    registered_paths: Optional[Set[str]] = None,
+    subfamily_counts: Optional[Dict[str, int]] = None,
+) -> Tuple[List[str], List[str]]:
+    """Check that a declared PANTHER family really contains its own members.
+
+    Label checking alone cannot distinguish a *wrong label on the right family*
+    from a *plausible label on the wrong family*: both look like a mismatch, and
+    a label that happens to match nothing is indistinguishable from one that was
+    invented. This check is the independent signal -- PANTHER's own sequence
+    classification says which family each UniProt accession belongs to, so a
+    descriptor that names ``PTHR11375`` while its representative member sits in
+    ``PTHR13337`` is provably mis-grounded regardless of how its label reads.
+
+    Accessions absent from the (pruned) index are not checkable and degrade to a
+    warning, so a newly cited protein never fails the build spuriously.
+    """
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    for use in uses:
+        declared_bases = {
+            base
+            for curie in use.declared_family_curies
+            if (base := _panther_family_base(curie)) is not None
+        }
+        known = {
+            accession: member_index[accession]
+            for accession in use.representative_accessions
+            if accession in member_index
+        }
+        if not known:
+            warnings.append(
+                f"{use.path}: none of the representative members "
+                f"({_format_limited(set(use.representative_accessions))}) are in "
+                "interpro/panther/panther-members.tsv, so family membership was "
+                "not checked; refresh with `just refresh-panther-members`"
+            )
+            continue
+
+        member_bases = {family_sf.split(":", 1)[0] for family_sf in known.values()}
+        if declared_bases & member_bases:
+            # Precision advisory: the id is right, but if every member resolves
+            # to one subfamily of a large family, the subfamily is the sharper
+            # grounding for a specific functional claim.
+            member_subfamilies = {v for v in known.values() if ":" in v}
+            declared_at_subfamily = any(
+                _is_panther_subfamily(curie) for curie in use.declared_family_curies
+            )
+            if (
+                subfamily_counts
+                and len(member_subfamilies) == 1
+                and not declared_at_subfamily
+            ):
+                subfamily = next(iter(member_subfamilies))
+                base = subfamily.split(":", 1)[0]
+                count = subfamily_counts.get(base, 0)
+                if count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
+                    warnings.append(
+                        f"{use.path}: PANTHER:{base} is split into {count} "
+                        f"subfamilies; every representative member here is in "
+                        f"PANTHER:{subfamily}. Consider grounding on the "
+                        "subfamily, which identifies the protein rather than "
+                        "just its superfamily."
+                    )
+            # A descriptor may deliberately group proteins PANTHER splits across
+            # families (a functional grouping rather than a strict family), so
+            # partial agreement is advisory, not an error.
+            outside = {
+                accession: family_sf
+                for accession, family_sf in known.items()
+                if family_sf.split(":", 1)[0] not in declared_bases
+            }
+            if outside:
+                listed = ", ".join(
+                    f"{accession} is in PANTHER:{family_sf}"
+                    for accession, family_sf in sorted(outside.items())
+                )
+                warnings.append(
+                    f"{use.path}: some representative members fall outside the "
+                    f"declared family -- {listed}. Confirm the grouping is "
+                    "intentional, or split the descriptor."
+                )
+            continue
+        actual = ", ".join(
+            f"{accession} is in PANTHER:{family_sf}"
+            for accession, family_sf in sorted(known.items())
+        )
+        declared = _format_limited({f"PANTHER:{base}" for base in declared_bases})
+        # Already-registered curation debt: reported, never silently accepted,
+        # and scoped to this exact descriptor so new mistakes still fail.
+        registered = None
+        if known_bad and module_id:
+            for curie in use.declared_family_curies:
+                key = known_bad_key(module_id, curie, use.representative_accessions)
+                if key in known_bad:
+                    registered = (key, known_bad[key])
+                    break
+        if registered is not None:
+            key, note = registered
+            if matched_known_bad is not None:
+                matched_known_bad.add(key)
+            if registered_paths is not None:
+                registered_paths.add(use.path)
+            detail = f" ({note})" if note else ""
+            warnings.append(
+                f"{use.path}: KNOWN-BAD grounding awaiting curation. "
+                f"PANTHER's sequence classification puts {actual}, not in the "
+                f"declared {declared}{detail}. Fix the grounding, then delete "
+                "its row from conf/panther_known_bad_groundings.tsv."
+            )
+            continue
+        # UniProt and PAINT genuinely disagree about some proteins' family. When
+        # the descriptor also declares a PAINT ancestral node that PAINT itself
+        # places in the declared family, the grounding is corroborated by a
+        # second machine source and the disagreement is reported, not enforced.
+        if declared_bases & _paint_corroborated_families(use, paint_index):
+            warnings.append(
+                f"{use.path}: PANTHER's sequence classification puts {actual}, "
+                f"not in the declared {declared}, but the descriptor's PAINT "
+                "ancestral node(s) are in the declared family; the two PANTHER "
+                "sources disagree for this protein. Document which one the "
+                "module follows."
+            )
+            continue
+        errors.append(
+            f"{use.path}: declared PANTHER family {declared} does not contain "
+            f"its own representative member(s) -- {actual}. Either the family "
+            "id or the representative member is wrong."
+        )
+
+    return errors, warnings
+
+
+def iter_cited_ptn_sources(obj: object, path: str = "$") -> Iterator[Tuple[str, str]]:
+    """Yield ``(path, PTN curie)`` for every PTN cited as an evidence source.
+
+    ``family.ancestral_nodes`` is not the only place a PTN is asserted: evidence
+    items cite them directly via ``source_id``, and those were previously
+    unchecked, so a node that does not exist -- or exists but carries no PAINT
+    support -- could be cited as provenance with nothing to catch it.
+
+    >>> doc = {"evidence": [{"source_id": "PANTHER:PTN1"}, {"source_id": "PMID:1"}]}
+    >>> list(iter_cited_ptn_sources(doc))
+    [('$.evidence[0].source_id', 'PANTHER:PTN1')]
+    """
+    if isinstance(obj, dict):
+        source_id = obj.get("source_id")
+        if isinstance(source_id, str) and PTN_ID_RE.match(source_id):
+            yield (f"{path}.source_id", source_id)
+        for key, value in obj.items():
+            yield from iter_cited_ptn_sources(value, f"{path}.{key}")
+    elif isinstance(obj, list):
+        for index, item in enumerate(obj):
+            yield from iter_cited_ptn_sources(item, f"{path}[{index}]")
+
+
+def load_goa_attested_ptns(genes_dir: Path) -> Set[str]:
+    """Collect every PTN id appearing in a machine-fetched ``*-goa.tsv``.
+
+    GOA files are downloaded from QuickGO, never authored, so the PTN ids in
+    their with/from columns are trusted by construction -- the same asymmetry
+    the project already applies to existing-annotation term ids. They are also
+    a *broader* attestation than the local PAINT slices: GOA's IBA data can name
+    an ancestral node that the current ``IBD.gaf`` snapshot no longer carries, so
+    without this a real, machine-sourced id would be reported as fabricated.
+    """
+    genes_dir = Path(genes_dir)
+    if genes_dir in _GOA_PTN_CACHE:
+        return _GOA_PTN_CACHE[genes_dir]
+    attested: Set[str] = set()
+    if genes_dir.exists():
+        for goa_path in genes_dir.rglob("*-goa.tsv"):
+            attested.update(
+                f"PANTHER:{node}"
+                for node in BARE_PTN_RE.findall(goa_path.read_text(errors="replace"))
+            )
+    _GOA_PTN_CACHE[genes_dir] = attested
+    return attested
+
+
+def validate_cited_ptn_sources(
+    cited: List[Tuple[str, str]],
+    paint_index: PaintIndex,
+    goa_attested: Optional[Set[str]] = None,
+) -> List[str]:
+    """Error for evidence-cited PTNs attested by neither PAINT nor GOA.
+
+    Unlike ``validate_paint_ptns`` this does not require positive IBD support:
+    an ``IRD``/``IKR`` node is legitimate provenance, and a node attested only by
+    GOA is legitimate too (see :func:`load_goa_attested_ptns`). It requires only
+    that the id be attested *somewhere machine-sourced* rather than authored --
+    which is precisely what a fabricated node id would fail.
+    """
+    errors: List[str] = []
+    attested = goa_attested or set()
+    for path, curie in cited:
+        if paint_index.get(curie) or curie in attested:
+            continue
+        errors.append(
+            f"{path}: {curie} is cited as an evidence source but appears in "
+            "neither the local interpro/panther/*/*-paint.tsv PAINT index nor "
+            "any machine-fetched genes/**/*-goa.tsv; fetch the family with "
+            "`just fetch-panther-paint <FAMILY>` or correct the id"
+        )
+    return errors
 
 
 def compare_label(
@@ -671,10 +1137,21 @@ def compare_label(
     if provided.lower() in lowered:
         return None
     shown = primary if primary is not None else "<no label>"
-    return (
+    message = (
         f"Label mismatch for {curie}: module says '{provided}' "
         f"but ontology label is '{shown}'"
     )
+    # A label naming a different entity entirely is weak evidence of a typo and
+    # strong evidence of a wrong id -- an id guessed at random is still a
+    # hallucination when it happens to resolve. Say so, so the reader fixes the
+    # id rather than "correcting" the label and cementing the wrong grounding.
+    if primary and label_drift(provided, primary) == "divergent":
+        message += (
+            ". These name different entities, which usually means the ID is "
+            "wrong rather than the label -- verify the ID before changing the "
+            "label"
+        )
+    return message
 
 
 def validate_terms(
@@ -696,6 +1173,12 @@ def validate_terms(
     unconfigured_seen: Set[str] = set()
 
     for curie, label in terms:
+        if PTN_ID_RE.match(curie):
+            # PTN ancestral nodes share the PANTHER prefix but are not in the
+            # PANTHER OBO (which covers families/subfamilies). They get a
+            # stronger check than existence in validate_paint_ptns: a declared
+            # node must carry real, positive, non-negated PAINT IBD support.
+            continue
         prefix = curie.split(":", 1)[0] if ":" in curie else curie
         if prefix not in adapter_map:
             if prefix not in unconfigured_seen:
@@ -787,12 +1270,48 @@ def validate_taxon_context(doc: object) -> List[str]:
     return errors
 
 
-def load_oak_adapter_map(config_path: Path) -> Dict[str, Optional[str]]:
-    """Load the prefix -> adapter mapping from an ``oak_config.yaml``."""
+def load_oak_adapter_map(
+    config_path: Path, project_root: Optional[Path] = None
+) -> Dict[str, Optional[str]]:
+    """Load the prefix -> adapter mapping from an ``oak_config.yaml``.
+
+    Adapter strings naming a repo-relative artifact (e.g.
+    ``simpleobo:interpro/panther/panther.obo``) are rewritten to absolute paths
+    so validation works regardless of the caller's working directory.
+    """
     with open(config_path) as f:
         data = yaml.safe_load(f) or {}
     adapters = data.get("ontology_adapters", {})
-    return {str(k): (None if v is None else str(v)) for k, v in adapters.items()}
+    if project_root is None:
+        project_root = Path(__file__).resolve().parents[3]
+    return {
+        str(k): (None if v is None else _absolutize_adapter(str(v), project_root))
+        for k, v in adapters.items()
+    }
+
+
+def _absolutize_adapter(adapter_string: str, project_root: Path) -> str:
+    """Resolve a repo-relative artifact path inside an OAK adapter string.
+
+    Only rewrites when the descriptor names a file that actually exists under
+    ``project_root``; scheme-only strings such as ``sqlite:obo:go`` or
+    ``ols:chebi`` are left untouched.
+
+    >>> _absolutize_adapter("ols:chebi", Path("/repo"))
+    'ols:chebi'
+    >>> _absolutize_adapter("sqlite:obo:go", Path("/repo"))
+    'sqlite:obo:go'
+    """
+    scheme, separator, descriptor = adapter_string.partition(":")
+    if not separator or not descriptor:
+        return adapter_string
+    candidate = Path(descriptor)
+    if candidate.is_absolute():
+        return adapter_string
+    resolved = project_root / candidate
+    if not resolved.exists():
+        return adapter_string
+    return f"{scheme}:{resolved}"
 
 
 def load_term_label_aliases(config_path: Path) -> Dict[str, Set[str]]:
@@ -807,6 +1326,30 @@ def load_term_label_aliases(config_path: Path) -> Dict[str, Set[str]]:
     }
 
 
+def _get_cached_adapter(adapter_string: str):
+    """Return a process-wide cached OAK adapter, or None if it cannot load.
+
+    Adapters are cached across files, not per ``validate_module_file`` call: the
+    CLI validates hundreds of modules in one process, and re-instantiating an
+    adapter each time means re-parsing its backing artifact every file (the
+    PANTHER OBO alone is ~14 MB, several seconds a pop). Failures are remembered
+    too so a broken/unreachable ontology is not retried once per term.
+    """
+    from oaklib import get_adapter  # imported lazily; heavy dependency
+
+    if adapter_string in _FAILED_ADAPTERS:
+        return None
+    if adapter_string not in _ADAPTER_CACHE:
+        # External system (ontology download/db): tolerate failures and degrade
+        # to "unavailable" rather than crashing the whole run.
+        try:
+            _ADAPTER_CACHE[adapter_string] = get_adapter(adapter_string)
+        except Exception:  # noqa: BLE001 - external system
+            _FAILED_ADAPTERS.add(adapter_string)
+            return None
+    return _ADAPTER_CACHE[adapter_string]
+
+
 def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     """Build a resolver backed by real OAK adapters (lazily created, cached).
 
@@ -815,25 +1358,8 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     instead such terms are treated as resolvable-but-unknown and reported by the
     caller. We keep one adapter per adapter string.
     """
-    from oaklib import get_adapter  # imported lazily; heavy dependency
-
-    cache: Dict[str, object] = {}
-    # Adapter strings that failed to load are remembered so we don't retry (and
-    # re-log) them per term.
-    failed: Set[str] = set()
-
     def get(adapter_string: str):
-        if adapter_string in failed:
-            return None
-        if adapter_string not in cache:
-            # External system (ontology download/db): tolerate failures and
-            # degrade to "unavailable" rather than crashing the whole run.
-            try:
-                cache[adapter_string] = get_adapter(adapter_string)
-            except Exception:  # noqa: BLE001 - external system
-                failed.add(adapter_string)
-                return None
-        return cache[adapter_string]
+        return _get_cached_adapter(adapter_string)
 
     def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
         prefix = curie.split(":", 1)[0]
@@ -860,26 +1386,12 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
 
 def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchResolver:
     """Build an OAK-backed GO branch resolver for known module slots."""
-    from oaklib import get_adapter  # imported lazily; heavy dependency
-
     adapter_string = adapter_map.get("GO")
-    adapter = None
-    adapter_failed = False
 
     def get_go_adapter():
-        nonlocal adapter, adapter_failed
-        if adapter_failed:
+        if adapter_string is None:
             return None
-        if adapter is None:
-            if adapter_string is None:
-                adapter_failed = True
-                return None
-            try:
-                adapter = get_adapter(adapter_string)
-            except Exception:  # noqa: BLE001 - external system
-                adapter_failed = True
-                return None
-        return adapter
+        return _get_cached_adapter(adapter_string)
 
     def resolve(curie: str, root_id: str) -> str:
         go_adapter = get_go_adapter()
@@ -900,6 +1412,31 @@ def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchRe
     return resolve
 
 
+def _build_go_ancestor_resolver(
+    adapter_map: Dict[str, Optional[str]],
+) -> Optional[GoAncestors]:
+    """Build a cached GO ancestor lookup, or None when GO is unavailable."""
+    adapter_string = adapter_map.get("GO")
+    if adapter_string is None:
+        return None
+    cache: Dict[str, Set[str]] = {}
+
+    def ancestors(curie: str) -> Set[str]:
+        if curie not in cache:
+            adapter = _get_cached_adapter(adapter_string)
+            if adapter is None:
+                return {curie}
+            try:  # external system: ontology query may fail transiently
+                cache[curie] = set(
+                    adapter.ancestors(curie, predicates=["rdfs:subClassOf", "BFO:0000050"])
+                )
+            except Exception:  # noqa: BLE001 - external system
+                return {curie}
+        return cache[curie]
+
+    return ancestors
+
+
 def _unavailable_go_branch_resolver(curie: str, root_id: str) -> str:
     """Offline test helper used when only label resolution is injected."""
     return "unavailable"
@@ -912,6 +1449,10 @@ def validate_module_file(
     branch_resolver: Optional[BranchResolver] = None,
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
+    member_index: Optional[Dict[str, str]] = None,
+    known_bad: Optional[Dict[KnownBadKey, str]] = None,
+    module_id: Optional[str] = None,
+    matched_known_bad: Optional[Set[KnownBadKey]] = None,
 ) -> ModuleValidationResult:
     """Validate term labels in a single module YAML file.
 
@@ -931,12 +1472,56 @@ def validate_module_file(
     with open(path) as f:
         doc = yaml.safe_load(f)
 
-    terms = list(iter_terms(doc))
     typed_go_terms = list(iter_typed_go_terms(doc))
     resolver_was_injected = resolver is not None
     if resolver is None:
         resolver = _build_oak_resolver(adapter_map)
+
+    # Family membership is resolved BEFORE label checking so a registered
+    # known-bad grounding can also silence its own label error: the divergent
+    # label is a symptom of the same wrong id, not a second, separate defect.
+    # Suppression is scoped to the exact descriptor path, so the same family id
+    # used correctly elsewhere in the file is still label-checked.
+    if member_index is None:
+        member_index = load_member_index(
+            project_root / "interpro" / "panther" / "panther-members.tsv"
+        )
+    if known_bad is None:
+        known_bad = load_known_bad_groundings(
+            project_root / "conf" / "panther_known_bad_groundings.tsv"
+        )
+    if module_id is None:
+        try:
+            module_id = str(path.resolve().relative_to(project_root))
+        except ValueError:
+            module_id = path.name
+    if paint_index is None:
+        if panther_dir is None:
+            panther_dir = project_root / "interpro" / "panther"
+        paint_index = load_paint_index(panther_dir)
+
+    registered_paths: Set[str] = set()
+    member_errors, member_warnings = validate_family_members(
+        list(iter_family_member_uses(doc)),
+        member_index,
+        paint_index,
+        known_bad=known_bad,
+        module_id=module_id,
+        matched_known_bad=matched_known_bad,
+        registered_paths=registered_paths,
+        subfamily_counts=load_subfamily_counts(
+            project_root / "interpro" / "panther" / "panther.obo"
+        ),
+    )
+
+    terms = [
+        (curie, label)
+        for term_path, curie, label in iter_terms_with_paths(doc)
+        if term_path not in registered_paths
+    ]
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
+    errors.extend(member_errors)
+    warnings.extend(member_warnings)
     errors.extend(validate_taxon_context(doc))
     if branch_resolver is None:
         branch_resolver = (
@@ -951,14 +1536,21 @@ def validate_module_file(
     warnings.extend(branch_warnings)
 
     ptn_uses = list(iter_ancestral_node_uses(doc))
-    if ptn_uses:
-        if paint_index is None:
-            if panther_dir is None:
-                panther_dir = project_root / "interpro" / "panther"
-            paint_index = load_paint_index(panther_dir)
-        ptn_errors, ptn_warnings = validate_paint_ptns(ptn_uses, paint_index)
+    cited_ptns = list(iter_cited_ptn_sources(doc))
+    if ptn_uses or cited_ptns:
+        ptn_errors, ptn_warnings = validate_paint_ptns(
+            ptn_uses, paint_index, _build_go_ancestor_resolver(adapter_map)
+        )
         errors.extend(ptn_errors)
         warnings.extend(ptn_warnings)
+        errors.extend(
+            validate_cited_ptn_sources(
+                cited_ptns,
+                paint_index,
+                load_goa_attested_ptns(project_root / "genes"),
+            )
+        )
+
 
     # Conformance: verify every `conforms_to` bundle against its template motif.
     # Templates are sibling module files, so they are resolved from the file's
@@ -1249,9 +1841,26 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    project_root = Path(__file__).resolve().parents[3]
+    register_path = project_root / "conf" / "panther_known_bad_groundings.tsv"
+    known_bad = load_known_bad_groundings(register_path)
+    matched: Set[KnownBadKey] = set()
+
     exit_code = 0
+    validated_modules: Set[str] = set()
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config)
+        try:
+            module_id = str(Path(path).resolve().relative_to(project_root))
+        except ValueError:
+            module_id = Path(path).name
+        validated_modules.add(module_id)
+        result = validate_module_file(
+            path,
+            config_path=args.config,
+            known_bad=known_bad,
+            module_id=module_id,
+            matched_known_bad=matched,
+        )
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
         for e in result.errors:
@@ -1260,6 +1869,24 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"✅ {path}: term labels OK ({len(result.warnings)} warnings)")
         else:
             exit_code = 1
+
+    # The register may only shrink. A row whose module was validated but which
+    # no longer fires means the grounding was fixed (or the descriptor removed),
+    # so the row must go -- otherwise the backlog silently becomes permanent
+    # cover for whatever is edited into that slot next.
+    stale = [
+        key
+        for key in known_bad
+        if key[0] in validated_modules and key not in matched
+    ]
+    if stale:
+        print(
+            f"❌ ERROR {register_path}: {len(stale)} known-bad row(s) no longer "
+            "apply; delete them (the register may only shrink):"
+        )
+        for module_id, declared, members in sorted(stale):
+            print(f"           {module_id}\t{declared}\t{members}")
+        exit_code = 1
     return exit_code
 
 

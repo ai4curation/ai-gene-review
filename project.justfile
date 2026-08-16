@@ -188,6 +188,31 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
+# This is the authority behind PANTHER family/subfamily id + label validation
+# (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
+# release bump, then re-run `just validate-modules`.
+[group('QC')]
+build-panther-obo *args="":
+    uv run ai-gene-review build-panther-obo --output-dir . {{args}}
+
+# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
+# family) for the accessions cited as representative_members in modules/.
+# This backs the check that a declared family really contains its own member,
+# which is what distinguishes a mis-grounded family from a mislabelled one.
+# Run after adding modules that cite new representative proteins.
+[group('QC')]
+refresh-panther-members *args="":
+    uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
+# upstream IBD.gaf. PTN claims are validated against slices that curation PRs
+# commit alongside the claim, so without this the check is self-certifying.
+# Network-bound; intended for the scheduled full run rather than per-PR CI.
+[group('QC')]
+verify-panther-paint *args="":
+    uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
@@ -2660,3 +2685,12 @@ cron-profile-preview name:
 # `on.schedule` block, leaving workflow_dispatch intact.
 cron-profile name:
     uv run python scripts/apply_cron_profile.py {{name}}
+
+# Rewrite PANTHER family/subfamily term.label values to PANTHER's official names.
+# `term.label` must be verifiable; put your own description in `preferred_term`.
+# Descriptors whose family does not contain their representative member are
+# skipped -- relabelling those would hide a wrong family id. Fix the id first.
+# Example: just fix-panther-labels --apply
+[group('QC')]
+fix-panther-labels *args="":
+    uv run ai-gene-review fix-panther-labels --output-dir . {{args}}

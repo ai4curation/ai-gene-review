@@ -15,9 +15,17 @@ from ai_gene_review.validation.module_validator import (
     PaintAnnotationRow,
     compare_label,
     iter_ancestral_node_uses,
+    iter_cited_ptn_sources,
+    iter_family_member_uses,
     iter_taxon_descriptors,
+    iter_terms_with_paths,
+    known_bad_key,
+    load_goa_attested_ptns,
+    load_known_bad_groundings,
     iter_terms,
     iter_typed_go_terms,
+    validate_cited_ptn_sources,
+    validate_family_members,
     validate_paint_ptns,
     validate_go_branches,
     validate_taxon_context,
@@ -343,7 +351,54 @@ def test_validate_paint_ptns_warns_on_no_exact_go_overlap():
 
     assert errors == []
     assert len(warnings) == 1
-    assert "no exact GO overlap" in warnings[0]
+    assert "no ancestry relation" in warnings[0]
+
+
+def test_validate_paint_ptns_accepts_a_more_specific_node_term():
+    """A node annotated to a child term does support the parent claim."""
+    doc = {
+        "function": {"term": {"id": "GO:0003674", "label": "molecular_function"}},
+        "family": {
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {"PANTHER:PTN000000001": [_paint_row(go_id="GO:0004672", aspect="F")]}
+    ancestors = {"GO:0004672": {"GO:0004672", "GO:0003674"}}.get
+
+    errors, warnings = validate_paint_ptns(
+        list(iter_ancestral_node_uses(doc)), index,
+        lambda t: ancestors(t) or {t},
+    )
+
+    assert (errors, warnings) == ([], [])
+
+
+def test_validate_paint_ptns_flags_a_node_silent_in_the_asserted_aspect():
+    """The common shape: node attests the pathway role, not the claimed MF."""
+    doc = {
+        "function": {"term": {"id": "GO:0004714", "label": "kinase"}},
+        "family": {
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {"PANTHER:PTN000000001": [_paint_row(go_id="GO:0007173", aspect="P")]}
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "attests nothing in GO aspect F" in warnings[0]
+    assert "needs separate support" in warnings[0]
 
 
 def test_validate_paint_ptns_accepts_any_declared_family_term():
@@ -790,3 +845,457 @@ def test_validate_reference_titles_wrong_title_errors():
     }
     errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
     assert any("title mismatch" in e.lower() for e in errors), errors
+
+
+# --------------------------------------------------------------------------- #
+# PANTHER family/member consistency and evidence-cited PTNs
+# --------------------------------------------------------------------------- #
+
+
+def _family_doc(family_id: str, accession: str) -> dict:
+    return {
+        "family": {
+            "term": {"id": family_id, "label": "some family"},
+            "representative_members": [
+                {"term": {"id": f"UniProtKB:{accession}", "label": "rep"}}
+            ],
+        }
+    }
+
+
+def test_iter_family_member_uses_requires_both_family_and_member():
+    with_member = _family_doc("PANTHER:PTHR13337", "O14521")
+    assert len(list(iter_family_member_uses(with_member))) == 1
+
+    no_member = {"family": {"term": {"id": "PANTHER:PTHR13337", "label": "f"}}}
+    assert list(iter_family_member_uses(no_member)) == []
+
+    no_family = {
+        "family": {
+            "representative_members": [{"term": {"id": "UniProtKB:O14521", "label": "r"}}]
+        }
+    }
+    assert list(iter_family_member_uses(no_family)) == []
+
+
+def test_validate_family_members_accepts_member_in_declared_family():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "O14521")))
+
+    errors, warnings = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
+
+    assert errors == []
+    assert warnings == []
+
+
+def test_validate_family_members_rejects_member_in_a_different_family():
+    """The SDHD/ANP32 case: a real id whose label describes another protein."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, warnings = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
+
+    assert warnings == []
+    assert len(errors) == 1
+    assert "PANTHER:PTHR11375" in errors[0]
+    assert "O14521 is in PANTHER:PTHR13337:SF6" in errors[0]
+
+
+def test_validate_family_members_matches_on_family_when_declared_as_subfamily():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337:SF6", "O14521")))
+
+    errors, _ = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
+
+    assert errors == []
+
+
+def test_validate_family_members_warns_when_accession_is_unindexed():
+    """An uncited protein must not fail the build, only warn."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "Q00000")))
+
+    errors, warnings = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "Q00000" in warnings[0]
+
+
+def test_validate_terms_skips_ptn_ids():
+    """PTNs share the PANTHER prefix but are checked against PAINT, not the OBO."""
+    terms = [("PANTHER:PTN000000001", "PTN000000001")]
+
+    def resolver(curie):
+        raise AssertionError(f"PTN {curie} must not be routed to the OBO adapter")
+
+    errors, warnings = validate_terms(
+        terms, {"PANTHER": "simpleobo:panther.obo"}, resolver
+    )
+
+    assert errors == []
+    assert warnings == []
+
+
+def test_iter_cited_ptn_sources_finds_evidence_source_ids():
+    doc = {
+        "family": {
+            "evidence": [
+                {"source_id": "PANTHER:PTN000000001"},
+                {"source_id": "GO_REF:0000033"},
+            ]
+        }
+    }
+
+    assert list(iter_cited_ptn_sources(doc)) == [
+        ("$.family.evidence[0].source_id", "PANTHER:PTN000000001")
+    ]
+
+
+def test_validate_cited_ptn_sources_rejects_unknown_node():
+    cited = [("$.evidence[0].source_id", "PANTHER:PTN999999999")]
+
+    errors = validate_cited_ptn_sources(cited, {"PANTHER:PTN000000001": [_paint_row()]})
+
+    assert len(errors) == 1
+    assert "PTN999999999" in errors[0]
+
+
+def test_validate_cited_ptn_sources_accepts_known_node_without_positive_ibd():
+    """IRD/IKR nodes are legitimate provenance; only existence is required."""
+    row = _paint_row(evidence="IRD", negated=True)
+    cited = [("$.evidence[0].source_id", "PANTHER:PTN000000001")]
+
+    assert validate_cited_ptn_sources(cited, {"PANTHER:PTN000000001": [row]}) == []
+
+
+def test_validate_cited_ptn_sources_accepts_goa_attested_node():
+    """A GOA-attested node is machine-sourced, so it is trusted even when the
+    current PAINT snapshot no longer carries it (release skew)."""
+    cited = [("$.evidence[0].source_id", "PANTHER:PTN002225929")]
+
+    assert (
+        validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
+    )
+
+
+def test_load_goa_attested_ptns_reads_with_from_column(tmp_path):
+    gene_dir = tmp_path / "PSEPK" / "mutL"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "mutL-goa.tsv").write_text(
+        "SYMBOL\tQUALIFIER\tGO TERM\tWITH/FROM\n"
+        "mutL\tinvolved_in\tGO:0006298\tPANTHER:PTN002225929|UniProtKB:P23367\n"
+    )
+
+    assert load_goa_attested_ptns(tmp_path) == {"PANTHER:PTN002225929"}
+
+
+def test_validate_family_members_warns_on_partial_membership():
+    """A functional grouping PANTHER splits across families is advisory only."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR24320", "label": "RETINOL DEHYDROGENASE"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:Q96NR8", "label": "RDH12"}},
+                {"term": {"id": "UniProtKB:Q9NYR8", "label": "RDH8"}},
+            ],
+        }
+    }
+    uses = list(iter_family_member_uses(doc))
+
+    errors, warnings = validate_family_members(
+        uses, {"Q96NR8": "PTHR24320:SF275", "Q9NYR8": "PTHR43391:SF8"}
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "Q9NYR8 is in PANTHER:PTHR43391:SF8" in warnings[0]
+
+
+def test_validate_family_members_defers_to_paint_corroboration():
+    """UniProt and PAINT disagree for some proteins; a PAINT-backed grounding
+    is corroborated by a second machine source, so it warns rather than fails."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR16515", "label": "PR DOMAIN ZINC FINGER PROTEIN"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P10069", "label": "BrlA"}}
+            ],
+            "ancestral_nodes": [
+                {"term": {"id": "PANTHER:PTN004463661", "label": "PTN004463661"}}
+            ],
+        }
+    }
+    uses = list(iter_family_member_uses(doc))
+    assert uses[0].ancestral_node_curies == frozenset({"PANTHER:PTN004463661"})
+    paint = {"PANTHER:PTN004463661": [_paint_row(family="PTHR16515")]}
+
+    errors, warnings = validate_family_members(
+        uses, {"P10069": "PTHR14003:SF19"}, paint
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "disagree" in warnings[0]
+
+
+def test_validate_family_members_still_errors_without_corroboration():
+    """A PAINT node in some *other* family does not rescue a bad grounding."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR11375", "label": "x"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:O14521", "label": "SDHD"}}
+            ],
+            "ancestral_nodes": [
+                {"term": {"id": "PANTHER:PTN000000001", "label": "PTN000000001"}}
+            ],
+        }
+    }
+    paint = {"PANTHER:PTN000000001": [_paint_row(family="PTHR99999")]}
+
+    errors, _ = validate_family_members(
+        list(iter_family_member_uses(doc)), {"O14521": "PTHR13337:SF6"}, paint
+    )
+
+    assert len(errors) == 1
+
+
+def test_compare_label_flags_divergent_mismatch_as_likely_wrong_id():
+    """A label naming a different entity points at the id, not the label."""
+    message = compare_label(
+        "PANTHER:PTHR11375",
+        "SUCCINATE DEHYDROGENASE CYTOCHROME B SMALL SUBUNIT",
+        "ACIDIC LEUCINE-RICH NUCLEAR PHOSPHOPROTEIN 32",
+        set(),
+    )
+    assert message is not None
+    assert "usually means the ID is wrong" in message
+
+
+def test_compare_label_omits_hint_for_near_miss_labels():
+    message = compare_label(
+        "PANTHER:PTHR11732", "ALDO-KETO REDUCTASE", "ALDO/KETO REDUCTASE", set()
+    )
+    assert message is not None
+    assert "usually means the ID is wrong" not in message
+
+
+# --------------------------------------------------------------------------- #
+# Known-bad grounding register
+# --------------------------------------------------------------------------- #
+
+
+def _two_descriptor_doc() -> dict:
+    """One file declaring the same family twice: once sound, once mis-grounded."""
+    return {
+        "parts": [
+            {  # CYP17A1 really is in PTHR24289 -- sound
+                "family": {
+                    "term": {"id": "PANTHER:PTHR24289", "label": "x"},
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:P05093", "label": "CYP17A1"}}
+                    ],
+                }
+            },
+            {  # CYP21A2 is not -- mis-grounded
+                "family": {
+                    "term": {"id": "PANTHER:PTHR24289", "label": "x"},
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:P08686", "label": "CYP21A2"}}
+                    ],
+                }
+            },
+        ]
+    }
+
+
+MEMBERS = {"P05093": "PTHR24289:SF1", "P08686": "PTHR24281:SF83"}
+
+
+def test_known_bad_register_downgrades_only_the_registered_descriptor():
+    """The same family id used soundly elsewhere must stay unaffected."""
+    uses = list(iter_family_member_uses(_two_descriptor_doc()))
+    key = known_bad_key("modules/m.yaml", "PANTHER:PTHR24289", {"P08686"})
+
+    errors, warnings = validate_family_members(
+        uses, MEMBERS, None, known_bad={key: "note"}, module_id="modules/m.yaml"
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "KNOWN-BAD" in warnings[0]
+    assert "P08686" in warnings[0]
+
+
+def test_unregistered_mis_grounding_still_errors():
+    """A register entry for one descriptor must not cover a different one."""
+    uses = list(iter_family_member_uses(_two_descriptor_doc()))
+    unrelated = known_bad_key("modules/other.yaml", "PANTHER:PTHR24289", {"P08686"})
+
+    errors, _ = validate_family_members(
+        uses, MEMBERS, None, known_bad={unrelated: ""}, module_id="modules/m.yaml"
+    )
+
+    assert len(errors) == 1
+    assert "P08686" in errors[0]
+
+
+def test_known_bad_register_reports_which_rows_it_used():
+    """main() needs this to detect rows that no longer apply."""
+    uses = list(iter_family_member_uses(_two_descriptor_doc()))
+    key = known_bad_key("modules/m.yaml", "PANTHER:PTHR24289", {"P08686"})
+    matched: set = set()
+    paths: set = set()
+
+    validate_family_members(
+        uses,
+        MEMBERS,
+        None,
+        known_bad={key: ""},
+        module_id="modules/m.yaml",
+        matched_known_bad=matched,
+        registered_paths=paths,
+    )
+
+    assert matched == {key}
+    assert paths == {"$.parts[1].family.term"}
+
+
+def test_load_known_bad_groundings_skips_comments_and_header(tmp_path):
+    path = tmp_path / "register.tsv"
+    path.write_text(
+        "# a comment\n"
+        "module\tdeclared_family\tmembers\tmember_real_family\tkind\tnote\n"
+        "modules/m.yaml\tPANTHER:PTHR1\tP1\tPTHR2:SF1\tfabricated-id\twhy\n"
+        "\n"
+    )
+    register = load_known_bad_groundings(path)
+    assert register == {("modules/m.yaml", "PANTHER:PTHR1", "P1"): "why"}
+
+
+def test_load_known_bad_groundings_missing_file_is_empty(tmp_path):
+    assert load_known_bad_groundings(tmp_path / "absent.tsv") == {}
+
+
+def test_iter_terms_with_paths_matches_family_member_use_paths():
+    """Label suppression keys off these paths, so they must line up exactly."""
+    doc = _two_descriptor_doc()
+    use_paths = {u.path for u in iter_family_member_uses(doc)}
+    term_paths = {p for p, _, _ in iter_terms_with_paths(doc)}
+    assert use_paths <= term_paths
+
+
+def test_validate_paint_ptns_rejects_inheriting_a_lost_function():
+    """The ERBB3 case: PAINT recorded IRD loss of the very term asserted.
+
+    Pseudoenzymes keep the fold and the family membership while losing the
+    ancestral activity, so a node that records the loss cannot support
+    inheriting it.
+    """
+    doc = {
+        "function": {
+            "term": {"id": "GO:0004714", "label": "kinase"},
+        },
+        "family": {
+            "term": {"id": "PANTHER:PTHR24416", "label": "f"},
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(go_id="GO:0038131", aspect="F"),
+            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+        ]
+    }
+
+    errors, _ = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert len(errors) == 1
+    assert "LOST" in errors[0]
+    assert "GO:0004714" in errors[0]
+    assert "GO:0038131" in errors[0]  # names what the node does retain
+
+
+def test_validate_paint_ptns_allows_retained_function_alongside_a_loss():
+    """A node with both losses and retained terms still supports the retained ones."""
+    doc = {
+        "function": {"term": {"id": "GO:0038131", "label": "neuregulin receptor"}},
+        "family": {
+            "term": {"id": "PANTHER:PTHR24416", "label": "f"},
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(go_id="GO:0038131", aspect="F"),
+            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+        ]
+    }
+
+    errors, _ = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+
+
+def test_validate_family_members_advises_subfamily_for_heterogeneous_family():
+    """PTHR24416 grounds 13 different receptor kinases; the family says little."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR24416", "label": "TYROSINE-PROTEIN KINASE RECEPTOR"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
+            ],
+        }
+    }
+    uses = list(iter_family_member_uses(doc))
+
+    errors, warnings = validate_family_members(
+        uses, {"P00533": "PTHR24416:SF91"}, subfamily_counts={"PTHR24416": 96}
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "96 subfamilies" in warnings[0]
+    assert "PANTHER:PTHR24416:SF91" in warnings[0]
+
+
+def test_validate_family_members_no_subfamily_advice_for_small_family():
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "f"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P1", "label": "m"}}
+            ],
+        }
+    }
+    errors, warnings = validate_family_members(
+        list(iter_family_member_uses(doc)),
+        {"P1": "PTHR1:SF2"},
+        subfamily_counts={"PTHR1": 3},
+    )
+    assert (errors, warnings) == ([], [])
+
+
+def test_validate_family_members_no_subfamily_advice_when_already_specific():
+    """A descriptor already grounded at subfamily level needs no advice."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR24416:SF91", "label": "EGFR"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
+            ],
+        }
+    }
+    errors, warnings = validate_family_members(
+        list(iter_family_member_uses(doc)),
+        {"P00533": "PTHR24416:SF91"},
+        subfamily_counts={"PTHR24416": 96},
+    )
+    assert (errors, warnings) == ([], [])

@@ -202,6 +202,56 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+### PANTHER ids: never write a family label from memory
+
+PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
+modules are now hard-validated against `interpro/panther/panther.obo`, built from
+PANTHER's own HMM classifications. Two rules follow:
+
+- **`term.label` must be PANTHER's official name, verbatim.** It is not a place for your
+  description of the protein. Writing a plausible-sounding label is exactly how a wrong
+  family id stays hidden — the id is real, so nothing else catches it. Put your readable
+  description in `preferred_term`, which is free text and is not label-checked. Look the
+  name up:
+  `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
+- **The declared family must contain its own `representative_members`.** This is checked
+  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
+  the representative protein is usually right and the family id is wrong — look up the
+  member's real family rather than deleting the member. Accessions missing from the index
+  only warn; run `just refresh-panther-members` to add newly cited proteins.
+- **If a label mismatch names a *different protein*, fix the ID, not the label.** A
+  wildly-wrong label is weak evidence of a typo and strong evidence that the id was
+  guessed. An id invented at random is still a hallucination when it happens to resolve
+  to a real family, and rewriting its label to the official name converts a visible error
+  into an invisible one. `just fix-panther-labels` therefore refuses to touch these and
+  reports them for review (`--allow-divergent` overrides, only after you have checked the
+  id). Beware the inverse too: PANTHER family names are often dominated by one member, so
+  a correct id can legitimately carry a surprising name (`PTHR24322` = "PKSB" really does
+  contain DHRS3). The representative-member check is what tells the two cases apart.
+
+PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
+`validate_paint_ptns`. Their label is conventionally just the bare id.
+
+**The known-bad register.** `conf/panther_known_bad_groundings.tsv` lists groundings
+already known to be wrong and awaiting curation. It is a shrinking backlog, not an
+escape hatch:
+
+- Each row names **one** descriptor (module + declared family + its representative
+  members). A mis-grounding anywhere else still fails, and the same family id used
+  soundly elsewhere in the same file is still checked.
+- A registered descriptor's **label** error is suppressed too, because a divergent label
+  is a symptom of that same wrong id rather than a second defect.
+- Rows may only be **removed**, by fixing the grounding. A row that stops applying is
+  itself a validation error, so the register cannot become permanent cover.
+- **Never add a row to make validation pass.** If a new mis-grounding appears, fix the
+  id. Rows exist only for the pre-existing backlog.
+
+When fixing one: the representative member is the reliable anchor, not the label. Look up
+which family PANTHER puts that protein in, confirm it matches what the annoton is
+claiming, and check whether any `ancestral_nodes` on the descriptor belong to the old
+family — if they do, the old grounding may be the PAINT-supported one and the conflict
+is a UniProt/PAINT disagreement to document rather than a mistake to overwrite.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording

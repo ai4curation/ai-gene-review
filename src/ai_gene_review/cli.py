@@ -3937,6 +3937,300 @@ def scan_module(
         typer.echo(f"wrote {p}", err=True)
 
 
+@app.command()
+def build_panther_obo(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Where to cache the download (default: <repo>/.cache/panther)."),
+    ] = None,
+    force_download: Annotated[
+        bool, typer.Option("--force-download", help="Re-download even if cached.")
+    ] = False,
+):
+    """Build interpro/panther/panther.obo from PANTHER HMM classifications.
+
+    PANTHER family/subfamily ids have no ontology to validate against, and
+    InterPro indexes only families (204 for every :SF accession). This converts
+    PANTHER's own classification file into an OBO that OAK reads via the
+    ``simpleobo:`` adapter, giving existence and label checking for both module
+    and gene-review validation.
+
+    Example:
+        ai-gene-review build-panther-obo
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_hmm_classifications,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    source = fetch_hmm_classifications(cache, force_download=force_download)
+    entries = parse_hmm_classifications(source.read_text().splitlines())
+    out_path = write_panther_obo(entries, repo_root / "interpro" / "panther" / "panther.obo")
+    families = sum(1 for e in entries if not e.is_subfamily)
+    typer.echo(
+        f"✓ Wrote {out_path} ({families} families, "
+        f"{len(entries) - families} subfamilies)."
+    )
+
+
+@app.command()
+def refresh_panther_members(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Where to cache downloads (default: <repo>/.cache/panther)."),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to include (repeatable). Defaults to the "
+            "set covering species curated in this repository.",
+        ),
+    ] = None,
+    no_uniprot_fallback: Annotated[
+        bool,
+        typer.Option(
+            "--no-uniprot-fallback",
+            help="Skip the UniProt lookup for accessions PANTHER's per-organism "
+            "files do not cover (offline / faster, but lower coverage).",
+        ),
+    ] = False,
+):
+    """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
+
+    Builds a pruned UniProt-accession -> PANTHER-family index covering only the
+    accessions cited as ``representative_members`` in modules/. This is what
+    catches a mis-grounded family (as opposed to a merely mislabelled one): the
+    declared family must actually contain the protein the descriptor names.
+
+    Example:
+        ai-gene-review refresh-panther-members --organism human --organism e_coli
+    """
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        build_member_index,
+        fetch_panther_from_uniprot,
+        fetch_sequence_classification,
+        write_member_index,
+    )
+    import yaml
+
+    from ai_gene_review.validation.module_validator import (
+        iter_family_member_uses,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    accessions: set[str] = set()
+    for path in sorted((repo_root / "modules").rglob("*.yaml")):
+        doc = yaml.safe_load(path.read_text())
+        for use in iter_family_member_uses(doc):
+            accessions.update(use.representative_accessions)
+    typer.echo(f"{len(accessions)} representative accessions cited in modules/")
+
+    paths = []
+    for slug in organisms:
+        classification = fetch_sequence_classification(slug, cache)
+        if classification is None:
+            typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
+            continue
+        paths.append(classification)
+
+    index = build_member_index(accessions, paths)
+    from_files = len(index)
+
+    if not no_uniprot_fallback:
+        unresolved = accessions - set(index)
+        if unresolved:
+            typer.echo(
+                f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
+            )
+            index.update(fetch_panther_from_uniprot(unresolved))
+
+    out_path = write_member_index(
+        index, repo_root / "interpro" / "panther" / "panther-members.tsv"
+    )
+    typer.echo(
+        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
+        f"({from_files} from {len(paths)} organism classification(s), "
+        f"{len(index) - from_files} from UniProt)."
+    )
+
+
+@app.command()
+def verify_panther_paint(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Where to cache the download (default: <repo>/.cache/panther)."),
+    ] = None,
+):
+    """Verify committed PAINT slices against PANTHER's upstream IBD.gaf.
+
+    PTN claims are validated against ``interpro/panther/*/*-paint.tsv`` slices
+    that curation PRs commit alongside the claim, so the check is self-certifying
+    unless something independently confirms those slices are genuine. This
+    re-derives them from upstream and reports any row that is not present there.
+
+    Example:
+        ai-gene-review verify-panther-paint
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_ibd_gaf,
+        load_committed_paint_rows,
+        parse_ibd_row_keys,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
+    committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
+
+    unbacked = sorted(
+        (source, key) for key, sources in committed.items() if key not in upstream
+        for source in sources
+    )
+    typer.echo(
+        f"upstream IBD.gaf: {len(upstream)} node annotations; "
+        f"committed slices: {len(committed)} rows"
+    )
+    if unbacked:
+        for source, key in unbacked[:50]:
+            typer.echo(f"❌ {source}: {key} is not present upstream")
+        typer.echo(f"❌ {len(unbacked)} committed PAINT row(s) have no upstream backing.")
+        raise typer.Exit(code=1)
+    typer.echo("✓ Every committed PAINT row is backed by upstream IBD.gaf.")
+
+
+@app.command()
+def fix_panther_labels(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML files (default: all of modules/)."),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    apply: Annotated[
+        bool, typer.Option("--apply", help="Write changes (default: dry run).")
+    ] = False,
+    allow_divergent: Annotated[
+        bool,
+        typer.Option(
+            "--allow-divergent",
+            help="Also rewrite labels that describe a different protein than the "
+            "id's official name. Held back by default because that pattern "
+            "usually means the ID is wrong; only pass this after checking.",
+        ),
+    ] = False,
+):
+    """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
+
+    `term.label` on a PANTHER id must be PANTHER's own name so it can be
+    verified; the curator's readable description belongs in `preferred_term`.
+    Descriptors whose declared family does not contain their representative
+    member are deliberately SKIPPED -- relabelling those would hide a wrong
+    family id behind an authoritative-looking name. Fix the id first.
+
+    Example:
+        ai-gene-review fix-panther-labels --apply
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_obo_names,
+        rewrite_panther_labels,
+    )
+    from ai_gene_review.validation.module_validator import (
+        iter_family_member_uses,
+        load_member_index,
+        load_paint_index,
+        validate_family_members,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
+    member_index = load_member_index(
+        repo_root / "interpro" / "panther" / "panther-members.tsv"
+    )
+    # Same PAINT-corroboration rule the validator applies, so a grounding the
+    # validator merely warns about is not treated here as disputed.
+    paint_index = load_paint_index(repo_root / "interpro" / "panther")
+    targets = list(files) if files else sorted((repo_root / "modules").rglob("*.yaml"))
+
+    total = 0
+    held_back: list[tuple[Path, str, str, str, bool]] = []
+    for path in targets:
+        text = path.read_text()
+        doc = yaml.safe_load(text)
+        skip: set[str] = set()
+        corroborated: set[str] = set()
+        for use in iter_family_member_uses(doc):
+            errors, _ = validate_family_members([use], member_index, paint_index)
+            if errors:
+                skip.update(use.declared_family_curies)
+            elif any(a in member_index for a in use.representative_accessions):
+                corroborated.update(use.declared_family_curies)
+        new_text, changes, deferred = rewrite_panther_labels(
+            text, names, skip, allow_divergent=allow_divergent
+        )
+        held_back.extend(
+            (path, curie, old, new, curie in corroborated)
+            for curie, old, new in deferred
+        )
+        if not changes:
+            continue
+        total += len(changes)
+        typer.echo(f"{path}:")
+        for curie, old, new in changes:
+            typer.echo(f"  {curie}: {old!r} -> {new!r}")
+        if skip:
+            typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
+        if apply:
+            path.write_text(new_text)
+
+    if held_back:
+        typer.echo(
+            f"\n⚠  {len(held_back)} label(s) NOT rewritten: the current label "
+            "describes a different protein than the id's official name, which "
+            "usually means the ID is wrong, not the label. A guessed id that "
+            "happens to resolve is still a hallucination; rewriting its label "
+            "would hide that. Check each id, then re-run with --allow-divergent "
+            "for any that are genuinely just mislabelled."
+        )
+        for path, curie, old, new, is_corroborated in held_back:
+            verdict = (
+                "id confirmed by its representative member"
+                if is_corroborated
+                else "NO representative member confirms this id"
+            )
+            typer.echo(f"  {path.name}: {curie}  [{verdict}]")
+            typer.echo(f"      label says : {old!r}")
+            typer.echo(f"      PANTHER    : {new!r}")
+
+    typer.echo(
+        f"{'Applied' if apply else 'Would apply'} {total} label correction(s)"
+        + ("" if apply else "; re-run with --apply")
+    )
+
+
 def main():
     """Main entry point for the CLI."""
     app()
