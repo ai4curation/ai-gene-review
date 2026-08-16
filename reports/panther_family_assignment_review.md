@@ -1,0 +1,107 @@
+# PANTHER family assignment review
+
+A pass over all 278 module YAMLs examining every PANTHER family assignment, the
+PAINT evolutionary evidence cited for it, and the extant proteins named as its
+representatives. Generated against PANTHER 19.0.
+
+## Scope
+
+| | count |
+|---|---|
+| family/subfamily descriptors examined | 1,022 |
+| declared at family level | 921 |
+| declared at subfamily level | 101 |
+| descriptors citing a PAINT ancestral node | 220 |
+| PAINT nodes resolved | 369 |
+| representative accessions resolved to a PANTHER family | 1,145 / 1,145 |
+
+## 1. Family assignments
+
+**Identifier correctness is now clean.** No fabricated ids remain; the 21
+groundings where the declared family provably excludes its own representative
+member are enumerated in `conf/panther_known_bad_groundings.tsv` awaiting
+curation.
+
+**The substantive remaining issue is precision, not correctness.** 834 of the
+921 family-level assignments have every representative member sitting in a
+single subfamily — the subfamily is the sharper claim. This matters most where
+the family is heterogeneous: 212 of those sit in families split into 20+
+subfamilies.
+
+The harm is concrete. **342 distinct proteins are grounded on 139 family ids
+that cannot distinguish between them**, and **145 distinct molecular-function
+assertions rest on 65 families that cannot support them all**. The worst cases:
+
+| family | name | distinct proteins | modules | subfamilies |
+|---|---|---:|---:|---:|
+| PTHR24416 | TYROSINE-PROTEIN KINASE RECEPTOR | 13 | 9 | 96 |
+| PTHR24418 | TYROSINE-PROTEIN KINASE | 6 | 5 | 76 |
+| PTHR11157 | FATTY ACID ACYL TRANSFERASE-RELATED | 6 | 1 | 58 |
+| PTHR11848 | TGF-BETA FAMILY | 4 | 7 | 71 |
+| PTHR22603 | CHOLINE/ETHANOALAMINE KINASE | 4 | 1 | 20 |
+
+`PTHR24416` alone grounds EGFR, ERBB2, ERBB3, EPHA2, EPHB4, FGFR1, TRKA, TRKB,
+VEGFR1, VEGFR2, MET, PDGFRB and INSR across nine modules. As a functional
+grounding it asserts no more than "a receptor tyrosine kinase".
+
+Not every case is a defect — `PTHR22912` collapses three dihydrolipoyl
+dehydrogenase subfamilies that do share the function. The discriminator is
+whether the module asserts *different* molecular functions on the shared id;
+`validate_family_members` now emits a precision advisory for the heterogeneous
+cases (threshold: 20 subfamilies).
+
+## 2. Evolutionary history (PAINT)
+
+**One hard contradiction found and fixed.** `erbb2_signaling.yaml` asserted
+`GO:0004714` transmembrane receptor protein tyrosine kinase activity for ERBB3
+while citing node `PTN002814617` — where PAINT records **IRD `GO:0004714`**,
+i.e. that this activity was *lost* on this lineage. ERBB3 is the canonical
+pseudokinase; it signals by heterodimerising with ERBB2. Corrected to
+`GO:0038131` neuregulin receptor activity, which the same node retains as a
+positive IBD row. `validate_paint_ptns` now blocks this class outright.
+
+**Three other loss-bearing nodes are cited correctly** — the modules' claims are
+consistent with what PAINT struck out:
+
+| module | node | lost (IRD) | retained, and used |
+|---|---|---|---|
+| hedgehog_signaling | PTN000885245 | Wnt binding/receptor activity, canonical + non-canonical Wnt signaling | smoothened signaling, cilium, patched binding |
+| nitric_oxide_cgmp_signaling | PTN001066032 | NADPH-hemoprotein reductase activity | nitric oxide synthase activity |
+| nlr_signaling | PTN004670420 | molecular function inhibitor activity | pattern recognition receptor activity, response to muramyl dipeptide |
+
+Smoothened losing its ancestral Wnt functions while retaining Hh signalling is
+exactly the evolutionary story the node encodes, and the module reflects it.
+
+**Evidence depth.** 180 of 369 resolved nodes rest on ≤3 UniProt seed proteins.
+Ancestral reconstructions that thin are weak support for propagating a specific
+function and are worth a second look.
+
+**Claim support.** 100 nodes exactly support the module's assertion. Of the 33
+that appeared not to, 12 were GO ancestry artifacts (the node is annotated to a
+child or parent term) — the check is now ancestry-aware. Of the 21 genuinely
+disjoint, most share one shape: the node attests the *pathway role* (`P:`) while
+the module asserts a *molecular function* (`F:`) the node says nothing about.
+That is not a contradiction, but the MF claim rests on other evidence and the
+advisory now says so explicitly.
+
+## 3. Extant proteins
+
+**Taxonomic plausibility is clean.** Resolving each descriptor's *nearest
+enclosing* taxon scope, all 47 Bacteria-scoped family assignments use families
+that genuinely occur in bacterial proteomes — zero taxon-constraint violations.
+
+An earlier run that attributed any taxon in a file to every descriptor flagged
+three eukaryote-only families in `selenocysteine_biosynthesis_incorporation.yaml`
+(PSTK, SEPSECS, SECISBP2). That was an artifact of the crude scoping: the module
+correctly splits a Bacteria-scoped SelA route from a Eukaryota-scoped
+PSTK–SepSecS route via `variant_sets`. Taxon scope must be read from the nearest
+enclosing context, not the file.
+
+## Checks added by this pass
+
+- **Loss contradiction** (error): a module may not assert a GO term that a cited
+  ancestral node records as IRD/IKR.
+- **Ancestry- and aspect-aware node support** (advisory): distinguishes "node is
+  silent in this GO aspect" from "node supports an unrelated term".
+- **Subfamily precision** (advisory): flags a family-level grounding whose
+  members all sit in one subfamily of a 20+-subfamily family.
