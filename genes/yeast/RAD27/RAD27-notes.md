@@ -107,17 +107,39 @@ so the 5'-3' exonuclease IDA is correctly attributed. Flagged as VERIFIED in `re
 
 ## Proposed new annotations
 
-Two, both from PMID:36672839 (full text cached), which assayed yeast and human FEN1 side by side:
+Two, both from PMID:36672839 (full text cached) — but **with different evidence codes**, because the
+paper does not test the yeast enzyme equally in both settings. Reading the full text:
 
-- **GO:0004523 RNA-DNA hybrid ribonuclease activity** (IDA) — RAD27 currently lacks any RNase H-type
-  annotation although human FEN1 has one.
+- §3.1 and §3.2 (Figures 1–2) assay recombinant *S. cerevisiae* Rad27 alongside human FEN1 on
+  lagging-strand RNA:DNA hybrid substrates — nicked RNA and RNA flaps.
+  [PMID:36672839 "Recombinant Saccharomyces cerevisiae FEN1 (Rad27) was cloned into T7 expression
+  vector pET-24b"]
+- §3.3–§3.5 (the R-loop sections) are **human-only**: the reconstituted BER reactions use
+  [PMID:36672839 "Recombinant human APE1, pol β, FEN1, and LIG I"] and the recruitment assays are in
+  human fibroblasts.
+
+Hence:
+
+- **GO:0004523 RNA-DNA hybrid ribonuclease activity — IDA.** Directly assayed on purified Rad27.
   [PMID:36672839 "We found that both human and yeast FEN1 efficiently cleaved an RNA flap in the
   intermediates using its endonuclease activity."]
-- **GO:0062176 R-loop processing** (IDA) — gives a process context to that activity.
-  [PMID:36672839 "Our study provides the first evidence that FEN1 endonucleolytic cleavage can result in
-  the resolution of R-loops via the BER pathway, thereby maintaining genome integrity."]
+- **GO:0062176 R-loop processing — ISS from human FEN1 (UniProtKB:P39748), not IDA.** Rad27 has the
+  underlying RNA-flap endonuclease activity, but it was never itself tested on an R-loop, and no in vivo
+  yeast R-loop phenotype has been reported. An IDA here would misattribute human experiments to the
+  yeast enzyme. (An earlier draft of this review made exactly that error; caught in PR review.)
 
-The matching GO:0062176 annotation was also proposed for human FEN1.
+The human FEN1 GO:0062176 annotation *is* correctly IDA — those are the human experiments.
+
+## Citation hygiene notes
+
+Several nucleus annotations originally carried quotes that did not support the compartment claimed
+(most seriously, the IBA `GO:0005634 is_active_in nucleus` was supported by the *mitochondrial*
+localization sentence from PMID:19699691). Rad27's nuclear localization is genuinely well established,
+but it rests on **dataset-level** evidence — the genome-wide GFP-fusion collection (PMID:14562095) and
+the curated UniProt subcellular location — not on any Rad27-specific sentence in a cached abstract.
+Those entries now carry no `supporting_text` and say so explicitly in `reason`, which is more honest
+than attaching a quote that is verbatim but irrelevant. PMID:19699691 is abstract-only, so its nucleus
+IDA is accepted in deference to the SGD curator's full-text reading.
 
 ## Action tally
 
