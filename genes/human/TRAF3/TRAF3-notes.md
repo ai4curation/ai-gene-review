@@ -100,6 +100,13 @@ IMP from PMID:20185819) is the vague shadow of this.
   resulting from the impairment of TLR3-dependent induction of IFN."]
   UniProt records this as Immunodeficiency 132A (MIM:614849), with a second, distinct
   dominant disorder IMD132B (MIM:621096).
+  Note the mechanism is **dominant-negative, not haploinsufficiency**: the paper's own
+  results section is headed "The TRAF3 mutant allele is dominant-negative", and patient
+  cells retain [PMID:20832341 "only about 17.5% the amount of TRAF3 present in controls"] -
+  well below the ~50% a null allele would leave - because R118W destabilises the product of
+  the wild-type allele through heterotrimer formation
+  [PMID:20832341 "although the R118W allele is a loss-of-expression allele, it may exert a
+  dominant-negative effect, by destabilizing proteins produced from the WT allele"].
 
 ### 2.3 The ubiquitin switch that separates the two outputs
 
@@ -192,13 +199,21 @@ Points where the review departs from GOA, with the reasoning:
   supplement are not in the cache.
 - **GO:0004842 "ubiquitin-protein transferase activity" (2× Reactome TAS, 1× IDA).** Parent of
   GO:0061630, which is annotated from the same evidence. MODIFY to GO:0061630.
+- **GO:0007166 "cell surface receptor signaling pathway" (IBA) is left as ACCEPT, not
+  narrowed.** The first draft of this review proposed GO:0023035 (CD40 signaling pathway) as
+  a replacement. That is wrong for an IBA: the row's WITH set is
+  `FB:FBgn0265464|MGI:...|RGD:...|UniProtKB:O00463|UniProtKB:Q12933|UniProtKB:Q9Y4K3`, i.e.
+  it spans *Drosophila* and TRAF2/TRAF5/TRAF6, and CD40 is vertebrate-specific — so a CD40
+  pathway term cannot be what is conserved across that PANTHER clade. The broad term is the
+  phylogenetically honest one here. The CD40-specific proposal is instead attached to the
+  human-experimental GO:0007165 TAS row anchored to PMID:7530216, where it belongs.
 - **GO:0031996 "thioesterase binding" / GO:0031625 "ubiquitin protein ligase binding"
   (IPI, PMID:11279055).** That paper is a bioinformatics-driven survey in which the isolated
   TRAF domains of MUL/TRIM37 and USP7 bound *all six* TRAFs in vitro
   ["MUL and USP7 are capable of binding in vitro via their TDs to all of the previously
   identified TRAF family proteins (TRAF1, TRAF2, TRAF3, TRAF4, TRAF5, and TRAF6)"], i.e. a
   pan-TRAF, non-selective interaction. Kept, but non-core. (Independently, TRAF3 genuinely
-  binds ubiquitin thioesterases OTUB1/OTUB2/OTUD5/DUBA, so the term itself is not wrong.)
+  binds ubiquitin thioesterases OTUB1/OTUB2/OTUD5 (= DUBA), so the term itself is not wrong.)
 - **GO:1902554 "serine/threonine protein kinase complex" (NAS, PMID:24622840).** From the
   STING–TRAF3–TBK1 complex. TRAF3 is a transient adaptor within a signalling complex that
   contains a kinase, not a stoichiometric subunit of a kinase complex. Marked over-annotated.
@@ -210,22 +225,42 @@ Points where the review departs from GOA, with the reasoning:
   informative content is preserved by GO:0005164, GO:0035591, GO:0019901, GO:0019903 and the
   proposed K63-ubiquitination terms.
 
-## 5. Gaps proposed as NEW
+## 5. Gaps
+
+Added to the review as **NEW annotations** (terms absent from GOA entirely):
 
 | Term | Why |
 |---|---|
 | GO:1901223 negative regulation of non-canonical NF-kappaB signal transduction | TRAF3's flagship function; not in GOA at all |
 | GO:0043161 proteasome-mediated ubiquitin-dependent protein catabolic process | mechanism of the above (NIK turnover) |
 | GO:0070534 protein K63-linked ubiquitination | the chain type TRAF3 actually builds (ASC, self) |
-| GO:0023035 CD40 signaling pathway | the founding receptor context, only present as generic "signal transduction" |
-| GO:0032728 positive regulation of interferon-beta production | GOA has only the unsigned parent GO:0032648 |
+
+Recommended as **`proposed_replacement_terms` on MODIFY rows** (the term is already
+represented in GOA, but by a parent that is too general or unsigned):
+
+| Existing row | Replacement | Why |
+|---|---|---|
+| GO:0007165 signal transduction (TAS, PMID:7530216) | GO:0023035 CD40 signaling pathway | the founding receptor context, currently only generic "signal transduction" |
+| GO:0032648 regulation of interferon-beta production | GO:0032728 positive regulation of interferon-beta production | GOA has only the unsigned parent |
+| GO:0032479 regulation of type I interferon production | GO:0032481 positive regulation of type I interferon production | ditto |
+| GO:0050688 regulation of defense response to virus | GO:0002230 positive regulation of defense response to virus by host | ditto |
+| GO:0008063 Toll signaling pathway (IEA) | GO:0002224 toll-like receptor signaling pathway | wrong lineage (see §4) |
+| GO:0004842 ubiquitin-protein transferase activity | GO:0061630 ubiquitin protein ligase activity | parent also covers E1/E2 |
+
+Proposed as a **new ontology term** (nothing suitable exists): a
+`lymphotoxin beta receptor signaling pathway` term, as a sibling of GO:0023035 under
+GO:0007166. Checked against OLS — GO has lymphotoxin terms only for the ligand and its
+production (GO:0032641, GO:0032681, GO:0062048), none for LTBR-initiated signalling.
 
 ## 6. Open questions
 
 - Is the "negative regulator of canonical NF-κB / MAPK" role a *direct* TRAF3 activity or
   purely a consequence of NIK-level and cIAP-level effects? The LTβR data (PMID:20185819)
   argue for a receptor-complex-composition mechanism (TRAF3 excludes TRAF2/IKK1), which would
-  be a genuine adaptor function.
+  be a genuine adaptor function. This is why GO:0043122 is kept as the unsigned parent rather
+  than being narrowed to GO:0043124 (negative regulation): signing the term would assert a
+  mechanism the current evidence does not distinguish. Suggested experiment 1 in the review
+  is designed to settle it.
 - Isoform 2 (Q13114-2) has no functional data at all in the reviewed literature.
 - Which substrates besides ASC does TRAF3 ubiquitinate directly? Most published "TRAF3
   ubiquitination" work is TRAF3-as-substrate.
