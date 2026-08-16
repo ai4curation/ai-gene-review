@@ -1389,10 +1389,9 @@ def test_validate_paint_ptns_seed_overlap_still_flags_a_real_miss():
     assert "no representative UniProtKB accession" in warnings[0]
 
 
-def test_validate_paint_ptns_rejects_a_descendant_of_a_lost_term():
-    """Asserting a specialisation of a struck-out term must not evade the check."""
-    doc = {
-        "function": {"term": {"id": "GO:0004713", "label": "PTK activity"}},
+def _loss_doc(asserted_go: str) -> dict:
+    return {
+        "function": {"term": {"id": asserted_go, "label": "f"}},
         "family": {
             "term": {"id": "PANTHER:PTHR1", "label": "f"},
             "ancestral_nodes": [
@@ -1403,18 +1402,38 @@ def test_validate_paint_ptns_rejects_a_descendant_of_a_lost_term():
             ],
         },
     }
+
+
+# Real GO relation: GO:0004714 (transmembrane receptor protein tyrosine kinase
+# activity) is_a GO:0004713 (protein tyrosine kinase activity). GO:0004713 is
+# the BROADER term -- worth stating, because getting this backwards is exactly
+# how a test can pass while encoding a false ontology fact.
+_PTK_ANCESTORS = {
+    "GO:0004714": {"GO:0004714", "GO:0004713", "GO:0003674"},
+    "GO:0004713": {"GO:0004713", "GO:0003674"},
+}
+
+
+def _ptk_ancestors(term: str) -> set:
+    return _PTK_ANCESTORS.get(term, {term})
+
+
+def test_validate_paint_ptns_rejects_a_descendant_of_a_lost_term():
+    """Asserting a specialisation of a struck-out term must not evade the check.
+
+    Losing the broad GO:0004713 also rules out the narrower GO:0004714.
+    """
     index = {
         "PANTHER:PTN000000001": [
             _paint_row(go_id="GO:0038131", aspect="F"),
-            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+            _paint_row(go_id="GO:0004713", aspect="F", evidence="IRD", negated=True),
         ]
     }
-    # GO:0004713 is a descendant of the lost GO:0004714.
-    ancestors = {"GO:0004713": {"GO:0004713", "GO:0004714"}}
 
     errors, _ = validate_paint_ptns(
-        list(iter_ancestral_node_uses(doc)), index,
-        lambda t: ancestors.get(t, {t}),
+        list(iter_ancestral_node_uses(_loss_doc("GO:0004714"))),
+        index,
+        _ptk_ancestors,
     )
 
     assert len(errors) == 1
@@ -1422,30 +1441,23 @@ def test_validate_paint_ptns_rejects_a_descendant_of_a_lost_term():
 
 
 def test_validate_paint_ptns_allows_an_ancestor_of_a_lost_term():
-    """Asserting something broader than what was lost is not contradicted."""
-    doc = {
-        "function": {"term": {"id": "GO:0003674", "label": "molecular_function"}},
-        "family": {
-            "term": {"id": "PANTHER:PTHR1", "label": "f"},
-            "ancestral_nodes": [
-                {
-                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
-                    "evidence": [{"source_id": "GO_REF:0000033"}],
-                }
-            ],
-        },
-    }
+    """Asserting something broader than what was lost is not contradicted.
+
+    ERBB3 loses the narrow GO:0004714, but a family whose other members retain
+    tyrosine kinase activity is still validly described by the broader
+    GO:0004713.
+    """
     index = {
         "PANTHER:PTN000000001": [
-            _paint_row(go_id="GO:0003674", aspect="F"),
+            _paint_row(go_id="GO:0004713", aspect="F"),
             _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
         ]
     }
-    ancestors = {"GO:0004714": {"GO:0004714", "GO:0003674"}}
 
     errors, _ = validate_paint_ptns(
-        list(iter_ancestral_node_uses(doc)), index,
-        lambda t: ancestors.get(t, {t}),
+        list(iter_ancestral_node_uses(_loss_doc("GO:0004713"))),
+        index,
+        _ptk_ancestors,
     )
 
     assert errors == []

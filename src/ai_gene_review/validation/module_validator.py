@@ -178,7 +178,11 @@ class AncestralNodeUse:
     # ``asserted_go_terms`` set reaches to the module root, which is fine for an
     # advisory overlap hint but far too wide for a blocking error -- the same
     # nearest-enclosing-scope argument the taxon check needs.
-    nearest_asserted_go_terms: Tuple[ModuleGoAssertion, ...] = ()
+    #
+    # Deliberately has NO default: it drives a blocking check, so a construction
+    # site that forgot to populate it would silently disable that check rather
+    # than fail. Required means a new caller cannot fail open by omission.
+    nearest_asserted_go_terms: Tuple[ModuleGoAssertion, ...]
 
 
 @dataclass(frozen=True)
