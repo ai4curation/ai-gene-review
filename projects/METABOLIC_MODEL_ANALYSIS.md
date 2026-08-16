@@ -791,9 +791,14 @@ by a different route (scipy HiGHS instead of COBRApy, after accepting a sandbox
 import block rather than working around it). It reads the biology differently,
 though: it argues the strict pyranase reannotation **over-predicts**
 essentiality, because rbsD mutants retain some ribose growth via spontaneous
-mutarotation. If that is right, the "corrected model -> 0% growth -> Correct"
-row in the FBA table above is too clean - the real phenotype would be *impaired*,
-not *abolished*. Unresolved here; it needs the actual growth data.
+mutarotation. On checking, that claim is **not supported by any of the four
+papers it cites** - none reports a rbsD growth phenotype - while GOA carries an
+**IMP** annotation to GO:0019303 (D-ribose catabolic process) from PMID:15060078,
+i.e. an EcoCyc curator read a real mutant phenotype in a full text we have not
+seen. So the reinterpretation is an unsupported lead, not a correction. What
+remains fair is narrower: the "corrected model -> 0% growth -> Correct" row above
+is an FBA idealisation, and whether the true phenotype is *abolished* or merely
+*impaired* rests on that IMP's full text.
 
 Full writeup, replication table, run-to-run comparison, and citation audit:
 [openscientist/RESULTS.md](METABOLIC_MODEL_ANALYSIS/openscientist/RESULTS.md).

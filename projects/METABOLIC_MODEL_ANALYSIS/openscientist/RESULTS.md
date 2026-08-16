@@ -127,13 +127,47 @@ mechanistic reason", and that the strict reannotation **over-predicts** essentia
 ignoring spontaneous mutarotation — proposing a third spontaneous-bypass variant that gets
 KO/WT = 1.0 by a correct mechanism.
 
-That disagreement is not settled here, and it lands on this project page too: the FBA table
-above scores the corrected model as "✓ Correct" for predicting lethality, which is too clean
-if the real phenotype is *impaired* rather than *abolished*. Note also that PMID:15060078's
-abstract states "the anomeric exchange of only ribofuranose, not ribopyranose, occurs
-spontaneously in solution", which arguably cuts *against* run 2's spontaneous-bypass rescue;
-and run 2's supporting citation PMID:3011793 has not been verified here. Resolving it needs
-the actual Δ*rbsD* growth data, not more modelling.
+### Adjudicating that disagreement (verified 2026-08-16)
+
+**PMID:3011793 — VERIFIED, and well used.** Bell et al. 1986, *J Biol Chem* 261(17):7652-8,
+[DOI](https://doi.org/10.1016/S0021-9258(19)57448-8). The quoted sentence — "These genes
+encode components of the high affinity ribose transport system in Escherichia coli" — is
+verbatim in the abstract, which lumps `rbsD` with `rbsA`/`rbsC` and concludes their products
+"presumably form a membrane-bound transport complex". Run 2's characterisation of it as the
+historical origin of the annotation iML1515 inherited is exactly right. This is the run's
+strongest citation and neither run 1 nor this project page had it.
+
+**Run 2's biological claim is NOT supported by anything it cited.** Its reinterpretation rests
+on the assertion that Δ*rbsD* mutants still grow on ribose via spontaneous mutarotation. None
+of its four citations state a Δ*rbsD* growth phenotype: 3011793 is a sequencing paper, 23651393
+is about RbsR regulation, 21276853 is a *S. aureus* structure, and 15060078's abstract reports
+NMR enzymology, not growth. The assertion is uncited inference presented as a correction.
+
+**The evidence that does exist points the other way.** GOA/EcoCyc carry two experimental
+annotations for rbsD from PMID:15060078 (`genes/ECOLI/rbsD/rbsD-goa.tsv`):
+
+| GO term | Evidence | Reference | Assigned by |
+|---|---|---|---|
+| GO:0062193 D-ribose pyranase activity | **IDA** | PMID:15060078 | EcoCyc |
+| GO:0019303 D-ribose catabolic process | **IMP** | PMID:15060078 | EcoCyc |
+
+An **IMP** means an EcoCyc curator read a mutant phenotype in the full text — which is not in
+`publications/` and which neither run, nor this analysis, has seen. Per this repo's own rule
+(*do not overrule curators from incomplete evidence*), rbsD is experimentally required for
+D-ribose catabolism; what is unestablished is the **magnitude** — abolished versus impaired.
+
+**Correcting my own earlier note:** I previously wrote that PMID:15060078's line "the anomeric
+exchange of only ribofuranose, not ribopyranose, occurs spontaneously in solution" cuts against
+run 2. That over-reads it. The sentence is about *anomeric* (α⇌β) exchange, not pyranose⇌furanose
+*ring-form* interconversion, so it does not directly settle whether the ring conversion proceeds
+fast enough without the enzyme.
+
+**Net:** run 2's numbers are right and its modelling caveat (the result depends on ribokinase
+anomer specificity) stands. Its *biological* reinterpretation should be treated as an
+unsupported lead, not a correction — and this project page's "corrected model → lethal →
+✓ Correct" row should be read as an FBA idealisation whose real-world magnitude rests on an
+IMP whose full text we have not read. Settling it needs the Δ*rbsD* growth curve in
+PMID:15060078, not more modelling.
 
 ## Bearing on the "is ChatGEM overkill?" question
 
