@@ -1299,3 +1299,57 @@ def test_validate_family_members_no_subfamily_advice_when_already_specific():
         subfamily_counts={"PTHR24416": 96},
     )
     assert (errors, warnings) == ([], [])
+
+
+def test_validate_paint_ptns_seed_overlap_is_vacuous_without_uniprot_seeds():
+    """PAINT seeds are often MGI/SGD/FB ids; an empty UniProt set proves nothing."""
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "f"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P1", "label": "rep"}}
+            ],
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(seeds="MGI:MGI:88314|SGD:S000003865")
+        ]
+    }
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "not checked" in warnings[0]
+    assert "MGI:MGI:88314" in warnings[0]
+
+
+def test_validate_paint_ptns_seed_overlap_still_flags_a_real_miss():
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "f"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P1", "label": "rep"}}
+            ],
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {"PANTHER:PTN000000001": [_paint_row(seeds="UniProtKB:P99999")]}
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "no representative UniProtKB accession" in warnings[0]

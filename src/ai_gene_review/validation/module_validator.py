@@ -775,15 +775,30 @@ def validate_paint_ptns(
 
         if use.representative_uniprot_accessions:
             seed_accessions: Set[str] = set()
+            all_seeds: Set[str] = set()
             for row in positive_ibd_rows:
                 seed_accessions.update(row.uniprot_seed_accessions)
+                all_seeds.update(s for s in row.seeds.split("|") if s.strip())
             if not seed_accessions.intersection(use.representative_uniprot_accessions):
-                warnings.append(
-                    f"{use.path}: no representative UniProtKB accession "
-                    f"({_format_limited(set(use.representative_uniprot_accessions))}) "
-                    f"appears among IBD seed UniProtKB accessions "
-                    f"({_format_limited(seed_accessions) or 'none'})"
+                representatives = _format_limited(
+                    set(use.representative_uniprot_accessions)
                 )
+                if not seed_accessions:
+                    # PAINT seeds are model-organism ids (MGI, SGD, FB, WB, ...)
+                    # as often as UniProtKB ones, so an empty UniProt seed set
+                    # makes the comparison vacuous rather than negative.
+                    warnings.append(
+                        f"{use.path}: seed overlap not checked -- this node's IBD "
+                        f"seeds carry no UniProtKB accession "
+                        f"({_format_limited(all_seeds) or 'no seeds'}), so they "
+                        f"cannot be compared with {representatives}"
+                    )
+                else:
+                    warnings.append(
+                        f"{use.path}: no representative UniProtKB accession "
+                        f"({representatives}) appears among IBD seed UniProtKB "
+                        f"accessions ({_format_limited(seed_accessions)})"
+                    )
 
     return errors, warnings
 

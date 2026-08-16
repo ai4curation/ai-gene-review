@@ -72,9 +72,17 @@ consistent with what PAINT struck out:
 Smoothened losing its ancestral Wnt functions while retaining Hh signalling is
 exactly the evolutionary story the node encodes, and the module reflects it.
 
-**Evidence depth.** 180 of 369 resolved nodes rest on ≤3 UniProt seed proteins.
-Ancestral reconstructions that thin are weak support for propagating a specific
-function and are worth a second look.
+**Evidence depth.** 82 of 369 resolved nodes are reconstructed from ≤3 seed
+proteins; only 3 have no seed at all, and none of those three is the stated
+evidence for a molecular-function claim. Reconstructions that thin are weak
+support for propagating a specific function and are worth a second look.
+
+Counting seeds requires care: PAINT records them as model-organism identifiers
+(MGI 4,514, RGD 2,807, FB 1,801, WB 1,067, SGD 511, ZFIN 479, ...) at least as
+often as UniProtKB (7,912). Counting only `UniProtKB:` seeds inflates the
+"shallow" figure to 180. The pre-existing seed-overlap warning had the same
+blind spot — 3 of its 9 firings were vacuous, comparing a representative against
+a node whose seeds carry no UniProt accession at all — and now says so instead.
 
 **Claim support.** 100 nodes exactly support the module's assertion. Of the 33
 that appeared not to, 12 were GO ancestry artifacts (the node is annotated to a
