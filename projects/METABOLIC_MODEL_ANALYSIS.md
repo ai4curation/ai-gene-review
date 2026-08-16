@@ -764,3 +764,33 @@ Searched all reactions with EC 2.3.1.16 (acetyl-CoA C-acyltransferase / thiolase
 2. HADHB expression data cannot be integrated with FAO flux predictions
 3. MTPD2 (HADHB deficiency, MIM:620300) phenotype cannot be modeled
 4. Drug target analysis for HADHB will predict wrong pathway effects
+
+---
+
+## 2026-08-12: Can an autonomous agent run the COBRApy job itself?
+
+Probe of whether a general-purpose autonomous research agent (OpenScientist),
+with no GEM-specific RAG corpus and no bespoke agentic platform, can execute a
+constraint-based modelling task of the kind ChatGEM
+([bioRxiv 10.64898/2026.07.20.739662](https://doi.org/10.64898/2026.07.20.739662))
+builds a dedicated multi-agent stack for.
+
+It was given the rbsD/iML1515 experiment above as a **blinded** task — asked for
+growth rates neutrally, never told the expected outcome. It reproduced the
+held-out result exactly (published model KO/WT = 1.000; rbsD-as-pyranase variant
+KO/WT = 0.000), and every number replicates under independent re-run.
+
+It also added a caveat this page was missing: the lethality **hinges on
+ribokinase being anomer-specific**. If `RBK` can still phosphorylate `rib__D_c`
+directly, the pyranase carries no obligatory flux and the knockout is non-lethal
+again. The "corrected model → lethal" claim above is a property of that modelling
+choice, not a free-standing fact.
+
+Full writeup, replication table, and citation audit:
+[openscientist/RESULTS.md](METABOLIC_MODEL_ANALYSIS/openscientist/RESULTS.md).
+
+**Gap this exposed in our own work:** the FBA experiment above references
+`models/metabolic/fba_annotation_experiment.py` and
+`models/metabolic/iML1515_with_pyranase.json`, but neither is committed — the
+prose is currently the only artifact. `projects/METABOLIC_MODEL_ANALYSIS/openscientist/verify_rbsD_fba.py`
+closes that gap for the rbsD case; the glgX case still needs the same treatment.
