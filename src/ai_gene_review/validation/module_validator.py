@@ -856,11 +856,30 @@ class FamilyMemberUse:
     declared_family_curies: frozenset[str]
     representative_accessions: frozenset[str]
     ancestral_node_curies: frozenset[str] = frozenset()
-    # Every YAML path at which this descriptor declares a PANTHER id. A
-    # descriptor may declare via ``term`` and/or ``family_terms[]``, and label
-    # suppression keys off these paths, so ``path`` alone (always ``...term``)
-    # would miss a family_terms-only descriptor.
-    declared_paths: frozenset[str] = frozenset()
+
+
+def count_ungrounded_families(obj: object) -> int:
+    """Count family descriptors that name members but assert no PANTHER id.
+
+    Omitting an id is the correct conservative move when the family cannot be
+    established (see CLAUDE.md), so this is a visibility counter, not a defect:
+    it keeps the size of the "not yet grounded" backlog countable by tooling
+    without creating a mechanism that could suppress a real error.
+    """
+    total = 0
+    if isinstance(obj, dict):
+        family = obj.get("family")
+        if isinstance(family, dict):
+            term = family.get("term")
+            has_id = isinstance(term, dict) and isinstance(term.get("id"), str)
+            if not has_id and _representative_uniprot_accessions(family):
+                total += 1
+        for value in obj.values():
+            total += count_ungrounded_families(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            total += count_ungrounded_families(item)
+    return total
 
 
 def iter_family_member_uses(
@@ -879,15 +898,6 @@ def iter_family_member_uses(
             if _panther_family_base(curie) is not None
         }
         accessions = _representative_uniprot_accessions(obj)
-        declared_paths = set()
-        term = obj.get("term")
-        if isinstance(term, dict) and isinstance(term.get("id"), str):
-            if _panther_family_base(term["id"]) is not None:
-                declared_paths.add(f"{path}.term")
-        for index, family_term in enumerate(_as_list(obj.get("family_terms"))):
-            if isinstance(family_term, dict) and isinstance(family_term.get("id"), str):
-                if _panther_family_base(family_term["id"]) is not None:
-                    declared_paths.add(f"{path}.family_terms[{index}]")
         if family_curies and accessions:
             nodes = set()
             for node_descriptor in _as_list(obj.get("ancestral_nodes")):
@@ -902,7 +912,6 @@ def iter_family_member_uses(
                 declared_family_curies=frozenset(family_curies),
                 representative_accessions=frozenset(accessions),
                 ancestral_node_curies=frozenset(nodes),
-                declared_paths=frozenset(declared_paths),
             )
         for key, value in obj.items():
             yield from iter_family_member_uses(value, f"{path}.{key}")
@@ -1816,7 +1825,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     exit_code = 0
+    ungrounded = 0
     for path in args.files:
+        with open(path) as handle:
+            ungrounded += count_ungrounded_families(yaml.safe_load(handle))
         result = validate_module_file(path, config_path=args.config)
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
@@ -1827,6 +1839,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             exit_code = 1
 
+    if ungrounded:
+        print(
+            f"ℹ️  {ungrounded} family descriptor(s) name representative members but "
+            "assert no PANTHER id (correct when the family cannot be established)"
+        )
     return exit_code
 
 

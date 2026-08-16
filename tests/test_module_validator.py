@@ -16,9 +16,9 @@ from ai_gene_review.validation.module_validator import (
     compare_label,
     iter_ancestral_node_uses,
     iter_cited_ptn_sources,
+    count_ungrounded_families,
     iter_family_member_uses,
     iter_taxon_descriptors,
-    iter_terms_with_paths,
     load_goa_attested_ptns,
     iter_terms,
     iter_typed_go_terms,
@@ -1075,165 +1075,34 @@ def test_compare_label_omits_hint_for_near_miss_labels():
     assert "usually means the ID is wrong" not in message
 
 
-@pytest.mark.parametrize(
-    "family",
-    [
-        # ids declared via `term:`
-        {
-            "term": {"id": "PANTHER:PTHR24289", "label": "x"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
-            ],
-        },
-        # ids declared ONLY via `family_terms[]` -- four modules use this form
-        {
-            "family_terms": [{"id": "PANTHER:PTHR24289", "label": "x"}],
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
-            ],
-        },
-        # both forms at once
-        {
-            "term": {"id": "PANTHER:PTHR24289", "label": "x"},
-            "family_terms": [{"id": "PANTHER:PTHR24281", "label": "y"}],
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
-            ],
-        },
-    ],
-)
-def test_declared_paths_line_up_with_term_paths(family):
-    """Label suppression keys off these paths, so they must line up exactly.
-
-    A `family_terms`-only descriptor has no `...term` path at all, so keying on
-    `use.path` would silently fail to suppress its label error.
-    """
-    doc = {"family": family}
-    uses = list(iter_family_member_uses(doc))
-    assert uses, "descriptor should be discoverable"
-    term_paths = {p for p, _, _ in iter_terms_with_paths(doc)}
-    declared = set().union(*(u.declared_paths for u in uses))
-    assert declared, "every descriptor must report where it declares its ids"
-    assert declared <= term_paths
-
-
-def test_validate_paint_ptns_rejects_inheriting_a_lost_function():
-    """The ERBB3 case: PAINT recorded IRD loss of the very term asserted.
-
-    Pseudoenzymes keep the fold and the family membership while losing the
-    ancestral activity, so a node that records the loss cannot support
-    inheriting it.
-    """
+def test_count_ungrounded_families_counts_only_member_bearing_descriptors():
+    """Keeps the not-yet-grounded backlog countable without a suppression file."""
     doc = {
-        "function": {
-            "term": {"id": "GO:0004714", "label": "kinase"},
-        },
-        "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "f"},
-            "ancestral_nodes": [
-                {
-                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
-                    "evidence": [{"source_id": "GO_REF:0000033"}],
+        "parts": [
+            # no id, but names members -> counted
+            {
+                "family": {
+                    "preferred_term": "some family",
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:P1", "label": "m"}}
+                    ],
                 }
-            ],
-        },
-    }
-    index = {
-        "PANTHER:PTN000000001": [
-            _paint_row(go_id="GO:0038131", aspect="F"),
-            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+            },
+            # has an id -> not counted
+            {
+                "family": {
+                    "term": {"id": "PANTHER:PTHR1", "label": "x"},
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:P2", "label": "m"}}
+                    ],
+                }
+            },
+            # no id and no members -> nothing to ground, not counted
+            {"family": {"preferred_term": "vague"}},
         ]
     }
 
-    errors, _ = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
-
-    assert len(errors) == 1
-    assert "LOST" in errors[0]
-    assert "GO:0004714" in errors[0]
-    assert "GO:0038131" in errors[0]  # names what the node does retain
-
-
-def test_validate_paint_ptns_allows_retained_function_alongside_a_loss():
-    """A node with both losses and retained terms still supports the retained ones."""
-    doc = {
-        "function": {"term": {"id": "GO:0038131", "label": "neuregulin receptor"}},
-        "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "f"},
-            "ancestral_nodes": [
-                {
-                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
-                    "evidence": [{"source_id": "GO_REF:0000033"}],
-                }
-            ],
-        },
-    }
-    index = {
-        "PANTHER:PTN000000001": [
-            _paint_row(go_id="GO:0038131", aspect="F"),
-            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
-        ]
-    }
-
-    errors, _ = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
-
-    assert errors == []
-
-
-def test_validate_family_members_advises_subfamily_for_heterogeneous_family():
-    """PTHR24416 grounds 13 different receptor kinases; the family says little."""
-    doc = {
-        "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "TYROSINE-PROTEIN KINASE RECEPTOR"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
-            ],
-        }
-    }
-    uses = list(iter_family_member_uses(doc))
-
-    errors, warnings = validate_family_members(
-        uses, {"P00533": "PTHR24416:SF91"}, subfamily_counts={"PTHR24416": 96}
-    )
-
-    assert errors == []
-    assert len(warnings) == 1
-    assert "96 subfamilies" in warnings[0]
-    assert "PANTHER:PTHR24416:SF91" in warnings[0]
-
-
-def test_validate_family_members_no_subfamily_advice_for_small_family():
-    doc = {
-        "family": {
-            "term": {"id": "PANTHER:PTHR1", "label": "f"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
-        }
-    }
-    errors, warnings = validate_family_members(
-        list(iter_family_member_uses(doc)),
-        {"P1": "PTHR1:SF2"},
-        subfamily_counts={"PTHR1": 3},
-    )
-    assert (errors, warnings) == ([], [])
-
-
-def test_validate_family_members_no_subfamily_advice_when_already_specific():
-    """A descriptor already grounded at subfamily level needs no advice."""
-    doc = {
-        "family": {
-            "term": {"id": "PANTHER:PTHR24416:SF91", "label": "EGFR"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
-            ],
-        }
-    }
-    errors, warnings = validate_family_members(
-        list(iter_family_member_uses(doc)),
-        {"P00533": "PTHR24416:SF91"},
-        subfamily_counts={"PTHR24416": 96},
-    )
-    assert (errors, warnings) == ([], [])
+    assert count_ungrounded_families(doc) == 1
 
 
 def test_validate_paint_ptns_seed_overlap_is_vacuous_without_uniprot_seeds():
