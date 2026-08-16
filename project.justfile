@@ -192,6 +192,12 @@ fetch-panther-paint-all *args="":
 # This is the authority behind PANTHER family/subfamily id + label validation
 # (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
 # release bump, then re-run `just validate-modules`.
+# NOTE ON CHURN: the artifact is ~14 MB / 700k lines and is regenerated wholesale,
+# so a release bump rewrites the entire file in one commit. That is the price of
+# offline, reproducible, pinned-release validation; expect the diff to be large
+# and review it by the reported family/subfamily counts rather than line by line.
+# A bump will also surface label drift as new validation errors -- run
+# `just fix-panther-labels` afterwards, and check any DIVERGENT labels by hand.
 [group('QC')]
 build-panther-obo *args="":
     uv run ai-gene-review build-panther-obo --output-dir . {{args}}

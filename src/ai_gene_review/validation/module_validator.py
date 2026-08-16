@@ -103,7 +103,9 @@ Resolver = Callable[[str], Tuple[str, Optional[str], Set[str]]]
 BranchResolver = Callable[[str, str], str]
 
 PTN_ID_RE = re.compile(r"^PANTHER:PTN\d+$")
-BARE_PTN_RE = re.compile(r"PTN\d+")
+# Anchored on word boundaries so a PTN embedded in a longer token (an
+# accession that merely contains "PTN1234") is not read as attestation.
+BARE_PTN_RE = re.compile(r"\bPTN\d+\b")
 PANTHER_FAMILY_RE = re.compile(r"^PANTHER:(PTHR\d+)(?::SF\d+)?$")
 TAXON_EXPERIMENTAL_SYSTEM_RE = re.compile(
     r"\b("
@@ -172,6 +174,11 @@ class AncestralNodeUse:
     representative_uniprot_accessions: frozenset[str]
     asserted_go_terms: Tuple[ModuleGoAssertion, ...]
     has_go_ref_0000033: bool
+    # Assertions from the NEAREST enclosing ancestor that makes any. The full
+    # ``asserted_go_terms`` set reaches to the module root, which is fine for an
+    # advisory overlap hint but far too wide for a blocking error -- the same
+    # nearest-enclosing-scope argument the taxon check needs.
+    nearest_asserted_go_terms: Tuple[ModuleGoAssertion, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -475,10 +482,13 @@ def iter_ancestral_node_uses(
 ) -> Iterator[AncestralNodeUse]:
     """Yield every module use of ``family.ancestral_nodes`` with context.
 
-    The GO assertions collected here are intentionally *nearby* module
-    assertions: direct typed slots on enclosing annotons, complex units, or
-    protein-complex descriptors. They are used only for advisory PTN/GO overlap
-    warnings, not as hard validation.
+    Two GO-assertion sets are carried, because they serve checks of different
+    severity. ``asserted_go_terms`` collects direct typed slots from every
+    enclosing ancestor (annotons, complex units, protein-complex descriptors) up
+    to the module root -- wide enough to be a useful *advisory* overlap hint.
+    ``nearest_asserted_go_terms`` keeps only those from the closest ancestor that
+    makes any assertion at all, which is what a *blocking* check must use: an
+    assertion several levels up is not this descriptor's claim.
     """
     if isinstance(obj, dict):
         ancestral_nodes = obj.get("ancestral_nodes")
@@ -488,9 +498,13 @@ def iter_ancestral_node_uses(
             representative_accessions = _representative_uniprot_accessions(obj)
 
             asserted_terms: List[ModuleGoAssertion] = []
+            nearest_terms: List[ModuleGoAssertion] = []
             seen_assertions: Set[Tuple[str, str, str]] = set()
             for ancestor_path, ancestor in reversed(ancestors):
-                for assertion in _iter_direct_go_assertions(ancestor, ancestor_path):
+                found = list(_iter_direct_go_assertions(ancestor, ancestor_path))
+                if found and not nearest_terms:
+                    nearest_terms = found
+                for assertion in found:
                     key = (assertion.path, assertion.aspect, assertion.curie)
                     if key not in seen_assertions:
                         seen_assertions.add(key)
@@ -510,6 +524,7 @@ def iter_ancestral_node_uses(
                     family_term_curies=family_term_curies,
                     representative_uniprot_accessions=representative_accessions,
                     asserted_go_terms=tuple(asserted_terms),
+                    nearest_asserted_go_terms=tuple(nearest_terms),
                     has_go_ref_0000033=(
                         isinstance(node_descriptor, dict)
                         and _has_go_ref_0000033(node_descriptor)
@@ -608,6 +623,27 @@ def _format_limited(values: Set[str], limit: int = 8) -> str:
 GoAncestors = Callable[[str], Set[str]]
 
 
+def _assertion_is_lost(
+    assertion: ModuleGoAssertion,
+    lost: Set[Tuple[str, str]],
+    go_ancestors: Optional[GoAncestors],
+) -> bool:
+    """True if the assertion is a lost term, or a descendant of one.
+
+    A descendant of a struck-out term is at least as contradicted as the term
+    itself -- losing "receptor tyrosine kinase activity" also rules out any
+    specialisation of it.
+    """
+    if (assertion.aspect, assertion.curie) in lost:
+        return True
+    if go_ancestors is None:
+        return False
+    ancestors = go_ancestors(assertion.curie)
+    return any(
+        aspect == assertion.aspect and go_id in ancestors for aspect, go_id in lost
+    )
+
+
 def _go_terms_agree(
     asserted: Tuple[ModuleGoAssertion, ...],
     supported: Set[Tuple[str, str]],
@@ -680,10 +716,15 @@ def validate_paint_ptns(
             for row in rows
             if (row.negated or row.evidence in ("IRD", "IKR")) and row.go_id
         }
+        # Support detection walks GO ancestry, so loss detection must too, or the
+        # check is trivially evaded by asserting a *descendant* of the struck-out
+        # term. Only descendants count: asserting an ancestor of a lost term
+        # (e.g. "molecular_function" over a lost kinase activity) is broader than
+        # what was lost and is not contradicted by it.
         contradicted = [
             assertion
-            for assertion in use.asserted_go_terms
-            if (assertion.aspect, assertion.curie) in lost
+            for assertion in use.nearest_asserted_go_terms
+            if _assertion_is_lost(assertion, lost, go_ancestors)
         ]
         if contradicted:
             struck = _format_limited(
@@ -811,6 +852,11 @@ class FamilyMemberUse:
     declared_family_curies: frozenset[str]
     representative_accessions: frozenset[str]
     ancestral_node_curies: frozenset[str] = frozenset()
+    # Every YAML path at which this descriptor declares a PANTHER id. A
+    # descriptor may declare via ``term`` and/or ``family_terms[]``, and label
+    # suppression keys off these paths, so ``path`` alone (always ``...term``)
+    # would miss a family_terms-only descriptor.
+    declared_paths: frozenset[str] = frozenset()
 
 
 def iter_family_member_uses(
@@ -829,6 +875,15 @@ def iter_family_member_uses(
             if _panther_family_base(curie) is not None
         }
         accessions = _representative_uniprot_accessions(obj)
+        declared_paths = set()
+        term = obj.get("term")
+        if isinstance(term, dict) and isinstance(term.get("id"), str):
+            if _panther_family_base(term["id"]) is not None:
+                declared_paths.add(f"{path}.term")
+        for index, family_term in enumerate(_as_list(obj.get("family_terms"))):
+            if isinstance(family_term, dict) and isinstance(family_term.get("id"), str):
+                if _panther_family_base(family_term["id"]) is not None:
+                    declared_paths.add(f"{path}.family_terms[{index}]")
         if family_curies and accessions:
             nodes = set()
             for node_descriptor in _as_list(obj.get("ancestral_nodes")):
@@ -843,6 +898,7 @@ def iter_family_member_uses(
                 declared_family_curies=frozenset(family_curies),
                 representative_accessions=frozenset(accessions),
                 ancestral_node_curies=frozenset(nodes),
+                declared_paths=frozenset(declared_paths),
             )
         for key, value in obj.items():
             yield from iter_family_member_uses(value, f"{path}.{key}")
@@ -1028,7 +1084,7 @@ def validate_family_members(
             if matched_known_bad is not None:
                 matched_known_bad.add(key)
             if registered_paths is not None:
-                registered_paths.add(use.path)
+                registered_paths.update(use.declared_paths or {use.path})
             detail = f" ({note})" if note else ""
             warnings.append(
                 f"{use.path}: KNOWN-BAD grounding awaiting curation. "

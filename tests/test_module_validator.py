@@ -1174,12 +1174,46 @@ def test_load_known_bad_groundings_missing_file_is_empty(tmp_path):
     assert load_known_bad_groundings(tmp_path / "absent.tsv") == {}
 
 
-def test_iter_terms_with_paths_matches_family_member_use_paths():
-    """Label suppression keys off these paths, so they must line up exactly."""
-    doc = _two_descriptor_doc()
-    use_paths = {u.path for u in iter_family_member_uses(doc)}
+@pytest.mark.parametrize(
+    "family",
+    [
+        # ids declared via `term:`
+        {
+            "term": {"id": "PANTHER:PTHR24289", "label": "x"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
+            ],
+        },
+        # ids declared ONLY via `family_terms[]` -- four modules use this form
+        {
+            "family_terms": [{"id": "PANTHER:PTHR24289", "label": "x"}],
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
+            ],
+        },
+        # both forms at once
+        {
+            "term": {"id": "PANTHER:PTHR24289", "label": "x"},
+            "family_terms": [{"id": "PANTHER:PTHR24281", "label": "y"}],
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P05093", "label": "m"}}
+            ],
+        },
+    ],
+)
+def test_declared_paths_line_up_with_term_paths(family):
+    """Label suppression keys off these paths, so they must line up exactly.
+
+    A `family_terms`-only descriptor has no `...term` path at all, so keying on
+    `use.path` would silently fail to suppress its label error.
+    """
+    doc = {"family": family}
+    uses = list(iter_family_member_uses(doc))
+    assert uses, "descriptor should be discoverable"
     term_paths = {p for p, _, _ in iter_terms_with_paths(doc)}
-    assert use_paths <= term_paths
+    declared = set().union(*(u.declared_paths for u in uses))
+    assert declared, "every descriptor must report where it declares its ids"
+    assert declared <= term_paths
 
 
 def test_validate_paint_ptns_rejects_inheriting_a_lost_function():
@@ -1353,3 +1387,65 @@ def test_validate_paint_ptns_seed_overlap_still_flags_a_real_miss():
     assert errors == []
     assert len(warnings) == 1
     assert "no representative UniProtKB accession" in warnings[0]
+
+
+def test_validate_paint_ptns_rejects_a_descendant_of_a_lost_term():
+    """Asserting a specialisation of a struck-out term must not evade the check."""
+    doc = {
+        "function": {"term": {"id": "GO:0004713", "label": "PTK activity"}},
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "f"},
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(go_id="GO:0038131", aspect="F"),
+            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+        ]
+    }
+    # GO:0004713 is a descendant of the lost GO:0004714.
+    ancestors = {"GO:0004713": {"GO:0004713", "GO:0004714"}}
+
+    errors, _ = validate_paint_ptns(
+        list(iter_ancestral_node_uses(doc)), index,
+        lambda t: ancestors.get(t, {t}),
+    )
+
+    assert len(errors) == 1
+    assert "LOST" in errors[0]
+
+
+def test_validate_paint_ptns_allows_an_ancestor_of_a_lost_term():
+    """Asserting something broader than what was lost is not contradicted."""
+    doc = {
+        "function": {"term": {"id": "GO:0003674", "label": "molecular_function"}},
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "f"},
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "n"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(go_id="GO:0003674", aspect="F"),
+            _paint_row(go_id="GO:0004714", aspect="F", evidence="IRD", negated=True),
+        ]
+    }
+    ancestors = {"GO:0004714": {"GO:0004714", "GO:0003674"}}
+
+    errors, _ = validate_paint_ptns(
+        list(iter_ancestral_node_uses(doc)), index,
+        lambda t: ancestors.get(t, {t}),
+    )
+
+    assert errors == []

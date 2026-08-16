@@ -164,13 +164,34 @@ def render_obo(entries: Iterable[PantherEntry], release: str = PANTHER_RELEASE) 
         yield ""
         yield "[Term]"
         yield f"id: PANTHER:{entry.accession}"
-        yield f"name: {entry.name}"
+        yield f"name: {escape_obo_value(entry.name)}"
     for entry in subfamilies:
         yield ""
         yield "[Term]"
         yield f"id: PANTHER:{entry.accession}"
-        yield f"name: {entry.name}"
+        yield f"name: {escape_obo_value(entry.name)}"
         yield f"is_a: PANTHER:{entry.family}"
+
+
+def escape_obo_value(value: str) -> str:
+    r"""Escape OBO tag-value special characters in a name.
+
+    PANTHER 19.0 contains no ``!`` or ``{`` in any name, so this is currently a
+    no-op -- but an unescaped ``!`` starts an OBO trailing comment, which would
+    silently truncate a name and turn a *correct* label into a reported
+    mismatch. Cheap insurance against a future release.
+
+    >>> escape_obo_value("PLAIN NAME")
+    'PLAIN NAME'
+    >>> escape_obo_value("A ! B")
+    'A \\! B'
+    >>> escape_obo_value("X {y}")
+    'X \\{y}'
+    """
+    out = value.replace("\\", "\\\\")
+    for char in ("!", "{"):
+        out = out.replace(char, "\\" + char)
+    return out
 
 
 def _subfamily_sort_key(entry: PantherEntry) -> Tuple[str, int]:
@@ -412,6 +433,53 @@ def parse_ibd_row_keys(lines: Iterable[str]) -> Set[PaintRowKey]:
             )
         )
     return keys
+
+
+def index_upstream_by_node(keys: Iterable[PaintRowKey]) -> Dict[str, Set[PaintRowKey]]:
+    """Group upstream IBD row keys by their PTN node.
+
+    >>> sorted(index_upstream_by_node([("PTN1", "GO:1", "IBD", False)]))
+    ['PTN1']
+    """
+    by_node: Dict[str, Set[PaintRowKey]] = {}
+    for key in keys:
+        by_node.setdefault(key[0], set()).add(key)
+    return by_node
+
+
+def find_pruned_paint_rows(
+    committed: Dict[PaintRowKey, List[str]],
+    upstream: Set[PaintRowKey],
+) -> Dict[str, Set[PaintRowKey]]:
+    """Return upstream rows missing from slices that already carry their node.
+
+    Checking only ``committed - upstream`` is not enough. The loss check
+    (``validate_paint_ptns``) can only fire when the slice actually contains the
+    ``IRD``/``IKR`` row, so a slice with its loss rows *removed* would defeat it
+    while every remaining row still verifies as genuine. Since curation PRs
+    commit the very slices their PTN claims are checked against, that omission is
+    the more dangerous direction.
+
+    Only nodes already present in a slice are checked -- slices are deliberately
+    per-family subsets of PAINT, so absent nodes are not a defect.
+
+    >>> committed = {("PTN1", "GO:1", "IBD", False): ["f.tsv"]}
+    >>> upstream = {("PTN1", "GO:1", "IBD", False), ("PTN1", "GO:2", "IRD", True)}
+    >>> find_pruned_paint_rows(committed, upstream)
+    {'PTN1': {('PTN1', 'GO:2', 'IRD', True)}}
+    >>> find_pruned_paint_rows(committed, {("PTN1", "GO:1", "IBD", False)})
+    {}
+    """
+    by_node = index_upstream_by_node(upstream)
+    present: Dict[str, Set[PaintRowKey]] = {}
+    for key in committed:
+        present.setdefault(key[0], set()).add(key)
+    pruned: Dict[str, Set[PaintRowKey]] = {}
+    for node, rows in present.items():
+        missing = by_node.get(node, set()) - rows
+        if missing:
+            pruned[node] = missing
+    return pruned
 
 
 def load_committed_paint_rows(panther_dir: Path) -> Dict[PaintRowKey, List[str]]:

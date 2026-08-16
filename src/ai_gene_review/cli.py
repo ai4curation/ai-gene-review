@@ -4086,13 +4086,19 @@ def verify_panther_paint(
     PTN claims are validated against ``interpro/panther/*/*-paint.tsv`` slices
     that curation PRs commit alongside the claim, so the check is self-certifying
     unless something independently confirms those slices are genuine. This
-    re-derives them from upstream and reports any row that is not present there.
+    re-derives them from upstream and checks BOTH directions: no committed row
+    may be absent upstream (fabrication), and no slice may omit a row upstream
+    records for a node it already carries (pruning). The second matters most --
+    the loss check can only fire when the slice contains the IRD/IKR row, so a
+    slice with its loss rows removed would defeat it while every remaining row
+    still verified as genuine.
 
     Example:
         ai-gene-review verify-panther-paint
     """
     from ai_gene_review.etl.panther_families import (
         fetch_ibd_gaf,
+        find_pruned_paint_rows,
         load_committed_paint_rows,
         parse_ibd_row_keys,
     )
@@ -4110,12 +4116,36 @@ def verify_panther_paint(
         f"upstream IBD.gaf: {len(upstream)} node annotations; "
         f"committed slices: {len(committed)} rows"
     )
+    pruned = find_pruned_paint_rows(committed, upstream)
+    failed = False
+
     if unbacked:
         for source, key in unbacked[:50]:
             typer.echo(f"❌ {source}: {key} is not present upstream")
         typer.echo(f"❌ {len(unbacked)} committed PAINT row(s) have no upstream backing.")
+        failed = True
+
+    if pruned:
+        for node, rows in sorted(pruned.items())[:50]:
+            lost = sorted(r for r in rows if r[3] or r[2] in ("IRD", "IKR"))
+            typer.echo(
+                f"❌ {node}: slice omits {len(rows)} upstream row(s)"
+                + (f", including {len(lost)} loss row(s): {lost[:3]}" if lost else "")
+            )
+        typer.echo(
+            f"❌ {len(pruned)} node(s) have upstream rows missing from their "
+            "committed slice; re-fetch with `just fetch-panther-paint <FAMILY>`."
+        )
+        failed = True
+
+    if failed:
         raise typer.Exit(code=1)
-    typer.echo("✓ Every committed PAINT row is backed by upstream IBD.gaf.")
+    nodes_checked = len({key[0] for key in committed})
+    typer.echo(
+        f"✓ All {len(committed)} committed rows are backed by upstream IBD.gaf, "
+        f"and each of the {nodes_checked} nodes present in a slice carries every "
+        "upstream row for that node."
+    )
 
 
 @app.command()
