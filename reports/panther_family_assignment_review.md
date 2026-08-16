@@ -12,15 +12,16 @@ representatives. Generated against PANTHER 19.0.
 | family/subfamily descriptors with an id | 1,000 |
 | declared at family level | 902 |
 | declared at subfamily level | 98 |
-| family descriptors asserting no id | 166 (across 52 modules) |
+| family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT nodes resolved | 369 |
 | representative accessions resolved to a PANTHER family | 1,145 / 1,145 |
 
 Counts are post-removal: 21 descriptors that named a family provably excluding
-their own representative member now assert no id (see §1); the other 145
-pre-date this work. "Asserting no id" uses the same definition as the sweep's
-`ℹ️` counter -- a family descriptor naming UniProt representative members but no
-PANTHER term -- so the two figures are directly comparable.
+their own representative member now assert no id (see §1); the other 142
+pre-date this work. The figure comes from the sweep's own `ℹ️` counter (carried
+on `ModuleValidationResult`), so report and tool cannot drift apart: it counts
+family descriptors that name UniProt representative members and carry no id in
+either `term` or `family_terms[]`.
 
 ## 1. Family assignments
 

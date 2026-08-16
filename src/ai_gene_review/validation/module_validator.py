@@ -249,6 +249,10 @@ class ModuleValidationResult:
     path: Path
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    # Descriptors naming representative members but asserting no id. Carried on
+    # the result rather than recomputed by the caller, so there is only one
+    # place the definition can live and it cannot drift from the validator's.
+    ungrounded_families: int = 0
 
     @property
     def is_valid(self) -> bool:
@@ -870,8 +874,19 @@ def count_ungrounded_families(obj: object) -> int:
     if isinstance(obj, dict):
         family = obj.get("family")
         if isinstance(family, dict):
+            # A descriptor may be grounded through `term` OR exclusively
+            # through `family_terms[]` -- iter_family_member_uses reads both via
+            # _family_term_curies, and testing only `term` would report those as
+            # ungrounded. A non-PANTHER `term` (InterPro, NCBIfam) still counts
+            # as grounded; this counter measures descriptors with no id at all,
+            # not descriptors lacking a PANTHER id specifically.
             term = family.get("term")
             has_id = isinstance(term, dict) and isinstance(term.get("id"), str)
+            if not has_id:
+                has_id = any(
+                    _panther_family_base(curie) is not None
+                    for curie in _family_term_curies(family)
+                )
             if not has_id and _representative_uniprot_accessions(family):
                 total += 1
         for value in obj.values():
@@ -1563,7 +1578,12 @@ def validate_module_file(
     errors.extend(st_errors)
     warnings.extend(st_warnings)
 
-    return ModuleValidationResult(path=path, errors=errors, warnings=warnings)
+    return ModuleValidationResult(
+        path=path,
+        errors=errors,
+        warnings=warnings,
+        ungrounded_families=count_ungrounded_families(doc),
+    )
 
 
 # Literature source_id prefixes whose supporting_text quotes are checked
@@ -1827,9 +1847,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     exit_code = 0
     ungrounded = 0
     for path in args.files:
-        with open(path) as handle:
-            ungrounded += count_ungrounded_families(yaml.safe_load(handle))
         result = validate_module_file(path, config_path=args.config)
+        ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
         for e in result.errors:
