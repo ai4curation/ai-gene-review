@@ -99,6 +99,42 @@ free-standing fact. The project page currently states the lethality without that
    - PMID:21276853, [DOI](https://doi.org/10.1016/j.jsb.2011.01.007) — verbatim and fairly
      characterised as mechanism support, though the paper is about a *S. aureus* homolog.
 
+## Run 2: same numbers, different method, different conclusion
+
+A second run of the **identical prompt** (`--no-cache`, 1324 s,
+[`rbsD-fba-openscientist-run2.md`](rbsD-fba-openscientist-run2.md)) tests what ChatGEM's
+benchmark cannot: run-to-run variance. Their evaluation is n = 1 per condition.
+
+**Every computed number is identical** — glucose 0.876997, ribose WT 0.688913, published
+KO/WT = 1.0000, reannotated KO/WT = 0.0000, model 3,062,491 bytes. The quantitative result is
+reproducible across independent runs and matches local replication.
+
+**Everything else differs:**
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| Sandbox `import cobra` blocked | worked around it: `pip install` + subprocess | accepted it: hand-built LP |
+| Tool actually used | **COBRApy 0.32.1 / GLPK** (as the task required) | **scipy HiGHS** `linprog` (protocol violation, disclosed) |
+| Verbatim code in report | **no** — named artifacts never delivered | **yes** — full runnable script inline |
+| Citations returned | 0 | 4 |
+| Found PMID:15060078 (Ryu/Kim) | no — called it "not retrievable" | **yes** |
+| Positive control | — | deleting true ribokinase `b3752` kills ribose growth |
+
+Run 2 also **disagrees with run 1 on the biology**. Run 1 concluded the reannotated variant
+"matches the experimental phenotype". Run 2 argues the published model's "still grows" call
+happens to match the fact that Δ*rbsD* mutants *can* still grow on ribose, but "for the wrong
+mechanistic reason", and that the strict reannotation **over-predicts** essentiality by
+ignoring spontaneous mutarotation — proposing a third spontaneous-bypass variant that gets
+KO/WT = 1.0 by a correct mechanism.
+
+That disagreement is not settled here, and it lands on this project page too: the FBA table
+above scores the corrected model as "✓ Correct" for predicting lethality, which is too clean
+if the real phenotype is *impaired* rather than *abolished*. Note also that PMID:15060078's
+abstract states "the anomeric exchange of only ribofuranose, not ribopyranose, occurs
+spontaneously in solution", which arguably cuts *against* run 2's spontaneous-bypass rescue;
+and run 2's supporting citation PMID:3011793 has not been verified here. Resolving it needs
+the actual Δ*rbsD* growth data, not more modelling.
+
 ## Bearing on the "is ChatGEM overkill?" question
 
 A general-purpose agent with **no GEM-specific RAG corpus, no curated script library, and no
@@ -111,10 +147,20 @@ their tier-2/3 tasks (OptKnock, ecOptMDFPathway), which were not tested here.
 
 It also sharpens the criticism of ChatGEM's evaluation. Their only quality gate is an LLM
 judge scoring code style (Coding Accuracy / Code Completeness → OPS). That gate would have
-scored this run highly **and would not have caught either real defect**: the undelivered code
+scored run 1 highly **and would not have caught either real defect**: the undelivered code
 provenance, or the miscited literature. Both were caught by deterministic checks — re-running
 the model, and verifying quotes against PubMed — which is the verification posture this repo
 already uses for annotations and does not yet use for its own metabolic-model work.
+
+The two runs make that concrete. OPS would score **run 2 far below run 1**: it violated the
+stated protocol by not using COBRApy, which is precisely the failure mode ChatGEM's
+without-RAG OptKnock run was penalised for (Cameo instead of StrainDesign → Accuracy 2,
+OPS 2.30). Yet run 2 delivered *better* work by every measure that matters for science —
+verbatim executed code, a positive control, four citations including the key primary
+reference run 1 missed, and a sharper reading of the biology — while producing numerically
+identical results. **OPS measures protocol compliance, not correctness.** Since ChatGEM's RAG
+corpus is the protocol, scoring retrieval-grounded output against protocol adherence is close
+to circular, and the 2.63 → 4.20 headline should be read with that in mind.
 
 **Concrete follow-up for this project:** the FBA experiment on the project page has the same
 gap this run did — its script and corrected model (`fba_annotation_experiment.py`,

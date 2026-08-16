@@ -786,7 +786,16 @@ directly, the pyranase carries no obligatory flux and the knockout is non-lethal
 again. The "corrected model → lethal" claim above is a property of that modelling
 choice, not a free-standing fact.
 
-Full writeup, replication table, and citation audit:
+A second run of the identical prompt returned **numerically identical results**
+by a different route (scipy HiGHS instead of COBRApy, after accepting a sandbox
+import block rather than working around it). It reads the biology differently,
+though: it argues the strict pyranase reannotation **over-predicts**
+essentiality, because rbsD mutants retain some ribose growth via spontaneous
+mutarotation. If that is right, the "corrected model -> 0% growth -> Correct"
+row in the FBA table above is too clean - the real phenotype would be *impaired*,
+not *abolished*. Unresolved here; it needs the actual growth data.
+
+Full writeup, replication table, run-to-run comparison, and citation audit:
 [openscientist/RESULTS.md](METABOLIC_MODEL_ANALYSIS/openscientist/RESULTS.md).
 
 **Gap this exposed in our own work:** the FBA experiment above references
