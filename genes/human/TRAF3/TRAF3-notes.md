@@ -240,7 +240,7 @@ represented in GOA, but by a parent that is too general or unsigned):
 
 | Existing row | Replacement | Why |
 |---|---|---|
-| GO:0007165 signal transduction (TAS, PMID:7530216) | GO:0023035 CD40 signaling pathway | the founding receptor context, currently only generic "signal transduction" |
+| GO:0007165 signal transduction (both rows: TAS/PMID:7530216 and IEA/GO_REF:0000002) | GO:0023035 CD40 signaling pathway | the founding receptor context, currently only generic "signal transduction". The proposal is justified by the direct human evidence on the TAS row and recommended for the gene's annotation set; the IEA row is an InterPro2GO mapping from the pan-TRAF signature IPR012227 and has no anchoring publication of its own, so the term is not something that rule could have picked out. Contrast the GO:0007166 IBA, which is left broad (see §4) - the difference is that GO:0007165 is also carried by direct human experimental evidence here, whereas the IBA row is family-level only. |
 | GO:0032648 regulation of interferon-beta production | GO:0032728 positive regulation of interferon-beta production | GOA has only the unsigned parent |
 | GO:0032479 regulation of type I interferon production | GO:0032481 positive regulation of type I interferon production | ditto |
 | GO:0050688 regulation of defense response to virus | GO:0002230 positive regulation of defense response to virus by host | ditto |
