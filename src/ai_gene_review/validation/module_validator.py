@@ -917,54 +917,6 @@ def iter_family_member_uses(
 # curation judgement, not a correctness fix.
 HETEROGENEOUS_FAMILY_SUBFAMILIES = 20
 
-KnownBadKey = Tuple[str, str, str]
-KNOWN_BAD_HEADER = [
-    "module",
-    "declared_family",
-    "members",
-    "member_real_family",
-    "kind",
-    "note",
-]
-
-
-def known_bad_key(module_id: str, declared_curie: str, members) -> KnownBadKey:
-    """Build the register key for one family descriptor.
-
-    Keyed on the members as well as the family so that a file declaring the same
-    family twice -- once correctly, once not -- registers only the bad one.
-    """
-    return (module_id, declared_curie, "|".join(sorted(members)))
-
-
-def load_known_bad_groundings(path: Path) -> Dict[KnownBadKey, str]:
-    """Load the register of mis-groundings already known and awaiting curation.
-
-    This is a *shrinking* backlog, not a suppression switch: each row names one
-    specific descriptor, so a new mis-grounding anywhere else still fails. Rows
-    are removed by fixing the grounding, never by widening a pattern.
-    """
-    path = Path(path)
-    if not path.exists():
-        return {}
-    register: Dict[KnownBadKey, str] = {}
-    for line in path.read_text().splitlines():
-        line = line.rstrip("\n")
-        if not line.strip() or line.startswith("#"):
-            continue
-        columns = line.split("\t")
-        if len(columns) < 3:
-            continue
-        module_id, declared, members = columns[0], columns[1], columns[2]
-        # The header may sit anywhere after the explanatory comment block, so
-        # recognise it by content rather than by line number.
-        if module_id == KNOWN_BAD_HEADER[0]:
-            continue
-        note = columns[5] if len(columns) > 5 else ""
-        register[(module_id, declared, members)] = note
-    return register
-
-
 def _paint_corroborated_families(
     use: FamilyMemberUse, paint_index: Optional[PaintIndex]
 ) -> Set[str]:
@@ -983,10 +935,6 @@ def validate_family_members(
     uses: List[FamilyMemberUse],
     member_index: Dict[str, str],
     paint_index: Optional[PaintIndex] = None,
-    known_bad: Optional[Dict[KnownBadKey, str]] = None,
-    module_id: Optional[str] = None,
-    matched_known_bad: Optional[Set[KnownBadKey]] = None,
-    registered_paths: Optional[Set[str]] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
@@ -1074,29 +1022,6 @@ def validate_family_members(
             for accession, family_sf in sorted(known.items())
         )
         declared = _format_limited({f"PANTHER:{base}" for base in declared_bases})
-        # Already-registered curation debt: reported, never silently accepted,
-        # and scoped to this exact descriptor so new mistakes still fail.
-        registered = None
-        if known_bad and module_id:
-            for curie in use.declared_family_curies:
-                key = known_bad_key(module_id, curie, use.representative_accessions)
-                if key in known_bad:
-                    registered = (key, known_bad[key])
-                    break
-        if registered is not None:
-            key, note = registered
-            if matched_known_bad is not None:
-                matched_known_bad.add(key)
-            if registered_paths is not None:
-                registered_paths.update(use.declared_paths or {use.path})
-            detail = f" ({note})" if note else ""
-            warnings.append(
-                f"{use.path}: KNOWN-BAD grounding awaiting curation. "
-                f"PANTHER's sequence classification puts {actual}, not in the "
-                f"declared {declared}{detail}. Fix the grounding, then delete "
-                "its row from conf/panther_known_bad_groundings.tsv."
-            )
-            continue
         # UniProt and PAINT genuinely disagree about some proteins' family. When
         # the descriptor also declares a PAINT ancestral node that PAINT itself
         # places in the declared family, the grounding is corroborated by a
@@ -1525,9 +1450,6 @@ def validate_module_file(
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
     member_index: Optional[Dict[str, str]] = None,
-    known_bad: Optional[Dict[KnownBadKey, str]] = None,
-    module_id: Optional[str] = None,
-    matched_known_bad: Optional[Set[KnownBadKey]] = None,
 ) -> ModuleValidationResult:
     """Validate term labels in a single module YAML file.
 
@@ -1552,48 +1474,25 @@ def validate_module_file(
     if resolver is None:
         resolver = _build_oak_resolver(adapter_map)
 
-    # Family membership is resolved BEFORE label checking so a registered
-    # known-bad grounding can also silence its own label error: the divergent
-    # label is a symptom of the same wrong id, not a second, separate defect.
-    # Suppression is scoped to the exact descriptor path, so the same family id
-    # used correctly elsewhere in the file is still label-checked.
     if member_index is None:
         member_index = load_member_index(
             project_root / "interpro" / "panther" / "panther-members.tsv"
         )
-    if known_bad is None:
-        known_bad = load_known_bad_groundings(
-            project_root / "conf" / "panther_known_bad_groundings.tsv"
-        )
-    if module_id is None:
-        try:
-            module_id = str(path.resolve().relative_to(project_root))
-        except ValueError:
-            module_id = path.name
     if paint_index is None:
         if panther_dir is None:
             panther_dir = project_root / "interpro" / "panther"
         paint_index = load_paint_index(panther_dir)
 
-    registered_paths: Set[str] = set()
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
-        known_bad=known_bad,
-        module_id=module_id,
-        matched_known_bad=matched_known_bad,
-        registered_paths=registered_paths,
         subfamily_counts=load_subfamily_counts(
             project_root / "interpro" / "panther" / "panther.obo"
         ),
     )
 
-    terms = [
-        (curie, label)
-        for term_path, curie, label in iter_terms_with_paths(doc)
-        if term_path not in registered_paths
-    ]
+    terms = list(iter_terms(doc))
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
     errors.extend(member_errors)
     warnings.extend(member_warnings)
@@ -1916,26 +1815,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    project_root = Path(__file__).resolve().parents[3]
-    register_path = project_root / "conf" / "panther_known_bad_groundings.tsv"
-    known_bad = load_known_bad_groundings(register_path)
-    matched: Set[KnownBadKey] = set()
-
     exit_code = 0
-    validated_modules: Set[str] = set()
     for path in args.files:
-        try:
-            module_id = str(Path(path).resolve().relative_to(project_root))
-        except ValueError:
-            module_id = Path(path).name
-        validated_modules.add(module_id)
-        result = validate_module_file(
-            path,
-            config_path=args.config,
-            known_bad=known_bad,
-            module_id=module_id,
-            matched_known_bad=matched,
-        )
+        result = validate_module_file(path, config_path=args.config)
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
         for e in result.errors:
@@ -1945,23 +1827,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             exit_code = 1
 
-    # The register may only shrink. A row whose module was validated but which
-    # no longer fires means the grounding was fixed (or the descriptor removed),
-    # so the row must go -- otherwise the backlog silently becomes permanent
-    # cover for whatever is edited into that slot next.
-    stale = [
-        key
-        for key in known_bad
-        if key[0] in validated_modules and key not in matched
-    ]
-    if stale:
-        print(
-            f"❌ ERROR {register_path}: {len(stale)} known-bad row(s) no longer "
-            "apply; delete them (the register may only shrink):"
-        )
-        for module_id, declared, members in sorted(stale):
-            print(f"           {module_id}\t{declared}\t{members}")
-        exit_code = 1
     return exit_code
 
 

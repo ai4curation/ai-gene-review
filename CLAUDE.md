@@ -232,25 +232,17 @@ PANTHER's own HMM classifications. Two rules follow:
 PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
 `validate_paint_ptns`. Their label is conventionally just the bare id.
 
-**The known-bad register.** `conf/panther_known_bad_groundings.tsv` lists groundings
-already known to be wrong and awaiting curation. It is a shrinking backlog, not an
-escape hatch:
-
-- Each row names **one** descriptor (module + declared family + its representative
-  members). A mis-grounding anywhere else still fails, and the same family id used
-  soundly elsewhere in the same file is still checked.
-- A registered descriptor's **label** error is suppressed too, because a divergent label
-  is a symptom of that same wrong id rather than a second defect.
-- Rows may only be **removed**, by fixing the grounding. A row that stops applying is
-  itself a validation error, so the register cannot become permanent cover.
-- **Never add a row to make validation pass.** If a new mis-grounding appears, fix the
-  id. Rows exist only for the pre-existing backlog.
-
-When fixing one: the representative member is the reliable anchor, not the label. Look up
-which family PANTHER puts that protein in, confirm it matches what the annoton is
-claiming, and check whether any `ancestral_nodes` on the descriptor belong to the old
-family — if they do, the old grounding may be the PAINT-supported one and the conflict
-is a UniProt/PAINT disagreement to document rather than a mistake to overwrite.
+**If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
+When you cannot establish that a PANTHER family corresponds to what the descriptor
+means, omit `term` entirely and keep `preferred_term` (free-text intent) and
+`representative_members` (the proteins themselves). An omitted id says "not
+established"; a wrong id says something false, and says it in a machine-readable
+field other tooling will believe. Never invent a plausible id to fill the slot, and
+never guess a replacement for one that failed validation -- re-pointing a family is
+a judgement about evolutionary placement, and doing it mechanically has previously
+broken real PAINT links. The same rule applies to evolutionary claims generally: if
+the PAINT evidence for a step is not clear, say nothing about it rather than
+asserting an inference the data does not support.
 
 ## Reviewing references
 

@@ -17,10 +17,17 @@ representatives. Generated against PANTHER 19.0.
 
 ## 1. Family assignments
 
-**Identifier correctness is now clean.** No fabricated ids remain; the 21
-groundings where the declared family provably excludes its own representative
-member are enumerated in `conf/panther_known_bad_groundings.tsv` awaiting
-curation.
+**Identifier correctness is now clean.** No fabricated ids remain. The 21
+groundings where the declared family provably excluded its own representative
+member have had that `term` removed: 15 were invented ids (the authored label
+named a different protein), and 6 were real families whose *name* fit a protein
+PANTHER classifies elsewhere -- the class label checking cannot see at all.
+
+Those descriptors keep `preferred_term` and `representative_members` and simply
+assert no PANTHER id. A replacement was not guessed: re-pointing a family is a
+judgement about evolutionary placement, and doing it mechanically broke 9 real
+PAINT links on the first attempt. An omitted id states "not established"; a
+wrong id states something false in a field other tooling believes.
 
 **The substantive remaining issue is precision, not correctness.** 834 of the
 921 family-level assignments have every representative member sitting in a

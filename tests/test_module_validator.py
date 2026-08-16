@@ -19,9 +19,7 @@ from ai_gene_review.validation.module_validator import (
     iter_family_member_uses,
     iter_taxon_descriptors,
     iter_terms_with_paths,
-    known_bad_key,
     load_goa_attested_ptns,
-    load_known_bad_groundings,
     iter_terms,
     iter_typed_go_terms,
     validate_cited_ptn_sources,
@@ -1075,103 +1073,6 @@ def test_compare_label_omits_hint_for_near_miss_labels():
     )
     assert message is not None
     assert "usually means the ID is wrong" not in message
-
-
-# --------------------------------------------------------------------------- #
-# Known-bad grounding register
-# --------------------------------------------------------------------------- #
-
-
-def _two_descriptor_doc() -> dict:
-    """One file declaring the same family twice: once sound, once mis-grounded."""
-    return {
-        "parts": [
-            {  # CYP17A1 really is in PTHR24289 -- sound
-                "family": {
-                    "term": {"id": "PANTHER:PTHR24289", "label": "x"},
-                    "representative_members": [
-                        {"term": {"id": "UniProtKB:P05093", "label": "CYP17A1"}}
-                    ],
-                }
-            },
-            {  # CYP21A2 is not -- mis-grounded
-                "family": {
-                    "term": {"id": "PANTHER:PTHR24289", "label": "x"},
-                    "representative_members": [
-                        {"term": {"id": "UniProtKB:P08686", "label": "CYP21A2"}}
-                    ],
-                }
-            },
-        ]
-    }
-
-
-MEMBERS = {"P05093": "PTHR24289:SF1", "P08686": "PTHR24281:SF83"}
-
-
-def test_known_bad_register_downgrades_only_the_registered_descriptor():
-    """The same family id used soundly elsewhere must stay unaffected."""
-    uses = list(iter_family_member_uses(_two_descriptor_doc()))
-    key = known_bad_key("modules/m.yaml", "PANTHER:PTHR24289", {"P08686"})
-
-    errors, warnings = validate_family_members(
-        uses, MEMBERS, None, known_bad={key: "note"}, module_id="modules/m.yaml"
-    )
-
-    assert errors == []
-    assert len(warnings) == 1
-    assert "KNOWN-BAD" in warnings[0]
-    assert "P08686" in warnings[0]
-
-
-def test_unregistered_mis_grounding_still_errors():
-    """A register entry for one descriptor must not cover a different one."""
-    uses = list(iter_family_member_uses(_two_descriptor_doc()))
-    unrelated = known_bad_key("modules/other.yaml", "PANTHER:PTHR24289", {"P08686"})
-
-    errors, _ = validate_family_members(
-        uses, MEMBERS, None, known_bad={unrelated: ""}, module_id="modules/m.yaml"
-    )
-
-    assert len(errors) == 1
-    assert "P08686" in errors[0]
-
-
-def test_known_bad_register_reports_which_rows_it_used():
-    """main() needs this to detect rows that no longer apply."""
-    uses = list(iter_family_member_uses(_two_descriptor_doc()))
-    key = known_bad_key("modules/m.yaml", "PANTHER:PTHR24289", {"P08686"})
-    matched: set = set()
-    paths: set = set()
-
-    validate_family_members(
-        uses,
-        MEMBERS,
-        None,
-        known_bad={key: ""},
-        module_id="modules/m.yaml",
-        matched_known_bad=matched,
-        registered_paths=paths,
-    )
-
-    assert matched == {key}
-    assert paths == {"$.parts[1].family.term"}
-
-
-def test_load_known_bad_groundings_skips_comments_and_header(tmp_path):
-    path = tmp_path / "register.tsv"
-    path.write_text(
-        "# a comment\n"
-        "module\tdeclared_family\tmembers\tmember_real_family\tkind\tnote\n"
-        "modules/m.yaml\tPANTHER:PTHR1\tP1\tPTHR2:SF1\tfabricated-id\twhy\n"
-        "\n"
-    )
-    register = load_known_bad_groundings(path)
-    assert register == {("modules/m.yaml", "PANTHER:PTHR1", "P1"): "why"}
-
-
-def test_load_known_bad_groundings_missing_file_is_empty(tmp_path):
-    assert load_known_bad_groundings(tmp_path / "absent.tsv") == {}
 
 
 @pytest.mark.parametrize(
