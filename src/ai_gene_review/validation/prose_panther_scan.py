@@ -155,11 +155,12 @@ def main(argv: List[str] | None = None) -> int:
     if missing and args.online:
         index.update(fetch_panther_from_uniprot(missing))
 
-    # Accessions the index records as having no PANTHER family at all. They are
-    # not failures and not gaps: the lookup ran and came back empty, so a prose
-    # claim about them cannot be adjudicated and never will be. Conflating them
-    # with "not looked up yet" would make the scan fail permanently while telling
-    # the reader to run a refresh that has already been run.
+    # The index records two distinct kinds of gap. ``gaps.absent``: both sources
+    # were consulted and PANTHER has no family, so the claim can never be
+    # adjudicated -- informational, not a failure. ``gaps.unchecked``: the
+    # UniProt fallback was skipped, so the status is simply unknown and
+    # rerunning the refresh is a real remedy -- which is why it routes with
+    # "never seen" rather than with "absent".
     gaps = load_member_index_gaps(members_path)
 
     contradicted = [
@@ -168,9 +169,16 @@ def main(argv: List[str] | None = None) -> int:
         if c.accession in index
         and index[c.accession].split(":")[0] != c.claimed_family
     ]
-    absent = sorted({c.accession for c in claims if c.accession in gaps.absent})
-    # "unchecked" joins "never seen" rather than "absent": in both cases the
-    # lookup has not happened, and rerunning the refresh is a real remedy.
+    # Every claim lands in exactly one bucket. `absent` needs the not-in-index
+    # guard because --online can resolve an accession the file recorded as
+    # absent; without it that claim would be counted as both checked and absent.
+    absent = sorted(
+        {
+            c.accession
+            for c in claims
+            if c.accession not in index and c.accession in gaps.absent
+        }
+    )
     unresolvable = sorted(
         {
             c.accession
@@ -178,12 +186,18 @@ def main(argv: List[str] | None = None) -> int:
             if c.accession not in index and c.accession not in gaps.absent
         }
     )
+    unchecked = sorted(set(unresolvable) & gaps.unchecked)
 
+    # Counted in claims throughout, not a mix of claims and unique accessions,
+    # so the four figures partition len(claims) and can be read as a total.
+    checked = sum(1 for c in claims if c.accession in index)
+    absent_claims = sum(1 for c in claims if c.accession in set(absent))
+    unresolvable_claims = sum(1 for c in claims if c.accession in set(unresolvable))
     print(f"prose accession/PANTHER claims : {len(claims)}")
-    print(f"checked                        : {sum(1 for c in claims if c.accession in index)}")
+    print(f"checked                        : {checked}")
     print(f"contradicted                   : {len(contradicted)}")
-    print(f"no PANTHER family exists       : {len(absent)}")
-    print(f"unresolvable (not looked up)   : {len(unresolvable)}")
+    print(f"no PANTHER family exists       : {absent_claims}")
+    print(f"unresolvable (not looked up)   : {unresolvable_claims}")
 
     for claim in contradicted:
         print(
@@ -195,6 +209,12 @@ def main(argv: List[str] | None = None) -> int:
         print(
             "ℹ️  PANTHER has no family for these, so the claim cannot be "
             f"adjudicated: {', '.join(absent)}"
+        )
+    if unchecked:
+        print(
+            "⚠️  the UniProt fallback was skipped when the index was built "
+            "(--no-uniprot-fallback), so these were never looked up: "
+            f"{', '.join(unchecked)}"
         )
     if unresolvable:
         print(

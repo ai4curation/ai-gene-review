@@ -158,3 +158,33 @@ def test_main_fails_when_uniprot_was_never_consulted(monkeypatch, modules_dir, c
     assert "no PANTHER family exists       : 0" in out
     assert "unresolvable (not looked up)   : 1" in out
     assert "cannot be adjudicated" not in out
+
+
+def test_main_does_not_double_count_an_online_resolved_accession(
+    monkeypatch, modules_dir, capsys
+):
+    """--online resolving a recorded-absent accession must move it, not clone it.
+
+    `absent` reads the file while `checked` reads the index after the online
+    update, so without a not-in-index guard the same claim is counted under both
+    headings and the figures stop partitioning the claim total.
+    """
+    write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
+    monkeypatch.setattr(
+        "ai_gene_review.validation.prose_panther_scan.fetch_panther_from_uniprot",
+        lambda accessions: {"Q88ND1": "PTHR11908:SF1"},
+    )
+    members = modules_dir.parent / "interpro" / "panther"
+    members.mkdir(parents=True, exist_ok=True)
+    write_member_index({}, members / "panther-members.tsv", {"Q88ND1"})
+    monkeypatch.setattr(
+        "ai_gene_review.validation.prose_panther_scan.REPO_ROOT", modules_dir.parent
+    )
+
+    code = main(["--modules-dir", str(modules_dir), "--online"])
+    out = capsys.readouterr().out
+
+    assert code == 0
+    assert "checked                        : 1" in out
+    assert "no PANTHER family exists       : 0" in out, "must not be counted twice"
+    assert "unresolvable (not looked up)   : 0" in out
