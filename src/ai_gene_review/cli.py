@@ -4068,13 +4068,15 @@ def refresh_panther_members(
             )
             index.update(fetch_panther_from_uniprot(unresolved))
 
+    unresolved = accessions - set(index)
     out_path = write_member_index(
-        index, repo_root / "interpro" / "panther" / "panther-members.tsv"
+        index, repo_root / "interpro" / "panther" / "panther-members.tsv", unresolved
     )
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
         f"({from_files} from {len(paths)} organism classification(s), "
-        f"{len(index) - from_files} from UniProt)."
+        f"{len(index) - from_files} from UniProt); "
+        f"{len(unresolved)} unresolved, recorded in the file."
     )
 
 

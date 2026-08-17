@@ -310,24 +310,52 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
 MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
 
 
-def render_member_index(index: Dict[str, str]) -> Iterator[str]:
+def render_member_index(
+    index: Dict[str, str], unresolved: Optional[Set[str]] = None
+) -> Iterator[str]:
     """Render a member index as a sorted two-column TSV.
+
+    ``unresolved`` accessions are recorded as a trailing comment block. Without
+    it the file holds only successes, so it cannot distinguish "asked PANTHER
+    and UniProt, no family exists" from "never asked" -- and any resolution rate
+    read off the artifact is over an unknown denominator. That is the same
+    partial-measurement-reported-as-whole this branch hit repeatedly.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
     uniprot_accession	panther_family_sf
     P1	PTHR1:SF3
     P2	PTHR2
+
+    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}):
+    ...     print(line)
+    uniprot_accession	panther_family_sf
+    P1	PTHR1
+    <BLANKLINE>
+    # 1 accession(s) cited in modules/ for which no PANTHER family was found in
+    # PANTHER's per-organism classifications or in UniProt's xref_panther:
+    # P9
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     for accession in sorted(index):
         yield f"{accession}\t{index[accession]}"
+    if unresolved:
+        yield ""
+        yield (
+            f"# {len(unresolved)} accession(s) cited in modules/ for which no "
+            "PANTHER family was found in"
+        )
+        yield "# PANTHER's per-organism classifications or in UniProt's xref_panther:"
+        for accession in sorted(unresolved):
+            yield f"# {accession}"
 
 
-def write_member_index(index: Dict[str, str], out_path: Path) -> Path:
+def write_member_index(
+    index: Dict[str, str], out_path: Path, unresolved: Optional[Set[str]] = None
+) -> Path:
     """Write the pruned accession -> family index, returning the path written."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text("\n".join(render_member_index(index)) + "\n")
+    out_path.write_text("\n".join(render_member_index(index, unresolved)) + "\n")
     return out_path
 
 
@@ -342,7 +370,7 @@ def load_member_index(path: Path) -> Dict[str, str]:
         return {}
     index: Dict[str, str] = {}
     for line_number, line in enumerate(path.read_text().splitlines()):
-        if line_number == 0 or not line.strip():
+        if line_number == 0 or not line.strip() or line.startswith("#"):
             continue
         accession, _, family_sf = line.partition("\t")
         if family_sf:

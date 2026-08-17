@@ -14,7 +14,8 @@ representatives. Generated against PANTHER 19.0.
 | declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT nodes resolved | 369 |
-| representative accessions resolved to a PANTHER family | 1,145 / 1,145 |
+| prose PANTHER claims checked | 168 / 168 |
+| cited accessions resolved to a PANTHER family | 1,450 / 1,485 |
 
 Counts are post-removal: 21 descriptors that named a family provably excluding
 their own representative member now assert no id (see §1); the other 142
@@ -22,6 +23,12 @@ pre-date this work. The figure comes from the sweep's own `ℹ️` counter (carr
 on `ModuleValidationResult`), so report and tool cannot drift apart: it counts
 family descriptors that name UniProt representative members and carry no id in
 either `term` or `family_terms[]`.
+
+The 35 accessions for which no PANTHER family exists in either PANTHER's
+classifications or UniProt are listed in `panther-members.tsv` itself, so the
+resolution rate above is over a stated denominator rather than over successes
+only — the file cannot be read as claiming 100% coverage of a set it never
+enumerated.
 
 ## 1. Family assignments
 
@@ -47,8 +54,8 @@ to consult when re-grounding. Nine such claims across seven files were corrected
 Several prose claims are genuinely true and were deliberately left alone
 (CYP11A1/B1/B2 share PTHR24279; ACOX1/ACOX3 share PTHR10909; the ELOVLs share
 PTHR11157), so a blanket edit would have destroyed correct content. That check now exists as
-`scripts/scan_prose_panther_claims.py` (`just scan-prose-panther`), which
-reports 168/168 claims checked and 0 contradictions. Two constraints were
+`src/ai_gene_review/validation/prose_panther_scan.py`
+(`just scan-prose-panther`). Two constraints were
 learned by getting them wrong: ids must be matched exactly (a truncating window
 produced four false positives), and an id belongs to the accession it
 *immediately* follows -- proximity alone pairs one protein's accession with the
