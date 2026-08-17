@@ -1,6 +1,6 @@
 # PANTHER family assignment review
 
-A pass over all 278 module YAMLs examining every PANTHER family assignment, the
+A pass over all 279 module YAMLs examining every PANTHER family assignment, the
 PAINT evolutionary evidence cited for it, and the extant proteins named as its
 representatives. Generated against PANTHER 19.0.
 
@@ -36,6 +36,21 @@ assert no PANTHER id. A replacement was not guessed: re-pointing a family is a
 judgement about evolutionary placement, and doing it mechanically broke 9 real
 PAINT links on the first attempt. An omitted id states "not established"; a
 wrong id states something false in a field other tooling believes.
+
+**Prose is a separate surface, and it was not clean.** Validation reads
+`term.id`/`label` pairs, so a PANTHER id written into a `notes` or `description`
+field is invisible to it. The same wrong id therefore survived in three places
+per descriptor, and removing it from the two checked slots left the third
+asserting what had just been disproved -- in the field a curator is most likely
+to consult when re-grounding. Nine such claims across six modules were corrected
+(scan: 178 accession/PTHR pairings, 177 resolvable, 0 contradictions remaining).
+Several prose claims are genuinely true and were deliberately left alone
+(CYP11A1/B1/B2 share PTHR24279; ACOX1/ACOX3 share PTHR10909; the ELOVLs share
+PTHR11157), so a blanket edit would have destroyed correct content. Making this
+a real check is worthwhile but needs care: ids must be matched exactly (a
+truncating window produced four false positives in a first draft), and
+accessions absent from `panther-members.tsv` must be reported as unresolvable
+rather than silently skipped.
 
 **The substantive remaining issue is precision, not correctness.** 834 of the
 921 family-level assignments have every representative member sitting in a
