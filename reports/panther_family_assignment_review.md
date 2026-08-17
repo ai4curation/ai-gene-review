@@ -42,25 +42,30 @@ wrong id states something false in a field other tooling believes.
 field is invisible to it. The same wrong id therefore survived in three places
 per descriptor, and removing it from the two checked slots left the third
 asserting what had just been disproved -- in the field a curator is most likely
-to consult when re-grounding. Nine such claims across six modules were corrected
+to consult when re-grounding. Nine such claims across seven files were corrected
 (scan: 178 accession/PTHR pairings, 177 resolvable, 0 contradictions remaining).
 Several prose claims are genuinely true and were deliberately left alone
 (CYP11A1/B1/B2 share PTHR24279; ACOX1/ACOX3 share PTHR10909; the ELOVLs share
-PTHR11157), so a blanket edit would have destroyed correct content. Making this
-a real check is worthwhile but needs care: ids must be matched exactly (a
-truncating window produced four false positives in a first draft), and
-accessions absent from `panther-members.tsv` must be reported as unresolvable
-rather than silently skipped.
+PTHR11157), so a blanket edit would have destroyed correct content. That check now exists as
+`scripts/scan_prose_panther_claims.py` (`just scan-prose-panther`), which
+reports 168/168 claims checked and 0 contradictions. Two constraints were
+learned by getting them wrong: ids must be matched exactly (a truncating window
+produced four false positives), and an id belongs to the accession it
+*immediately* follows -- proximity alone pairs one protein's accession with the
+next protein's id across a clause boundary. Measured against the nine errors it
+was built from, it catches seven; the two misses are a symbol-phrased claim and
+the first-named member of a shared claim, both documented rather than papered
+over.
 
-**The substantive remaining issue is precision, not correctness.** 834 of the
-921 family-level assignments have every representative member sitting in a
+**The substantive remaining issue is precision, not correctness.** 814 of the
+900 family-level assignments have every representative member sitting in a
 single subfamily — the subfamily is the sharper claim. This matters most where
-the family is heterogeneous: 212 of those sit in families split into 20+
+the family is heterogeneous: 205 of those sit in families split into 20+
 subfamilies.
 
-The harm is concrete. **342 distinct proteins are grounded on 139 family ids
-that cannot distinguish between them**, and **145 distinct molecular-function
-assertions rest on 65 families that cannot support them all**. The worst cases:
+The harm is concrete. **332 distinct proteins are grounded on 136 family ids
+that cannot distinguish between them**, and **136 distinct molecular-function
+assertions rest on 61 families that cannot support them all**. The worst cases:
 
 | family | name | distinct proteins | modules | subfamilies |
 |---|---|---:|---:|---:|

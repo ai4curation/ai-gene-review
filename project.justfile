@@ -2700,3 +2700,12 @@ cron-profile name:
 [group('QC')]
 fix-panther-labels *args="":
     uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
+
+# Check PANTHER family ids written into module PROSE (notes/description/statement)
+# against interpro/panther/panther-members.tsv. Module validation only reads
+# term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
+# such claims were contradicted by the repo's own data. Catches 7 of those 9;
+# symbol-phrased and first-of-a-shared-pair claims are documented misses.
+[group('QC')]
+scan-prose-panther *args="":
+    uv run python scripts/scan_prose_panther_claims.py {{args}}
