@@ -310,16 +310,26 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
 MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
 
 
+UNRESOLVED_MARKER = "# unresolved:"
+
+
 def render_member_index(
-    index: Dict[str, str], unresolved: Optional[Set[str]] = None
+    index: Dict[str, str],
+    unresolved: Optional[Set[str]] = None,
+    consulted_uniprot: bool = True,
 ) -> Iterator[str]:
     """Render a member index as a sorted two-column TSV.
 
     ``unresolved`` accessions are recorded as a trailing comment block. Without
     it the file holds only successes, so it cannot distinguish "asked PANTHER
     and UniProt, no family exists" from "never asked" -- and any resolution rate
-    read off the artifact is over an unknown denominator. That is the same
-    partial-measurement-reported-as-whole this branch hit repeatedly.
+    read off the artifact is over an unknown denominator.
+
+    ``consulted_uniprot`` must say whether the UniProt fallback actually ran.
+    Recording "not found in UniProt" when ``--no-uniprot-fallback`` skipped that
+    lookup writes a false claim into a committed artifact, which is worse than
+    the omission this block replaced: a reader can recover from silence, not
+    from a confident wrong statement.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
     uniprot_accession	panther_family_sf
@@ -331,9 +341,21 @@ def render_member_index(
     uniprot_accession	panther_family_sf
     P1	PTHR1
     <BLANKLINE>
-    # 1 accession(s) cited in modules/ for which no PANTHER family was found in
-    # PANTHER's per-organism classifications or in UniProt's xref_panther:
-    # P9
+    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # per-organism classifications or in UniProt's xref_panther:
+    # unresolved: P9
+
+    With the fallback skipped, the block says only what was actually checked:
+
+    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, False):
+    ...     print(line)
+    uniprot_accession	panther_family_sf
+    P1	PTHR1
+    <BLANKLINE>
+    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # per-organism classifications. UniProt was NOT consulted
+    # (--no-uniprot-fallback), so these are unchecked rather than absent:
+    # unresolved: P9
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     for accession in sorted(index):
@@ -341,21 +363,55 @@ def render_member_index(
     if unresolved:
         yield ""
         yield (
-            f"# {len(unresolved)} accession(s) cited in modules/ for which no "
-            "PANTHER family was found in"
+            f"# {len(unresolved)} accession(s) cited in modules/ with no PANTHER "
+            "family in PANTHER's"
         )
-        yield "# PANTHER's per-organism classifications or in UniProt's xref_panther:"
+        if consulted_uniprot:
+            yield "# per-organism classifications or in UniProt's xref_panther:"
+        else:
+            yield "# per-organism classifications. UniProt was NOT consulted"
+            yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
         for accession in sorted(unresolved):
-            yield f"# {accession}"
+            yield f"{UNRESOLVED_MARKER} {accession}"
+
+
+def load_unresolved_accessions(path: Path) -> Set[str]:
+    """Load the accessions a member index records as having no PANTHER family.
+
+    The programmatic counterpart to the comment block. Without this, a consumer
+    sees only that an accession is absent from the index and cannot tell "no
+    PANTHER family exists for this protein" from "nobody has looked it up yet" --
+    which matters because the remedy differs: the first is a permanent fact, the
+    second is a stale artifact.
+
+    >>> import tempfile, pathlib
+    >>> p = pathlib.Path(tempfile.mkdtemp()) / "m.tsv"
+    >>> _ = write_member_index({"P1": "PTHR1"}, p, {"P9"})
+    >>> sorted(load_unresolved_accessions(p))
+    ['P9']
+    """
+    path = Path(path)
+    if not path.exists():
+        return set()
+    return {
+        line[len(UNRESOLVED_MARKER) :].strip()
+        for line in path.read_text().splitlines()
+        if line.startswith(UNRESOLVED_MARKER)
+    }
 
 
 def write_member_index(
-    index: Dict[str, str], out_path: Path, unresolved: Optional[Set[str]] = None
+    index: Dict[str, str],
+    out_path: Path,
+    unresolved: Optional[Set[str]] = None,
+    consulted_uniprot: bool = True,
 ) -> Path:
     """Write the pruned accession -> family index, returning the path written."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text("\n".join(render_member_index(index, unresolved)) + "\n")
+    out_path.write_text(
+        "\n".join(render_member_index(index, unresolved, consulted_uniprot)) + "\n"
+    )
     return out_path
 
 

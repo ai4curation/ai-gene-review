@@ -17,6 +17,7 @@ from ai_gene_review.validation.module_validator import (
     iter_ancestral_node_uses,
     iter_cited_ptn_sources,
     count_ungrounded_families,
+    iter_all_representative_accessions,
     iter_family_member_uses,
     iter_taxon_descriptors,
     load_goa_attested_ptns,
@@ -1383,3 +1384,39 @@ def test_validate_paint_ptns_allows_an_ancestor_of_a_lost_term():
     )
 
     assert errors == []
+
+
+def test_iter_all_representative_accessions_includes_ungrounded_descriptors():
+    """The members of an UNGROUNDED descriptor are the ones most needing lookup.
+
+    iter_family_member_uses requires a family id, so building the member index
+    from it excluded exactly the descriptors whose id was dropped for being
+    wrong -- the index could not tell you what the id should have been.
+    """
+    doc = {
+        "parts": [
+            {  # grounded
+                "family": {
+                    "term": {"id": "PANTHER:PTHR1", "label": "x"},
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:P1", "label": "m"}}
+                    ],
+                }
+            },
+            {  # ungrounded -- previously invisible to the index builder
+                "family": {
+                    "preferred_term": "family we could not establish",
+                    "representative_members": [
+                        {"term": {"id": "UniProtKB:O14521", "label": "SDHD"}}
+                    ],
+                }
+            },
+        ]
+    }
+
+    assert set(iter_all_representative_accessions(doc)) == {"P1", "O14521"}
+    # the grounded-only view still misses the second one
+    grounded = set()
+    for use in iter_family_member_uses(doc):
+        grounded.update(use.representative_accessions)
+    assert grounded == {"P1"}

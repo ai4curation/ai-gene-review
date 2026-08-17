@@ -4009,8 +4009,11 @@ def refresh_panther_members(
 ):
     """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
 
-    Builds a pruned UniProt-accession -> PANTHER-family index covering only the
-    accessions cited as ``representative_members`` in modules/. This is what
+    Builds a pruned UniProt-accession -> PANTHER-family index covering every
+    accession cited in modules/: all ``representative_members`` whether or not
+    their descriptor carries a family id (an ungrounded descriptor is precisely
+    the one whose members need resolving), plus accessions appearing only in
+    prose. Accessions that resolve nowhere are recorded in the file. This is what
     catches a mis-grounded family (as opposed to a merely mislabelled one): the
     declared family must actually contain the protein the descriptor names.
 
@@ -4070,7 +4073,10 @@ def refresh_panther_members(
 
     unresolved = accessions - set(index)
     out_path = write_member_index(
-        index, repo_root / "interpro" / "panther" / "panther-members.tsv", unresolved
+        index,
+        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        unresolved,
+        consulted_uniprot=not no_uniprot_fallback,
     )
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "

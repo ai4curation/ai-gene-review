@@ -18,6 +18,7 @@ from ai_gene_review.etl.panther_families import (
     rewrite_panther_labels,
     build_member_index,
     load_member_index,
+    load_unresolved_accessions,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
@@ -102,6 +103,38 @@ def test_member_index_round_trip(tmp_path):
     index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
     path = write_member_index(index, tmp_path / "members.tsv")
     assert load_member_index(path) == index
+    assert load_unresolved_accessions(path) == set()
+
+
+def test_member_index_round_trips_unresolved_accessions(tmp_path):
+    """The unresolved block must survive write -> read without polluting rows."""
+    index = {"O14521": "PTHR13337:SF6"}
+    path = write_member_index(index, tmp_path / "members.tsv", {"Q88ND1", "Q94ET8"})
+
+    assert load_member_index(path) == index, "comments must not become rows"
+    assert load_unresolved_accessions(path) == {"Q88ND1", "Q94ET8"}
+
+
+def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
+    """Under --no-uniprot-fallback the file must not claim UniProt was checked.
+
+    Writing "not found in UniProt" when UniProt was never asked puts a false
+    statement into a committed artifact -- worse than the omission the block
+    replaced, because silence is recoverable and a confident wrong claim is not.
+    """
+    checked = write_member_index(
+        {"P1": "PTHR1"}, tmp_path / "a.tsv", {"P9"}, consulted_uniprot=True
+    ).read_text()
+    skipped = write_member_index(
+        {"P1": "PTHR1"}, tmp_path / "b.tsv", {"P9"}, consulted_uniprot=False
+    ).read_text()
+
+    assert "UniProt's xref_panther" in checked
+    assert "NOT consulted" not in checked
+    assert "NOT consulted" in skipped
+    assert "unchecked rather than absent" in skipped
+    # Either way the accession itself round-trips.
+    assert load_unresolved_accessions(tmp_path / "b.tsv") == {"P9"}
 
 
 def test_load_member_index_missing_file_is_empty(tmp_path):

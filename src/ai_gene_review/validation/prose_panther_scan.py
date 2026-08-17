@@ -54,6 +54,7 @@ import yaml
 from ai_gene_review.etl.panther_families import (
     fetch_panther_from_uniprot,
     load_member_index,
+    load_unresolved_accessions,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -146,14 +147,20 @@ def main(argv: List[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    index: Dict[str, str] = dict(
-        load_member_index(REPO_ROOT / "interpro" / "panther" / "panther-members.tsv")
-    )
+    members_path = REPO_ROOT / "interpro" / "panther" / "panther-members.tsv"
+    index: Dict[str, str] = dict(load_member_index(members_path))
     claims = collect_claims(args.modules_dir)
 
     missing = {c.accession for c in claims if c.accession not in index}
     if missing and args.online:
         index.update(fetch_panther_from_uniprot(missing))
+
+    # Accessions the index records as having no PANTHER family at all. They are
+    # not failures and not gaps: the lookup ran and came back empty, so a prose
+    # claim about them cannot be adjudicated and never will be. Conflating them
+    # with "not looked up yet" would make the scan fail permanently while telling
+    # the reader to run a refresh that has already been run.
+    known_absent = load_unresolved_accessions(members_path)
 
     contradicted = [
         c
@@ -161,18 +168,31 @@ def main(argv: List[str] | None = None) -> int:
         if c.accession in index
         and index[c.accession].split(":")[0] != c.claimed_family
     ]
-    unresolvable = sorted({c.accession for c in claims if c.accession not in index})
+    absent = sorted({c.accession for c in claims if c.accession in known_absent})
+    unresolvable = sorted(
+        {
+            c.accession
+            for c in claims
+            if c.accession not in index and c.accession not in known_absent
+        }
+    )
 
     print(f"prose accession/PANTHER claims : {len(claims)}")
-    print(f"checked                        : {len(claims) - sum(1 for c in claims if c.accession not in index)}")
+    print(f"checked                        : {sum(1 for c in claims if c.accession in index)}")
     print(f"contradicted                   : {len(contradicted)}")
-    print(f"unresolvable                   : {len(unresolvable)}")
+    print(f"no PANTHER family exists       : {len(absent)}")
+    print(f"unresolvable (not looked up)   : {len(unresolvable)}")
 
     for claim in contradicted:
         print(
             f"❌ {claim.module}: {claim.accession} is claimed as "
             f"{claim.claimed_family} but PANTHER has it in "
             f"{index[claim.accession]}"
+        )
+    if absent:
+        print(
+            "ℹ️  PANTHER has no family for these, so the claim cannot be "
+            f"adjudicated: {', '.join(absent)}"
         )
     if unresolvable:
         print(
