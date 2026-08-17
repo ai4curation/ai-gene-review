@@ -54,7 +54,7 @@ import yaml
 from ai_gene_review.etl.panther_families import (
     fetch_panther_from_uniprot,
     load_member_index,
-    load_unresolved_accessions,
+    load_member_index_gaps,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -160,7 +160,7 @@ def main(argv: List[str] | None = None) -> int:
     # claim about them cannot be adjudicated and never will be. Conflating them
     # with "not looked up yet" would make the scan fail permanently while telling
     # the reader to run a refresh that has already been run.
-    known_absent = load_unresolved_accessions(members_path)
+    gaps = load_member_index_gaps(members_path)
 
     contradicted = [
         c
@@ -168,12 +168,14 @@ def main(argv: List[str] | None = None) -> int:
         if c.accession in index
         and index[c.accession].split(":")[0] != c.claimed_family
     ]
-    absent = sorted({c.accession for c in claims if c.accession in known_absent})
+    absent = sorted({c.accession for c in claims if c.accession in gaps.absent})
+    # "unchecked" joins "never seen" rather than "absent": in both cases the
+    # lookup has not happened, and rerunning the refresh is a real remedy.
     unresolvable = sorted(
         {
             c.accession
             for c in claims
-            if c.accession not in index and c.accession not in known_absent
+            if c.accession not in index and c.accession not in gaps.absent
         }
     )
 

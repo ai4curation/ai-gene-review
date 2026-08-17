@@ -37,7 +37,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Tuple
+from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import requests
 import yaml
@@ -310,7 +310,25 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
 MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
 
 
+# Two distinct markers, because the two states have different remedies and a
+# shared marker silently conflates them. "unresolved" means both PANTHER's
+# per-organism files and UniProt were consulted and neither has a family -- a
+# permanent fact, nothing to do. "unchecked" means the UniProt fallback was
+# skipped, so the status is simply unknown -- rerun without the flag. Using one
+# marker for both lets a --no-uniprot-fallback refresh be read as "no family
+# exists", which is a false claim in the tool's output rather than in the file.
 UNRESOLVED_MARKER = "# unresolved:"
+UNCHECKED_MARKER = "# unchecked:"
+
+
+class MemberIndexGaps(NamedTuple):
+    """Accessions a member index holds no family for, split by why."""
+
+    absent: Set[str]
+    """Both sources consulted; PANTHER has no family. Permanent."""
+
+    unchecked: Set[str]
+    """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
 
 def render_member_index(
@@ -355,7 +373,10 @@ def render_member_index(
     # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications. UniProt was NOT consulted
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
-    # unresolved: P9
+    # unchecked: P9
+
+    The marker differs, not just the prose: a shared marker would let a
+    consumer read a skipped lookup as a completed one.
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     for accession in sorted(index):
@@ -368,36 +389,47 @@ def render_member_index(
         )
         if consulted_uniprot:
             yield "# per-organism classifications or in UniProt's xref_panther:"
+            marker = UNRESOLVED_MARKER
         else:
             yield "# per-organism classifications. UniProt was NOT consulted"
             yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
+            marker = UNCHECKED_MARKER
         for accession in sorted(unresolved):
-            yield f"{UNRESOLVED_MARKER} {accession}"
+            yield f"{marker} {accession}"
 
 
-def load_unresolved_accessions(path: Path) -> Set[str]:
-    """Load the accessions a member index records as having no PANTHER family.
+def load_member_index_gaps(path: Path) -> MemberIndexGaps:
+    """Load the accessions a member index holds no family for, split by why.
 
-    The programmatic counterpart to the comment block. Without this, a consumer
-    sees only that an accession is absent from the index and cannot tell "no
-    PANTHER family exists for this protein" from "nobody has looked it up yet" --
-    which matters because the remedy differs: the first is a permanent fact, the
-    second is a stale artifact.
+    The programmatic counterpart to the comment block. Returning one merged set
+    would let a consumer read a skipped UniProt lookup as a completed one and
+    report "no PANTHER family exists" about a protein nobody asked about --
+    moving the false claim out of the artifact and into the tool's output, where
+    it is harder to notice.
 
     >>> import tempfile, pathlib
-    >>> p = pathlib.Path(tempfile.mkdtemp()) / "m.tsv"
-    >>> _ = write_member_index({"P1": "PTHR1"}, p, {"P9"})
-    >>> sorted(load_unresolved_accessions(p))
-    ['P9']
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = write_member_index({"P1": "PTHR1"}, d / "asked.tsv", {"P9"})
+    >>> gaps = load_member_index_gaps(d / "asked.tsv")
+    >>> sorted(gaps.absent), sorted(gaps.unchecked)
+    (['P9'], [])
+
+    >>> _ = write_member_index({"P1": "PTHR1"}, d / "skipped.tsv", {"P9"}, False)
+    >>> gaps = load_member_index_gaps(d / "skipped.tsv")
+    >>> sorted(gaps.absent), sorted(gaps.unchecked)
+    ([], ['P9'])
     """
     path = Path(path)
     if not path.exists():
-        return set()
-    return {
-        line[len(UNRESOLVED_MARKER) :].strip()
-        for line in path.read_text().splitlines()
-        if line.startswith(UNRESOLVED_MARKER)
-    }
+        return MemberIndexGaps(set(), set())
+    absent: Set[str] = set()
+    unchecked: Set[str] = set()
+    for line in path.read_text().splitlines():
+        if line.startswith(UNRESOLVED_MARKER):
+            absent.add(line[len(UNRESOLVED_MARKER) :].strip())
+        elif line.startswith(UNCHECKED_MARKER):
+            unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
+    return MemberIndexGaps(absent, unchecked)
 
 
 def write_member_index(

@@ -18,7 +18,7 @@ from ai_gene_review.etl.panther_families import (
     rewrite_panther_labels,
     build_member_index,
     load_member_index,
-    load_unresolved_accessions,
+    load_member_index_gaps,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
@@ -103,7 +103,7 @@ def test_member_index_round_trip(tmp_path):
     index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
     path = write_member_index(index, tmp_path / "members.tsv")
     assert load_member_index(path) == index
-    assert load_unresolved_accessions(path) == set()
+    assert load_member_index_gaps(path) == (set(), set())
 
 
 def test_member_index_round_trips_unresolved_accessions(tmp_path):
@@ -112,7 +112,7 @@ def test_member_index_round_trips_unresolved_accessions(tmp_path):
     path = write_member_index(index, tmp_path / "members.tsv", {"Q88ND1", "Q94ET8"})
 
     assert load_member_index(path) == index, "comments must not become rows"
-    assert load_unresolved_accessions(path) == {"Q88ND1", "Q94ET8"}
+    assert load_member_index_gaps(path).absent == {"Q88ND1", "Q94ET8"}
 
 
 def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
@@ -133,8 +133,15 @@ def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
     assert "NOT consulted" not in checked
     assert "NOT consulted" in skipped
     assert "unchecked rather than absent" in skipped
-    # Either way the accession itself round-trips.
-    assert load_unresolved_accessions(tmp_path / "b.tsv") == {"P9"}
+
+    # The MARKER must differ too, not only the prose. A shared marker lets a
+    # consumer read a skipped lookup as a completed one and report "no PANTHER
+    # family exists" about a protein nobody asked about -- which moves the false
+    # claim out of the artifact and into the tool's output.
+    asked = load_member_index_gaps(tmp_path / "a.tsv")
+    skipped_gaps = load_member_index_gaps(tmp_path / "b.tsv")
+    assert (asked.absent, asked.unchecked) == ({"P9"}, set())
+    assert (skipped_gaps.absent, skipped_gaps.unchecked) == (set(), {"P9"})
 
 
 def test_load_member_index_missing_file_is_empty(tmp_path):

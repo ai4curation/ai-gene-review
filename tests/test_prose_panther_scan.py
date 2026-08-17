@@ -85,10 +85,10 @@ def test_collect_claims_walks_a_directory(modules_dir):
 # --------------------------------------------------------------------------- #
 
 
-def _run(monkeypatch, modules_dir, index, unresolved=None):
+def _run(monkeypatch, modules_dir, index, unresolved=None, consulted_uniprot=True):
     """Point the scan at a temporary members file and modules directory."""
     members = modules_dir.parent / "panther-members.tsv"
-    write_member_index(index, members, unresolved)
+    write_member_index(index, members, unresolved, consulted_uniprot)
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT",
         modules_dir.parent,
@@ -136,3 +136,25 @@ def test_main_does_not_fail_when_no_panther_family_exists(
     assert code == 0
     assert "no PANTHER family exists       : 1" in out
     assert "cannot be adjudicated" in out
+
+
+def test_main_fails_when_uniprot_was_never_consulted(monkeypatch, modules_dir, capsys):
+    """A skipped lookup must not be reported as "no PANTHER family exists".
+
+    The artifact's prose and its machine-readable marker have to agree. With a
+    shared marker, a `refresh-panther-members --no-uniprot-fallback` run makes
+    the scan announce that PANTHER has no family for a protein nobody asked
+    about, and return 0 -- moving the false claim out of the file and into the
+    tool output, where it is harder to notice. This is the composition test for
+    that pair of fixes.
+    """
+    write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
+    code = _run(
+        monkeypatch, modules_dir, {}, unresolved={"Q88ND1"}, consulted_uniprot=False
+    )
+    out = capsys.readouterr().out
+
+    assert code == 1, "an unchecked accession must not pass"
+    assert "no PANTHER family exists       : 0" in out
+    assert "unresolvable (not looked up)   : 1" in out
+    assert "cannot be adjudicated" not in out
