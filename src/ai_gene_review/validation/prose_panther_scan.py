@@ -29,10 +29,16 @@ afbc432eb5): it catches seven. The two it misses are precisely the documented
 limitations -- one symbol-phrased, one the first-named member of a shared claim.
 That is the honest detection rate, not a clean sweep.
 
+Lives under ``src/`` rather than ``scripts/`` deliberately: ``scripts/`` is
+ruff-excluded and outside the mypy and doctest targets, so a copy there would be
+unlinted, untyped, and its doctests would never run again -- and those doctests
+are the only thing pinning the pairing rule. Widening ``PROXIMITY_CHARS`` there
+would silently restore the cross-clause false positive.
+
 Usage::
 
-    uv run python scripts/scan_prose_panther_claims.py            # offline
-    uv run python scripts/scan_prose_panther_claims.py --online   # + UniProt
+    just scan-prose-panther            # offline
+    just scan-prose-panther --online   # + UniProt
 """
 
 from __future__ import annotations
@@ -45,15 +51,12 @@ from typing import Dict, Iterator, List, NamedTuple
 
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT / "src"))
-
-from ai_gene_review.etl.panther_families import (  # noqa: E402
+from ai_gene_review.etl.panther_families import (
     fetch_panther_from_uniprot,
-)
-from ai_gene_review.validation.module_validator import (  # noqa: E402
     load_member_index,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 # UniProtKB accession syntax (both the classic and the extended forms).
 ACCESSION_RE = re.compile(
@@ -174,9 +177,13 @@ def main(argv: List[str] | None = None) -> int:
     if unresolvable:
         print(
             "⚠️  not in panther-members.tsv, so NOT checked "
-            f"(re-run with --online): {', '.join(unresolvable)}"
+            f"(run `just refresh-panther-members`, or --online): "
+            f"{', '.join(unresolvable)}"
         )
-    return 1 if contradicted else 0
+    # Non-zero for unresolvable too: a partial sweep reported as a pass is the
+    # failure mode this whole branch kept hitting. If it ever gates CI, "could
+    # not check" must not read as "checked and clean".
+    return 1 if (contradicted or unresolvable) else 0
 
 
 if __name__ == "__main__":

@@ -9,9 +9,9 @@ representatives. Generated against PANTHER 19.0.
 | | count |
 |---|---|
 | module files | 279 |
-| family/subfamily descriptors with an id | 1,000 |
-| declared at family level | 902 |
-| declared at subfamily level | 98 |
+| family/subfamily descriptors with an id and a representative member | 1,001 |
+| declared at family level | 900 |
+| declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT nodes resolved | 369 |
 | representative accessions resolved to a PANTHER family | 1,145 / 1,145 |
@@ -43,7 +43,7 @@ field is invisible to it. The same wrong id therefore survived in three places
 per descriptor, and removing it from the two checked slots left the third
 asserting what had just been disproved -- in the field a curator is most likely
 to consult when re-grounding. Nine such claims across seven files were corrected
-(scan: 178 accession/PTHR pairings, 177 resolvable, 0 contradictions remaining).
+(the scan below reports 168 claims, all checked, 0 contradictions).
 Several prose claims are genuinely true and were deliberately left alone
 (CYP11A1/B1/B2 share PTHR24279; ACOX1/ACOX3 share PTHR10909; the ELOVLs share
 PTHR11157), so a blanket edit would have destroyed correct content. That check now exists as

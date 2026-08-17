@@ -4027,19 +4027,27 @@ def refresh_panther_members(
     import yaml
 
     from ai_gene_review.validation.module_validator import (
-        iter_family_member_uses,
+        iter_all_representative_accessions,
     )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
 
     repo_root = output_dir or Path.cwd()
     cache = cache_dir or (repo_root / ".cache" / "panther")
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
 
+    # Every representative member, grounded or not -- an ungrounded descriptor's
+    # members are the ones whose real family most needs resolving -- plus the
+    # accessions cited only in prose, which the prose scan checks.
     accessions: set[str] = set()
     for path in sorted((repo_root / "modules").rglob("*.yaml")):
         doc = yaml.safe_load(path.read_text())
-        for use in iter_family_member_uses(doc):
-            accessions.update(use.representative_accessions)
-    typer.echo(f"{len(accessions)} representative accessions cited in modules/")
+        accessions.update(iter_all_representative_accessions(doc))
+    prose = {c.accession for c in collect_claims(repo_root / "modules")}
+    accessions.update(prose)
+    typer.echo(
+        f"{len(accessions)} accessions cited in modules/ "
+        f"({len(prose)} of them appearing in prose)"
+    )
 
     paths = []
     for slug in organisms:

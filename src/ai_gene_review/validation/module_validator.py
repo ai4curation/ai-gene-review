@@ -862,6 +862,27 @@ class FamilyMemberUse:
     ancestral_node_curies: frozenset[str] = frozenset()
 
 
+def iter_all_representative_accessions(obj: object) -> Iterator[str]:
+    """Yield every UniProt accession named as a family representative_member.
+
+    Unlike :func:`iter_family_member_uses`, this does NOT require the descriptor
+    to carry a PANTHER id. That distinction matters for building the member
+    index: an ungrounded descriptor is precisely the one whose members' real
+    families a curator needs to look up, so indexing only grounded descriptors
+    omits exactly the accessions the index exists to resolve -- including the
+    21 groundings dropped in this branch.
+    """
+    if isinstance(obj, dict):
+        family = obj.get("family")
+        if isinstance(family, dict):
+            yield from _representative_uniprot_accessions(family)
+        for value in obj.values():
+            yield from iter_all_representative_accessions(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from iter_all_representative_accessions(item)
+
+
 def count_ungrounded_families(obj: object) -> int:
     """Count family descriptors that name members but assert no PANTHER id.
 

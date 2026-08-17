@@ -2708,4 +2708,4 @@ fix-panther-labels *args="":
 # symbol-phrased and first-of-a-shared-pair claims are documented misses.
 [group('QC')]
 scan-prose-panther *args="":
-    uv run python scripts/scan_prose_panther_claims.py {{args}}
+    uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
