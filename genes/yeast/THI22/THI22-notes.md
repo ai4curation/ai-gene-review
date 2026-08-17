@@ -160,3 +160,95 @@ Inline bioinformatics (THI22-bioinformatics/): reproducible Biopython alignment 
 confirms 76.4% identity and conservation of all THI20 functional residues (HMP-binding Q64->Q86,
 thiaminase-II C468->C489, E540->E561) — THI22 is NOT a residue-dead pseudoenzyme, which is why
 no domain/pseudoenzyme-based REMOVE was applied to the kinase/thiaminase MF terms.
+
+## 2026-08-08 — OpenScientist blinded run on GO:0005576 (pre-registration)
+
+Launched a neutral function-assignment hypothesis job before looking at any result, so the
+comparison is honest:
+
+```
+scripts/gene_hypothesis_deep_research.py run yeast THI22 openscientist \
+  --annotation-term-id GO:0005576 --as-function-hypothesis \
+  --timeout-seconds 8100 -- --param max_iterations=3 --param timeout=7200
+```
+
+`--as-function-hypothesis` withholds this review's verdict — the dry-run confirms the prompt
+carries only `term`, `evidence_type` and `original_reference_id`, with no `review:` block. The
+hypothesis sent is the bare "THI22 has extracellular region (GO:0005576)."; no scoping context
+was added, so OpenScientist chooses its own decisive analysis. Nothing from
+`THI22-bioinformatics/` was sent.
+
+**Why this hypothesis.** The SL project (`projects/SL.md`, pattern C) identified `SL-0243
+Secreted` as a family-rule / sequence-feature propagation risk, and this review's own text names
+the open question: "Whether the predicted N-terminal extension is a genuine targeting signal is
+itself a knowledge gap". The current verdict, `MARK_AS_OVER_ANNOTATED`, rests on an argument
+from absence (no evidence of secretion, cytosolic paralogs). A sequence answer would replace
+that with positive evidence in either direction.
+
+**Held out.** `THI22-bioinformatics/RESULTS.md` was written to answer a different question
+(catalytic-residue conservation vs THI20) but contains one observation that bears directly on
+this one, and it is the holdout:
+
+> THI22 positions are offset from THI20 by ~21-22 residues because of THI22's N-terminal
+> signal-peptide extension (residues 1-19), which THI20/THI21 lack.
+
+So the family context — the extension is unique to THI22 among the three paralogs — is known
+locally and withheld from the run.
+
+**Prediction, recorded before the result.** The current review implies the extension is not a
+functional secretory signal. Three outcomes are distinguishable:
+
+1. *Confirms the review* — the extension is not a bona fide secretory signal (weak/low-scoring
+   prediction, absent in fungal orthologues, or better explained as an ORF-start artefact).
+   Action: keep `MARK_AS_OVER_ANNOTATED` but replace the argument from absence with the
+   positive finding, and cite the run.
+2. *Overturns the review* — the extension is a well-supported signal peptide conserved across
+   fungal THI22 orthologues. Action: reconsider the verdict; a secreted or cell-wall
+   thiaminase-II would be a real finding, not a mapping artefact.
+3. *Third answer* — the extension is a targeting signal for somewhere else (mitochondrion,
+   vacuole). Action: `MODIFY` rather than `MARK_AS_OVER_ANNOTATED`, to whichever compartment.
+
+Per project practice, any conclusion resting on PMIDs not in `publications/` will be recorded
+as a lead rather than wired as an annotation until the primary literature is cached.
+
+### Result (2026-08-08, 770 s, 3 iterations)
+
+Report: `THI22-hypotheses/function-hypothesis-go-0005576/openscientist.md`. Non-empty with four
+artifacts including computed provenance (`provenance_nterm_hydropathy.json/.png`). Leak check
+clean — the only mentions of `*-bioinformatics` in the report are its own statement that such
+analyses were withheld.
+
+**Outcome 3 of the three pre-registered, with a correction to this review's reasoning.**
+
+*Blind agreement on the sequence fact.* The held-out local observation was that the N-terminal
+extension is unique to THI22 among THI20/THI21/THI22. OpenScientist reached the same fact
+independently and quantified it — a "family-atypical ~24-aa hydrophobic N-terminal extension"
+with a Kyte-Doolittle peak of 3.78 against ~0.79 (THI20) and ~0.49 (THI21) — running its own
+analysis with saved provenance. It was not told to look at the N-terminus.
+
+*Where it went further, and where this review was wrong.* This review argued: paralogs are
+cytosolic, therefore secretion is implausible, therefore the annotation is over-annotated, and
+whether the extension is a real signal is an open gap. The run reads the same paralog contrast
+the opposite way — the extension is most likely a **functional ER-targeting signal**, and its
+uniqueness is evidence of neofunctionalization toward the endomembrane system, not evidence
+that THI22 behaves like its sisters. SGD's locus record (verified directly against the SGD
+API, not taken from the report) states "SWAT-GFP and mCherry fusion proteins localize to the
+endoplasmic reticulum and vacuole respectively".
+
+So the verdict `MARK_AS_OVER_ANNOTATED` survives, but for a different reason: the error in
+GO:0005576 is the **endpoint, not the signal**. Entering the secretory pathway is not the same
+as being secreted.
+
+*What was wired, and what was gated.* The annotation keeps `MARK_AS_OVER_ANNOTATED`; its
+`reason` was rewritten and now cites the run. ER (GO:0005783) and vacuole (GO:0005773) are
+recorded as **leads only** and deliberately not annotated: the primary imaging references are
+not cached, and the calls are high-throughput and tag-dependent (the N-terminal and C-terminal
+tags disagree with each other). The cytosol IBA is flagged as questionable but left untouched
+pending the same references. All three `supporting_text` quotes were verified
+character-exact against their sources — `file:` and `SGD:` prefixes are in the reference
+validator's skip list, so nothing checks them automatically.
+
+*Open follow-up.* Caching the SWAT-GFP and mCherry primary references would let the ER/vacuole
+calls be annotated properly and would settle the cytosol IBA. Note this review's own earlier
+falcon-derived note that "Huh et al. 2003 GFP screen did not give a clear THI22 localization"
+(PMID:14562095) is consistent — SWAT is a later, more sensitive N-terminal tagging method.
