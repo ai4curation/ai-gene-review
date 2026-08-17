@@ -118,7 +118,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        "post_review": {"overlap": 859, "total": 2767, "pred": 8871},
+        # post_review moved 859/2767 -> 858/2766 when 4a9b2d6cec ("Reconcile
+        # stale SL re-review prose") dropped one post-review term from
+        # genes/ANOGA/TOLL9. goa and core are unaffected, which is what
+        # distinguishes an upstream review edit from a regression here.
+        "post_review": {"overlap": 858, "total": 2766, "pred": 8871},
         "core": {"overlap": 349, "total": 1224, "pred": 8871},
     }
 

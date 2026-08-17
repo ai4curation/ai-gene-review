@@ -693,6 +693,27 @@ def label_drift(old: str, new: str) -> str:
     return "cosmetic"
 
 
+def _is_placeholder_label(label: str, curie: str) -> bool:
+    """True when a label is just the id repeated, bare or as a CURIE.
+
+    The divergence guard exists to stop a label that *names a different protein*
+    being overwritten, because that pattern means the id was guessed. A label
+    that merely restates its own id makes no claim about any protein, so there
+    is nothing to hide and filling it in is safe. Without this exception the
+    guard misfires on the ``label: PTHR13190`` convention -- an id shares no
+    words with its official name, so every placeholder reads as divergent.
+
+    >>> _is_placeholder_label("PTHR13190", "PANTHER:PTHR13190")
+    True
+    >>> _is_placeholder_label("PANTHER:PTHR13190", "PANTHER:PTHR13190")
+    True
+    >>> _is_placeholder_label("SUCCINATE DEHYDROGENASE", "PANTHER:PTHR13190")
+    False
+    """
+    stripped = label.strip()
+    return stripped == curie or stripped == curie.split(":", 1)[-1]
+
+
 def load_obo_names(path: Path) -> Dict[str, str]:
     """Load ``CURIE -> name`` from an OBO file written by :func:`write_panther_obo`."""
     names: Dict[str, str] = {}
@@ -793,7 +814,11 @@ def rewrite_panther_labels(
         current = str(yaml.safe_load(f"v: {label_match.group(2)}")["v"])
         if current.strip() == official:
             continue
-        if not allow_divergent and label_drift(current, official) == "divergent":
+        if (
+            not allow_divergent
+            and not _is_placeholder_label(current, curie)
+            and label_drift(current, official) == "divergent"
+        ):
             deferred.append((curie, current, official))
             continue
         lines[index + 1] = f"{expected_indent}label: {emit_yaml_scalar(official)}\n"

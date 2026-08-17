@@ -288,3 +288,39 @@ def test_label_drift_classification(old, new, expected):
 )
 def test_emit_yaml_scalar(value, expected):
     assert emit_yaml_scalar(value) == expected
+
+
+def test_rewrite_panther_labels_fills_a_placeholder_label():
+    """`label: PTHR13190` is a missing label, not a claim about another protein.
+
+    The divergence guard exists to stop a label naming a *different* protein
+    being overwritten, since that means the id was guessed. An id shares no
+    words with its own official name, so without this exception every
+    placeholder reads as divergent and is deferred forever -- which is how a
+    module merged to main with this convention broke CI.
+    """
+    names = {"PANTHER:PTHR13190": "AUTOPHAGY-RELATED 2, ISOFORM A"}
+    text = "  term:\n    id: PANTHER:PTHR13190\n    label: PTHR13190\n"
+
+    new, applied, deferred = rewrite_panther_labels(text, names)
+
+    assert deferred == []
+    assert applied == [
+        ("PANTHER:PTHR13190", "PTHR13190", "AUTOPHAGY-RELATED 2, ISOFORM A")
+    ]
+    assert "label: AUTOPHAGY-RELATED 2, ISOFORM A" in new
+
+
+def test_rewrite_panther_labels_still_defers_a_real_divergence():
+    """The placeholder exception must not weaken the guard it sits inside."""
+    names = {"PANTHER:PTHR11375": "ACIDIC LEUCINE-RICH NUCLEAR PHOSPHOPROTEIN 32"}
+    text = (
+        "  term:\n    id: PANTHER:PTHR11375\n"
+        "    label: SUCCINATE DEHYDROGENASE CYTOCHROME B SMALL SUBUNIT\n"
+    )
+
+    new, applied, deferred = rewrite_panther_labels(text, names)
+
+    assert applied == []
+    assert len(deferred) == 1
+    assert new == text
