@@ -1,0 +1,5209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STBD1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>STBD1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95210" target="_blank" class="term-link">
+                        O95210
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "STBD1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95210" data-a="DESCRIPTION: STBD1 (starch-binding domain-containing protein 1,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>STBD1 (starch-binding domain-containing protein 1, genethonin-1) is the cargo receptor for glycophagy, the selective autophagic delivery of glycogen to lysosomes. It is a small single-pass type III membrane protein: an N-terminal hydrophobic segment anchors it to the endoplasmic reticulum and to perinuclear membranes, and a C-terminal CBM20 carbohydrate-binding module binds glycogen. An AIM/LIR motif binds the ATG8-family proteins GABARAP and GABARAPL1, so STBD1 physically bridges glycogen to the autophagic machinery. Deleting the membrane anchor disperses the protein; mutating CBM20 leaves it perinuclear but releases its glycogen cargo, separating targeting from binding. STBD1 is most studied in liver and skeletal muscle, where it is also found at the T-tubule near junctional sarcoplasmic reticulum.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare membrane propagated phylogenetically; uninformative for a protein whose specific membrane anchor is known.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same shape as the SL project&#39;s pattern A (bare parent retained alongside a specific child), reached here by phylogenetic propagation. STBD1 carries GO:0005789 endoplasmic reticulum membrane with experimental support and is a single-pass type III membrane protein, so the bare parent adds nothing. The objection is to granularity only; the IBA itself is sound, and the WITH/FROM column listing UniProtKB:O95210 alongside the PANTHER node reflects that this gene&#39;s own experimental annotation helped the curator place the ancestral assertion. See projects/SL.md for the pattern.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000386078</span>
+
+                                    &middot; STBD1/Stbd1 family node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The node-level assertion is sound; it is simply pitched at the bare membrane parent, which adds nothing over the experimentally supported GO:0005789 the target already carries. A granularity issue, not a propagation failure.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O95210</span>
+
+                                    &middot; STBD1 (the target&#39;s own experimental evidence)
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The target appears in its own WITH/FROM because its experimental annotation was one of the descendant evidences behind the curator&#39;s IBD. Not circular.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:1311800</span>
+
+                                    &middot; Stbd1 (rat)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Rat ortholog is a genuine membrane protein, but transferring the bare parent rather than the specific membrane is the scoping problem, not the orthology.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                    GO:0007041
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0007041" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the trafficking of glycogen to lysosomes.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038024" target="_blank" class="term-link">
+                                    GO:0038024
+                                </a>
+                            </span>
+                            <span class="term-label">cargo receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0038024" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cargo receptor for glycogen; the gene&#39;s core molecular function, but stated at the generic cargo-receptor level rather than the autophagy-specific one.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> STBD1 binds glycogen through its CBM20 domain and an ATG8-family protein through its AIM/LIR, physically bridging cargo to the autophagic machinery. This receptor role is what the gene is for, and GO:0160247 autophagy cargo adaptor activity states it exactly: &#34;the binding activity of a molecule that brings together a cargo, targeted for degradation via autophagy, to a phagophore&#34;, carrying &#34;selective autophagy receptor activity&#34; as a synonym. The generic GO:0038024 parent drops the autophagic context that is the whole point of the function, and this corpus already uses GO:0160247 for every other selective-autophagy receptor it has reviewed (TAX1BP1, NBR1, NCOA4, CALCOCO2, CCDC50). Both source annotations here are electronic or phylogenetic (IBA from GO_REF:0000033, IEA from GO_REF:0000107), so no experimental curation is being overruled.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    autophagy cargo adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                    GO:0061723
+                                </a>
+                            </span>
+                            <span class="term-label">glycophagy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0061723" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycophagy, the selective autophagy route STBD1 defines.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so this is not merely participation in a route but constitutive of it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum membrane; STBD1 is a single-pass type III membrane protein anchored there.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported. The N-terminal hydrophobic segment is the membrane anchor - deleting it gives a diffuse cytoplasmic distribution.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                    GO:0016192
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle-mediated transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0016192" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Vesicle-mediated transport, a broad parent of the specific trafficking terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative relative to GO:0007041 and GO:0061753, both present with better support.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0030246" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbohydrate binding, the uninformative parent of glycogen binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but less informative than GO:2001069, which carries the specific evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030315" target="_blank" class="term-link">
+                                    GO:0030315
+                                </a>
+                            </span>
+                            <span class="term-label">T-tubule</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0030315" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> T-tubule; a muscle-specific location for a protein most studied in liver and muscle glycogen metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed in muscle, near junctional sarcoplasmic reticulum. Real but tissue-restricted, so peripheral to the general cargo-receptor function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034045" target="_blank" class="term-link">
+                                    GO:0034045
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore assembly site membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0034045" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phagophore assembly site membrane; the cited evidence shows perinuclear and lysosomal colocalization, not a PAS membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the STBD1 row of the section 5.4 triage in GO issue #29437, listed there under &#39;no evident support - review for removal&#39;. Reading the primary paper confirms that reading. PMID:20810658 places Stbd1 at enlarged perinuclear structures colocalized with glycogen, the late endosomal/lysosomal marker LAMP1, and GABARAPL1; it never examines the phagophore assembly site. Colocalization with an ATG8-family protein has been over-read into residence in a PAS membrane. GO:0034045 additionally asserts via bounding_layer_of a bounding membrane that the PAS, a protein condensate, does not have (PMID:32025038). No replacement term is proposed because the supported locations - GO:0048471 perinuclear region and the ER membrane - are already annotated on this gene, so there is nothing to move.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link">
+                                        PMID:20810658
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the autophagy protein GABARAPL1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2001069" target="_blank" class="term-link">
+                                    GO:2001069
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:2001069" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycogen binding via the C-terminal CBM20 carbohydrate-binding module.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct and specific; the cargo half of the receptor function. CBM20 point mutations leave STBD1 perinuclear but abolish glycogen concentration there, separating binding from targeting.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2001070" target="_blank" class="term-link">
+                                    GO:2001070
+                                </a>
+                            </span>
+                            <span class="term-label">starch binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:2001070" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Starch binding, a CBM20 domain-derived inference with no mammalian substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The CBM20 module is named for starch binding in microbial and plant enzymes, and the term transfers with the domain. Mammals do not make starch; the physiological ligand is glycogen, already annotated as GO:2001069. This is a domain-family inference that does not survive organism context.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20562859
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Network organization of the human autophagy system.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:20562859" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34524948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34524948
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global Proximity Interactome of the Human Macroautophagy Pat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:34524948" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                    GO:0007041
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0007041" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the trafficking of glycogen to lysosomes.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038024" target="_blank" class="term-link">
+                                    GO:0038024
+                                </a>
+                            </span>
+                            <span class="term-label">cargo receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0038024" data-r="GO_REF:0000107" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cargo receptor for glycogen; the gene&#39;s core molecular function, but stated at the generic cargo-receptor level rather than the autophagy-specific one.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> STBD1 binds glycogen through its CBM20 domain and an ATG8-family protein through its AIM/LIR, physically bridging cargo to the autophagic machinery. This receptor role is what the gene is for, and GO:0160247 autophagy cargo adaptor activity states it exactly: &#34;the binding activity of a molecule that brings together a cargo, targeted for degradation via autophagy, to a phagophore&#34;, carrying &#34;selective autophagy receptor activity&#34; as a synonym. The generic GO:0038024 parent drops the autophagic context that is the whole point of the function, and this corpus already uses GO:0160247 for every other selective-autophagy receptor it has reviewed (TAX1BP1, NBR1, NCOA4, CALCOCO2, CCDC50). Both source annotations here are electronic or phylogenetic (IBA from GO_REF:0000033, IEA from GO_REF:0000107), so no experimental curation is being overruled.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                                    autophagy cargo adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                    GO:0061723
+                                </a>
+                            </span>
+                            <span class="term-label">glycophagy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0061723" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycophagy, the selective autophagy route STBD1 defines.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so this is not merely participation in a route but constitutive of it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061753" target="_blank" class="term-link">
+                                    GO:0061753
+                                </a>
+                            </span>
+                            <span class="term-label">substrate localization to autophagosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0061753" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Substrate localization to autophagosome; the mechanistic statement of the receptor role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Describes what the cargo receptor actually accomplishes, and is more informative than the generic transport terms.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005789" data-r="PMID:24837458" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum membrane; STBD1 is a single-pass type III membrane protein anchored there.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported. The N-terminal hydrophobic segment is the membrane anchor - deleting it gives a diffuse cytoplasmic distribution.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034045" target="_blank" class="term-link">
+                                    GO:0034045
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore assembly site membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0034045" data-r="PMID:20810658" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phagophore assembly site membrane; the cited evidence shows perinuclear and lysosomal colocalization, not a PAS membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the STBD1 row of the section 5.4 triage in GO issue #29437, listed there under &#39;no evident support - review for removal&#39;. Reading the primary paper confirms that reading. PMID:20810658 places Stbd1 at enlarged perinuclear structures colocalized with glycogen, the late endosomal/lysosomal marker LAMP1, and GABARAPL1; it never examines the phagophore assembly site. Colocalization with an ATG8-family protein has been over-read into residence in a PAS membrane. GO:0034045 additionally asserts via bounding_layer_of a bounding membrane that the PAS, a protein condensate, does not have (PMID:32025038). No replacement term is proposed because the supported locations - GO:0048471 perinuclear region and the ER membrane - are already annotated on this gene, so there is nothing to move.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link">
+                                        PMID:20810658
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the autophagy protein GABARAPL1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                    GO:0007041
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27358407" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27358407
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch Binding Domain-containing Protein 1 Plays a Dominant ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0007041" data-r="PMID:27358407" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the trafficking of glycogen to lysosomes.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030247" target="_blank" class="term-link">
+                                    GO:0030247
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0030247" data-r="PMID:24837458" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Polysaccharide binding, another parent of glycogen binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same reasoning as carbohydrate binding; retained as a high-level default.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21893048" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21893048
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch-binding domain-containing protein 1 (Stbd1) and glyco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:21893048" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:24837458" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005783" data-r="PMID:24837458" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum, parent of the membrane term already supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Less informative than GO:0005789 for a single-pass membrane protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9794794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9794794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of a novel human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005783" data-r="PMID:9794794" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endoplasmic reticulum, parent of the membrane term already supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Less informative than GO:0005789 for a single-pass membrane protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9794794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9794794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of a novel human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005886" data-r="PMID:9794794" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained as context for the muscle localization rather than as a general residence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019899" target="_blank" class="term-link">
+                                    GO:0019899
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0019899" data-r="PMID:24837458" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Enzyme binding, an uninformative binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Names no partner and no function. STBD1&#39;s meaningful interactions - GABARAP and GABARAPL1 via its AIM/LIR, and glycogen-associated enzymes such as GYS2 - are better captured by the cargo receptor and glycogen binding terms already accepted.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030315" target="_blank" class="term-link">
+                                    GO:0030315
+                                </a>
+                            </span>
+                            <span class="term-label">T-tubule</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9794794" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9794794
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and functional expression of a novel human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0030315" data-r="PMID:9794794" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> T-tubule; a muscle-specific location for a protein most studied in liver and muscle glycogen metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed in muscle, near junctional sarcoplasmic reticulum. Real but tissue-restricted, so peripheral to the general cargo-receptor function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                    GO:0048471
+                                </a>
+                            </span>
+                            <span class="term-label">perinuclear region of cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21893048" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21893048
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch-binding domain-containing protein 1 (Stbd1) and glyco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0048471" data-r="PMID:21893048" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Perinuclear region of cytoplasm, the location directly observed for STBD1 and its glycogen cargo.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed. Overexpressed Stbd1 concentrates at enlarged perinuclear structures colocalized with glycogen, LAMP1 and GABARAPL1, and the localization survives CBM20 point mutation while glycogen concentration does not.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798747
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005886" data-r="Reactome:R-HSA-6798747" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained as context for the muscle localization rather than as a general residence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800426
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005886" data-r="Reactome:R-HSA-6800426" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained as context for the muscle localization rather than as a general residence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070821" target="_blank" class="term-link">
+                                    GO:0070821
+                                </a>
+                            </span>
+                            <span class="term-label">tertiary granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798747
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0070821" data-r="Reactome:R-HSA-6798747" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tertiary granule membrane, from neutrophil organelle proteomics.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput compartment proteomics in one cell type. Not false, but it reflects where the protein was detected in a specific granulocyte fractionation rather than a functional location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0101003" target="_blank" class="term-link">
+                                    GO:0101003
+                                </a>
+                            </span>
+                            <span class="term-label">ficolin-1-rich granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800426
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0101003" data-r="Reactome:R-HSA-6800426" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ficolin-1-rich granule membrane, from the same neutrophil proteomics series.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same basis and same caveat as the tertiary granule membrane annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005515" data-r="PMID:20810658" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from nine IPI experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per project curation guidance, protein binding does not describe what the gene product does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of the accepted cargo receptor activity and are better expressed there.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0005980" data-r="PMID:20810658" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycogen catabolic process; STBD1 delivers glycogen for degradation but does not catabolize it.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> STBD1 has no glycosidase activity. It participates by supplying substrate to the lysosomal route, so the term is defensible as pathway membership but is not a statement of this gene product&#39;s activity. Kept as non-core rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0016020" data-r="PMID:20810658" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare membrane from the same experiment that established the specific ER-membrane localization; the parent is redundant with its own child.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:20810658 is the paper that showed STBD1 is anchored by its N-terminal hydrophobic segment and localizes to the ER and perinuclear membranes, and it also underlies the GO:0005789 annotation on this gene. Recording the bare parent alongside the child from the same experiment adds no information. Not false, only empty. Same shape as the SL project&#39;s pattern A, though the evidence here is direct rather than GO_REF:0000044.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                    GO:0048471
+                                </a>
+                            </span>
+                            <span class="term-label">perinuclear region of cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0048471" data-r="PMID:20810658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Perinuclear region of cytoplasm, the location directly observed for STBD1 and its glycogen cargo.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed. Overexpressed Stbd1 concentrates at enlarged perinuclear structures colocalized with glycogen, LAMP1 and GABARAPL1, and the localization survives CBM20 point mutation while glycogen concentration does not.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                    GO:0061723
+                                </a>
+                            </span>
+                            <span class="term-label">glycophagy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:0061723" data-r="PMID:20810658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycophagy, the selective autophagy route STBD1 defines.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so this is not merely participation in a route but constitutive of it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2001069" target="_blank" class="term-link">
+                                    GO:2001069
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20810658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Starch binding domain-containing protein 1/genethonin 1 is a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95210" data-a="GO:2001069" data-r="PMID:20810658" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Glycogen binding via the C-terminal CBM20 carbohydrate-binding module.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct and specific; the cargo half of the receptor function. CBM20 point mutations leave STBD1 perinuclear but abolish glycogen concentration there, separating binding from targeting.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bridges glycogen to the autophagic machinery, binding the polysaccharide through its CBM20 module and an ATG8-family protein through its AIM/LIR, so that glycogen is captured as autophagic cargo and delivered to lysosomes.</h3>
+                <span class="vote-buttons" data-g="O95210" data-a="FUNCTION: Bridges glycogen to the autophagic machinery, bind..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                            autophagy cargo adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                glycophagy
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061753" target="_blank" class="term-link">
+                                substrate localization to autophagosome
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                lysosomal transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                perinuclear region of cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link">
+                                PMID:20810658
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the autophagy protein GABARAPL1.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds glycogen directly through the C-terminal CBM20 module; this is the cargo-recognition half of the receptor and is separable by point mutation from membrane targeting.</h3>
+                <span class="vote-buttons" data-g="O95210" data-a="FUNCTION: Binds glycogen directly through the C-terminal CBM..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2001069" target="_blank" class="term-link">
+                            glycogen binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                glycophagy
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                perinuclear region of cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link">
+                                PMID:20810658
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Point mutations in the CBM20 domain did not change the perinuclear localization of Stbd1, but glycogen was no longer concentrated in this compartment.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link">
+                            PMID:20562859
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Network organization of the human autophagy system.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20810658" target="_blank" class="term-link">
+                            PMID:20810658
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Starch binding domain-containing protein 1/genethonin 1 is a novel participant in glycogen metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21893048" target="_blank" class="term-link">
+                            PMID:21893048
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Starch-binding domain-containing protein 1 (Stbd1) and glycogen metabolism: Identification of the Atg8 family interacting motif (AIM) in Stbd1 required for interaction with GABARAPL1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link">
+                            PMID:24837458
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The carbohydrate-binding domain of overexpressed STBD1 is important for its stability and protein-protein interactions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27358407" target="_blank" class="term-link">
+                            PMID:27358407
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Starch Binding Domain-containing Protein 1 Plays a Dominant Role in Glycogen Transport to Lysosomes in Liver.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34524948" target="_blank" class="term-link">
+                            PMID:34524948
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global Proximity Interactome of the Human Macroautophagy Pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9794794" target="_blank" class="term-link">
+                            PMID:9794794
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and functional expression of a novel human gene encoding two 41-43 kDa skeletal muscle internal membrane proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798747
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of tertiary granule membrane proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800426
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of ficolin-rich granule membrane proteins</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is STBD1 the sole glycophagy receptor in mammals, or do other CBM-containing proteins act redundantly in tissues where Stbd1 loss has a mild phenotype?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95210" data-a="Q: Is STBD1 the sole glycophagy receptor in mammals, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Correlative light-electron microscopy of endogenously tagged STBD1 with glycogen and LAMP1 under glucose starvation, scoring whether the perinuclear structures are double-membraned.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: STBD1&#39;s perinuclear glycogen compartment is a pre-lysosomal staging site rather than an autophagosome.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: imaging</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95210" data-a="EXPERIMENT: Correlative light-electron microscopy of endogenou..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95210
+gene_symbol: STBD1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  STBD1 (starch-binding domain-containing protein 1, genethonin-1) is the cargo receptor for
+  glycophagy, the selective autophagic delivery of glycogen to lysosomes. It is a small
+  single-pass type III membrane protein: an N-terminal hydrophobic segment anchors it to the
+  endoplasmic reticulum and to perinuclear membranes, and a C-terminal CBM20 carbohydrate-binding
+  module binds glycogen. An AIM/LIR motif binds the ATG8-family proteins GABARAP and GABARAPL1,
+  so STBD1 physically bridges glycogen to the autophagic machinery. Deleting the membrane anchor
+  disperses the protein; mutating CBM20 leaves it perinuclear but releases its glycogen cargo,
+  separating targeting from binding. STBD1 is most studied in liver and skeletal muscle, where it
+  is also found at the T-tubule near junctional sarcoplasmic reticulum.
+existing_annotations:
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Bare membrane propagated phylogenetically; uninformative for a protein whose specific
+      membrane anchor is known.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same shape as the SL project&#39;s pattern A (bare parent retained alongside a specific
+      child), reached here by phylogenetic propagation. STBD1 carries GO:0005789 endoplasmic
+      reticulum membrane with experimental support and is a single-pass type III membrane
+      protein, so the bare parent adds nothing. The objection is to granularity only; the
+      IBA itself is sound, and the WITH/FROM column listing UniProtKB:O95210 alongside the
+      PANTHER node reflects that this gene&#39;s own experimental annotation helped the curator
+      place the ancestral assertion. See projects/SL.md for the pattern.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000386078
+        source_label: STBD1/Stbd1 family node
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The node-level assertion is sound; it is simply pitched at the bare membrane
+          parent, which adds nothing over the experimentally supported GO:0005789 the target
+          already carries. A granularity issue, not a propagation failure.
+      - source_id: UniProtKB:O95210
+        source_label: STBD1 (the target&#39;s own experimental evidence)
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The target appears in its own WITH/FROM because its experimental annotation was one
+          of the descendant evidences behind the curator&#39;s IBD. Not circular.
+      - source_id: RGD:1311800
+        source_label: Stbd1 (rat)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Rat ortholog is a genuine membrane protein, but transferring the bare parent rather
+          than the specific membrane is the scoping problem, not the orthology.
+- term:
+    id: GO:0007041
+    label: lysosomal transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the
+      trafficking of glycogen to lysosomes.
+- term:
+    id: GO:0038024
+    label: cargo receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cargo receptor for glycogen; the gene&#39;s core molecular function, but stated at the
+      generic cargo-receptor level rather than the autophagy-specific one.
+    action: MODIFY
+    reason: &gt;-
+      STBD1 binds glycogen through its CBM20 domain and an ATG8-family protein through its
+      AIM/LIR, physically bridging cargo to the autophagic machinery. This receptor role is
+      what the gene is for, and GO:0160247 autophagy cargo adaptor activity states it
+      exactly: &#34;the binding activity of a molecule that brings together a cargo, targeted
+      for degradation via autophagy, to a phagophore&#34;, carrying &#34;selective autophagy
+      receptor activity&#34; as a synonym. The generic GO:0038024 parent drops the autophagic
+      context that is the whole point of the function, and this corpus already uses
+      GO:0160247 for every other selective-autophagy receptor it has reviewed (TAX1BP1,
+      NBR1, NCOA4, CALCOCO2, CCDC50). Both source annotations here are electronic or
+      phylogenetic (IBA from GO_REF:0000033, IEA from GO_REF:0000107), so no experimental
+      curation is being overruled.
+    proposed_replacement_terms:
+    - id: GO:0160247
+      label: autophagy cargo adaptor activity
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+        - GRANULARITY_MISMATCH
+- term:
+    id: GO:0061723
+    label: glycophagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Glycophagy, the selective autophagy route STBD1 defines.
+    action: ACCEPT
+    reason: &gt;-
+      Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so
+      this is not merely participation in a route but constitutive of it.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Endoplasmic reticulum membrane; STBD1 is a single-pass type III membrane protein
+      anchored there.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported. The N-terminal hydrophobic segment is the membrane anchor -
+      deleting it gives a diffuse cytoplasmic distribution.
+- term:
+    id: GO:0016192
+    label: vesicle-mediated transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Vesicle-mediated transport, a broad parent of the specific trafficking terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Uninformative relative to GO:0007041 and GO:0061753, both present with better support.
+- term:
+    id: GO:0030246
+    label: carbohydrate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Carbohydrate binding, the uninformative parent of glycogen binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but less informative than GO:2001069, which carries the specific evidence.
+- term:
+    id: GO:0030315
+    label: T-tubule
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      T-tubule; a muscle-specific location for a protein most studied in liver and muscle
+      glycogen metabolism.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Directly observed in muscle, near junctional sarcoplasmic reticulum. Real but
+      tissue-restricted, so peripheral to the general cargo-receptor function.
+- term:
+    id: GO:0034045
+    label: phagophore assembly site membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Phagophore assembly site membrane; the cited evidence shows perinuclear and lysosomal
+      colocalization, not a PAS membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is the STBD1 row of the section 5.4 triage in GO issue #29437, listed there under
+      &#39;no evident support - review for removal&#39;. Reading the primary paper confirms that
+      reading. PMID:20810658 places Stbd1 at enlarged perinuclear structures colocalized
+      with glycogen, the late endosomal/lysosomal marker LAMP1, and GABARAPL1; it never
+      examines the phagophore assembly site. Colocalization with an ATG8-family protein has
+      been over-read into residence in a PAS membrane. GO:0034045 additionally asserts via
+      bounding_layer_of a bounding membrane that the PAS, a protein condensate, does not
+      have (PMID:32025038). No replacement term is proposed because the supported locations
+      - GO:0048471 perinuclear region and the ER membrane - are already annotated on this
+      gene, so there is nothing to move.
+    supported_by:
+    - reference_id: PMID:20810658
+      supporting_text: When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the autophagy protein GABARAPL1.
+- term:
+    id: GO:2001069
+    label: glycogen binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Glycogen binding via the C-terminal CBM20 carbohydrate-binding module.
+    action: ACCEPT
+    reason: &gt;-
+      Direct and specific; the cargo half of the receptor function. CBM20 point mutations
+      leave STBD1 perinuclear but abolish glycogen concentration there, separating binding
+      from targeting.
+- term:
+    id: GO:2001070
+    label: starch binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Starch binding, a CBM20 domain-derived inference with no mammalian substrate.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The CBM20 module is named for starch binding in microbial and plant enzymes, and the
+      term transfers with the domain. Mammals do not make starch; the physiological ligand
+      is glycogen, already annotated as GO:2001069. This is a domain-family inference that
+      does not survive organism context.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20562859
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34524948
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0007041
+    label: lysosomal transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the
+      trafficking of glycogen to lysosomes.
+- term:
+    id: GO:0038024
+    label: cargo receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cargo receptor for glycogen; the gene&#39;s core molecular function, but stated at the
+      generic cargo-receptor level rather than the autophagy-specific one.
+    action: MODIFY
+    reason: &gt;-
+      STBD1 binds glycogen through its CBM20 domain and an ATG8-family protein through its
+      AIM/LIR, physically bridging cargo to the autophagic machinery. This receptor role is
+      what the gene is for, and GO:0160247 autophagy cargo adaptor activity states it
+      exactly: &#34;the binding activity of a molecule that brings together a cargo, targeted
+      for degradation via autophagy, to a phagophore&#34;, carrying &#34;selective autophagy
+      receptor activity&#34; as a synonym. The generic GO:0038024 parent drops the autophagic
+      context that is the whole point of the function, and this corpus already uses
+      GO:0160247 for every other selective-autophagy receptor it has reviewed (TAX1BP1,
+      NBR1, NCOA4, CALCOCO2, CCDC50). Both source annotations here are electronic or
+      phylogenetic (IBA from GO_REF:0000033, IEA from GO_REF:0000107), so no experimental
+      curation is being overruled.
+    proposed_replacement_terms:
+    - id: GO:0160247
+      label: autophagy cargo adaptor activity
+- term:
+    id: GO:0061723
+    label: glycophagy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Glycophagy, the selective autophagy route STBD1 defines.
+    action: ACCEPT
+    reason: &gt;-
+      Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so
+      this is not merely participation in a route but constitutive of it.
+- term:
+    id: GO:0061753
+    label: substrate localization to autophagosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Substrate localization to autophagosome; the mechanistic statement of the receptor
+      role.
+    action: ACCEPT
+    reason: &gt;-
+      Describes what the cargo receptor actually accomplishes, and is more informative than
+      the generic transport terms.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:24837458
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Endoplasmic reticulum membrane; STBD1 is a single-pass type III membrane protein
+      anchored there.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported. The N-terminal hydrophobic segment is the membrane anchor -
+      deleting it gives a diffuse cytoplasmic distribution.
+- term:
+    id: GO:0034045
+    label: phagophore assembly site membrane
+  evidence_type: EXP
+  original_reference_id: PMID:20810658
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Phagophore assembly site membrane; the cited evidence shows perinuclear and lysosomal
+      colocalization, not a PAS membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is the STBD1 row of the section 5.4 triage in GO issue #29437, listed there under
+      &#39;no evident support - review for removal&#39;. Reading the primary paper confirms that
+      reading. PMID:20810658 places Stbd1 at enlarged perinuclear structures colocalized
+      with glycogen, the late endosomal/lysosomal marker LAMP1, and GABARAPL1; it never
+      examines the phagophore assembly site. Colocalization with an ATG8-family protein has
+      been over-read into residence in a PAS membrane. GO:0034045 additionally asserts via
+      bounding_layer_of a bounding membrane that the PAS, a protein condensate, does not
+      have (PMID:32025038). No replacement term is proposed because the supported locations
+      - GO:0048471 perinuclear region and the ER membrane - are already annotated on this
+      gene, so there is nothing to move.
+    supported_by:
+    - reference_id: PMID:20810658
+      supporting_text: When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the autophagy protein GABARAPL1.
+- term:
+    id: GO:0007041
+    label: lysosomal transport
+  evidence_type: IGI
+  original_reference_id: PMID:27358407
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Lysosomal transport; glycogen delivery to lysosomes is the outcome of glycophagy.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by the colocalization of STBD1 with glycogen and LAMP1 and by the
+      trafficking of glycogen to lysosomes.
+- term:
+    id: GO:0030247
+    label: polysaccharide binding
+  evidence_type: IDA
+  original_reference_id: PMID:24837458
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Polysaccharide binding, another parent of glycogen binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Same reasoning as carbohydrate binding; retained as a high-level default.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21893048
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24837458
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:24837458
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Endoplasmic reticulum, parent of the membrane term already supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Less informative than GO:0005789 for a single-pass membrane protein.
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:9794794
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Endoplasmic reticulum, parent of the membrane term already supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Less informative than GO:0005789 for a single-pass membrane protein.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:9794794
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retained as context for the muscle localization rather than as a general residence.
+- term:
+    id: GO:0019899
+    label: enzyme binding
+  evidence_type: IPI
+  original_reference_id: PMID:24837458
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Enzyme binding, an uninformative binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Names no partner and no function. STBD1&#39;s meaningful interactions - GABARAP and
+      GABARAPL1 via its AIM/LIR, and glycogen-associated enzymes such as GYS2 - are better
+      captured by the cargo receptor and glycogen binding terms already accepted.
+- term:
+    id: GO:0030315
+    label: T-tubule
+  evidence_type: IDA
+  original_reference_id: PMID:9794794
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      T-tubule; a muscle-specific location for a protein most studied in liver and muscle
+      glycogen metabolism.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Directly observed in muscle, near junctional sarcoplasmic reticulum. Real but
+      tissue-restricted, so peripheral to the general cargo-receptor function.
+- term:
+    id: GO:0048471
+    label: perinuclear region of cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:21893048
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Perinuclear region of cytoplasm, the location directly observed for STBD1 and its
+      glycogen cargo.
+    action: ACCEPT
+    reason: &gt;-
+      Directly observed. Overexpressed Stbd1 concentrates at enlarged perinuclear structures
+      colocalized with glycogen, LAMP1 and GABARAPL1, and the localization survives CBM20
+      point mutation while glycogen concentration does not.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798747
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retained as context for the muscle localization rather than as a general residence.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800426
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Plasma membrane; the parent under which the sarcolemma/T-tubule observation sits.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retained as context for the muscle localization rather than as a general residence.
+- term:
+    id: GO:0070821
+    label: tertiary granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798747
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Tertiary granule membrane, from neutrophil organelle proteomics.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput compartment proteomics in one cell type. Not false, but it reflects
+      where the protein was detected in a specific granulocyte fractionation rather than a
+      functional location.
+- term:
+    id: GO:0101003
+    label: ficolin-1-rich granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800426
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ficolin-1-rich granule membrane, from the same neutrophil proteomics series.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Same basis and same caveat as the tertiary granule membrane annotation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20810658
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from nine IPI experiments.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per project curation guidance, protein binding does not describe what the gene product
+      does. The underlying interactions with GABARAP/GABARAPL1 are the mechanistic basis of
+      the accepted cargo receptor activity and are better expressed there.
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:20810658
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Glycogen catabolic process; STBD1 delivers glycogen for degradation but does not
+      catabolize it.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      STBD1 has no glycosidase activity. It participates by supplying substrate to the
+      lysosomal route, so the term is defensible as pathway membership but is not a
+      statement of this gene product&#39;s activity. Kept as non-core rather than removed.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:20810658
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Bare membrane from the same experiment that established the specific ER-membrane
+      localization; the parent is redundant with its own child.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PMID:20810658 is the paper that showed STBD1 is anchored by its N-terminal hydrophobic
+      segment and localizes to the ER and perinuclear membranes, and it also underlies the
+      GO:0005789 annotation on this gene. Recording the bare parent alongside the child from
+      the same experiment adds no information. Not false, only empty. Same shape as the SL
+      project&#39;s pattern A, though the evidence here is direct rather than GO_REF:0000044.
+- term:
+    id: GO:0048471
+    label: perinuclear region of cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:20810658
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Perinuclear region of cytoplasm, the location directly observed for STBD1 and its
+      glycogen cargo.
+    action: ACCEPT
+    reason: &gt;-
+      Directly observed. Overexpressed Stbd1 concentrates at enlarged perinuclear structures
+      colocalized with glycogen, LAMP1 and GABARAPL1, and the localization survives CBM20
+      point mutation while glycogen concentration does not.
+- term:
+    id: GO:0061723
+    label: glycophagy
+  evidence_type: IMP
+  original_reference_id: PMID:20810658
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Glycophagy, the selective autophagy route STBD1 defines.
+    action: ACCEPT
+    reason: &gt;-
+      Core process. STBD1 is the receptor that makes glycogen an autophagic substrate, so
+      this is not merely participation in a route but constitutive of it.
+- term:
+    id: GO:2001069
+    label: glycogen binding
+  evidence_type: IDA
+  original_reference_id: PMID:20810658
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Glycogen binding via the C-terminal CBM20 carbohydrate-binding module.
+    action: ACCEPT
+    reason: &gt;-
+      Direct and specific; the cargo half of the receptor function. CBM20 point mutations
+      leave STBD1 perinuclear but abolish glycogen concentration there, separating binding
+      from targeting.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:20562859
+  title: Network organization of the human autophagy system.
+  findings: []
+- id: PMID:20810658
+  title: Starch binding domain-containing protein 1/genethonin 1 is a novel participant
+    in glycogen metabolism.
+  findings: []
+- id: PMID:21893048
+  title: &#39;Starch-binding domain-containing protein 1 (Stbd1) and glycogen metabolism:
+    Identification of the Atg8 family interacting motif (AIM) in Stbd1 required for
+    interaction with GABARAPL1.&#39;
+  findings: []
+- id: PMID:24837458
+  title: The carbohydrate-binding domain of overexpressed STBD1 is important for its
+    stability and protein-protein interactions.
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+- id: PMID:27358407
+  title: Starch Binding Domain-containing Protein 1 Plays a Dominant Role in Glycogen
+    Transport to Lysosomes in Liver.
+  findings: []
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: PMID:34524948
+  title: Global Proximity Interactome of the Human Macroautophagy Pathway.
+  findings: []
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+- id: PMID:9794794
+  title: Molecular cloning and functional expression of a novel human gene encoding
+    two 41-43 kDa skeletal muscle internal membrane proteins.
+  findings: []
+- id: Reactome:R-HSA-6798747
+  title: Exocytosis of tertiary granule membrane proteins
+  findings: []
+- id: Reactome:R-HSA-6800426
+  title: Exocytosis of ficolin-rich granule membrane proteins
+  findings: []
+core_functions:
+- description: &gt;-
+    Bridges glycogen to the autophagic machinery, binding the polysaccharide through its CBM20
+    module and an ATG8-family protein through its AIM/LIR, so that glycogen is captured as
+    autophagic cargo and delivered to lysosomes.
+  molecular_function:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  directly_involved_in:
+  - id: GO:0061723
+    label: glycophagy
+  - id: GO:0061753
+    label: substrate localization to autophagosome
+  - id: GO:0007041
+    label: lysosomal transport
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  - id: GO:0048471
+    label: perinuclear region of cytoplasm
+  supported_by:
+  - reference_id: PMID:20810658
+    supporting_text: When overexpressed in COSM9 cells, Stbd1 concentrated at enlarged perinuclear
+      structures, co-localized with glycogen, the late endosomal/lysosomal marker LAMP1 and the
+      autophagy protein GABARAPL1.
+- description: &gt;-
+    Binds glycogen directly through the C-terminal CBM20 module; this is the cargo-recognition
+    half of the receptor and is separable by point mutation from membrane targeting.
+  molecular_function:
+    id: GO:2001069
+    label: glycogen binding
+  directly_involved_in:
+  - id: GO:0061723
+    label: glycophagy
+  locations:
+  - id: GO:0048471
+    label: perinuclear region of cytoplasm
+  supported_by:
+  - reference_id: PMID:20810658
+    supporting_text: Point mutations in the CBM20 domain did not change the perinuclear localization
+      of Stbd1, but glycogen was no longer concentrated in this compartment.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is STBD1 the sole glycophagy receptor in mammals, or do other CBM-containing proteins act
+    redundantly in tissues where Stbd1 loss has a mild phenotype?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    STBD1&#39;s perinuclear glycogen compartment is a pre-lysosomal staging site rather than an
+    autophagosome.
+  description: &gt;-
+    Correlative light-electron microscopy of endogenously tagged STBD1 with glycogen and LAMP1
+    under glucose starvation, scoring whether the perinuclear structures are double-membraned.
+  experiment_type: imaging
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
