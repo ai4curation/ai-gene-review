@@ -693,7 +693,7 @@ def label_drift(old: str, new: str) -> str:
     return "cosmetic"
 
 
-def _is_placeholder_label(label: str, curie: str) -> bool:
+def is_placeholder_label(label: str, curie: str) -> bool:
     """True when a label is just the id repeated, bare or as a CURIE.
 
     The divergence guard exists to stop a label that *names a different protein*
@@ -703,11 +703,11 @@ def _is_placeholder_label(label: str, curie: str) -> bool:
     guard misfires on the ``label: PTHR13190`` convention -- an id shares no
     words with its official name, so every placeholder reads as divergent.
 
-    >>> _is_placeholder_label("PTHR13190", "PANTHER:PTHR13190")
+    >>> is_placeholder_label("PTHR13190", "PANTHER:PTHR13190")
     True
-    >>> _is_placeholder_label("PANTHER:PTHR13190", "PANTHER:PTHR13190")
+    >>> is_placeholder_label("PANTHER:PTHR13190", "PANTHER:PTHR13190")
     True
-    >>> _is_placeholder_label("SUCCINATE DEHYDROGENASE", "PANTHER:PTHR13190")
+    >>> is_placeholder_label("SUCCINATE DEHYDROGENASE", "PANTHER:PTHR13190")
     False
     """
     stripped = label.strip()
@@ -816,7 +816,7 @@ def rewrite_panther_labels(
             continue
         if (
             not allow_divergent
-            and not _is_placeholder_label(current, curie)
+            and not is_placeholder_label(current, curie)
             and label_drift(current, official) == "divergent"
         ):
             deferred.append((curie, current, official))

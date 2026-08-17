@@ -17,10 +17,11 @@ representatives. Generated against PANTHER 19.0.
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
 
-These counts drift whenever main merges a module, and have gone stale four
-times in this branch's history. Re-derive rather than hand-edit them:
-`just validate-modules` prints the module and ungrounded totals, and
-`just scan-prose-panther` prints the prose figures.
+Every row above is emitted by `just panther-report-stats` — paste its output
+over the table after a merge. These counts drift whenever main merges a module
+and went stale four times in this branch's history; the first attempt at a fix
+named two commands that between them covered three of the eight rows, so the
+four that actually kept drifting stayed hand-maintained.
 
 Counts are post-removal: 21 descriptors that named a family provably excluding
 their own representative member now assert no id (see §1); the other 142
@@ -69,11 +70,13 @@ was built from, it catches seven; the two misses are a symbol-phrased claim and
 the first-named member of a shared claim, both documented rather than papered
 over.
 
-**The substantive remaining issue is precision, not correctness.** Most
-family-level assignments have every representative member sitting in a
+**The substantive remaining issue is precision, not correctness.** 817 of the
+907 family-level assignments have every representative member sitting in a
 single subfamily — the subfamily is the sharper claim. This matters most where
-the family is heterogeneous: 205 of those sit in families split into 20+
-subfamilies.
+the family is heterogeneous: 206 of those sit in families split into 20+
+subfamilies. (These two move with the tree like the scope table; the
+subfamily-precision advisory count printed by `just validate-modules` tracks
+the same population.)
 
 The harm is concrete. **332 distinct proteins are grounded on 136 family ids
 that cannot distinguish between them**, and **136 distinct molecular-function

@@ -2709,3 +2709,10 @@ fix-panther-labels *args="":
 [group('QC')]
 scan-prose-panther *args="":
     uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
+
+# Print every row of the PANTHER review report's scope table.
+# That table went stale four times because its rows had no committed
+# derivation; paste this output over the table after a merge.
+[group('QC')]
+panther-report-stats *args="":
+    uv run ai-gene-review panther-report-stats --output-dir . {{args}}

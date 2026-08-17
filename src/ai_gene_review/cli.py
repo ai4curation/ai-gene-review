@@ -4277,6 +4277,89 @@ def fix_panther_labels(
     )
 
 
+@app.command()
+def panther_report_stats(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+):
+    """Print every row of the PANTHER review report's scope table.
+
+    That table has gone stale four times in this branch's history, each time
+    because its rows had no committed derivation and had to be hand-edited
+    after a merge. Prescribing "run validate-modules and scan-prose-panther"
+    covered three of eight rows, so the next merger would see no discrepancy
+    and leave the rest stale. This derives all of them.
+
+    Example:
+        just panther-report-stats
+    """
+    import re
+
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_member_index,
+        load_member_index_gaps,
+    )
+    from ai_gene_review.validation.module_validator import (
+        count_ungrounded_families,
+        iter_ancestral_node_uses,
+        iter_family_member_uses,
+    )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
+
+    repo_root = output_dir or Path.cwd()
+    family_re = re.compile(r"^PANTHER:(PTHR\d+)(?::(SF\d+))?$")
+
+    files = sorted((repo_root / "modules").rglob("*.yaml"))
+    family_level = subfamily_level = ungrounded = nodes = 0
+    ungrounded_modules: set[str] = set()
+    for path in files:
+        document = yaml.safe_load(path.read_text())
+        count = count_ungrounded_families(document)
+        if count:
+            ungrounded += count
+            ungrounded_modules.add(path.name)
+        nodes += len(list(iter_ancestral_node_uses(document)))
+        for use in iter_family_member_uses(document):
+            match = family_re.match(sorted(use.declared_family_curies)[0])
+            if not match:
+                continue
+            if match.group(2):
+                subfamily_level += 1
+            else:
+                family_level += 1
+
+    members = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    index = load_member_index(members)
+    gaps = load_member_index_gaps(members)
+    collected = len(index) + len(gaps.absent) + len(gaps.unchecked)
+    claims = collect_claims(repo_root / "modules")
+    checked = sum(1 for c in claims if c.accession in index)
+
+    typer.echo("| | count |")
+    typer.echo("|---|---|")
+    typer.echo(f"| module files | {len(files)} |")
+    typer.echo(
+        "| family/subfamily descriptors with an id and a representative member | "
+        f"{family_level + subfamily_level:,} |"
+    )
+    typer.echo(f"| declared at family level | {family_level} |")
+    typer.echo(f"| declared at subfamily level | {subfamily_level} |")
+    typer.echo(
+        f"| family descriptors asserting no id | {ungrounded} "
+        f"(across {len(ungrounded_modules)} modules) |"
+    )
+    typer.echo(f"| PAINT nodes resolved | {nodes} |")
+    typer.echo(f"| prose PANTHER claims checked | {checked} / {len(claims)} |")
+    typer.echo(
+        "| cited accessions resolved to a PANTHER family | "
+        f"{len(index):,} / {collected:,} |"
+    )
+
+
 def main():
     """Main entry point for the CLI."""
     app()

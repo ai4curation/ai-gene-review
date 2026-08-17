@@ -1420,3 +1420,27 @@ def test_iter_all_representative_accessions_includes_ungrounded_descriptors():
     for use in iter_family_member_uses(doc):
         grounded.update(use.representative_accessions)
     assert grounded == {"P1"}
+
+
+def test_compare_label_offers_the_fill_remedy_for_a_panther_placeholder():
+    """`label: PTHR13190` is a missing label, not a claim about another protein."""
+    message = compare_label(
+        "PANTHER:PTHR13190", "PTHR13190", "AUTOPHAGY-RELATED 2, ISOFORM A", set()
+    )
+    assert message is not None
+    assert "asserts nothing about the protein" in message
+    assert "fix-panther-labels" in message
+    # the wrong-id advice would be false here and must not also appear
+    assert "usually means the ID is wrong" not in message
+
+
+@pytest.mark.parametrize("curie", ["GO:0005634", "CHEBI:15377", "InterPro:IPR000719"])
+def test_compare_label_does_not_offer_a_panther_remedy_for_other_prefixes(curie):
+    """fix-panther-labels reads the PANTHER OBO only.
+
+    Naming it for a GO or CHEBI placeholder is advice that cannot work -- the
+    same defect as an artifact claiming a lookup it never ran.
+    """
+    message = compare_label(curie, curie, "some real label", set())
+    assert message is not None
+    assert "fix-panther-labels" not in message
