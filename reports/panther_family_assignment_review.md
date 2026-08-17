@@ -1,6 +1,6 @@
 # PANTHER family assignment review
 
-A pass over all 279 module YAMLs examining every PANTHER family assignment, the
+A pass over all 281 module YAMLs examining every PANTHER family assignment, the
 PAINT evolutionary evidence cited for it, and the extant proteins named as its
 representatives. Generated against PANTHER 19.0.
 
@@ -8,14 +8,19 @@ representatives. Generated against PANTHER 19.0.
 
 | | count |
 |---|---|
-| module files | 279 |
-| family/subfamily descriptors with an id and a representative member | 1,001 |
-| declared at family level | 900 |
+| module files | 281 |
+| family/subfamily descriptors with an id and a representative member | 1,008 |
+| declared at family level | 907 |
 | declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
-| PAINT nodes resolved | 369 |
+| PAINT nodes resolved | 372 |
 | prose PANTHER claims checked | 168 / 168 |
-| cited accessions resolved to a PANTHER family | 1,450 / 1,485 |
+| cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
+
+These counts drift whenever main merges a module, and have gone stale four
+times in this branch's history. Re-derive rather than hand-edit them:
+`just validate-modules` prints the module and ungrounded totals, and
+`just scan-prose-panther` prints the prose figures.
 
 Counts are post-removal: 21 descriptors that named a family provably excluding
 their own representative member now assert no id (see §1); the other 142
@@ -64,8 +69,8 @@ was built from, it catches seven; the two misses are a symbol-phrased claim and
 the first-named member of a shared claim, both documented rather than papered
 over.
 
-**The substantive remaining issue is precision, not correctness.** 814 of the
-900 family-level assignments have every representative member sitting in a
+**The substantive remaining issue is precision, not correctness.** Most
+family-level assignments have every representative member sitting in a
 single subfamily — the subfamily is the sharper claim. This matters most where
 the family is heterogeneous: 205 of those sit in families split into 20+
 subfamilies.
@@ -114,10 +119,9 @@ consistent with what PAINT struck out:
 Smoothened losing its ancestral Wnt functions while retaining Hh signalling is
 exactly the evolutionary story the node encodes, and the module reflects it.
 
-**Evidence depth.** 82 of 369 resolved nodes are reconstructed from ≤3 seed
-proteins; only 3 have no seed at all, and none of those three is the stated
-evidence for a molecular-function claim. Reconstructions that thin are weak
-support for propagating a specific function and are worth a second look.
+**Evidence depth.** 82 of 372 resolved nodes are reconstructed from ≤3 seed
+proteins, and none has zero seeds. Reconstructions that thin are weak support
+for propagating a specific function and are worth a second look.
 
 Counting seeds requires care: PAINT records them as model-organism identifiers
 (MGI 4,514, RGD 2,807, FB 1,801, WB 1,067, SGD 511, ZFIN 479, ...) at least as
@@ -126,7 +130,7 @@ often as UniProtKB (7,912). Counting only `UniProtKB:` seeds inflates the
 blind spot — 3 of its 9 firings were vacuous, comparing a representative against
 a node whose seeds carry no UniProt accession at all — and now says so instead.
 
-**Claim support.** 100 nodes exactly support the module's assertion. Of the 33
+**Claim support.** 103 nodes exactly support the module's assertion. Of the 33
 that appeared not to, 12 were GO ancestry artifacts (the node is annotated to a
 child or parent term) — the check is now ancestry-aware. Of the 21 genuinely
 disjoint, most share one shape: the node attests the *pathway role* (`P:`) while

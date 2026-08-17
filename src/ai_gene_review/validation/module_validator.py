@@ -85,6 +85,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple
 import yaml
 
 from ai_gene_review.etl.panther_families import (
+    _is_placeholder_label,
     label_drift,
     load_member_index,
     load_subfamily_counts,
@@ -1186,6 +1187,16 @@ def compare_label(
         f"Label mismatch for {curie}: module says '{provided}' "
         f"but ontology label is '{shown}'"
     )
+    # A label that merely restates its own id names no entity, so the
+    # wrong-id advice below would be false twice over: it would send a curator
+    # to re-verify a probably-correct id while leaving the real defect -- a
+    # missing label -- undescribed. The fixer already knows this distinction;
+    # the reporter has to agree with it or the two halves contradict.
+    if _is_placeholder_label(provided, curie):
+        return message + (
+            ". The label is just the id repeated, so it asserts nothing about "
+            "the protein -- fill it in with `just fix-panther-labels --apply`"
+        )
     # A label naming a different entity entirely is weak evidence of a typo and
     # strong evidence of a wrong id -- an id guessed at random is still a
     # hallucination when it happens to resolve. Say so, so the reader fixes the
