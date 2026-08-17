@@ -184,6 +184,38 @@ Therefore:
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
 
+### What an IBA asserts: read the phylogeny, not the donor count
+
+An IBA is **not** a pairwise similarity transfer. Behind every IBA is a PAINT curator's
+**IBD** (Inferred from Biological aspect of Descendant): the curator inspected the family
+tree and the MSA, read the experimental annotations of all extant members, judged at which
+node the function arose — sometimes recent, sometimes as deep as LUCA — and placed the
+assertion there. IBA rows follow mechanically from descent from that node. So an IBA carries
+a considered phylogenetic judgment, and challenging one means arguing with the node
+placement (is the target inside the clade that inherited the function? is there
+target-specific evidence of loss or divergence?), not with a similarity score.
+
+Two consequences that are easy to get backwards:
+
+- **A short `WITH/FROM` donor list is not weak support.** A node seeded by a single
+  well-characterized MOD or human gene can be entirely sound. Do not use donor count as a
+  proxy for evidential strength.
+- **The target appearing in its own `WITH/FROM` is correct and expected — not circular.**
+  When a gene has its own experimental annotation for the term, that annotation is one of
+  the descendant evidences the curator used to place the IBD, so the gene legitimately
+  appears among the sources of the IBA it later receives. It is a marker that experimental
+  grounding exists *on the target itself*, and the IBA then says something additional: that
+  the function is inherited rather than lineage-specific. **Never** mark such a source
+  `CIRCULAR_OR_REDUNDANT` or describe it as inflating support.
+
+Reserve `CIRCULAR_OR_REDUNDANT` for genuine circularity: a propagation whose source is
+itself a propagated annotation with no experimental grounding anywhere in the chain, or a
+source that adds nothing because the target already has stronger direct evidence for the
+same claim.
+
+See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
+patterns.
+
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
 Validation deliberately treats the two sources of GO term ids differently:

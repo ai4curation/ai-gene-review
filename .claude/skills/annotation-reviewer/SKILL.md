@@ -43,6 +43,33 @@ The exception is if you think there are key annotations missing. In this case yo
 
 However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the term at the right level of specificity. However, they can be conservative and missing functions.
 
+**What an IBA asserts.** An IBA is not a pairwise similarity transfer. Behind it is a PAINT
+curator's IBD: they inspected the family tree and MSA, read the experimental annotations of
+all extant members, judged at which node the function arose — sometimes recent, sometimes as
+deep as LUCA — and placed the assertion there. IBA rows follow mechanically from descent.
+Reviewing an IBA means arguing with that node placement, not with a similarity score.
+
+Two things this implies, both easy to get backwards:
+
+- **A short donor list is not weak evidence.** A node seeded by a single well-characterized
+  MOD or human gene can be entirely sound, because the claim is about where the function
+  arose and the curator had the whole alignment and tree in view. Do not count donor genes
+  as a proxy for evidential strength. To challenge an IBA, ask whether the target is inside
+  the clade that inherited the function and whether there is target-specific evidence of
+  loss or divergence.
+- **The target appearing in its own `WITH/FROM` is correct and expected, not circular.**
+  When a gene has its own experimental annotation for the term, that annotation is one of
+  the descendant evidences used to place the IBD, so the gene legitimately appears among the
+  sources of the IBA it receives. This is a marker that experimental grounding exists — on
+  the target itself — and that the function is inherited rather than lineage-specific.
+  Never label such a source `CIRCULAR_OR_REDUNDANT`, and never describe it as inflating or
+  duplicating support. Reserve `CIRCULAR_OR_REDUNDANT` for a propagation whose source is
+  itself a propagated annotation with no experimental grounding anywhere in the chain, or a
+  source that adds nothing because the target already has stronger direct evidence.
+
+See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
+taxonomy and the fifteen catalogued failure patterns.
+
 Always make use of the `original_reference_id`. If this refers to a PMID, then read the publication (in publications/ directory) and make use of the information there.
 
 3. **Holistic Assessment**: Base your decisions on a synthesized understanding of gene function derived from multiple sources.
