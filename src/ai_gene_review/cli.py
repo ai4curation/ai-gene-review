@@ -4516,7 +4516,7 @@ def panther_report_stats(
     distinct_nodes: set[str] = set()
     thin_annotations = total_annotations = 0
     family_uses: list = []
-    divergent_reported: set[tuple[str, str]] = set()
+    divergent_reported: set[tuple[str, str, str]] = set()
     annotation_depth: dict[tuple[str, str, str], bool] = {}
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
 
@@ -4567,13 +4567,9 @@ def panther_report_stats(
                 seeds = len(_seed_tokens(row))
                 if (
                     depth.get(key, seeds) != seeds
-                    and (
-                        node_use.ptn_curie,
-                        row.go_id,
-                    )
-                    not in divergent_reported
+                    and (node_use.ptn_curie, *key) not in divergent_reported
                 ):
-                    divergent_reported.add((node_use.ptn_curie, row.go_id))
+                    divergent_reported.add((node_use.ptn_curie, *key))
                     # Byte-identical across slices today, so this is unreachable
                     # now; without it a future release shipping divergent copies
                     # would make the figure depend on glob order, silently.
