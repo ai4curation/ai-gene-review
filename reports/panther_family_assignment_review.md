@@ -14,15 +14,20 @@ representatives. Generated against PANTHER 19.0.
 | declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT node citations | 372 (of 195 distinct nodes) |
-| PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 472 / 1279 citation-weighted |
+| PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
+| family-level groundings with all members in one subfamily | 810 / 907 |
+| ...in families split into 20+ subfamilies (the advisory) | 199 |
+| family ids covering more than one distinct protein | 216 (over 531 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
 
 Every row above is emitted by `just panther-report-stats` — paste its output
 over the table after a merge. These counts drift whenever main merges a module
 and went stale four times in this branch's history; the first attempt at a fix
-named two commands that between them covered three of the eight rows, so the
-four that actually kept drifting stayed hand-maintained.
+named two commands that between them covered three of the then eight rows, so
+the four that actually kept drifting stayed hand-maintained. The last three rows
+were narrative figures in §1 until they were found to have drifted too, and were
+moved here for the same reason.
 
 Counts are post-removal: 21 descriptors that named a family provably excluding
 their own representative member now assert no id (see §1); the other 142
@@ -71,17 +76,29 @@ was built from, it catches seven; the two misses are a symbol-phrased claim and
 the first-named member of a shared claim, both documented rather than papered
 over.
 
-**The substantive remaining issue is precision, not correctness.** 817 of the
-907 family-level assignments have every representative member sitting in a
-single subfamily — the subfamily is the sharper claim. This matters most where
-the family is heterogeneous: 206 of those sit in families split into 20+
-subfamilies. (These two move with the tree like the scope table; the
-subfamily-precision advisory count printed by `just validate-modules` tracks
-the same population.)
+**The substantive remaining issue is precision, not correctness.** Most
+family-level assignments have every representative member sitting in a single
+subfamily — the subfamily is the sharper claim — and a quarter of those sit in
+families split into 20+ subfamilies, where the family says least about any one
+member. Both counts are scope-table rows, and the second *is* the
+subfamily-precision advisory `just validate-modules` prints, computed from the
+same `subfamily_precision_case` predicate rather than a second implementation
+of it.
 
-The harm is concrete. **332 distinct proteins are grounded on 136 family ids
-that cannot distinguish between them**, and **136 distinct molecular-function
-assertions rest on 61 families that cannot support them all**. The worst cases:
+That shared predicate is new, and it is why these numbers changed. The report
+previously claimed 817 of 907 and 206, asserting the advisory "tracks the same
+population" while never printing the two together; the sweep was warning 199.
+Both figures were recomputed independently here and had drifted — precisely the
+failure the §2 rule below describes, left in place in the section that states
+it. Deriving them from the validator's own predicate is what makes the
+"same population" claim checkable instead of merely asserted.
+
+The harm is concrete: **many more distinct proteins are grounded on family ids
+that cannot distinguish between them than there are such ids** (scope table;
+counted as a family-level id used, across all modules, for more than one
+representative protein resolvable in the member index). The worst cases, among
+families PANTHER splits into 20+ subfamilies, by distinct proteins then
+subfamily count:
 
 | family | name | distinct proteins | modules | subfamilies |
 |---|---|---:|---:|---:|
@@ -89,7 +106,21 @@ assertions rest on 61 families that cannot support them all**. The worst cases:
 | PTHR24418 | TYROSINE-PROTEIN KINASE | 6 | 5 | 76 |
 | PTHR11157 | FATTY ACID ACYL TRANSFERASE-RELATED | 6 | 1 | 58 |
 | PTHR11848 | TGF-BETA FAMILY | 4 | 7 | 71 |
-| PTHR22603 | CHOLINE/ETHANOALAMINE KINASE | 4 | 1 | 20 |
+| PTHR43591 | METHYLTRANSFERASE | 4 | 3 | 29 |
+
+An earlier revision of this table listed `PTHR22603` in the last row. It ties
+on distinct proteins, so the row was an undeclared tie-break rather than an
+error; the sort criterion is now stated.
+
+A fifth claim once stood here — that 136 distinct molecular-function assertions
+rest on 61 families that cannot support them all. It has been withdrawn rather
+than restated. `FamilyMemberUse` does not carry the enclosing annoton's
+molecular function, so the figure cannot be rederived from the code that
+produced the others, and its original predicate is no longer recoverable. Per
+the rule this report applies elsewhere, an unverifiable number is worse than a
+missing one. Recovering it needs the descriptor walk to thread the annoton, and
+the underlying point — that a shared id cannot support divergent MF claims —
+survives in the paragraph below without it.
 
 `PTHR24416` alone grounds EGFR, ERBB2, ERBB3, EPHA2, EPHB4, FGFR1, TRKA, TRKB,
 VEGFR1, VEGFR2, MET, PDGFRB and INSR across nine modules. As a functional

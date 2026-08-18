@@ -80,7 +80,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import yaml
 
@@ -963,6 +963,66 @@ def iter_family_member_uses(
 # curation judgement, not a correctness fix.
 HETEROGENEOUS_FAMILY_SUBFAMILIES = 20
 
+
+class SubfamilyPrecisionCase(NamedTuple):
+    """A family-level grounding whose members all sit in one subfamily.
+
+    The subfamily is the sharper claim, so this is the population the precision
+    advisory is drawn from. ``subfamily_count`` is exposed rather than filtered
+    so callers can report the whole population and the advisory-triggering
+    subset from one definition -- the report previously counted these
+    independently and drifted to 206 against the validator's 199.
+    """
+
+    use: "FamilyMemberUse"
+    base: str
+    subfamily: str
+    subfamily_count: int
+
+
+def subfamily_precision_case(
+    use: "FamilyMemberUse",
+    member_index: Dict[str, str],
+    subfamily_counts: Optional[Dict[str, int]],
+) -> Optional[SubfamilyPrecisionCase]:
+    """Classify one descriptor's family-vs-subfamily precision, or None.
+
+    Returns None when the descriptor is already declared at subfamily level, has
+    no member resolvable in the index, is not grounding-consistent (a separate
+    and more serious finding), or has members spread across several subfamilies
+    -- in which case the family really is the level that covers them.
+    """
+    if not subfamily_counts:
+        return None
+    if any(_is_panther_subfamily(curie) for curie in use.declared_family_curies):
+        return None
+    declared_bases = {
+        base
+        for curie in use.declared_family_curies
+        if (base := _panther_family_base(curie)) is not None
+    }
+    known = {
+        accession: member_index[accession]
+        for accession in use.representative_accessions
+        if accession in member_index
+    }
+    if not known:
+        return None
+    if not declared_bases & {family_sf.split(":", 1)[0] for family_sf in known.values()}:
+        return None
+    member_subfamilies = {v for v in known.values() if ":" in v}
+    if len(member_subfamilies) != 1:
+        return None
+    subfamily = next(iter(member_subfamilies))
+    base = subfamily.split(":", 1)[0]
+    return SubfamilyPrecisionCase(
+        use=use,
+        base=base,
+        subfamily=subfamily,
+        subfamily_count=subfamily_counts.get(base, 0),
+    )
+
+
 def _paint_corroborated_families(
     use: FamilyMemberUse, paint_index: Optional[PaintIndex]
 ) -> Set[str]:
@@ -1023,24 +1083,17 @@ def validate_family_members(
         if declared_bases & member_bases:
             # Precision advisory: the id is right, but if every member resolves
             # to one subfamily of a large family, the subfamily is the sharper
-            # grounding for a specific functional claim.
-            member_subfamilies = {v for v in known.values() if ":" in v}
-            declared_at_subfamily = any(
-                _is_panther_subfamily(curie) for curie in use.declared_family_curies
-            )
-            if (
-                subfamily_counts
-                and len(member_subfamilies) == 1
-                and not declared_at_subfamily
-            ):
-                subfamily = next(iter(member_subfamilies))
-                base = subfamily.split(":", 1)[0]
-                count = subfamily_counts.get(base, 0)
-                if count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
+            # grounding for a specific functional claim. The predicate lives in
+            # subfamily_precision_case so the report cannot re-implement it and
+            # drift, which is how it came to publish 206 against this 199.
+            case = subfamily_precision_case(use, member_index, subfamily_counts)
+            if case is not None:
+                if case.subfamily_count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
                     warnings.append(
-                        f"{use.path}: PANTHER:{base} is split into {count} "
+                        f"{use.path}: PANTHER:{case.base} is split into "
+                        f"{case.subfamily_count} "
                         f"subfamilies; every representative member here is in "
-                        f"PANTHER:{subfamily}. Consider grounding on the "
+                        f"PANTHER:{case.subfamily}. Consider grounding on the "
                         "subfamily, which identifies the protein rather than "
                         "just its superfamily."
                     )

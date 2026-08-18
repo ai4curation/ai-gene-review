@@ -164,6 +164,53 @@ def test_distinct_and_citation_weighted_aggregations_differ(repo):
     )
 
 
+def test_an_annotation_in_several_family_slices_counts_once(repo):
+    """A node's annotation is committed once per family slice containing it.
+
+    `PTN000010968`'s GO:0008168 sits in three committed slices, and
+    load_paint_index appends across them. Counting rows let "how many slices we
+    happened to commit" masquerade as citation frequency -- inflating the real
+    denominator by 120 and, because duplicates are overwhelmingly thick,
+    deflating the thin fraction from 40% to 37%. Every other fixture here
+    writes a single family, so nothing else in this file reaches it.
+    """
+    row = ("PTN1", "GO:1", "IBD", "UniProtKB:A|UniProtKB:B")
+    write_slice(repo, "PTHR1", [row])
+    write_slice(repo, "PTHR2", [row])
+    write_slice(repo, "PTHR3", [row])
+    write_module(repo, "a.yaml", ["PANTHER:PTN1"])
+
+    assert (
+        "| PAINT annotations resting on <=3 seeds | 1 / 1 distinct (node, term) "
+        "= 1 / 1 citation-weighted |" in run(repo)
+    )
+
+
+def test_duplicate_slices_with_divergent_seeds_are_reported(repo):
+    """Dedup must not silently become glob-order-dependent.
+
+    Copies are byte-identical today, so this cannot fire against real data --
+    but a future PANTHER release shipping divergent copies would otherwise
+    decide a published figure by directory iteration order.
+    """
+    # Slice order is load-bearing: load_paint_index reads sorted(), so the THIN
+    # copy must come last. With the thick copy last, last-write-wins agrees with
+    # max by coincidence and this test cannot tell them apart -- the first draft
+    # was ordered that way and passed under the very bug it names.
+    write_slice(
+        repo,
+        "PTHR1",
+        [("PTN1", "GO:1", "IBD", "|".join(f"UniProtKB:S{i}" for i in range(9)))],
+    )
+    write_slice(repo, "PTHR2", [("PTN1", "GO:1", "IBD", "UniProtKB:A|UniProtKB:B")])
+    write_module(repo, "a.yaml", ["PANTHER:PTN1"])
+
+    output = run(repo)
+    assert "differing seed sets across family slices" in output
+    # Resolved to the better-supported copy, not to whichever was globbed last.
+    assert "| PAINT annotations resting on <=3 seeds | 0 / 1 distinct" in output
+
+
 def test_non_ibd_rows_are_excluded(repo):
     """The evidence filter is part of the definition, not an implementation detail."""
     write_slice(
