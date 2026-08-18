@@ -176,3 +176,18 @@ none of these rows needs to be left UNDECIDED:
 Note on Campli et al. 2026 (bioRxiv): flags kni as an adaptively-expanding "Family 11" TF at
 metamorphic origins in Pancrustacea. This is comparative/phylogenomic project context only and is
 **not** evidence for any D. melanogaster GO annotation; not used to support annotations here.
+
+## Reference-block sweep (round 2 review follow-up)
+
+The `reference_review` blocks were not updated alongside the IPI action changes, so three still
+described the superseded verdicts. Corrected for `PMID:14605208`, `PMID:17972097` and
+`PMID:30995488`; all three now record `WITH/FROM = UniProtKB:O46036` (dCtBP, `kni-uniprot.txt:97`)
+as the basis for `MODIFY → GO:0001222`. `PMID:17972097` keeps `correctness: UNVERIFIED`, which is a
+statement about the abstract-only cache, not about the partner.
+
+The `PMID:30995488` `findings.statement` had preserved the refuted inference ("Knirps partners
+detected in this screen are transcription factors") in a machine-readable field; it now states only
+what the paper reports. The screen-scope quote is likewise re-framed in the annotation `reason`:
+read as evidence *about this partner* it argued against the very annotation it defended, since
+dCtBP is among the partners the screen detected. It now serves its actual purpose — showing why the
+screen's nominal TF-only scope was never a safe way to infer a partner's class.

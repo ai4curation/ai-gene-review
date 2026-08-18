@@ -152,3 +152,17 @@ Nucleus (UniProt PROSITE-derived; bHLH DNA-binding TF). GOA carries nucleus by I
    long-range repression.
 3. Deployed in **pair-rule segmentation** (GO:0007366) and **PNS/bristle patterning via
    achaete-scute repression** (GO:0050767) in the **nucleus** (GO:0005634).
+
+## 9. Reference-block sweep (round 2 review follow-up)
+
+When the five bare-`protein binding` IPIs were switched to `MODIFY → GO:0001222`, the matching
+`reference_review` blocks in the `references:` list were not swept and still asserted the
+superseded "left UNDECIDED" verdicts. Corrected here for `PMID:17898168` and `PMID:19805071`:
+`correctness: UNVERIFIED` is retained, because it is a claim about what the *cached text*
+supports, but the prose now records that the partner comes from the GOA `WITH/FROM` column
+(`UniProtKB:P16371-2` and `UniProtKB:P16371`, both gro) rather than from the paper.
+
+Also added `UniProtKB:P14003` as a reference so the two Groucho `MODIFY` rows carry a
+`supported_by` anchor. The SUBUNIT block is the right source, since the partner is curated
+input data rather than something asserted by either cited paper
+[UniProtKB:P14003 "Interacts with gro (via WPRW motif)"].
