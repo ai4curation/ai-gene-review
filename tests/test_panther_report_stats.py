@@ -519,6 +519,9 @@ def test_the_partition_row_covers_only_family_level_statuses(repo):
         repo,
         "a.yaml",
         [
+            # Deliberately ordered so insertion order (spread first) differs
+            # from the alphabetical tie-break; otherwise the two coincide and
+            # this cannot tell a stable secondary key from Counter order.
             (["PANTHER:PTHR1"], ["A", "B"]),  # members spread
             (["PANTHER:PTHR2:SF1"], ["C"]),  # declared at subfamily
             (["PANTHER:PTHR3"], ["D"]),  # grounding inconsistent
@@ -532,9 +535,11 @@ def test_the_partition_row_covers_only_family_level_statuses(repo):
     # Assert against the row itself: "declared at subfamily" also appears in the
     # scope table's own count row, and a substring check over the whole output
     # would pass or fail for the wrong reason.
+    # Both statuses tie at 1, so the order is fixed by the secondary sort key on
+    # the status name, not by the order the descriptors appear in the module.
     assert row == (
         "| ...why the other 2 family-level ones are not | "
-        "1 members spread, 1 grounding inconsistent |"
+        "1 grounding inconsistent, 1 members spread |"
     )
 
 

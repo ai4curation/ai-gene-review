@@ -17,7 +17,7 @@ representatives. Generated against PANTHER 19.0.
 | PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
 | family-level groundings with all members in one subfamily | 806 / 892 checkable (of 907 declared) |
 | ...in families split into 20+ subfamilies (the advisory) | 197 |
-| ...why the other 101 family-level ones are not | 82 members spread, 11 grounding inconsistent, 4 some members unplaced, 4 no subfamily recorded |
+| ...why the other 101 family-level ones are not | 82 members spread, 11 grounding inconsistent, 4 no subfamily recorded, 4 some members unplaced |
 | family ids covering more than one distinct protein | 213 (over 528 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
@@ -95,17 +95,17 @@ it. Deriving them from the validator's own predicate is what makes the
 "same population" claim checkable instead of merely asserted.
 
 The denominator is the descriptors where narrowing had a real answer, and its
-complement is those where the answer is no — the family is the level that
-covers every member, either because they span subfamilies or because one has
-none to narrow to. The whole partition is a scope-table row, so the breakdown
+complement is those where the answer is no — no *recorded* subfamily covers
+every member, either because they span subfamilies or because one has none
+recorded to narrow to. The whole partition is a scope-table row, so the breakdown
 is checkable rather than quoted.
 
 Getting there meant letting the predicate report *which* outcome it reached
 instead of collapsing them to a yes/no, and two attempts got it wrong in
 opposite directions. The first counted family-level-with-a-resolvable-member,
 sweeping in grounding-inconsistent descriptors (a correctness finding the sweep
-reports separately, including the `PTHR23037` case below) and members PANTHER
-assigns no subfamily at all. The second discarded a member the index places in no
+reports separately, including the `PTHR23037` case below) and members with no
+subfamily recorded. The second discarded a member the index places in no
 subfamily and reported the remainder as a clean finding — so the advisory told a
 curator that *every* representative member sits in one subfamily while naming a
 member it places nowhere, and the narrowing it recommended would have dropped a
@@ -120,18 +120,15 @@ rests on it. The index records what the consulted source returned, so a
 bare-family row means no subfamily was *recorded* — not that PANTHER assigns
 none. Which of the two resolution paths produced any given row is not recoverable
 from the artifact, and both admit bare rows: `parse_sequence_classification`
-keeps them deliberately, and the UniProt cross-reference fallback emits one when
-a record carries no `:SF`. Nor does the organism account for it — 346 of the 360
-*P. putida* accessions in the index do carry a subfamily. So if a particular
+matches the bare-family pattern as well as the subfamily one, and the UniProt
+cross-reference fallback emits a bare row when a record carries no `:SF`. Nor
+does the organism account for it — of the 378 *P. putida* accessions asked
+about, 346 resolved to a subfamily, 14 to a bare family and 18 to nothing at
+all. So if a particular
 blank is a gap rather than a verdict, `histidine_catabolism` is a genuine finding
 after all. Declining to recommend a narrowing that would drop a member you cannot
 place is right under either reading, which is why these outcomes are named for
 the record rather than for a verdict PANTHER has not given.
-
-An earlier revision of this paragraph asserted the fallback as the sole
-mechanism and invoked organisms PANTHER does not publish. Both were wrong, and
-checkably so from this repo — the same overreach the rename had just removed one
-field over.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
 that cannot distinguish between them than there are such ids** (scope table).

@@ -4539,7 +4539,10 @@ def panther_report_stats(
         f"| ...why the other {sum(rest.values())} family-level ones are not | "
         + ", ".join(
             f"{count} {status.replace('_', ' ')}"
-            for status, count in sorted(rest.items(), key=lambda kv: -kv[1])
+            # Secondary key on the status name: without it, equal counts fall
+            # back to Counter insertion order, so the row would depend on the
+            # order descriptors happen to appear in the tree.
+            for status, count in sorted(rest.items(), key=lambda kv: (-kv[1], kv[0]))
         )
         + " |"
     )
