@@ -4515,6 +4515,7 @@ def panther_report_stats(
     distinct_nodes: set[str] = set()
     thin_annotations = total_annotations = 0
     family_uses: list = []
+    divergent_reported: set[tuple[str, str]] = set()
     annotation_depth: dict[tuple[str, str, str], bool] = {}
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
 
@@ -4563,13 +4564,21 @@ def panther_report_stats(
             for row in rows:
                 key = (row.aspect, row.go_id)
                 seeds = len(_seed_tokens(row))
-                if depth.get(key, seeds) != seeds:
+                if (
+                    depth.get(key, seeds) != seeds
+                    and (
+                        node_use.ptn_curie,
+                        row.go_id,
+                    )
+                    not in divergent_reported
+                ):
+                    divergent_reported.add((node_use.ptn_curie, row.go_id))
                     # Byte-identical across slices today, so this is unreachable
                     # now; without it a future release shipping divergent copies
                     # would make the figure depend on glob order, silently.
                     typer.echo(
                         f"note: {node_use.ptn_curie} {row.go_id} carries "
-                        f"differing seed sets across family slices "
+                        f"differing seed counts across family slices "
                         f"({depth[key]} vs {seeds}); using the larger",
                         err=True,
                     )
@@ -4584,11 +4593,12 @@ def panther_report_stats(
             match = family_re.match(sorted(use.declared_family_curies)[0])
             if not match:
                 continue
-            if match.group(2):
+            declared_at_subfamily = bool(match.group(2))
+            if declared_at_subfamily:
                 subfamily_level += 1
             else:
                 family_level += 1
-            family_uses.append(use)
+            family_uses.append((use, declared_at_subfamily))
 
     members = repo_root / "interpro" / "panther" / "panther-members.tsv"
     index = load_member_index(members)
@@ -4599,16 +4609,47 @@ def panther_report_stats(
     # Section 1's precision figures, from the validator's own predicate rather
     # than a second implementation of it. Counting these independently is how
     # the report came to publish 206 where the sweep warned 199.
-    single_subfamily = heterogeneous = 0
+    single_subfamily = heterogeneous = precision_checkable = 0
     proteins_by_family: dict[str, set] = {}
-    for use in family_uses:
-        resolvable = {a for a in use.representative_accessions if a in index}
-        for curie in use.declared_family_curies:
-            base_match = family_re.match(curie)
-            if base_match and not base_match.group(2):
-                proteins_by_family.setdefault(base_match.group(1), set()).update(
-                    resolvable
-                )
+    for use, declared_at_subfamily in family_uses:
+        # Attribute each member to the family the committed index says it is in,
+        # not to every family its descriptor declares. A descriptor may span
+        # families deliberately -- peroxisome-lifecycle declares PTHR12652 and
+        # PTHR20990 because PANTHER splits those paralogs, and says so in its own
+        # prose -- and unioning made each family look ambiguous on the other's
+        # proteins. That counted the descriptors most explicit about the split as
+        # evidence that ids cannot distinguish between them.
+        declared_bases = {
+            base_match.group(1)
+            for curie in use.declared_family_curies
+            if (base_match := family_re.match(curie)) and not base_match.group(2)
+        }
+        for accession in use.representative_accessions:
+            family_sf = index.get(accession)
+            if family_sf is None:
+                continue
+            base = family_sf.split(":", 1)[0]
+            if base in declared_bases:
+                # The index settles which declared family this member belongs to.
+                credit = {base}
+            else:
+                # The index places it outside every declared family. That is the
+                # UniProt/PAINT disagreement the sweep warns about separately
+                # (P08887 in PTHR23036 against a PAINT node in PTHR23037), not a
+                # multi-family split, and the module's grounding is the only
+                # claim available -- so it still counts toward what the declared
+                # id is being asked to cover. Dropping it would understate.
+                credit = declared_bases
+            for family in credit:
+                proteins_by_family.setdefault(family, set()).add(accession)
+        # Only family-level declarations can be narrowed; a subfamily-level one
+        # is already at the sharper level, so it belongs in neither half of the
+        # ratio. "Checkable" then separates "not a finding" from "could not be
+        # checked" -- 35 cited accessions resolve to no family at all.
+        if not declared_at_subfamily and any(
+            a in index for a in use.representative_accessions
+        ):
+            precision_checkable += 1
         case = subfamily_precision_case(use, index, subfamily_counts)
         if case is None:
             continue
@@ -4653,7 +4694,8 @@ def panther_report_stats(
     )
     typer.echo(
         f"| family-level groundings with all members in one subfamily | "
-        f"{single_subfamily} / {family_level} |"
+        f"{single_subfamily} / {precision_checkable} checkable "
+        f"(of {family_level} declared) |"
     )
     typer.echo(
         f"| ...in families split into {HETEROGENEOUS_FAMILY_SUBFAMILIES}+ subfamilies "

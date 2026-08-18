@@ -15,9 +15,9 @@ representatives. Generated against PANTHER 19.0.
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT node citations | 372 (of 195 distinct nodes) |
 | PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
-| family-level groundings with all members in one subfamily | 810 / 907 |
+| family-level groundings with all members in one subfamily | 810 / 907 checkable (of 907 declared) |
 | ...in families split into 20+ subfamilies (the advisory) | 199 |
-| family ids covering more than one distinct protein | 216 (over 531 proteins) |
+| family ids covering more than one distinct protein | 213 (over 528 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
 
@@ -94,9 +94,18 @@ it. Deriving them from the validator's own predicate is what makes the
 "same population" claim checkable instead of merely asserted.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
-that cannot distinguish between them than there are such ids** (scope table;
-counted as a family-level id used, across all modules, for more than one
-representative protein resolvable in the member index). The worst cases, among
+that cannot distinguish between them than there are such ids** (scope table).
+A member counts toward the family the committed index places it in; where the
+index places it outside every family the descriptor declares, the declared
+grounding stands. Both halves of that rule matter. Attributing a member to
+every declared family credited each with the others' proteins, so the two
+descriptors whose own prose says PANTHER splits these paralogs across families
+— and names which member is in which — were counted as evidence that ids cannot
+distinguish between proteins. Dropping those members instead understated it,
+discarding the UniProt/PAINT disagreements (P08887 classified in PTHR23036
+against a PAINT node in the declared PTHR23037) where the module's grounding is
+the only claim available. The first correction here made exactly that second
+error, and its cost was five family ids. The worst cases, among
 families PANTHER splits into 20+ subfamilies, by distinct proteins then
 subfamily count:
 
@@ -165,8 +174,8 @@ are emitted by nothing, so they would drift exactly as the table did.
 
 The scope-table row above gives both aggregations of that measure rather than
 picking one: **a slim majority of distinct (node, term) annotations rest on ≤3
-seed proteins**, and weighted by how often modules actually cite them, rather
-over a third. The first describes the evidence base, the second how much of
+seed proteins**, and weighted by how often modules actually cite them, two
+fifths. The first describes the evidence base, the second how much of
 the propagation in use rests on it. No node has zero seeds. Reconstructions
 this thin are weak support for propagating a specific function and are worth a
 second look. The counts are not repeated here — the table is the one place

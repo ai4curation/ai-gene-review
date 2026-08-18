@@ -55,7 +55,12 @@ def write_module(repo: Path, name: str, nodes: list[str]) -> None:
                                 "participant": {
                                     "family": {
                                         "ancestral_nodes": [
-                                            {"term": {"id": n, "label": n.split(":")[1]}}
+                                            {
+                                                "term": {
+                                                    "id": n,
+                                                    "label": n.split(":")[1],
+                                                }
+                                            }
                                             for n in nodes
                                         ]
                                     }
@@ -67,6 +72,57 @@ def write_module(repo: Path, name: str, nodes: list[str]) -> None:
             ],
         }
     }
+    (repo / "modules" / name).write_text(yaml.safe_dump(document))
+
+
+def write_obo(repo: Path, subfamilies: dict[str, int]) -> None:
+    """Write a PANTHER OBO with `count` subfamily stanzas per family.
+
+    load_subfamily_counts counts `id: PANTHER:PTHRn:SFm` lines, and an empty OBO
+    makes subfamily_precision_case return None on its first line -- which is why
+    the precision rows read zero in every fixture until this existed.
+    """
+    lines = ["format-version: 1.2", "ontology: panther", ""]
+    for family, count in subfamilies.items():
+        lines += ["[Term]", f"id: PANTHER:{family}", f"name: {family} FAMILY", ""]
+        for index in range(1, count + 1):
+            lines += [
+                "[Term]",
+                f"id: PANTHER:{family}:SF{index}",
+                f"name: {family} SUBFAMILY {index}",
+                "",
+            ]
+    (repo / "interpro" / "panther" / "panther.obo").write_text("\n".join(lines))
+
+
+def write_members(repo: Path, members: dict[str, str]) -> None:
+    """Write the accession -> family:subfamily index."""
+    rows = ["uniprot_accession\tpanther_family_sf"]
+    rows += [f"{accession}\t{family}" for accession, family in members.items()]
+    (repo / "interpro" / "panther" / "panther-members.tsv").write_text(
+        "\n".join(rows) + "\n"
+    )
+
+
+def write_family_module(
+    repo: Path, name: str, descriptors: list[tuple[list[str], list[str]]]
+) -> None:
+    """Write a module of family descriptors: (declared families, members)."""
+    annotons = [
+        {
+            "participant": {
+                "family": {
+                    "term": {"id": families[0], "label": "F"},
+                    "family_terms": [{"id": f, "label": "F"} for f in families[1:]],
+                    "representative_members": [
+                        {"term": {"id": f"UniProtKB:{a}", "label": a}} for a in accs
+                    ],
+                }
+            }
+        }
+        for families, accs in descriptors
+    ]
+    document = {"module": {"id": "m", "parts": [{"node": {"annotons": annotons}}]}}
     (repo / "modules" / name).write_text(yaml.safe_dump(document))
 
 
@@ -206,7 +262,7 @@ def test_duplicate_slices_with_divergent_seeds_are_reported(repo):
     write_module(repo, "a.yaml", ["PANTHER:PTN1"])
 
     output = run(repo)
-    assert "differing seed sets across family slices" in output
+    assert "differing seed counts across family slices" in output
     # Resolved to the better-supported copy, not to whichever was globbed last.
     assert "| PAINT annotations resting on <=3 seeds | 0 / 1 distinct" in output
 
@@ -224,3 +280,109 @@ def test_non_ibd_rows_are_excluded(repo):
     write_module(repo, "a.yaml", ["PANTHER:PTN1"])
 
     assert "| PAINT annotations resting on <=3 seeds | 1 / 1 distinct" in run(repo)
+
+
+def test_single_subfamily_and_heterogeneity_rows(repo):
+    """The precision rows, which read zero in every earlier fixture.
+
+    PTHR1 is split into 20 subfamilies (the advisory threshold) with both members
+    in one of them; PTHR2 into 3, so it counts toward the population but not the
+    advisory. PTHR3's members are spread, so the family really is the level that
+    covers them and it is not a precision case at all.
+    """
+    write_obo(repo, {"PTHR1": 20, "PTHR2": 3, "PTHR3": 5})
+    write_members(
+        repo,
+        {
+            "A": "PTHR1:SF1",
+            "B": "PTHR1:SF1",
+            "C": "PTHR2:SF2",
+            "D": "PTHR3:SF1",
+            "E": "PTHR3:SF2",
+        },
+    )
+    write_family_module(
+        repo,
+        "a.yaml",
+        [
+            (["PANTHER:PTHR1"], ["A", "B"]),
+            (["PANTHER:PTHR2"], ["C"]),
+            (["PANTHER:PTHR3"], ["D", "E"]),
+        ],
+    )
+
+    output = run(repo)
+    assert "| declared at family level | 3 |" in output
+    assert (
+        "with all members in one subfamily | 2 / 3 checkable (of 3 declared) |"
+        in output
+    )
+    assert "subfamilies (the advisory) | 1 |" in output
+
+
+def test_a_subfamily_level_declaration_is_not_a_precision_case(repo):
+    """Already at the sharper level, so there is nothing to narrow."""
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1:SF1"], ["A"])])
+
+    output = run(repo)
+    assert "| declared at subfamily level | 1 |" in output
+    # Subfamily-level declarations belong in neither half of the ratio.
+    assert (
+        "with all members in one subfamily | 0 / 0 checkable (of 0 declared) |"
+        in output
+    )
+
+
+def test_a_two_family_descriptor_does_not_make_each_family_ambiguous(repo):
+    """The misattribution: crediting every member to every declared family.
+
+    peroxisome-lifecycle declares PTHR12652 and PTHR20990 together because
+    PANTHER splits those paralogs -- and says so in its own prose. Unioning made
+    each family look ambiguous on the other's proteins, counting the descriptors
+    most explicit about the split as evidence that ids cannot distinguish
+    between proteins. Only PTHR1 genuinely covers two.
+    """
+    write_obo(repo, {"PTHR1": 3, "PTHR2": 3})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF2", "C": "PTHR2:SF1"})
+    write_family_module(
+        repo, "a.yaml", [(["PANTHER:PTHR1", "PANTHER:PTHR2"], ["A", "B", "C"])]
+    )
+
+    assert "| family ids covering more than one distinct protein | 1 (over 2" in run(
+        repo
+    )
+
+
+def test_a_member_outside_every_declared_family_still_counts(repo):
+    """The UniProt/PAINT disagreement, which must not be dropped.
+
+    P08887's sequence classification puts it in PTHR23036 while its PAINT node
+    is in the declared PTHR23037. The index cannot settle it, so the module's
+    grounding is the only claim available and the declared id is still being
+    asked to cover the protein. Excluding it understated the row.
+    """
+    write_obo(repo, {"PTHR1": 3, "PTHR9": 3})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR9:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A", "B"])])
+
+    assert "| family ids covering more than one distinct protein | 1 (over 2" in run(
+        repo
+    )
+
+
+def test_the_divergence_note_prints_once_per_annotation(repo):
+    """Not once per citation -- a node cited 29 times printed 29 identical notes."""
+    write_slice(
+        repo,
+        "PTHR1",
+        [("PTN1", "GO:1", "IBD", "|".join(f"UniProtKB:S{i}" for i in range(9)))],
+    )
+    write_slice(repo, "PTHR2", [("PTN1", "GO:1", "IBD", "UniProtKB:A|UniProtKB:B")])
+    for name in ("a.yaml", "b.yaml", "c.yaml"):
+        write_module(repo, name, ["PANTHER:PTN1"])
+
+    output = run(repo)
+    assert output.count("differing seed counts") == 1
+    assert "| PAINT node citations | 3 (of 1 distinct nodes) |" in output
