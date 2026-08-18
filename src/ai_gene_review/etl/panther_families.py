@@ -470,11 +470,22 @@ def build_member_index(
     accessions: Set[str],
     classification_paths: Iterable[Path],
 ) -> Dict[str, str]:
-    """Build a pruned accession -> family index from organism classifications.
+    """Build an accession -> family index from organism classifications.
 
-    Only ``accessions`` actually cited in the repository are retained, keeping
-    the committed artifact small (a few thousand rows rather than the ~1.5M
-    proteins PANTHER classifies).
+    Every accession PANTHER classifies for these organisms is retained, not just
+    the ones currently cited. Pruning to cited accessions kept the artifact small
+    but made it lag the repository by construction: a PR citing a new protein
+    found the index silent about exactly the protein under review, so the
+    member-consistency check -- the only one that can catch a guessed family id --
+    was skipped. The full 21-organism index is ~300k rows and under 7 MB, against
+    a 14 MB ``panther.obo`` already committed beside it.
+
+    ``accessions`` no longer filters the result; it is retained so callers can
+    report which cited accessions the organism files do not cover and must be
+    resolved through the UniProt fallback instead. That set is not small or
+    exotic: PANTHER publishes no *P. putida* sequence classification at all
+    (its ``pseudomonas`` file is *P. aeruginosa*), and P. putida is the most
+    heavily curated organism in this repository.
 
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
@@ -482,8 +493,11 @@ def build_member_index(
     ...     "HUMAN|UniProtKB=O14521\\tO14521\\tSDHD\\tPTHR13337:SF6\\tSDH\\n"
     ...     "HUMAN|UniProtKB=P99999\\tP99999\\tOTHER\\tPTHR1:SF1\\tX\\n"
     ... )
-    >>> build_member_index({"O14521"}, [d / "org"])
-    {'O14521': 'PTHR13337:SF6'}
+    >>> index = build_member_index({"O14521"}, [d / "org"])
+    >>> index["O14521"]
+    'PTHR13337:SF6'
+    >>> index["P99999"]  # retained although never cited
+    'PTHR1:SF1'
     """
     index: Dict[str, str] = {}
     for path in classification_paths:
@@ -493,8 +507,7 @@ def build_member_index(
         for accession, family_sf in parse_sequence_classification(
             path.read_text(errors="replace").splitlines()
         ).items():
-            if accession in accessions:
-                index.setdefault(accession, family_sf)
+            index.setdefault(accession, family_sf)
     return index
 
 

@@ -4066,6 +4066,12 @@ def refresh_panther_members(
 
     index = build_member_index(accessions, paths)
     from_files = len(index)
+    # Coverage of what we CITE is the number that matters, and it is not the
+    # size of the index: the index now carries every protein these organisms
+    # classify, while the accessions we cite are mostly from an organism PANTHER
+    # does not publish at all. Reporting len(index)/len(accessions) would print
+    # a ratio far above 1 and read as success.
+    covered_from_files = len(accessions & set(index))
 
     if not no_uniprot_fallback:
         unresolved = accessions - set(index)
@@ -4083,9 +4089,14 @@ def refresh_panther_members(
         consulted_uniprot=not no_uniprot_fallback,
     )
     typer.echo(
-        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
+        f"✓ Wrote {out_path}: {len(index)} accessions indexed "
         f"({from_files} from {len(paths)} organism classification(s), "
-        f"{len(index) - from_files} from UniProt); "
+        f"{len(index) - from_files} from UniProt)."
+    )
+    typer.echo(
+        f"  cited by modules/: {len(accessions) - len(unresolved)}/{len(accessions)} "
+        f"resolved ({covered_from_files} from organism files, "
+        f"{len(accessions) - len(unresolved) - covered_from_files} from UniProt); "
         f"{len(unresolved)} unresolved, recorded in the file."
     )
 

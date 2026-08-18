@@ -149,13 +149,24 @@ def test_load_member_index_missing_file_is_empty(tmp_path):
     assert load_member_index(tmp_path / "absent.tsv") == {}
 
 
-def test_build_member_index_prunes_to_requested_accessions(tmp_path):
+def test_build_member_index_retains_uncited_accessions(tmp_path):
+    """The index must not be pruned to what is currently cited.
+
+    Pruning made the artifact lag the repository by construction: a PR citing a
+    new protein found the index silent about exactly the protein under review,
+    so the member-consistency check -- the only one that can catch a guessed
+    family id -- was skipped rather than run. Across the open-PR backlog that
+    silently disabled 78% of those checks.
+    """
     source = tmp_path / "org"
     source.write_text(
         "HUMAN|UniProtKB=O14521\tO14521\tSDHD\tPTHR13337:SF6\tSDH\n"
         "HUMAN|UniProtKB=P99999\tP99999\tOTHER\tPTHR1:SF1\tX\n"
     )
-    assert build_member_index({"O14521"}, [source]) == {"O14521": "PTHR13337:SF6"}
+    assert build_member_index({"O14521"}, [source]) == {
+        "O14521": "PTHR13337:SF6",
+        "P99999": "PTHR1:SF1",
+    }
 
 
 def test_build_member_index_tolerates_missing_files(tmp_path):

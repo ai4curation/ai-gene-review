@@ -1137,11 +1137,19 @@ def validate_family_members(
             if accession in member_index
         }
         if not known:
-            warnings.append(
+            # An ERROR, not a warning. This is the check that catches a guessed
+            # family id, and it is silently skipped exactly when it is most
+            # needed: new curation cites new proteins, which are by definition
+            # the ones missing from the index. Degrading to a warning meant 78%
+            # of these checks were dark across the open-PR backlog while the
+            # sweep reported zero grounding failures. An index that does not
+            # cover what we cite is a defect in the index, so it fails the build
+            # until `just refresh-panther-members` resolves the accession.
+            errors.append(
                 f"{use.path}: none of the representative members "
                 f"({_format_limited(set(use.representative_accessions))}) are in "
-                "interpro/panther/panther-members.tsv, so family membership was "
-                "not checked; refresh with `just refresh-panther-members`"
+                "interpro/panther/panther-members.tsv, so family membership "
+                "could not be checked; run `just refresh-panther-members`"
             )
             continue
 

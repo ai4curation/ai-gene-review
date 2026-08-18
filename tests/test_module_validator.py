@@ -906,15 +906,27 @@ def test_validate_family_members_matches_on_family_when_declared_as_subfamily():
     assert errors == []
 
 
-def test_validate_family_members_warns_when_accession_is_unindexed():
-    """An uncited protein must not fail the build, only warn."""
+def test_validate_family_members_fails_when_accession_is_unindexed():
+    """An unindexed protein must FAIL, not warn.
+
+    This is the check that catches a guessed family id, and warning here made it
+    silently skip exactly when it matters: new curation cites new proteins, so
+    the unindexed case IS the under-review case. Measured across the open-PR
+    backlog, 78% of these checks never ran while the sweep reported zero
+    grounding failures -- a clean bill of health from a check that was dark.
+
+    An index that does not cover what we cite is a defect in the index, and
+    `just refresh-panther-members` resolves the accession from the PR branch's
+    own modules/, so the fix is always available to whoever hits the error.
+    """
     uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "Q00000")))
 
     errors, warnings = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
 
-    assert errors == []
-    assert len(warnings) == 1
-    assert "Q00000" in warnings[0]
+    assert warnings == []
+    assert len(errors) == 1
+    assert "Q00000" in errors[0]
+    assert "refresh-panther-members" in errors[0]
 
 
 def test_validate_terms_skips_ptn_ids():
