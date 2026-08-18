@@ -4487,6 +4487,7 @@ def panther_report_stats(
     Example:
         just panther-report-stats
     """
+    import collections
     import re
 
     import yaml
@@ -4607,6 +4608,7 @@ def panther_report_stats(
     # than a second implementation of it. Counting these independently is how
     # the report came to publish 206 where the sweep warned 199.
     single_subfamily = heterogeneous = precision_checkable = 0
+    precision_status: collections.Counter = collections.Counter()
     proteins_by_family: dict[str, set] = {}
     for use, _declared_at_subfamily in family_uses:
         # Attribute each member to the family the committed index says it is in,
@@ -4646,6 +4648,7 @@ def panther_report_stats(
         # reports separately) and proteins PANTHER assigns no subfamily, so its
         # complement was not the members-spread population it claimed to be.
         case = subfamily_precision_case(use, index, subfamily_counts)
+        precision_status[case.status.value] += 1
         if case.status.is_checkable:
             precision_checkable += 1
         if case.status is not SubfamilyPrecision.SINGLE_SUBFAMILY:
@@ -4697,6 +4700,17 @@ def panther_report_stats(
     typer.echo(
         f"| ...in families split into {HETEROGENEOUS_FAMILY_SUBFAMILIES}+ subfamilies "
         f"(the advisory) | {heterogeneous} |"
+    )
+    # Emitting the whole partition keeps the report from quoting a breakdown
+    # that nothing computes -- the exact failure this command exists to stop.
+    typer.echo(
+        "| ...why the rest are not findings | "
+        + ", ".join(
+            f"{count} {status.replace('_', ' ')}"
+            for status, count in sorted(precision_status.items(), key=lambda kv: -kv[1])
+            if status != "single_subfamily"
+        )
+        + " |"
     )
     typer.echo(
         f"| family ids covering more than one distinct protein | {len(ambiguous)} "

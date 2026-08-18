@@ -457,3 +457,44 @@ def test_a_mixed_granularity_descriptor_is_not_checkable(repo):
     )
 
     assert "with all members in one subfamily | 0 / 0 checkable" in run(repo)
+
+
+def test_a_member_with_no_subfamily_blocks_the_narrowing(repo):
+    """histidine_catabolism's shape: some members subfamilied, one bare.
+
+    Bare members were discarded before the count, so the remainder was reported
+    as a clean finding and the advisory asserted "every representative member
+    here is in SF1" about a protein PANTHER assigns no subfamily. Two such
+    descriptors sat inside the published advisory, recommending a narrowing that
+    would drop the module's own exemplar.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF1", "C": "PTHR1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A", "B", "C"])])
+
+    output = run(repo)
+    # Checkable -- narrowing has a real answer, and the answer is no.
+    assert (
+        "with all members in one subfamily | 0 / 1 checkable (of 1 declared) |"
+        in output
+    )
+    assert "subfamilies (the advisory) | 0 |" in output
+
+
+def test_members_sharing_one_subfamily_are_still_a_finding(repo):
+    """Guards the miscount that read every shared subfamily as partial coverage.
+
+    Comparing DISTINCT subfamilies against member count misreads three members
+    in one subfamily as "some unassigned" -- it reported 91 such descriptors
+    where there are 5, and silently cut the finding count by 79.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF1", "C": "PTHR1:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A", "B", "C"])])
+
+    output = run(repo)
+    assert (
+        "with all members in one subfamily | 1 / 1 checkable (of 1 declared) |"
+        in output
+    )
+    assert "subfamilies (the advisory) | 1 |" in output

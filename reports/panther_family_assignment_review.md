@@ -15,8 +15,9 @@ representatives. Generated against PANTHER 19.0.
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT node citations | 372 (of 195 distinct nodes) |
 | PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
-| family-level groundings with all members in one subfamily | 810 / 892 checkable (of 907 declared) |
-| ...in families split into 20+ subfamilies (the advisory) | 199 |
+| family-level groundings with all members in one subfamily | 806 / 892 checkable (of 907 declared) |
+| ...in families split into 20+ subfamilies (the advisory) | 197 |
+| ...why the rest are not findings | 101 declared at subfamily, 81 members spread, 11 grounding inconsistent, 5 some members unassigned, 4 no subfamily assigned |
 | family ids covering more than one distinct protein | 213 (over 528 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
@@ -94,15 +95,25 @@ it. Deriving them from the validator's own predicate is what makes the
 "same population" claim checkable instead of merely asserted.
 
 The denominator is the descriptors where narrowing had a real answer, and its
-complement is then exactly the 82 whose members span subfamilies — where the
-family genuinely is the level that covers them. Getting that right meant
-letting the predicate report *which* of its outcomes it reached instead of
-collapsing them to a yes/no: a first attempt counted family-level-with-a-
-resolvable-member, which also swept in 11 grounding-inconsistent descriptors
-(a correctness finding the sweep reports separately, including the
-`PTHR23037` case discussed below) and 4 whose members PANTHER assigns no
-subfamily at all, so there is nothing to narrow to. Those 15 are not findings
-and not failures; they are cases where the question cannot be put.
+complement is those where the answer is no — the family is the level that
+covers every member, either because they span subfamilies or because one has
+none to narrow to. The whole partition is a scope-table row, so the breakdown
+is checkable rather than quoted.
+
+Getting there meant letting the predicate report *which* outcome it reached
+instead of collapsing them to a yes/no, and two attempts got it wrong in
+opposite directions. The first counted family-level-with-a-resolvable-member,
+sweeping in grounding-inconsistent descriptors (a correctness finding the sweep
+reports separately, including the `PTHR23037` case below) and members PANTHER
+assigns no subfamily at all. The second discarded a member with no subfamily
+and reported the remainder as a clean finding — so the advisory told a curator
+that *every* representative member sits in one subfamily while naming a protein
+PANTHER puts in none, and the narrowing it recommended would have dropped a
+module's own *P. putida* exemplar. Two such advisories were inside the
+published count, which is why it is now 197. A third error, caught in
+testing, compared distinct subfamilies against member count and so misread
+every descriptor whose members legitimately share a subfamily as partially
+unassigned, cutting the finding count by 79.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
 that cannot distinguish between them than there are such ids** (scope table).

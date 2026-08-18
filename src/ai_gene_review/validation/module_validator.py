@@ -978,6 +978,7 @@ class SubfamilyPrecision(str, Enum):
 
     SINGLE_SUBFAMILY = "single_subfamily"
     MEMBERS_SPREAD = "members_spread"
+    SOME_MEMBERS_UNASSIGNED = "some_members_unassigned"
     NO_SUBFAMILY_ASSIGNED = "no_subfamily_assigned"
     GROUNDING_INCONSISTENT = "grounding_inconsistent"
     NO_MEMBER_RESOLVABLE = "no_member_resolvable"
@@ -994,6 +995,7 @@ class SubfamilyPrecision(str, Enum):
         return self in (
             SubfamilyPrecision.SINGLE_SUBFAMILY,
             SubfamilyPrecision.MEMBERS_SPREAD,
+            SubfamilyPrecision.SOME_MEMBERS_UNASSIGNED,
         )
 
 
@@ -1047,11 +1049,22 @@ def subfamily_precision_case(
         return verdict(SubfamilyPrecision.NO_MEMBER_RESOLVABLE)
     if not declared_bases & {family_sf.split(":", 1)[0] for family_sf in known.values()}:
         return verdict(SubfamilyPrecision.GROUNDING_INCONSISTENT)
-    member_subfamilies = {v for v in known.values() if ":" in v}
+    # Count MEMBERS with a subfamily, not distinct subfamilies: several members
+    # legitimately share one, so comparing the distinct-subfamily count against
+    # the member count misreads every such descriptor as partially unassigned.
+    subfamilied = {a: v for a, v in known.items() if ":" in v}
+    member_subfamilies = set(subfamilied.values())
     if not member_subfamilies:
         # PANTHER assigns these proteins no subfamily, so there is nothing to
         # narrow to -- 20 rows in panther-members.tsv carry a bare family.
         return verdict(SubfamilyPrecision.NO_SUBFAMILY_ASSIGNED)
+    if len(subfamilied) < len(known):
+        # Some members are in a subfamily and some have none. Discarding the
+        # bare ones and reporting the remainder as a clean finding made the
+        # advisory claim "every representative member here is in SFn" about a
+        # protein PANTHER puts in no subfamily at all -- and recommending that
+        # narrowing would drop the module's own exemplar.
+        return verdict(SubfamilyPrecision.SOME_MEMBERS_UNASSIGNED)
     if len(member_subfamilies) > 1:
         return verdict(SubfamilyPrecision.MEMBERS_SPREAD)
     subfamily = next(iter(member_subfamilies))
