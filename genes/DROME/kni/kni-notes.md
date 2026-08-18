@@ -17,6 +17,15 @@ Architecture (from UniProt P10734 features):
   the NR0 ("knirps-like") subfamily: they retained the NR-type DBD but lost the LBD, so they act
   as **ligand-independent / orphan** factors, not hormone-activated receptors.
 - UniProt SIMILARITY: "Belongs to the nuclear hormone receptor family. NR0 subfamily."
+- PANTHER family: `PTHR48092`, cross-referenced from the UniProt record itself
+  (`kni-uniprot.txt:175`, `DR   PANTHER; PTHR48092; KNIRPS-RELATED PROTEIN-RELATED; 1.`), and
+  fetched to `interpro/panther/PTHR48092/`. Note the naming discrepancy: InterPro/PANTHER's own
+  entry name for this family is "Nuclear hormone receptor family NR3 subfamily" (integrated into
+  IPR050200), which does **not** match the NR0A subfamily assignment UniProt gives kni. The
+  UniProt `DR` line is what places kni in this family; the family's NR3 name reflects the
+  vertebrate steroid receptors that dominate it, and is a further illustration of why the
+  vertebrate-receptor IBAs (`nuclear receptor activity`, `estrogen response element binding`)
+  over-propagate onto this LBD-less orphan factor.
 - UniProt FUNCTION: "Transcriptional repressor. Binds to multiple sites in the eve stripe 3
   enhancer element. Plays an essential role in the segmentation process both by refining the
   expression patterns of gap genes and by establishing pair-rules stripes of gene expression."
@@ -111,23 +120,30 @@ is about **endoreduplication (endocycles)**, not mitosis, so a more accurate ter
 
 ## Physical interactions / protein binding annotations
 
-Four bare `GO:0005515 protein binding` (IPI) annotations exist. "protein binding" is uninformative;
-where the partner is known it should be replaced with a more specific MF:
-- PMID:10982842 (`DNA-binding transcription factor binding`, GO:0140297) documents the **dCtBP**
-  interaction. dCtBP is a **corepressor**, so the more accurate MF is **GO:0001222 transcription
-  corepressor binding**.
-- PMID:19805071 documents the **Groucho** interaction (also a corepressor) → GO:0001222.
-- PMID:30995488 is a genome-wide **TF-TF Y2H interactome**; kni's partners in it are sequence-specific
-  TFs, so `GO:0140297 DNA-binding transcription factor binding` is the appropriate specific MF.
-  [PMID:30995488 "we identified 1,983 protein-protein interactions (PPIs)"]
-- PMID:14605208 (Giot) is a general two-hybrid **proteome** map; partner not specified in the cached
-  record; keep as uninformative non-core.
+Several bare `GO:0005515 protein binding` (IPI) annotations exist. "protein binding" is
+uninformative, and in every case here the partner **is** known — the GOA `WITH/FROM` column names
+it, and `kni-uniprot.txt` resolves the accession. The `CC INTERACTION` block lists exactly two
+physical partners for kni: **dCtBP (O46036)** and **gro/Groucho (P16371)** (`kni-uniprot.txt:97-98`).
+Partner identity is therefore curated input data, not something to be recovered from an abstract, so
+none of these rows needs to be left UNDECIDED:
+- PMID:10982842 (`WITH/FROM = FB:FBgn0020496`) documents the **dCtBP** interaction. dCtBP is a
+  **corepressor**, so the accurate MF is **GO:0001222 transcription corepressor binding**.
+- PMID:19805071 (`WITH/FROM = UniProtKB:P16371`) documents the **Groucho** interaction (also a
+  corepressor) → GO:0001222.
+- PMID:30995488 is a genome-wide Y2H interactome, but its `WITH/FROM` for kni is
+  `UniProtKB:O46036` = **dCtBP**, not a sequence-specific TF — so GO:0140297 would be wrong here and
+  the correct term is **GO:0001222**. The paper itself places non-DNA-binding cofactors outside the
+  screened set.
+  [PMID:30995488 "a broader PPI screen including non-DNA-binding cofactors and
+  chromatin-associated proteins may reveal additional co-regulatory interactions"]
+- PMID:14605208 (Giot) is a general two-hybrid **proteome** map, but its `WITH/FROM` is likewise
+  `UniProtKB:O46036` = **dCtBP** → GO:0001222.
   [PMID:14605208 "we present a two-hybrid-based protein-interaction map of the fly proteome"]
-- PMID:17972097 is an **Arabidopsis ANGUSTIFOLIA vs dCtBP** paper (abstract-only in cache). It
-  establishes that dCtBP is "a transcriptional corepressor for ... DNA-binding repressors containing
-  the short amino acid motif, PXDLS" (kni is such a PXDLS repressor), but I cannot verify from the
-  cached abstract that this paper reports a *direct kni* interaction → UNDECIDED (per project rule:
-  do not assert mis-attribution for an experimental IPI whose full text I have not read).
+- PMID:17972097 is an **Arabidopsis ANGUSTIFOLIA vs dCtBP** paper (abstract-only in cache) whose
+  `WITH/FROM` is `UniProtKB:O46036` = **dCtBP** → GO:0001222. The abstract independently establishes
+  that dCtBP is "a transcriptional corepressor for ... DNA-binding repressors containing the short
+  amino acid motif, PXDLS", and kni is such a PXDLS repressor, so the assay context matches the
+  curated partner.
   [PMID:17972097 "Drosophila CtBP (dCtBP) functions as a transcriptional corepressor for
   deoxyribonucleic acid (DNA)-binding repressors containing the short amino acid motif, PXDLS"]
 

@@ -135,10 +135,15 @@ Nucleus (UniProt PROSITE-derived; bHLH DNA-binding TF). GOA carries nucleus by I
   PMID:15848387 (available) does not mention "hairy" (0 occurrences); the paper foregrounds btl,
   pointed, kni/knrl. Cannot verify the supporting evidence for hairy from the cache — mark
   UNDECIDED rather than accept or remove an experimental IMP.
-- **Bare GO:0005515 protein binding IPIs**: uninformative; where the partner is Groucho/CtBP →
-  corepressor binding (GO:0001222); where the partner is an E3 ligase (Topors, Dgrn) → ubiquitin
-  protein ligase binding (GO:0031625); Ubx (Hox) partner kept as non-core; unverifiable ones
-  (PMID:17898168 Myc-Groucho abstract-only; PMID:19805071 a Knirps-focused paper) → UNDECIDED.
+- **Bare GO:0005515 protein binding IPIs**: uninformative, but the partner is always named by the
+  GOA `WITH/FROM` column and resolved by the `CC INTERACTION` block of `hairy-uniprot.txt`
+  (CtBP `O46036` at line 126; gro `P16371` at line 128; gro isoform 2 `P16371-2` at line 129).
+  Where the partner is Groucho/CtBP → corepressor binding (GO:0001222); where the partner is an
+  E3 ligase (Topors, Dgrn) → ubiquitin protein ligase binding (GO:0031625); Ubx (Hox) partner kept
+  as non-core. The two rows previously left UNDECIDED are covered by the same rule and should not
+  have been: PMID:17898168 has `WITH/FROM = UniProtKB:P16371-2` and PMID:19805071 has
+  `WITH/FROM = UniProtKB:P16371`, both Groucho → GO:0001222. Being unable to confirm an interaction
+  from an abstract is irrelevant when the partner is supplied as curated data.
 
 ## 8. Core function summary
 1. **Sequence-specific DNA-binding transcriptional repressor** (bHLH-O; N-box/class-C sites) —

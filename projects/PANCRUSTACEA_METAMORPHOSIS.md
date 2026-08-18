@@ -138,15 +138,15 @@ just fetch-gene DROME kni      # then deep research + notes, then the ai-review.
 
 **IN_PROGRESS.** Two candidate transcription factors reviewed so far:
 
-- **knirps (*kni*, P10734)** — 29 annotations adjudicated (17 ACCEPT, 6 MODIFY,
-  4 KEEP_AS_NON_CORE, 1 REMOVE, 1 UNDECIDED). Notable: removed an
+- **knirps (*kni*, P10734)** — 29 annotations adjudicated (17 ACCEPT, 8 MODIFY,
+  3 KEEP_AS_NON_CORE, 1 REMOVE). Notable: removed an
   over-propagated `intracellular receptor signaling pathway` term (knirps is a
   ligand-independent orphan NR that lost its ligand-binding domain) and
   redirected the IBA `nuclear receptor activity` / `estrogen response element
   binding` terms and the bare `protein binding` IPIs to informative repressor /
   corepressor-binding terms.
-- **hairy (*h*, P14003)** — 45 annotations adjudicated (28 ACCEPT, 7
-  KEEP_AS_NON_CORE, 6 MODIFY, 3 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED). Notable:
+- **hairy (*h*, P14003)** — 45 annotations adjudicated (28 ACCEPT, 8 MODIFY, 7
+  KEEP_AS_NON_CORE, 1 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED). Notable:
   resolved the `protein binding` IPIs to STUbL (Topors/Degringolade) and Groucho
   corepressor interactions, and flagged a distal `membrane organization` term as
   over-annotation of a nuclear repressor.
