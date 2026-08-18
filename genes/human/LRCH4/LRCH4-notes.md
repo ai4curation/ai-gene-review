@@ -98,6 +98,12 @@ non-core.
   Searches of the full article for LRCH4, O75427, LRN and LRRN aliases found no LRCH4
   evidence, so the PML-body citation is a source miscitation rather than an LRCH4 nuclear
   function.
+- A live QuickGO check on 2026-08-18 returned the mouse source rows
+  `Q921G6 / GO:0001765 / IDA / PMID:16449650` and
+  `Q921G6 / GO:0034123 / IDA / PMID:16449650`. Thus the source miscitation is present on
+  the current mouse raft-assembly and TLR-signaling rows as well as on the human PML-body
+  chain. PMID:30523158 independently supports the mouse raft and TLR biology, but does
+  not repair those mechanical source records.
 - PMID:9799793 discovered the chromosome 7q22 locus but only reported sequence similarity:
   [PMID:9799793, "Two genes showed weak similarity to an insulin-like receptor and a
   neuronal protein with a leucine-rich amino-terminal domain."] It does not experimentally
