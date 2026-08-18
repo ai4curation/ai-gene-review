@@ -222,7 +222,9 @@ GO_BRANCH_CONSTRAINTS: Dict[str, GoBranchConstraint] = {
     "cellular_components": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
-    "source_location": GoBranchConstraint("GO:0110165", "cellular anatomical entity"),
+    "source_location": GoBranchConstraint(
+        "GO:0110165", "cellular anatomical entity"
+    ),
     "destination_location": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
@@ -353,9 +355,7 @@ def iter_typed_go_terms(obj: object, path: str = "$") -> Iterator[TypedGoTerm]:
                     if not isinstance(descriptor, dict):
                         continue
                     descriptor_path = (
-                        f"{child_path}[{index}]"
-                        if isinstance(value, list)
-                        else child_path
+                        f"{child_path}[{index}]" if isinstance(value, list) else child_path
                     )
                     term = descriptor.get("term")
                     if (
@@ -969,13 +969,15 @@ class SubfamilyPrecision(str, Enum):
     subfamily.
 
     Note what a missing subfamily does and does not mean. The index records what
-    the consulted source returned, and a bare family row can only arrive via the
-    UniProt cross-reference fallback (``_best_panther_xref``), used for organisms
-    PANTHER does not publish directly -- every bare row today is such an
-    organism. So it means "no subfamily recorded", not "PANTHER assigns none".
-    Declining to recommend a narrowing that would drop a member you cannot place
-    is right either way, which is why these are named for the record rather than
-    for a verdict PANTHER has not given.
+    the consulted source returned, so a bare family row means no subfamily was
+    *recorded* -- not that PANTHER assigns none. Both resolution paths admit such
+    a row (``parse_sequence_classification`` keeps a bare family deliberately,
+    its guard matching ``FAMILY_RE`` as well as ``SUBFAMILY_RE``; and
+    ``_best_panther_xref`` falls back to one when a UniProt record carries no
+    ``:SF`` cross-reference), and the artifact does not record which produced any
+    given row. Declining to recommend a narrowing that would drop a member you
+    cannot place is right either way, which is why these are named for the record
+    rather than for a verdict PANTHER has not given.
     """
 
     SINGLE_SUBFAMILY = "single_subfamily"
@@ -991,9 +993,10 @@ class SubfamilyPrecision(str, Enum):
     def is_checkable(self) -> bool:
         """True when narrowing had a real answer, either way.
 
-        This is the honest denominator for the precision ratio. Its complement
-        is the descriptors where the answer is no: MEMBERS_SPREAD plus
-        SOME_MEMBERS_UNPLACED, both meaning no subfamily covers every member.
+        This is the honest denominator for the precision ratio. Within it, the
+        descriptors that are not SINGLE_SUBFAMILY are MEMBERS_SPREAD plus
+        SOME_MEMBERS_UNPLACED -- no *recorded* subfamily covers every member.
+        The statuses outside it are the ones where the question cannot be put.
         """
         return self in (
             SubfamilyPrecision.SINGLE_SUBFAMILY,
@@ -1600,7 +1603,9 @@ def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchRe
                 return "not_found"
             if curie == root_id:
                 return "not_in_branch"
-            ancestors = set(go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"]))
+            ancestors = set(
+                go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
+            )
             return "ok" if root_id in ancestors else "not_in_branch"
         except Exception:  # noqa: BLE001 - external system
             return "unavailable"

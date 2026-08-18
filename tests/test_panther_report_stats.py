@@ -414,9 +414,9 @@ def test_a_member_with_no_subfamily_is_not_checkable(repo):
 
     dtdp_l_rhamnose_biosynthesis declares PTHR43000 whose sole member Q88LZ1 is
     indexed without a :SF; 20 rows of panther-members.tsv are this shape. The
-    blank means the consulted source returned no subfamily -- every such row
-    arrives via the UniProt cross-reference fallback, for organisms PANTHER does
-    not publish directly -- not that PANTHER assigns none.
+    blank means the consulted source recorded no subfamily, not that PANTHER
+    assigns none -- both resolution paths admit a bare row and the artifact does
+    not say which produced one.
     """
     write_obo(repo, {"PTHR1": 20})
     write_members(repo, {"A": "PTHR1"})
@@ -526,10 +526,16 @@ def test_the_partition_row_covers_only_family_level_statuses(repo):
     )
 
     output = run(repo)
-    assert "| ...why the other 2 family-level ones are not | " in output
-    assert "1 members spread" in output
-    assert "1 grounding inconsistent" in output
-    assert "declared at subfamily," not in output
+    row = next(
+        line for line in output.splitlines() if "family-level ones are not" in line
+    )
+    # Assert against the row itself: "declared at subfamily" also appears in the
+    # scope table's own count row, and a substring check over the whole output
+    # would pass or fail for the wrong reason.
+    assert row == (
+        "| ...why the other 2 family-level ones are not | "
+        "1 members spread, 1 grounding inconsistent |"
+    )
 
 
 def test_no_member_resolvable_is_not_checkable(repo):

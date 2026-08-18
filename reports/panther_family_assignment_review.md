@@ -116,17 +116,22 @@ members legitimately share a subfamily as partially unplaced, cutting the
 finding count by 79.
 
 A missing subfamily is worth stating precisely, because the whole judgement
-rests on it. The index records what the consulted source returned, and a
-bare-family row can only arrive through the UniProt cross-reference fallback,
-used for organisms PANTHER does not publish directly — every bare row today is
-such an organism, and in all the partial cases the unplaced member is the
-*P. putida* one while its placed co-members are *E. coli*, human or
-*P. aeruginosa*. So the blank means "no subfamily recorded", not "PANTHER
-assigns none": if it is a cross-reference gap, `histidine_catabolism` is a
-genuine finding after all. Declining to recommend a narrowing that would drop a
-member you cannot place is right under either reading, which is why these
-outcomes are named for the record rather than for a verdict PANTHER has not
-given.
+rests on it. The index records what the consulted source returned, so a
+bare-family row means no subfamily was *recorded* — not that PANTHER assigns
+none. Which of the two resolution paths produced any given row is not recoverable
+from the artifact, and both admit bare rows: `parse_sequence_classification`
+keeps them deliberately, and the UniProt cross-reference fallback emits one when
+a record carries no `:SF`. Nor does the organism account for it — 346 of the 360
+*P. putida* accessions in the index do carry a subfamily. So if a particular
+blank is a gap rather than a verdict, `histidine_catabolism` is a genuine finding
+after all. Declining to recommend a narrowing that would drop a member you cannot
+place is right under either reading, which is why these outcomes are named for
+the record rather than for a verdict PANTHER has not given.
+
+An earlier revision of this paragraph asserted the fallback as the sole
+mechanism and invoked organisms PANTHER does not publish. Both were wrong, and
+checkably so from this repo — the same overreach the rename had just removed one
+field over.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
 that cannot distinguish between them than there are such ids** (scope table).
