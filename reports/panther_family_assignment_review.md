@@ -14,6 +14,7 @@ representatives. Generated against PANTHER 19.0.
 | declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT node citations | 372 (of 195 distinct nodes) |
+| ...resting on <=3 seeds for some annotation | 100 citations / 76 distinct nodes |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
 
@@ -122,15 +123,24 @@ consistent with what PAINT struck out:
 Smoothened losing its ancestral Wnt functions while retaining Hh signalling is
 exactly the evolutionary story the node encodes, and the module reflects it.
 
-**Evidence depth.** 82 of 372 node *citations* rest on a reconstruction from
-≤3 seed proteins (22%). Counted by distinct node — the better measure of how
-much of the evidence base is thin, since PTN001230349 alone is cited 29 times —
-it is 64 of 195 (33%). None has zero seeds. Reconstructions that thin are weak
-support for propagating a specific function and are worth a second look.
+**Evidence depth.** A node is *thin* when no annotation on it rests on more
+than 3 seed proteins. That definition is per annotation, not per node: each
+PAINT row's with/from is the seed set backing that one term, so a node with two
+3-seed rows supports neither of its claims with 6 seeds. Pooling them would
+credit a propagated function with seeds never used together to infer it —
+`PTN000329346` (two IBD rows, 3 seeds each) is the boundary case, and the
+pooled reading calls it well-supported while neither of its annotations is.
 
-Both halves of each ratio count the same population; mixing them (82 distinct
-nodes against 372 citations) would understate the thin fraction as 22% when it
-is 33%.
+On that definition **100 of 372 citations (27%)** are thin, or **76 of 195
+distinct nodes (39%)**. The distinct-node figure is the better measure of how
+much of the evidence base is thin, since `PTN001230349` alone is cited 29
+times. No node has zero seeds. Reconstructions this thin are weak support for
+propagating a specific function and are worth a second look.
+
+Both figures are emitted by `just panther-report-stats`, so the definition and
+the number are checkable together. An earlier revision reported 22%/33% from
+pooling each node's seeds across its rows — a definitional choice that was
+never stated, in the paragraph warning against mixing populations.
 
 Counting seeds requires care: PAINT records them as model-organism identifiers
 (MGI 4,514, RGD 2,807, FB 1,801, WB 1,067, SGD 511, ZFIN 479, ...) at least as
