@@ -386,3 +386,74 @@ def test_the_divergence_note_prints_once_per_annotation(repo):
     output = run(repo)
     assert output.count("differing seed counts") == 1
     assert "| PAINT node citations | 3 (of 1 distinct nodes) |" in output
+
+
+def test_grounding_inconsistent_descriptors_are_not_checkable(repo):
+    """il6_signaling's shape: declared PTHR23037, member indexed in PTHR23036.
+
+    It is family-level with a member in the index, so the earlier hand-rolled
+    guard admitted it -- putting a correctness finding the sweep reports
+    separately into the complement of a precision ratio. Worse, it is the very
+    descriptor the attribution rule reasons about, so it was counted one way for
+    the ambiguity row and another for the precision row.
+    """
+    write_obo(repo, {"PTHR1": 20, "PTHR9": 20})
+    write_members(repo, {"A": "PTHR9:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A"])])
+
+    output = run(repo)
+    assert "| declared at family level | 1 |" in output
+    assert (
+        "with all members in one subfamily | 0 / 0 checkable (of 1 declared) |"
+        in output
+    )
+
+
+def test_a_member_with_no_subfamily_is_not_checkable(repo):
+    """PANTHER assigns some proteins a bare family, so nothing exists to narrow to.
+
+    dtdp_l_rhamnose_biosynthesis declares PTHR43000 whose sole member Q88LZ1 is
+    indexed without a :SF; 20 rows of panther-members.tsv are this shape. It is
+    the textbook could-not-be-checked, not a finding.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A"])])
+
+    assert (
+        "with all members in one subfamily | 0 / 0 checkable (of 1 declared) |"
+        in run(repo)
+    )
+
+
+def test_members_spread_is_checkable_but_not_a_finding(repo):
+    """The complement of the ratio must be exactly this population.
+
+    Spread members mean the family really is the level that covers them -- a
+    real answer to "could this be narrowed?", so it belongs in the denominator.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF2"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A", "B"])])
+
+    assert (
+        "with all members in one subfamily | 0 / 1 checkable (of 1 declared) |"
+        in run(repo)
+    )
+
+
+def test_a_mixed_granularity_descriptor_is_not_checkable(repo):
+    """Declaring both a family and a subfamily is already at the sharper level.
+
+    The family/subfamily counters classify on the first sorted curie while the
+    predicate rejects on any declared subfamily, so this shape could enter the
+    denominator while being unreachable in the numerator. Nothing in the tree
+    mixes granularity today; this pins the behaviour before something does.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1"})
+    write_family_module(
+        repo, "a.yaml", [(["PANTHER:PTHR1", "PANTHER:PTHR1:SF1"], ["A"])]
+    )
+
+    assert "with all members in one subfamily | 0 / 0 checkable" in run(repo)

@@ -4502,6 +4502,7 @@ def panther_report_stats(
         iter_ancestral_node_uses,
         iter_family_member_uses,
         load_paint_index,
+        SubfamilyPrecision,
         subfamily_precision_case,
     )
     from ai_gene_review.validation.prose_panther_scan import collect_claims
@@ -4611,7 +4612,7 @@ def panther_report_stats(
     # the report came to publish 206 where the sweep warned 199.
     single_subfamily = heterogeneous = precision_checkable = 0
     proteins_by_family: dict[str, set] = {}
-    for use, declared_at_subfamily in family_uses:
+    for use, _declared_at_subfamily in family_uses:
         # Attribute each member to the family the committed index says it is in,
         # not to every family its descriptor declares. A descriptor may span
         # families deliberately -- peroxisome-lifecycle declares PTHR12652 and
@@ -4642,16 +4643,16 @@ def panther_report_stats(
                 credit = declared_bases
             for family in credit:
                 proteins_by_family.setdefault(family, set()).add(accession)
-        # Only family-level declarations can be narrowed; a subfamily-level one
-        # is already at the sharper level, so it belongs in neither half of the
-        # ratio. "Checkable" then separates "not a finding" from "could not be
-        # checked" -- 35 cited accessions resolve to no family at all.
-        if not declared_at_subfamily and any(
-            a in index for a in use.representative_accessions
-        ):
-            precision_checkable += 1
+        # Ask the predicate which of its outcomes this was rather than
+        # reconstructing a partial version of it here. Family-level-plus-a-
+        # resolvable-member is NOT the same as checkable: it also admits
+        # grounding-inconsistent descriptors (a correctness finding the sweep
+        # reports separately) and proteins PANTHER assigns no subfamily, so its
+        # complement was not the members-spread population it claimed to be.
         case = subfamily_precision_case(use, index, subfamily_counts)
-        if case is None:
+        if case.status.is_checkable:
+            precision_checkable += 1
+        if case.status is not SubfamilyPrecision.SINGLE_SUBFAMILY:
             continue
         single_subfamily += 1
         if case.subfamily_count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:

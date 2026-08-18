@@ -80,6 +80,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from enum import Enum
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import yaml
@@ -964,38 +965,74 @@ def iter_family_member_uses(
 HETEROGENEOUS_FAMILY_SUBFAMILIES = 20
 
 
-class SubfamilyPrecisionCase(NamedTuple):
-    """A family-level grounding whose members all sit in one subfamily.
+class SubfamilyPrecision(str, Enum):
+    """Why a descriptor is, or is not, a family-vs-subfamily precision case.
 
-    The subfamily is the sharper claim, so this is the population the precision
-    advisory is drawn from. ``subfamily_count`` is exposed rather than filtered
-    so callers can report the whole population and the advisory-triggering
-    subset from one definition -- the report previously counted these
-    independently and drifted to 206 against the validator's 199.
+    The distinction the caller needs is not merely case/no-case. Only
+    SINGLE_SUBFAMILY and MEMBERS_SPREAD are outcomes of actually asking "could
+    this be narrowed?" -- the rest are reasons the question could not be put.
+    Collapsing them to None made the report's complement mix a finding
+    (spread) with a correctness error reported elsewhere (grounding
+    inconsistency) and with proteins PANTHER assigns no subfamily at all.
+    """
+
+    SINGLE_SUBFAMILY = "single_subfamily"
+    MEMBERS_SPREAD = "members_spread"
+    NO_SUBFAMILY_ASSIGNED = "no_subfamily_assigned"
+    GROUNDING_INCONSISTENT = "grounding_inconsistent"
+    NO_MEMBER_RESOLVABLE = "no_member_resolvable"
+    DECLARED_AT_SUBFAMILY = "declared_at_subfamily"
+    NO_SUBFAMILY_DATA = "no_subfamily_data"
+
+    @property
+    def is_checkable(self) -> bool:
+        """True when narrowing had a real answer, either way.
+
+        This is the honest denominator for the precision ratio: its complement
+        is then exactly MEMBERS_SPREAD.
+        """
+        return self in (
+            SubfamilyPrecision.SINGLE_SUBFAMILY,
+            SubfamilyPrecision.MEMBERS_SPREAD,
+        )
+
+
+class SubfamilyPrecisionCase(NamedTuple):
+    """One descriptor's family-vs-subfamily precision verdict.
+
+    ``subfamily_count`` is exposed rather than filtered so callers can report
+    the whole population and the advisory-triggering subset from one
+    definition -- the report previously counted these independently and drifted
+    to 206 against the validator's 199. ``base``/``subfamily`` are set only for
+    SINGLE_SUBFAMILY, the one status that identifies a specific narrowing.
     """
 
     use: "FamilyMemberUse"
-    base: str
-    subfamily: str
-    subfamily_count: int
+    status: SubfamilyPrecision
+    base: Optional[str] = None
+    subfamily: Optional[str] = None
+    subfamily_count: int = 0
 
 
 def subfamily_precision_case(
     use: "FamilyMemberUse",
     member_index: Dict[str, str],
     subfamily_counts: Optional[Dict[str, int]],
-) -> Optional[SubfamilyPrecisionCase]:
-    """Classify one descriptor's family-vs-subfamily precision, or None.
+) -> SubfamilyPrecisionCase:
+    """Classify one descriptor's family-vs-subfamily precision.
 
-    Returns None when the descriptor is already declared at subfamily level, has
-    no member resolvable in the index, is not grounding-consistent (a separate
-    and more serious finding), or has members spread across several subfamilies
-    -- in which case the family really is the level that covers them.
+    Always returns a verdict; read ``status`` to tell a finding from a case that
+    could not be judged. See :class:`SubfamilyPrecision` for why that
+    distinction is not the caller's to reconstruct.
     """
+
+    def verdict(status: SubfamilyPrecision) -> SubfamilyPrecisionCase:
+        return SubfamilyPrecisionCase(use=use, status=status)
+
     if not subfamily_counts:
-        return None
+        return verdict(SubfamilyPrecision.NO_SUBFAMILY_DATA)
     if any(_is_panther_subfamily(curie) for curie in use.declared_family_curies):
-        return None
+        return verdict(SubfamilyPrecision.DECLARED_AT_SUBFAMILY)
     declared_bases = {
         base
         for curie in use.declared_family_curies
@@ -1007,16 +1044,21 @@ def subfamily_precision_case(
         if accession in member_index
     }
     if not known:
-        return None
+        return verdict(SubfamilyPrecision.NO_MEMBER_RESOLVABLE)
     if not declared_bases & {family_sf.split(":", 1)[0] for family_sf in known.values()}:
-        return None
+        return verdict(SubfamilyPrecision.GROUNDING_INCONSISTENT)
     member_subfamilies = {v for v in known.values() if ":" in v}
-    if len(member_subfamilies) != 1:
-        return None
+    if not member_subfamilies:
+        # PANTHER assigns these proteins no subfamily, so there is nothing to
+        # narrow to -- 20 rows in panther-members.tsv carry a bare family.
+        return verdict(SubfamilyPrecision.NO_SUBFAMILY_ASSIGNED)
+    if len(member_subfamilies) > 1:
+        return verdict(SubfamilyPrecision.MEMBERS_SPREAD)
     subfamily = next(iter(member_subfamilies))
     base = subfamily.split(":", 1)[0]
     return SubfamilyPrecisionCase(
         use=use,
+        status=SubfamilyPrecision.SINGLE_SUBFAMILY,
         base=base,
         subfamily=subfamily,
         subfamily_count=subfamily_counts.get(base, 0),
@@ -1087,7 +1129,7 @@ def validate_family_members(
             # subfamily_precision_case so the report cannot re-implement it and
             # drift, which is how it came to publish 206 against this 199.
             case = subfamily_precision_case(use, member_index, subfamily_counts)
-            if case is not None:
+            if case.status is SubfamilyPrecision.SINGLE_SUBFAMILY:
                 if case.subfamily_count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
                     warnings.append(
                         f"{use.path}: PANTHER:{case.base} is split into "

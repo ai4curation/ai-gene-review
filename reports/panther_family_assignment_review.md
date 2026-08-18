@@ -15,7 +15,7 @@ representatives. Generated against PANTHER 19.0.
 | family descriptors asserting no id | 163 (across 50 modules) |
 | PAINT node citations | 372 (of 195 distinct nodes) |
 | PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
-| family-level groundings with all members in one subfamily | 810 / 907 checkable (of 907 declared) |
+| family-level groundings with all members in one subfamily | 810 / 892 checkable (of 907 declared) |
 | ...in families split into 20+ subfamilies (the advisory) | 199 |
 | family ids covering more than one distinct protein | 213 (over 528 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
@@ -92,6 +92,17 @@ Both figures were recomputed independently here and had drifted — precisely th
 failure the §2 rule below describes, left in place in the section that states
 it. Deriving them from the validator's own predicate is what makes the
 "same population" claim checkable instead of merely asserted.
+
+The denominator is the descriptors where narrowing had a real answer, and its
+complement is then exactly the 82 whose members span subfamilies — where the
+family genuinely is the level that covers them. Getting that right meant
+letting the predicate report *which* of its outcomes it reached instead of
+collapsing them to a yes/no: a first attempt counted family-level-with-a-
+resolvable-member, which also swept in 11 grounding-inconsistent descriptors
+(a correctness finding the sweep reports separately, including the
+`PTHR23037` case discussed below) and 4 whose members PANTHER assigns no
+subfamily at all, so there is nothing to narrow to. Those 15 are not findings
+and not failures; they are cases where the question cannot be put.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
 that cannot distinguish between them than there are such ids** (scope table).
