@@ -145,11 +145,13 @@ just fetch-gene DROME kni      # then deep research + notes, then the ai-review.
   redirected the IBA `nuclear receptor activity` / `estrogen response element
   binding` terms and the bare `protein binding` IPIs to informative repressor /
   corepressor-binding terms.
-- **hairy (*h*, P14003)** — 45 annotations adjudicated (28 ACCEPT, 8 MODIFY, 7
+- **hairy (*h*, P14003)** — 45 annotations adjudicated (28 ACCEPT, 9 MODIFY, 6
   KEEP_AS_NON_CORE, 1 UNDECIDED, 1 MARK_AS_OVER_ANNOTATED). Notable:
-  resolved the `protein binding` IPIs to STUbL (Topors/Degringolade) and Groucho
-  corepressor interactions, and flagged a distal `membrane organization` term as
-  over-annotation of a nuclear repressor.
+  resolved every `protein binding` IPI to its curated `WITH/FROM` partner — STUbL
+  (Topors/Degringolade) ligase binding, Groucho/CtBP corepressor binding, and
+  DNA-binding transcription factor binding for the Ultrabithorax interaction — and
+  flagged a distal `membrane organization` term as over-annotation of a nuclear
+  repressor.
 
 Both reviews validate clean, with every `supporting_text` quote independently
 confirmed verbatim against the cached literature. Remaining candidates
