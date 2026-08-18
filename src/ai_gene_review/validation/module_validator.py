@@ -222,9 +222,7 @@ GO_BRANCH_CONSTRAINTS: Dict[str, GoBranchConstraint] = {
     "cellular_components": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
-    "source_location": GoBranchConstraint(
-        "GO:0110165", "cellular anatomical entity"
-    ),
+    "source_location": GoBranchConstraint("GO:0110165", "cellular anatomical entity"),
     "destination_location": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
@@ -355,7 +353,9 @@ def iter_typed_go_terms(obj: object, path: str = "$") -> Iterator[TypedGoTerm]:
                     if not isinstance(descriptor, dict):
                         continue
                     descriptor_path = (
-                        f"{child_path}[{index}]" if isinstance(value, list) else child_path
+                        f"{child_path}[{index}]"
+                        if isinstance(value, list)
+                        else child_path
                     )
                     term = descriptor.get("term")
                     if (
@@ -737,15 +737,9 @@ def validate_paint_ptns(
             if _assertion_is_lost(assertion, lost, go_ancestors)
         ]
         if contradicted:
-            struck = _format_limited(
-                {f"{a.aspect}:{a.curie}" for a in contradicted}
-            )
+            struck = _format_limited({f"{a.aspect}:{a.curie}" for a in contradicted})
             retained = _format_limited(
-                {
-                    f"{row.aspect}:{row.go_id}"
-                    for row in positive_ibd_rows
-                    if row.go_id
-                }
+                {f"{row.aspect}:{row.go_id}" for row in positive_ibd_rows if row.go_id}
             )
             errors.append(
                 f"{use.path}: the module asserts {struck} but PAINT records that "
@@ -920,9 +914,7 @@ def count_ungrounded_families(obj: object) -> int:
     return total
 
 
-def iter_family_member_uses(
-    obj: object, path: str = "$"
-) -> Iterator[FamilyMemberUse]:
+def iter_family_member_uses(obj: object, path: str = "$") -> Iterator[FamilyMemberUse]:
     """Yield every family descriptor that names representative UniProt members.
 
     Only descriptors carrying both a PANTHER family/subfamily id and at least one
@@ -968,18 +960,28 @@ HETEROGENEOUS_FAMILY_SUBFAMILIES = 20
 class SubfamilyPrecision(str, Enum):
     """Why a descriptor is, or is not, a family-vs-subfamily precision case.
 
-    The distinction the caller needs is not merely case/no-case. Only
-    SINGLE_SUBFAMILY and MEMBERS_SPREAD are outcomes of actually asking "could
-    this be narrowed?" -- the rest are reasons the question could not be put.
-    Collapsing them to None made the report's complement mix a finding
-    (spread) with a correctness error reported elsewhere (grounding
-    inconsistency) and with proteins PANTHER assigns no subfamily at all.
+    The distinction the caller needs is not merely case/no-case. SINGLE_SUBFAMILY,
+    MEMBERS_SPREAD and SOME_MEMBERS_UNPLACED are outcomes of actually asking
+    "could this be narrowed?" -- the last two answering no -- while the rest are
+    reasons the question could not be put. Collapsing them to None made the
+    report's complement mix a finding with a correctness error reported
+    elsewhere (grounding inconsistency) and with members the index places in no
+    subfamily.
+
+    Note what a missing subfamily does and does not mean. The index records what
+    the consulted source returned, and a bare family row can only arrive via the
+    UniProt cross-reference fallback (``_best_panther_xref``), used for organisms
+    PANTHER does not publish directly -- every bare row today is such an
+    organism. So it means "no subfamily recorded", not "PANTHER assigns none".
+    Declining to recommend a narrowing that would drop a member you cannot place
+    is right either way, which is why these are named for the record rather than
+    for a verdict PANTHER has not given.
     """
 
     SINGLE_SUBFAMILY = "single_subfamily"
     MEMBERS_SPREAD = "members_spread"
-    SOME_MEMBERS_UNASSIGNED = "some_members_unassigned"
-    NO_SUBFAMILY_ASSIGNED = "no_subfamily_assigned"
+    SOME_MEMBERS_UNPLACED = "some_members_unplaced"
+    NO_SUBFAMILY_RECORDED = "no_subfamily_recorded"
     GROUNDING_INCONSISTENT = "grounding_inconsistent"
     NO_MEMBER_RESOLVABLE = "no_member_resolvable"
     DECLARED_AT_SUBFAMILY = "declared_at_subfamily"
@@ -989,13 +991,14 @@ class SubfamilyPrecision(str, Enum):
     def is_checkable(self) -> bool:
         """True when narrowing had a real answer, either way.
 
-        This is the honest denominator for the precision ratio: its complement
-        is then exactly MEMBERS_SPREAD.
+        This is the honest denominator for the precision ratio. Its complement
+        is the descriptors where the answer is no: MEMBERS_SPREAD plus
+        SOME_MEMBERS_UNPLACED, both meaning no subfamily covers every member.
         """
         return self in (
             SubfamilyPrecision.SINGLE_SUBFAMILY,
             SubfamilyPrecision.MEMBERS_SPREAD,
-            SubfamilyPrecision.SOME_MEMBERS_UNASSIGNED,
+            SubfamilyPrecision.SOME_MEMBERS_UNPLACED,
         )
 
 
@@ -1047,7 +1050,9 @@ def subfamily_precision_case(
     }
     if not known:
         return verdict(SubfamilyPrecision.NO_MEMBER_RESOLVABLE)
-    if not declared_bases & {family_sf.split(":", 1)[0] for family_sf in known.values()}:
+    if not declared_bases & {
+        family_sf.split(":", 1)[0] for family_sf in known.values()
+    }:
         return verdict(SubfamilyPrecision.GROUNDING_INCONSISTENT)
     # Count MEMBERS with a subfamily, not distinct subfamilies: several members
     # legitimately share one, so comparing the distinct-subfamily count against
@@ -1055,18 +1060,21 @@ def subfamily_precision_case(
     subfamilied = {a: v for a, v in known.items() if ":" in v}
     member_subfamilies = set(subfamilied.values())
     if not member_subfamilies:
-        # PANTHER assigns these proteins no subfamily, so there is nothing to
-        # narrow to -- 20 rows in panther-members.tsv carry a bare family.
-        return verdict(SubfamilyPrecision.NO_SUBFAMILY_ASSIGNED)
-    if len(subfamilied) < len(known):
-        # Some members are in a subfamily and some have none. Discarding the
-        # bare ones and reporting the remainder as a clean finding made the
-        # advisory claim "every representative member here is in SFn" about a
-        # protein PANTHER puts in no subfamily at all -- and recommending that
-        # narrowing would drop the module's own exemplar.
-        return verdict(SubfamilyPrecision.SOME_MEMBERS_UNASSIGNED)
+        # No member has a subfamily recorded, so there is nothing to narrow to
+        # -- 20 rows in panther-members.tsv carry a bare family.
+        return verdict(SubfamilyPrecision.NO_SUBFAMILY_RECORDED)
     if len(member_subfamilies) > 1:
+        # Tested before the unplaced check so a descriptor whose placeable
+        # members genuinely sit in several subfamilies is reported by the
+        # stronger fact rather than by an unplaced co-member.
         return verdict(SubfamilyPrecision.MEMBERS_SPREAD)
+    if len(subfamilied) < len(known):
+        # Some members have a subfamily recorded and some do not. Discarding the
+        # latter and reporting the remainder as a clean finding made the advisory
+        # claim "every representative member here is in SFn" about a member the
+        # index places in no subfamily -- and recommending that narrowing would
+        # drop the module's own exemplar.
+        return verdict(SubfamilyPrecision.SOME_MEMBERS_UNPLACED)
     subfamily = next(iter(member_subfamilies))
     base = subfamily.split(":", 1)[0]
     return SubfamilyPrecisionCase(
@@ -1547,6 +1555,7 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     instead such terms are treated as resolvable-but-unknown and reported by the
     caller. We keep one adapter per adapter string.
     """
+
     def get(adapter_string: str):
         return _get_cached_adapter(adapter_string)
 
@@ -1591,9 +1600,7 @@ def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchRe
                 return "not_found"
             if curie == root_id:
                 return "not_in_branch"
-            ancestors = set(
-                go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
-            )
+            ancestors = set(go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"]))
             return "ok" if root_id in ancestors else "not_in_branch"
         except Exception:  # noqa: BLE001 - external system
             return "unavailable"
@@ -1617,7 +1624,9 @@ def _build_go_ancestor_resolver(
                 return {curie}
             try:  # external system: ontology query may fail transiently
                 cache[curie] = set(
-                    adapter.ancestors(curie, predicates=["rdfs:subClassOf", "BFO:0000050"])
+                    adapter.ancestors(
+                        curie, predicates=["rdfs:subClassOf", "BFO:0000050"]
+                    )
                 )
             except Exception:  # noqa: BLE001 - external system
                 return {curie}
@@ -1713,7 +1722,6 @@ def validate_module_file(
                 load_goa_attested_ptns(project_root / "genes"),
             )
         )
-
 
     # Conformance: verify every `conforms_to` bundle against its template motif.
     # Templates are sibling module files, so they are resolved from the file's

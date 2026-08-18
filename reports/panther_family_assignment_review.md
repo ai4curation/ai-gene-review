@@ -17,7 +17,7 @@ representatives. Generated against PANTHER 19.0.
 | PAINT annotations resting on <=3 seeds | 295 / 570 distinct (node, term) = 468 / 1159 citation-weighted |
 | family-level groundings with all members in one subfamily | 806 / 892 checkable (of 907 declared) |
 | ...in families split into 20+ subfamilies (the advisory) | 197 |
-| ...why the rest are not findings | 101 declared at subfamily, 81 members spread, 11 grounding inconsistent, 5 some members unassigned, 4 no subfamily assigned |
+| ...why the other 101 family-level ones are not | 82 members spread, 11 grounding inconsistent, 4 some members unplaced, 4 no subfamily recorded |
 | family ids covering more than one distinct protein | 213 (over 528 proteins) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
@@ -105,15 +105,28 @@ instead of collapsing them to a yes/no, and two attempts got it wrong in
 opposite directions. The first counted family-level-with-a-resolvable-member,
 sweeping in grounding-inconsistent descriptors (a correctness finding the sweep
 reports separately, including the `PTHR23037` case below) and members PANTHER
-assigns no subfamily at all. The second discarded a member with no subfamily
-and reported the remainder as a clean finding — so the advisory told a curator
-that *every* representative member sits in one subfamily while naming a protein
-PANTHER puts in none, and the narrowing it recommended would have dropped a
-module's own *P. putida* exemplar. Two such advisories were inside the
-published count, which is why it is now 197. A third error, caught in
-testing, compared distinct subfamilies against member count and so misread
-every descriptor whose members legitimately share a subfamily as partially
-unassigned, cutting the finding count by 79.
+assigns no subfamily at all. The second discarded a member the index places in no
+subfamily and reported the remainder as a clean finding — so the advisory told a
+curator that *every* representative member sits in one subfamily while naming a
+member it places nowhere, and the narrowing it recommended would have dropped a
+module's own *P. putida* exemplar. Two such advisories were inside the published
+count, which is why it is now 197. A third error, caught in testing, compared
+distinct subfamilies against member count and so misread every descriptor whose
+members legitimately share a subfamily as partially unplaced, cutting the
+finding count by 79.
+
+A missing subfamily is worth stating precisely, because the whole judgement
+rests on it. The index records what the consulted source returned, and a
+bare-family row can only arrive through the UniProt cross-reference fallback,
+used for organisms PANTHER does not publish directly — every bare row today is
+such an organism, and in all the partial cases the unplaced member is the
+*P. putida* one while its placed co-members are *E. coli*, human or
+*P. aeruginosa*. So the blank means "no subfamily recorded", not "PANTHER
+assigns none": if it is a cross-reference gap, `histidine_catabolism` is a
+genuine finding after all. Declining to recommend a narrowing that would drop a
+member you cannot place is right under either reading, which is why these
+outcomes are named for the record rather than for a verdict PANTHER has not
+given.
 
 The harm is concrete: **many more distinct proteins are grounded on family ids
 that cannot distinguish between them than there are such ids** (scope table).

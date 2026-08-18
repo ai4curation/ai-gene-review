@@ -4703,12 +4703,25 @@ def panther_report_stats(
     )
     # Emitting the whole partition keeps the report from quoting a breakdown
     # that nothing computes -- the exact failure this command exists to stop.
+    # Family-level statuses only: declared-at-subfamily descriptors are excluded
+    # before the denominator is formed, so listing them beside the others mixes
+    # populations. They also happen to number 101, exactly the same as the rest
+    # of the 907, so the row would read as arithmetically consistent while its
+    # leading term came from a different set.
+    rest = {
+        status: count
+        for status, count in precision_status.items()
+        if status
+        not in (
+            SubfamilyPrecision.SINGLE_SUBFAMILY.value,
+            SubfamilyPrecision.DECLARED_AT_SUBFAMILY.value,
+        )
+    }
     typer.echo(
-        "| ...why the rest are not findings | "
+        f"| ...why the other {sum(rest.values())} family-level ones are not | "
         + ", ".join(
             f"{count} {status.replace('_', ' ')}"
-            for status, count in sorted(precision_status.items(), key=lambda kv: -kv[1])
-            if status != "single_subfamily"
+            for status, count in sorted(rest.items(), key=lambda kv: -kv[1])
         )
         + " |"
     )

@@ -410,11 +410,13 @@ def test_grounding_inconsistent_descriptors_are_not_checkable(repo):
 
 
 def test_a_member_with_no_subfamily_is_not_checkable(repo):
-    """PANTHER assigns some proteins a bare family, so nothing exists to narrow to.
+    """No subfamily is recorded, so nothing exists to narrow to.
 
     dtdp_l_rhamnose_biosynthesis declares PTHR43000 whose sole member Q88LZ1 is
-    indexed without a :SF; 20 rows of panther-members.tsv are this shape. It is
-    the textbook could-not-be-checked, not a finding.
+    indexed without a :SF; 20 rows of panther-members.tsv are this shape. The
+    blank means the consulted source returned no subfamily -- every such row
+    arrives via the UniProt cross-reference fallback, for organisms PANTHER does
+    not publish directly -- not that PANTHER assigns none.
     """
     write_obo(repo, {"PTHR1": 20})
     write_members(repo, {"A": "PTHR1"})
@@ -460,13 +462,13 @@ def test_a_mixed_granularity_descriptor_is_not_checkable(repo):
 
 
 def test_a_member_with_no_subfamily_blocks_the_narrowing(repo):
-    """histidine_catabolism's shape: some members subfamilied, one bare.
+    """histidine_catabolism's shape: some members placed, one not.
 
-    Bare members were discarded before the count, so the remainder was reported
-    as a clean finding and the advisory asserted "every representative member
-    here is in SF1" about a protein PANTHER assigns no subfamily. Two such
-    descriptors sat inside the published advisory, recommending a narrowing that
-    would drop the module's own exemplar.
+    Unplaced members were discarded before the count, so the remainder was
+    reported as a clean finding and the advisory asserted "every representative
+    member here is in SF1" about a member the index places in no subfamily. Two
+    such descriptors sat inside the published advisory, recommending a narrowing
+    that would drop the module's own exemplar.
     """
     write_obo(repo, {"PTHR1": 20})
     write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF1", "C": "PTHR1"})
@@ -498,3 +500,78 @@ def test_members_sharing_one_subfamily_are_still_a_finding(repo):
         in output
     )
     assert "subfamilies (the advisory) | 1 |" in output
+
+
+def test_the_partition_row_covers_only_family_level_statuses(repo):
+    """Declared-at-subfamily descriptors are excluded before the denominator.
+
+    Listing them beside the family-level statuses mixed populations, and in the
+    real tree they number 101 -- exactly the same as the rest of the 907 -- so a
+    reader checking the arithmetic found it worked while the leading term came
+    from a different set. Here PTHR2 is declared at subfamily level and must not
+    appear in the row, whose total must equal the family-level non-findings.
+    """
+    write_obo(repo, {"PTHR1": 20, "PTHR2": 20, "PTHR9": 20})
+    write_members(
+        repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF2", "C": "PTHR2:SF1", "D": "PTHR9:SF1"}
+    )
+    write_family_module(
+        repo,
+        "a.yaml",
+        [
+            (["PANTHER:PTHR1"], ["A", "B"]),  # members spread
+            (["PANTHER:PTHR2:SF1"], ["C"]),  # declared at subfamily
+            (["PANTHER:PTHR3"], ["D"]),  # grounding inconsistent
+        ],
+    )
+
+    output = run(repo)
+    assert "| ...why the other 2 family-level ones are not | " in output
+    assert "1 members spread" in output
+    assert "1 grounding inconsistent" in output
+    assert "declared at subfamily," not in output
+
+
+def test_no_member_resolvable_is_not_checkable(repo):
+    """A descriptor whose members are absent from the index cannot be judged."""
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"Z": "PTHR1:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A"])])
+
+    output = run(repo)
+    assert (
+        "with all members in one subfamily | 0 / 0 checkable (of 1 declared) |"
+        in output
+    )
+    assert "1 no member resolvable" in output
+
+
+def test_without_subfamily_data_nothing_is_checkable(repo):
+    """No OBO means no subfamily counts, so the question cannot be put at all."""
+    write_members(repo, {"A": "PTHR1:SF1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A"])])
+
+    output = run(repo)
+    assert (
+        "with all members in one subfamily | 0 / 0 checkable (of 1 declared) |"
+        in output
+    )
+    assert "1 no subfamily data" in output
+
+
+def test_spread_beats_unplaced_when_a_descriptor_is_both(repo):
+    """de_novo_purine_synthesis's shape: two placed subfamilies plus an unplaced member.
+
+    Both facts are true, and the stronger one is that the placeable members
+    genuinely sit in different subfamilies -- that is a statement about PANTHER's
+    classification, whereas an unplaced co-member is a statement about what the
+    index recorded. Checking unplaced first filed such descriptors under the
+    weaker fact and left the published members-spread count one short.
+    """
+    write_obo(repo, {"PTHR1": 20})
+    write_members(repo, {"A": "PTHR1:SF1", "B": "PTHR1:SF2", "C": "PTHR1"})
+    write_family_module(repo, "a.yaml", [(["PANTHER:PTHR1"], ["A", "B", "C"])])
+
+    output = run(repo)
+    assert "1 members spread" in output
+    assert "some members unplaced" not in output
