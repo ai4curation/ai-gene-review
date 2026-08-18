@@ -4318,8 +4318,8 @@ def panther_report_stats(
     family_level = subfamily_level = ungrounded = nodes = 0
     ungrounded_modules: set[str] = set()
     distinct_nodes: set[str] = set()
-    thin_nodes: set[str] = set()
-    thin_citations = 0
+    thin_annotations = total_annotations = 0
+    annotation_depth: dict[tuple[str, str, str], bool] = {}
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
 
     def _seed_tokens(row) -> set:
@@ -4346,15 +4346,20 @@ def panther_report_stats(
             ]
             if not rows:
                 continue
-            # "Thin" is judged PER ANNOTATION, not on the union of a node's
-            # seeds. Each row's with/from is the seed set backing that one
-            # annotation, so a node with two 3-seed rows supports neither claim
-            # with 5 seeds -- the union pools seeds never used together. The
-            # figure exists to say how well a *propagated function* is
-            # grounded, so it has to be the per-claim count.
-            if max(len(_seed_tokens(r)) for r in rows) <= 3:
-                thin_citations += 1
-                thin_nodes.add(node_use.ptn_curie)
+            # Counted per ANNOTATION, which is the unit the figure is about:
+            # each row's with/from is the seed set backing that one term, and
+            # "weak support for propagating a specific function" is a claim
+            # about a term, not about a node. Aggregating to the node first
+            # forces a quantifier choice that changes the answer a lot (every
+            # annotation thin vs some annotation thin differ by ~1.6x on the
+            # node count) and either way credits or blames a term with evidence
+            # that does not back it.
+            for row in rows:
+                total_annotations += 1
+                thin = len(_seed_tokens(row)) <= 3
+                annotation_depth[(node_use.ptn_curie, row.aspect, row.go_id)] = thin
+                if thin:
+                    thin_annotations += 1
         for use in iter_family_member_uses(document):
             match = family_re.match(sorted(use.declared_family_curies)[0])
             if not match:
@@ -4391,9 +4396,15 @@ def panther_report_stats(
     typer.echo(
         f"| PAINT node citations | {nodes} (of {len(distinct_nodes)} distinct nodes) |"
     )
+    # Two aggregations of the same per-annotation measure. The distinct count
+    # describes the evidence base; the citation-weighted one describes how much
+    # of the propagation in use rests on it. Reporting one silently would pick
+    # a headline (52% vs 37%) without saying which question it answers.
+    distinct_thin = sum(1 for thin in annotation_depth.values() if thin)
     typer.echo(
-        f"| ...resting on <=3 seeds for some annotation | {thin_citations} "
-        f"citations / {len(thin_nodes)} distinct nodes |"
+        f"| PAINT annotations resting on <=3 seeds | {distinct_thin} / "
+        f"{len(annotation_depth)} distinct (node, term) "
+        f"= {thin_annotations} / {total_annotations} citation-weighted |"
     )
     typer.echo(f"| prose PANTHER claims checked | {checked} / {len(claims)} |")
     typer.echo(
