@@ -1,0 +1,3898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>krz - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>krz</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9V393" target="_blank" class="term-link">
+                        Q9V393
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "krz";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9V393" data-a="DESCRIPTION: Kurtz (Krz) is the single non-visual (beta-)arrest..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Kurtz (Krz) is the single non-visual (beta-)arrestin of Drosophila melanogaster, a cytoplasmic member of the arrestin family with two arrestin domains. As a canonical arrestin, it binds activated/phosphorylated G-protein-coupled receptors and receptor-family proteins and acts as an adaptor that promotes their clathrin-mediated internalization, desensitization and downregulation; conserved residues required for GPCR targeting to clathrin-coated pits and for clathrin binding are functionally important. Krz is essential for viability and neural function and, because it is the only non-visual arrestin in the fly, has broad pleiotropic roles as an attenuator of multiple developmental and immune signalling pathways. It limits receptor-tyrosine-kinase/MAPK (ERK) signalling by directly binding and sequestering inactive ERK away from its activating kinase MEK, thereby restraining the Torso pathway in the early embryo; it limits Toll/NF-kappaB (Dorsal) signalling in part by binding and stabilizing the IkappaB orthologue Cactus and, in larvae, through a functional interaction with the SUMO protease Ulp1; it can promote internalization and proteasomal degradation of the GPCR-family receptor Smoothened (antagonizing Hedgehog signalling when over-expressed) and facilitates Smoothened desumoylation via Ulp1; and it forms a Notch-Deltex-Kurtz complex that drives ubiquitination-dependent degradation of the Notch receptor. In the adult nervous system Krz is required for exploratory locomotor behaviour. The protein is predominantly cytoplasmic/cytosolic, acting transiently at the plasma membrane and endocytic compartments during receptor internalization.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007600" target="_blank" class="term-link">
+                                    GO:0007600
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0007600" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation reflecting the arrestin family&#39;s conserved role in sensory/GPCR signalling; Krz controls Drosophila olfaction and other sensory GPCR responses. A real but distal, pleiotropic role rather than the gene&#39;s core biochemical function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with Krz functioning as a GPCR regulator that controls sensory responses such as olfaction, but this is a downstream physiological outcome of the core arrestin activity rather than the molecular function itself; kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">controls Drosophila olfaction, behaviour, sensitivity to osmotic stress</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001664" target="_blank" class="term-link">
+                                    GO:0001664
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0001664" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core, evolutionarily conserved molecular function of a non-visual arrestin: binding activated/phosphorylated GPCRs (and GPCR-family receptors such as Smoothened) to desensitize them and drive their internalization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported both by the canonical arrestin mechanism and by direct experimental demonstration in Drosophila that Krz binds the GPCR-family receptor Smoothened. This is a central, defining molecular function of Krz and is retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz binds to Smo and internalizes it via clathrin-coated vesicles</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">promote internalization of GPCRs on receptor activation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz is predominantly a cytoplasmic protein, consistent with the non-visual arrestins being cytosolic proteins that act on receptors at/near the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly observed by antibody staining in both embryos and imaginal discs, matching the IBA phylogenetic assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the Krz protein is expressed throughout the blastoderm embryo and is predominantly cytoplasmic</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is localized in the cytoplasm of imaginal cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002031" target="_blank" class="term-link">
+                                    GO:0002031
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor internalization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0002031" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core arrestin function: Krz promotes clathrin-mediated internalization of activated GPCRs/GPCR-family receptors, shown directly for Smoothened and reported for other GPCRs on activation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Canonical, conserved arrestin activity supported experimentally in Drosophila (Smo internalization via clathrin-coated vesicles; promotion of GPCR internalization on receptor activation). Retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">promote Smoothened internalization and degradation in a clathrin- and proteosomal-dependent manner</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">promote internalization of GPCRs on receptor activation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general InterPro-based (IEA) annotation reflecting that arrestins participate in signal transduction. Not wrong but uninformative relative to the specific regulatory roles captured elsewhere.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A broad IEA that is biologically correct (Krz is a regulator of multiple signalling pathways); acceptable as a high-level term even though more specific process terms are also annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">participate in a variety of signalling events</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20802461
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0005515" data-r="PMID:20802461" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the interaction between Krz and ERK (rolled). Uninformative as annotated; the specific, experimentally supported activity is binding of the MAP kinase ERK, which Krz sequesters in its inactive form.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#39;protein binding&#39; conveys no functional information. The IPI evidence (Krz directly binds ERK/rolled; IntAct NbExp=12) supports the more informative molecular function &#39;mitogen-activated protein kinase binding&#39; (GO:0051019).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051019" target="_blank" class="term-link">
+                                    mitogen-activated protein kinase binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045751" target="_blank" class="term-link">
+                                    GO:0045751
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Toll signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24077307" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24077307
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Toll signaling and inflammation by β-arrestin ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0045751" data-r="PMID:24077307" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz limits Toll/NF-kappaB signalling in larvae/immunity, acting together with the SUMO protease Ulp1; loss of krz produces an inflammatory phenotype with nuclear accumulation of Toll effectors Dorsal and Dif.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported inhibitory role in Toll signalling and inflammation, but a pleiotropic downstream regulatory role rather than the core arrestin biochemical function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24077307" target="_blank" class="term-link">
+                                        PMID:24077307
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Loss of function of krz or Ulp1 in Drosophila larvae results in a similar inflammatory phenotype</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120177" target="_blank" class="term-link">
+                                    GO:0120177
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of torso signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20802461
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0120177" data-r="PMID:20802461" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz restrains the Torso RTK pathway in the early embryo by limiting ERK activity; maternal loss of krz expands and intensifies dpERK and Torso target-gene expression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by maternal krz mutant analysis (increased/expanded dpERK; upregulated tll/hkb). A specific developmental-signalling role downstream of the core ERK-binding activity; kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the normal function of Krz is to limit the activity of ERK, and hence the Torso pathway, in the early embryo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21437272
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of the Drosophila non-visual ß-arrestin kurtz in hedgeh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0005829" data-r="PMID:21437272" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct antibody localization of Krz to the cytoplasm/cytosol of imaginal cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IDA-quality localization data; consistent with the cytosolic nature of non-visual arrestins and with the cytoplasm (IBA) and Reactome (TAS) cytosol annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is localized in the cytoplasm of imaginal cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031648" target="_blank" class="term-link">
+                                    GO:0031648
+                                </a>
+                            </span>
+                            <span class="term-label">protein destabilization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21437272
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of the Drosophila non-visual ß-arrestin kurtz in hedgeh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0031648" data-r="PMID:21437272" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-expressed Krz reduces steady-state Smoothened levels by promoting its proteasomal degradation (destabilization), an outcome of Krz-driven Smo internalization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by S2-cell and imaginal-disc data showing Krz enhances Smo turnover via the proteasome. This destabilizing activity is a consequence of the core internalization/adaptor function acting on a specific receptor; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz enhances Smo degradation via the proteosomal pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045879" target="_blank" class="term-link">
+                                    GO:0045879
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of smoothened signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21437272
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of the Drosophila non-visual ß-arrestin kurtz in hedgeh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0045879" data-r="PMID:21437272" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-expression of Krz phenocopies loss of Hedgehog signalling and reduces Hh target-gene expression (Ptc, En) by promoting Smoothened internalization and degradation. Note the effect is seen only on over-expression; krz loss-of-function has no Smo phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported antagonism of Smoothened/Hh signalling, but manifested only upon Krz over-expression and dispensable in loss-of-function, so a conditional, non-core regulatory role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz has the potential to antagonize Hh signalling, although this antagonism is only observed upon its over-expression</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045879" target="_blank" class="term-link">
+                                    GO:0045879
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of smoothened signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28195188" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28195188
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SUMO regulates the activity of Smoothened and Costal-2 in Dr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0045879" data-r="PMID:28195188" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Excess Krz inhibits Smoothened sumoylation and prevents Smoothened accumulation, thereby down-regulating Hedgehog/Smoothened signalling; the effect maps to the Krz regulatory domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent experimental support (a second lab) for Krz antagonizing Smoothened signalling, here via the SUMO axis. A specific, non-core regulatory role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28195188" target="_blank" class="term-link">
+                                        PMID:28195188
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">inhibits Smo sumoylation and prevents Smo accumulation through Krz regulatory domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060189" target="_blank" class="term-link">
+                                    GO:0060189
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein desumoylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28195188" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28195188
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SUMO regulates the activity of Smoothened and Costal-2 in Dr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0060189" data-r="PMID:28195188" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz bridges Smoothened to the SUMO protease Ulp1, promoting Smo desumoylation; RNAi knockdown of Krz weakens the Smo-Ulp1 interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the demonstration that Krz facilitates the Smo-Ulp1 interaction that drives desumoylation. A specialized adaptor/scaffolding role in the SUMO pathway; non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28195188" target="_blank" class="term-link">
+                                        PMID:28195188
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz likely facilitates the interaction between Smo and Ulp1 because knockdown of Krz by RNAi attenuates Smo-Ulp1 interaction</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045746" target="_blank" class="term-link">
+                                    GO:0045746
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Notch signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16284625" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16284625
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Notch signalling by non-visual beta-arrestin.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0045746" data-r="PMID:16284625" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz forms a trimeric Notch-Deltex-Kurtz complex that promotes ubiquitination-dependent degradation of the Notch receptor, thereby down-regulating Notch signalling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the paper&#39;s own abstract (identification of the Notch-Deltex-Krz complex and ubiquitination-dependent Notch degradation), consistent with the arrestin adaptor role in receptor downregulation; a specific developmental-signalling role kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16284625" target="_blank" class="term-link">
+                                        PMID:16284625
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This complex mediates the degradation of the Notch receptor through a ubiquitination-dependent pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045751" target="_blank" class="term-link">
+                                    GO:0045751
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of Toll signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20802461
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0045751" data-r="PMID:20802461" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In the early embryo Krz limits Toll signalling: maternal loss of krz expands the Dorsal nuclear gradient and Toll target-gene (twi, rho) domains; Krz binds and stabilizes the IkappaB orthologue Cactus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by maternal krz mutant analysis and Krz-Cactus interaction. A specific developmental-signalling role (distinct paper/context from the larval Toll annotation); non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz functions during normal development to limit the activity of Toll</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043409" target="_blank" class="term-link">
+                                    GO:0043409
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of MAPK cascade</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20802461
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0043409" data-r="PMID:20802461" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz negatively regulates the ERK/MAPK cascade by directly binding and sequestering inactive ERK (rolled), preventing its activation by MEK; loss of krz increases overall ERK activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongly supported mechanistically (direct ERK binding plus increased dpERK in krz mutants). The underlying molecular activity (MAP kinase binding) is captured in core_functions; this process-level inhibitory role across multiple RTKs is a pleiotropic regulatory function kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                        PMID:20802461
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">loss of krz function results in an overall increase in ERK activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048260" target="_blank" class="term-link">
+                                    GO:0048260
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of receptor-mediated endocytosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19850026" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19850026
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of smoothened by Drosophila G-protein-coupled rec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0048260" data-r="PMID:19850026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-expression of the beta-arrestin Krz reduces Smoothened levels, the first evidence that arrestins promote receptor (Smo) internalization/endocytosis in flies - a manifestation of the canonical arrestin adaptor-for-endocytosis function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the core, conserved arrestin activity of promoting clathrin/receptor-mediated endocytosis; supported by Krz over-expression reducing Smo. Retained as core (canonical arrestin adaptor role).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19850026" target="_blank" class="term-link">
+                                        PMID:19850026
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This is the first evidence that arrestins participate in Smo regulation in flies</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Krz binds to Smo and internalizes it via clathrin-coated vesicles</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-DME-2071846
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0005829" data-r="Reactome:R-DME-2071846" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol localization for the &#34;Deltex recruits Kurtz arrestin to Notch&#34; step, consistent with the cytoplasmic/cytosolic localization of Krz.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Agrees with direct antibody localization of Krz to the cytoplasm/cytosol; a correct and well-supported cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is localized in the cytoplasm of imaginal cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-NUL-2071858
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0005829" data-r="Reactome:R-NUL-2071858" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol localization for the &#34;Kurtz promotes ubiquitination of Notch&#34; step, consistent with the cytoplasmic/cytosolic localization of Krz.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate cytosol localization from a related Reactome reaction; agrees with the IDA/IBA cytoplasm/cytosol evidence. Retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                        PMID:21437272
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is localized in the cytoplasm of imaginal cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035641" target="_blank" class="term-link">
+                                    GO:0035641
+                                </a>
+                            </span>
+                            <span class="term-label">locomotory exploration behavior</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17151232" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17151232
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exploratory activity in Drosophila requires the kurtz nonvis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9V393" data-a="GO:0035641" data-r="PMID:17151232" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Krz is specifically required in the nervous system for exploratory locomotor activity evoked by a novel arena and for mechanically stimulated activity; it is not required for spontaneous activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported organismal behavioural phenotype, a distal physiological consequence of Krz&#39;s neuronal GPCR-regulatory activity rather than its core molecular function; non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17151232" target="_blank" class="term-link">
+                                        PMID:17151232
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">There is a specific requirement for the kurtz nonvisual arrestin in the nervous system for both the exploration stimulated by the novel arena and the mechanically stimulated activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-visual arrestin adaptor that binds activated GPCRs / GPCR-family receptors and promotes their clathrin-mediated internalization and endocytic downregulation, acting from the cytoplasm.</h3>
+                <span class="vote-buttons" data-g="Q9V393" data-a="FUNCTION: Non-visual arrestin adaptor that binds activated G..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001664" target="_blank" class="term-link">
+                            G protein-coupled receptor binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002031" target="_blank" class="term-link">
+                                G protein-coupled receptor internalization
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048260" target="_blank" class="term-link">
+                                positive regulation of receptor-mediated endocytosis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                PMID:21437272
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">promote Smoothened internalization and degradation in a clathrin- and proteosomal-dependent manner</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                                PMID:21437272
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Krz binds to Smo and internalizes it via clathrin-coated vesicles</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                PMID:20802461
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">promote internalization of GPCRs on receptor activation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Directly binds the MAP kinase ERK (rolled), sequestering its inactive form and thereby limiting ERK/MAPK-cascade activation downstream of receptor tyrosine kinases.</h3>
+                <span class="vote-buttons" data-g="Q9V393" data-a="FUNCTION: Directly binds the MAP kinase ERK (rolled), seques..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051019" target="_blank" class="term-link">
+                            mitogen-activated protein kinase binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043409" target="_blank" class="term-link">
+                                negative regulation of MAPK cascade
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                PMID:20802461
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                                PMID:20802461
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">loss of krz function results in an overall increase in ERK activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16284625" target="_blank" class="term-link">
+                            PMID:16284625
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of Notch signalling by non-visual beta-arrestin.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17151232" target="_blank" class="term-link">
+                            PMID:17151232
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exploratory activity in Drosophila requires the kurtz nonvisual arrestin.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19850026" target="_blank" class="term-link">
+                            PMID:19850026
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of smoothened by Drosophila G-protein-coupled receptor kinases.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20802461" target="_blank" class="term-link">
+                            PMID:20802461
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosophila development.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21437272" target="_blank" class="term-link">
+                            PMID:21437272
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role of the Drosophila non-visual ß-arrestin kurtz in hedgehog signalling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24077307" target="_blank" class="term-link">
+                            PMID:24077307
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of Toll signaling and inflammation by β-arrestin and the SUMO protease Ulp1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28195188" target="_blank" class="term-link">
+                            PMID:28195188
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SUMO regulates the activity of Smoothened and Costal-2 in Drosophila Hedgehog signaling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-DME-2071846
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deltex recruits Kurtz arrestin to Notch</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-NUL-2071858
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kurtz promotes ubiquitination of Notch</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Krz bind clathrin and/or the AP-2 adaptor directly in Drosophila (as predicted by the conserved Leu440/IsoLeu441/Leu443 clathrin-binding motif), and can a specific clathrin-binding or clathrin-adaptor molecular function be experimentally assigned?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9V393" data-a="Q: Does Krz bind clathrin and/or the AP-2 adaptor dir..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which endogenous GPCRs (beyond Smoothened) are physiological Krz substrates in vivo, and is Krz&#39;s ERK-sequestration mechanism used downstream of GPCRs as well as RTKs?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9V393" data-a="Q: Which endogenous GPCRs (beyond Smoothened) are phy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenous co-immunoprecipitation / proximity-labeling of Krz to identify its receptor and adaptor (clathrin, AP-2) interactome under basal versus receptor-activated conditions.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9V393" data-a="EXPERIMENT: Endogenous co-immunoprecipitation / proximity-labe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Live imaging of tagged endogenous Krz to test transient recruitment to the plasma membrane and endosomes during agonist-induced receptor internalization.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9V393" data-a="EXPERIMENT: Live imaging of tagged endogenous Krz to test tran..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(krz-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9V393" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="kurtz-krz-drosophila-melanogaster-non-visual-arrestin-review-notes">Kurtz (krz) — Drosophila melanogaster non-visual (β-)arrestin — review notes</h1>
+<p>UniProt: Q9V393 (Q9V393_DROME) · FlyBase: FBgn0040206 · CG1487 · 470 aa.</p>
+<h2 id="gene-identity-architecture">Gene identity / architecture</h2>
+<ul>
+<li>Krz is the <strong>single non-visual β-arrestin</strong> of Drosophila. UniProt: "Belongs to the arrestin family"; two arrestin domains (Arrestin_N PF00339, Arrestin_C PF02752), PANTHER PTHR11792:SF17 "KURTZ ARRESTIN". Synonym <code>beta-arr2</code>.</li>
+<li>Molnar et al. frame it clearly: "In Drosophila melanogaster there is only a single non-visual β-arrestin, encoded by kurtz (krz), which function is essential for development, survival and neural function" <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>. A related gene CG32683 "lacks the clathrin-binding domain" and cannot substitute for Krz.</li>
+<li>Krz "has all the molecular features of a canonical β-arrestin"; conserved residues implicated in GPCR→clathrin-coated-pit targeting (Val94) and in clathrin binding (Leu440/IsoLeu441/Leu443) are functionally required <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>.</li>
+</ul>
+<h2 id="molecular-function-canonical-arrestin-core">Molecular function — canonical arrestin core</h2>
+<ul>
+<li>Canonical arrestin pathway restated in the Hh paper's intro: agonist-activated GPCRs are phosphorylated by GRKs, "followed by binding of the cytosolic arrestin proteins," and "the GRK/ß-arrestin pathway facilitates receptor internalization from the cell surface through clathrin-coated pits," leading to receptor degradation/recycling <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>.</li>
+<li>Krz "has recently been shown to promote internalization of GPCRs on receptor activation" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a> (citing Johnson et al. 2008), and "controls Drosophila olfaction, behaviour, sensitivity to osmotic stress" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a> — i.e. bona fide GPCR-regulator behaviour.</li>
+<li>Direct receptor binding demonstrated for the GPCR-family receptor Smoothened: co-IP shows Krz–Smo interaction; "these results... suggest that Krz binds to Smo and internalizes it via clathrin-coated vesicles" <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>.</li>
+</ul>
+<h2 id="map-kinase-erk-sequestration-a-distinctive-krz-molecular-function">MAP-kinase (ERK) sequestration — a distinctive Krz molecular function</h2>
+<ul>
+<li>Krz directly binds ERK (rolled). "Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a>. IntAct records the Krz–rl interaction with NbExp=12 (UniProt Q9V393 INTERACTION block). This is the basis of the bare <code>GO:0005515 protein binding</code> IPI (PMID:20802461) → should be an informative MF (mitogen-activated protein kinase binding, GO:0051019).</li>
+<li>Consequence: "loss of krz function results in an overall increase in ERK activity" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a> → negative regulation of the MAPK cascade (rolled/ERK) and of the Torso RTK pathway.</li>
+</ul>
+<h2 id="biological-processes-mostly-pleiotropic-developmental-signalling-roles">Biological processes (mostly pleiotropic developmental-signalling roles)</h2>
+<ul>
+<li><strong>Torso (RTK) / MAPK</strong>: "the normal function of Krz is to limit the activity of ERK, and hence the Torso pathway, in the early embryo" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a>. Distinct from Notch mechanism; a "molecular sponge" sequestering inactive ERK.</li>
+<li><strong>Toll / NF-κB (Dorsal–Cactus)</strong>: "Krz functions during normal development to limit the activity of Toll" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a>; Krz binds and stabilises Cactus (IκBα orthologue). Independently, in the immune/larval context "Loss of function of krz or Ulp1 in Drosophila larvae results in a similar inflammatory phenotype" <a href="https://pubmed.ncbi.nlm.nih.gov/24077307">PMID:24077307</a> — Krz limits Toll signalling via the SUMO protease Ulp1.</li>
+<li><strong>Hedgehog / Smoothened</strong>: over-expressed Krz promotes Smo internalization and degradation, "in a clathrin- and proteosomal-dependent manner" <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>; "Krz enhances Smo degradation via the proteosomal pathway" (protein destabilization). Antagonism of Hh is "only observed upon its over-expression" <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>; loss-of-function has no Smo phenotype (Smo unchanged in krz clones). In Cheng et al., "overexpression of Gprk2 or the β-arrestin orthologue Krz led to a reduction of Smo levels" — "first evidence that arrestins participate in Smo regulation in flies" <a href="https://pubmed.ncbi.nlm.nih.gov/19850026">PMID:19850026</a>, though "Smo levels were unchanged in krz mutant wing disc clones."</li>
+<li><strong>SUMO/Smo</strong>: Krz promotes Smo desumoylation by bridging Smo to Ulp1: "Krz likely facilitates the interaction between Smo and Ulp1 because knockdown of Krz by RNAi attenuates Smo-Ulp1 interaction"; "inhibits Smo sumoylation and prevents Smo accumulation through Krz regulatory domain" <a href="https://pubmed.ncbi.nlm.nih.gov/28195188">PMID:28195188</a>.</li>
+<li><strong>Notch</strong>: trimeric Notch–Deltex–Krz complex; "This complex mediates the degradation of the Notch receptor through a ubiquitination-dependent pathway" <a href="https://pubmed.ncbi.nlm.nih.gov/16284625">PMID:16284625</a> (abstract-only cache; IGI + Reactome R-DME-2071846 "Deltex recruits Kurtz arrestin to Notch", R-NUL-2071858 "Kurtz promotes ubiquitination of Notch").</li>
+<li><strong>Behaviour / sensory</strong>: "There is a specific requirement for the kurtz nonvisual arrestin in the nervous system for both the exploration stimulated by the novel arena and the mechanically stimulated activity" <a href="https://pubmed.ncbi.nlm.nih.gov/17151232">PMID:17151232</a>; Krz essential for CNS/neural function and viability <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Predominantly cytoplasmic: "the Krz protein is expressed throughout the blastoderm embryo and is predominantly cytoplasmic" <a href="https://pubmed.ncbi.nlm.nih.gov/20802461">PMID:20802461</a>; "the protein is localized in the cytoplasm of imaginal cells, being detected at higher levels close to the apical side of the epithelium" <a href="https://pubmed.ncbi.nlm.nih.gov/21437272">PMID:21437272</a>. Consistent with <code>cytoplasm</code>/<code>cytosol</code> (IBA, IDA, Reactome TAS). Functions transiently at the plasma membrane/endosome during receptor internalization but no dedicated experimental CC annotation for those compartments in GOA.</li>
+</ul>
+<h2 id="curation-synthesis">Curation synthesis</h2>
+<ul>
+<li><strong>Core</strong> (canonical, evolutionarily conserved arrestin functions): GPCR binding (GO:0001664), GPCR internalization (GO:0002031), positive regulation of receptor-mediated endocytosis (GO:0048260), cytoplasm/cytosol localization. A second, well-supported direct MF is MAP-kinase (ERK) binding (GO:0051019), underlying ERK/Torso/MAPK inhibition.</li>
+<li><strong>Non-core</strong> (pleiotropic developmental / immune signalling-attenuation roles, many seen only on over-expression): negative regulation of Toll (×2), Torso, Smoothened (×2), MAPK cascade, Notch; protein destabilization; positive regulation of protein desumoylation; locomotory exploration behavior; sensory perception.</li>
+<li><strong><code>GO:0005515 protein binding</code> (IPI, PMID:20802461)</strong> is uninformative → MODIFY to <code>GO:0051019 mitogen-activated protein kinase binding</code> (Krz–ERK/rolled).</li>
+<li><strong><code>GO:0007165 signal transduction</code> (IEA)</strong> is very general but not wrong (arrestin is a signalling regulator) → ACCEPT.</li>
+<li>No REMOVE calls: every experimental annotation is supported by its cited paper; abstract-only Notch (PMID:16284625) is directly supported by its own abstract.</li>
+</ul>
+<h2 id="go-ids-verified">GO IDs verified</h2>
+<ul>
+<li>GO:0051019 mitogen-activated protein kinase binding — MF, subclass of protein kinase binding (AmiGO). Used for the protein-binding MODIFY and core_function 2.</li>
+<li>GO:0001664 (GPCR binding, MF), GO:0002031 (GPCR internalization, BP), GO:0048260 (positive regulation of receptor-mediated endocytosis, BP), GO:0043409 (negative regulation of MAPK cascade, BP), GO:0005737 (cytoplasm, CC), GO:0005829 (cytosol, CC) — used in core_functions.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9V393
+gene_symbol: krz
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &gt;-
+  Kurtz (Krz) is the single non-visual (beta-)arrestin of Drosophila melanogaster,
+  a cytoplasmic member of the arrestin family with two arrestin domains. As a
+  canonical arrestin, it binds activated/phosphorylated G-protein-coupled receptors
+  and receptor-family proteins and acts as an adaptor that promotes their
+  clathrin-mediated internalization, desensitization and downregulation; conserved
+  residues required for GPCR targeting to clathrin-coated pits and for clathrin
+  binding are functionally important. Krz is essential for viability and neural
+  function and, because it is the only non-visual arrestin in the fly, has broad
+  pleiotropic roles as an attenuator of multiple developmental and immune signalling
+  pathways. It limits receptor-tyrosine-kinase/MAPK (ERK) signalling by directly
+  binding and sequestering inactive ERK away from its activating kinase MEK, thereby
+  restraining the Torso pathway in the early embryo; it limits Toll/NF-kappaB (Dorsal)
+  signalling in part by binding and stabilizing the IkappaB orthologue Cactus and,
+  in larvae, through a functional interaction with the SUMO protease Ulp1; it can
+  promote internalization and proteasomal degradation of the GPCR-family receptor
+  Smoothened (antagonizing Hedgehog signalling when over-expressed) and facilitates
+  Smoothened desumoylation via Ulp1; and it forms a Notch-Deltex-Kurtz complex that
+  drives ubiquitination-dependent degradation of the Notch receptor. In the adult
+  nervous system Krz is required for exploratory locomotor behaviour. The protein is
+  predominantly cytoplasmic/cytosolic, acting transiently at the plasma membrane and
+  endocytic compartments during receptor internalization.
+existing_annotations:
+- term:
+    id: GO:0007600
+    label: sensory perception
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation reflecting the arrestin family&#39;s conserved role in
+      sensory/GPCR signalling; Krz controls Drosophila olfaction and other sensory GPCR
+      responses. A real but distal, pleiotropic role rather than the gene&#39;s core
+      biochemical function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with Krz functioning as a GPCR regulator that controls sensory
+      responses such as olfaction, but this is a downstream physiological outcome of the
+      core arrestin activity rather than the molecular function itself; kept as non-core.
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: controls Drosophila olfaction, behaviour, sensitivity to osmotic stress
+- term:
+    id: GO:0001664
+    label: G protein-coupled receptor binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core, evolutionarily conserved molecular function of a non-visual arrestin: binding
+      activated/phosphorylated GPCRs (and GPCR-family receptors such as Smoothened) to
+      desensitize them and drive their internalization.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported both by the canonical arrestin mechanism and by direct experimental
+      demonstration in Drosophila that Krz binds the GPCR-family receptor Smoothened. This
+      is a central, defining molecular function of Krz and is retained as core.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: Krz binds to Smo and internalizes it via clathrin-coated vesicles
+    - reference_id: PMID:20802461
+      supporting_text: promote internalization of GPCRs on receptor activation
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Krz is predominantly a cytoplasmic protein, consistent with the non-visual arrestins
+      being cytosolic proteins that act on receptors at/near the plasma membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Directly observed by antibody staining in both embryos and imaginal discs, matching
+      the IBA phylogenetic assignment.
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: the Krz protein is expressed throughout the blastoderm embryo and is predominantly cytoplasmic
+    - reference_id: PMID:21437272
+      supporting_text: the protein is localized in the cytoplasm of imaginal cells
+- term:
+    id: GO:0002031
+    label: G protein-coupled receptor internalization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core arrestin function: Krz promotes clathrin-mediated internalization of activated
+      GPCRs/GPCR-family receptors, shown directly for Smoothened and reported for other
+      GPCRs on activation.
+    action: ACCEPT
+    reason: &gt;-
+      Canonical, conserved arrestin activity supported experimentally in Drosophila (Smo
+      internalization via clathrin-coated vesicles; promotion of GPCR internalization on
+      receptor activation). Retained as core.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: promote Smoothened internalization and degradation in a clathrin- and proteosomal-dependent manner
+    - reference_id: PMID:20802461
+      supporting_text: promote internalization of GPCRs on receptor activation
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Very general InterPro-based (IEA) annotation reflecting that arrestins participate in
+      signal transduction. Not wrong but uninformative relative to the specific regulatory
+      roles captured elsewhere.
+    action: ACCEPT
+    reason: &gt;-
+      A broad IEA that is biologically correct (Krz is a regulator of multiple signalling
+      pathways); acceptable as a high-level term even though more specific process terms are
+      also annotated.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: participate in a variety of signalling events
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20802461
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#39;protein binding&#39; from the interaction between Krz and ERK (rolled). Uninformative
+      as annotated; the specific, experimentally supported activity is binding of the MAP
+      kinase ERK, which Krz sequesters in its inactive form.
+    action: MODIFY
+    reason: &gt;-
+      &#39;protein binding&#39; conveys no functional information. The IPI evidence (Krz directly binds
+      ERK/rolled; IntAct NbExp=12) supports the more informative molecular function
+      &#39;mitogen-activated protein kinase binding&#39; (GO:0051019).
+    proposed_replacement_terms:
+    - id: GO:0051019
+      label: mitogen-activated protein kinase binding
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK
+- term:
+    id: GO:0045751
+    label: negative regulation of Toll signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:24077307
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz limits Toll/NF-kappaB signalling in larvae/immunity, acting together with the SUMO
+      protease Ulp1; loss of krz produces an inflammatory phenotype with nuclear accumulation
+      of Toll effectors Dorsal and Dif.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported inhibitory role in Toll signalling and inflammation, but a
+      pleiotropic downstream regulatory role rather than the core arrestin biochemical function.
+    supported_by:
+    - reference_id: PMID:24077307
+      supporting_text: Loss of function of krz or Ulp1 in Drosophila larvae results in a similar inflammatory phenotype
+- term:
+    id: GO:0120177
+    label: negative regulation of torso signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:20802461
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz restrains the Torso RTK pathway in the early embryo by limiting ERK activity;
+      maternal loss of krz expands and intensifies dpERK and Torso target-gene expression.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Directly supported by maternal krz mutant analysis (increased/expanded dpERK; upregulated
+      tll/hkb). A specific developmental-signalling role downstream of the core ERK-binding
+      activity; kept as non-core.
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: the normal function of Krz is to limit the activity of ERK, and hence the Torso pathway, in the early embryo
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:21437272
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct antibody localization of Krz to the cytoplasm/cytosol of imaginal cells.
+    action: ACCEPT
+    reason: &gt;-
+      IDA-quality localization data; consistent with the cytosolic nature of non-visual
+      arrestins and with the cytoplasm (IBA) and Reactome (TAS) cytosol annotations.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: the protein is localized in the cytoplasm of imaginal cells
+- term:
+    id: GO:0031648
+    label: protein destabilization
+  evidence_type: IMP
+  original_reference_id: PMID:21437272
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-expressed Krz reduces steady-state Smoothened levels by promoting its proteasomal
+      degradation (destabilization), an outcome of Krz-driven Smo internalization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by S2-cell and imaginal-disc data showing Krz enhances Smo turnover via the
+      proteasome. This destabilizing activity is a consequence of the core internalization/adaptor
+      function acting on a specific receptor; retained as non-core.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: Krz enhances Smo degradation via the proteosomal pathway
+- term:
+    id: GO:0045879
+    label: negative regulation of smoothened signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:21437272
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-expression of Krz phenocopies loss of Hedgehog signalling and reduces Hh target-gene
+      expression (Ptc, En) by promoting Smoothened internalization and degradation. Note the
+      effect is seen only on over-expression; krz loss-of-function has no Smo phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported antagonism of Smoothened/Hh signalling, but manifested only upon
+      Krz over-expression and dispensable in loss-of-function, so a conditional, non-core
+      regulatory role.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: Krz has the potential to antagonize Hh signalling, although this antagonism is only observed upon its over-expression
+- term:
+    id: GO:0045879
+    label: negative regulation of smoothened signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:28195188
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Excess Krz inhibits Smoothened sumoylation and prevents Smoothened accumulation, thereby
+      down-regulating Hedgehog/Smoothened signalling; the effect maps to the Krz regulatory domain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Independent experimental support (a second lab) for Krz antagonizing Smoothened signalling,
+      here via the SUMO axis. A specific, non-core regulatory role.
+    supported_by:
+    - reference_id: PMID:28195188
+      supporting_text: inhibits Smo sumoylation and prevents Smo accumulation through Krz regulatory domain
+- term:
+    id: GO:0060189
+    label: positive regulation of protein desumoylation
+  evidence_type: IMP
+  original_reference_id: PMID:28195188
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz bridges Smoothened to the SUMO protease Ulp1, promoting Smo desumoylation; RNAi
+      knockdown of Krz weakens the Smo-Ulp1 interaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by the demonstration that Krz facilitates the Smo-Ulp1 interaction that drives
+      desumoylation. A specialized adaptor/scaffolding role in the SUMO pathway; non-core.
+    supported_by:
+    - reference_id: PMID:28195188
+      supporting_text: Krz likely facilitates the interaction between Smo and Ulp1 because knockdown of Krz by RNAi attenuates Smo-Ulp1 interaction
+- term:
+    id: GO:0045746
+    label: negative regulation of Notch signaling pathway
+  evidence_type: IGI
+  original_reference_id: PMID:16284625
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz forms a trimeric Notch-Deltex-Kurtz complex that promotes ubiquitination-dependent
+      degradation of the Notch receptor, thereby down-regulating Notch signalling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by the paper&#39;s own abstract (identification of the Notch-Deltex-Krz complex and
+      ubiquitination-dependent Notch degradation), consistent with the arrestin adaptor role in
+      receptor downregulation; a specific developmental-signalling role kept as non-core.
+    supported_by:
+    - reference_id: PMID:16284625
+      supporting_text: This complex mediates the degradation of the Notch receptor through a ubiquitination-dependent pathway.
+- term:
+    id: GO:0045751
+    label: negative regulation of Toll signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:20802461
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      In the early embryo Krz limits Toll signalling: maternal loss of krz expands the Dorsal
+      nuclear gradient and Toll target-gene (twi, rho) domains; Krz binds and stabilizes the
+      IkappaB orthologue Cactus.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Directly supported by maternal krz mutant analysis and Krz-Cactus interaction. A specific
+      developmental-signalling role (distinct paper/context from the larval Toll annotation); non-core.
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: Krz functions during normal development to limit the activity of Toll
+- term:
+    id: GO:0043409
+    label: negative regulation of MAPK cascade
+  evidence_type: IMP
+  original_reference_id: PMID:20802461
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz negatively regulates the ERK/MAPK cascade by directly binding and sequestering inactive
+      ERK (rolled), preventing its activation by MEK; loss of krz increases overall ERK activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Strongly supported mechanistically (direct ERK binding plus increased dpERK in krz mutants).
+      The underlying molecular activity (MAP kinase binding) is captured in core_functions; this
+      process-level inhibitory role across multiple RTKs is a pleiotropic regulatory function kept
+      as non-core.
+    supported_by:
+    - reference_id: PMID:20802461
+      supporting_text: loss of krz function results in an overall increase in ERK activity
+- term:
+    id: GO:0048260
+    label: positive regulation of receptor-mediated endocytosis
+  evidence_type: IMP
+  original_reference_id: PMID:19850026
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-expression of the beta-arrestin Krz reduces Smoothened levels, the first evidence that
+      arrestins promote receptor (Smo) internalization/endocytosis in flies - a manifestation of
+      the canonical arrestin adaptor-for-endocytosis function.
+    action: ACCEPT
+    reason: &gt;-
+      Captures the core, conserved arrestin activity of promoting clathrin/receptor-mediated
+      endocytosis; supported by Krz over-expression reducing Smo. Retained as core (canonical
+      arrestin adaptor role).
+    supported_by:
+    - reference_id: PMID:19850026
+      supporting_text: This is the first evidence that arrestins participate in Smo regulation in flies
+    - reference_id: PMID:21437272
+      supporting_text: Krz binds to Smo and internalizes it via clathrin-coated vesicles
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-DME-2071846
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol localization for the &#34;Deltex recruits Kurtz arrestin to Notch&#34; step,
+      consistent with the cytoplasmic/cytosolic localization of Krz.
+    action: ACCEPT
+    reason: &gt;-
+      Agrees with direct antibody localization of Krz to the cytoplasm/cytosol; a correct and
+      well-supported cellular-component annotation.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: the protein is localized in the cytoplasm of imaginal cells
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-NUL-2071858
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol localization for the &#34;Kurtz promotes ubiquitination of Notch&#34; step,
+      consistent with the cytoplasmic/cytosolic localization of Krz.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate cytosol localization from a related Reactome reaction; agrees with the IDA/IBA
+      cytoplasm/cytosol evidence. Retained.
+    supported_by:
+    - reference_id: PMID:21437272
+      supporting_text: the protein is localized in the cytoplasm of imaginal cells
+- term:
+    id: GO:0035641
+    label: locomotory exploration behavior
+  evidence_type: IMP
+  original_reference_id: PMID:17151232
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Krz is specifically required in the nervous system for exploratory locomotor activity evoked
+      by a novel arena and for mechanically stimulated activity; it is not required for spontaneous
+      activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported organismal behavioural phenotype, a distal physiological consequence
+      of Krz&#39;s neuronal GPCR-regulatory activity rather than its core molecular function; non-core.
+    supported_by:
+    - reference_id: PMID:17151232
+      supporting_text: There is a specific requirement for the kurtz nonvisual arrestin in the nervous system for both the exploration stimulated by the novel arena and the mechanically stimulated activity.
+core_functions:
+- description: &gt;-
+    Non-visual arrestin adaptor that binds activated GPCRs / GPCR-family receptors and promotes
+    their clathrin-mediated internalization and endocytic downregulation, acting from the cytoplasm.
+  molecular_function:
+    id: GO:0001664
+    label: G protein-coupled receptor binding
+  directly_involved_in:
+  - id: GO:0002031
+    label: G protein-coupled receptor internalization
+  - id: GO:0048260
+    label: positive regulation of receptor-mediated endocytosis
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:21437272
+    supporting_text: promote Smoothened internalization and degradation in a clathrin- and proteosomal-dependent manner
+  - reference_id: PMID:21437272
+    supporting_text: Krz binds to Smo and internalizes it via clathrin-coated vesicles
+  - reference_id: PMID:20802461
+    supporting_text: promote internalization of GPCRs on receptor activation
+- description: &gt;-
+    Directly binds the MAP kinase ERK (rolled), sequestering its inactive form and thereby limiting
+    ERK/MAPK-cascade activation downstream of receptor tyrosine kinases.
+  molecular_function:
+    id: GO:0051019
+    label: mitogen-activated protein kinase binding
+  directly_involved_in:
+  - id: GO:0043409
+    label: negative regulation of MAPK cascade
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:20802461
+    supporting_text: Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK
+  - reference_id: PMID:20802461
+    supporting_text: loss of krz function results in an overall increase in ERK activity
+suggested_questions:
+- question: &gt;-
+    Does Krz bind clathrin and/or the AP-2 adaptor directly in Drosophila (as predicted by the
+    conserved Leu440/IsoLeu441/Leu443 clathrin-binding motif), and can a specific clathrin-binding
+    or clathrin-adaptor molecular function be experimentally assigned?
+- question: &gt;-
+    Which endogenous GPCRs (beyond Smoothened) are physiological Krz substrates in vivo, and is
+    Krz&#39;s ERK-sequestration mechanism used downstream of GPCRs as well as RTKs?
+suggested_experiments:
+- description: &gt;-
+    Endogenous co-immunoprecipitation / proximity-labeling of Krz to identify its receptor and
+    adaptor (clathrin, AP-2) interactome under basal versus receptor-activated conditions.
+- description: &gt;-
+    Live imaging of tagged endogenous Krz to test transient recruitment to the plasma membrane and
+    endosomes during agonist-induced receptor internalization.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:16284625
+  title: Regulation of Notch signalling by non-visual beta-arrestin.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; abstract-only in cache. Directly supports the Notch-Deltex-Kurtz complex and
+      ubiquitination-dependent Notch degradation (basis of GO:0045746 IGI and the two Reactome Notch
+      reactions).
+- id: PMID:17151232
+  title: Exploratory activity in Drosophila requires the kurtz nonvisual arrestin.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; directly supports the neuronal requirement of krz for exploratory locomotor
+      behavior (GO:0035641 IMP).
+- id: PMID:19850026
+  title: Regulation of smoothened by Drosophila G-protein-coupled receptor kinases.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; primarily about Gprk2, but explicitly shows Krz over-expression reduces Smo
+      (first evidence arrestins regulate Smo in flies), supporting GO:0048260. Notes krz LOF has no Smo
+      phenotype.
+- id: PMID:20802461
+  title: β-arrestin Kurtz inhibits MAPK and Toll signalling in Drosophila development.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; primary source for Krz-ERK binding/sequestration (MAPK, GO:0043409, GO:0120177,
+      GO:0051019), Krz-Cactus binding and Toll inhibition (GO:0045751), and cytoplasmic localization.
+- id: PMID:21437272
+  title: Role of the Drosophila non-visual ß-arrestin kurtz in hedgehog signalling.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; primary source for Krz-Smo binding, clathrin/proteasome-dependent Smo
+      internalization and degradation (GO:0002031, GO:0031648, GO:0045879) and cytoplasmic localization.
+      Antagonism of Hh only on over-expression.
+- id: PMID:24077307
+  title: Regulation of Toll signaling and inflammation by β-arrestin and the SUMO protease Ulp1.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; supports Krz limiting Toll signalling/inflammation in larvae via the SUMO
+      protease Ulp1 (GO:0045751 IMP).
+- id: PMID:28195188
+  title: SUMO regulates the activity of Smoothened and Costal-2 in Drosophila Hedgehog signaling.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; supports excess Krz inhibiting Smo sumoylation/accumulation (GO:0045879) and
+      Krz facilitating the Smo-Ulp1 interaction that promotes desumoylation (GO:0060189).
+- id: Reactome:R-DME-2071846
+  title: Deltex recruits Kurtz arrestin to Notch
+  findings: []
+- id: Reactome:R-NUL-2071858
+  title: Kurtz promotes ubiquitination of Notch
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@ title: "Pancrustacea Metamorphosis Gene Families"
 maturity: IN_PROGRESS
 tags: [LITERATURE, ARTHROPOD, DEVELOPMENT, CANDIDATE_GENES]
 species: [DROME]
-genes: [kni, hairy]
+genes: [kni, hairy, klg, trn, caps, kek1, krz, insc]
 ---
 
 # Pancrustacea Metamorphosis Gene Families
@@ -101,11 +101,12 @@ of which is yet reviewed in this corpus. "Family N" is the paper's numbering.
 |---|---|---|---|---|
 | **knirps** (*kni*) | 11 | orphan nuclear receptor (NR0A1), C4 zinc-finger short-range repressor (gap gene) | segmentation (pair-rule control), tracheal branch morphogenesis, gut endoreduplication; regulates ecdysteroid-biosynthesis enzymes in prothoracic gland | ✅ [reviewed](../genes/DROME/kni/kni-ai-review.yaml) |
 | **hairy** (*h*) | 5 | bHLH-Orange (HES-family) Groucho-recruiting repressor (pair-rule) | segmentation cascade (conserved across arthropods), sensory-bristle patterning via *achaete-scute* repression | ✅ [reviewed](../genes/DROME/hairy/hairy-ai-review.yaml) |
-| **klingon** (*klg*) | 1 | Ig-superfamily cell-adhesion protein | photoreceptor-neuron development, cell adhesion, axon guidance | — |
-| **Kurtz** (*krz*) | 12 | non-visual (β-)arrestin | inhibitor of MAPK and Toll pathways in development; rhodopsin regulation | — |
-| **inscuteable** (*insc*) | 7 | spindle-orientation adaptor | asymmetric cell division of neuroblasts and epithelial cells | — |
-| **tartan** (*trn*) / capricious (*caps*) | 3 | LRR transmembrane proteins (receptor pair) | neuronal & tracheal morphogenesis, axon guidance, imaginal-disc D/V boundary | — |
-| **kekkon** (*kek1* family) | 9 | LRR + Ig transmembrane | synaptic growth (with Toll), EGFR-pathway inhibition in eye/wing discs | — |
+| **klingon** (*klg*) | 1 | GPI-anchored Ig-superfamily cell-adhesion glycoprotein | homophilic adhesion, R7 photoreceptor fate/differentiation, axon guidance, long-term memory | ✅ [reviewed](../genes/DROME/klg/klg-ai-review.yaml) |
+| **Kurtz** (*krz*) | 12 | non-visual (β-)arrestin | GPCR binding/internalization adaptor; pleiotropic MAPK/Toll/Hedgehog/Notch attenuation | ✅ [reviewed](../genes/DROME/krz/krz-ai-review.yaml) |
+| **inscuteable** (*insc*) | 7 | cytoskeletal spindle-orientation adaptor | apical-basal spindle orientation in asymmetric neuroblast/SOP division | ✅ [reviewed](../genes/DROME/insc/insc-ai-review.yaml) |
+| **tartan** (*trn*) | 3 | LRR transmembrane adhesion molecule | motor-axon guidance, affinity boundaries, tracheal/salivary morphogenesis | ✅ [reviewed](../genes/DROME/trn/trn-ai-review.yaml) |
+| **capricious** (*caps*) | 3 | LRR transmembrane adhesion molecule (trn paralog) | axon target recognition, homophilic adhesion, tracheal branch fusion | ✅ [reviewed](../genes/DROME/caps/caps-ai-review.yaml) |
+| **kekkon-1** (*kek1*) | 9 | LRR + Ig transmembrane receptor-inhibitor | negative-feedback inhibition of EGFR signalling (binds DER directly) | ✅ [reviewed](../genes/DROME/kek1/kek1-ai-review.yaml) |
 
 *deadpan (dpn)* is also mentioned alongside *knirps*/*hairy* in insect neural
 development but was not called out as an adaptively expanding family.
@@ -136,7 +137,8 @@ just fetch-gene DROME kni      # then deep research + notes, then the ai-review.
 
 ## Status
 
-**IN_PROGRESS.** Two candidate transcription factors reviewed so far:
+**IN_PROGRESS.** All eight *Drosophila* reference genes named in the paper have
+now been reviewed. The two transcription factors:
 
 - **knirps (*kni*, P10734)** — 29 annotations adjudicated (17 ACCEPT, 8 MODIFY,
   3 KEEP_AS_NON_CORE, 1 REMOVE). Notable: removed an
@@ -151,7 +153,38 @@ just fetch-gene DROME kni      # then deep research + notes, then the ai-review.
   corepressor interactions, and flagged a distal `membrane organization` term as
   over-annotation of a nuclear repressor.
 
-Both reviews validate clean, with every `supporting_text` quote independently
-confirmed verbatim against the cached literature. Remaining candidates
-(*klingon*, *Kurtz*, *inscuteable*, *tartan*/*capricious*, *kekkon*) are not yet
-started; genes move onto the `genes:` frontmatter list as their reviews land.
+The adhesion/receptor and signalling/asymmetric-division candidates are now also
+reviewed:
+
+- **klingon (*klg*, Q9VCT4)** — 19 annotations. GPI-anchored IgSF adhesion
+  molecule; core homophilic-adhesion and R7 photoreceptor roles accepted, distal
+  ethanol/long-term-memory behaviours kept non-core, bare `protein binding`
+  redirected to `cell adhesion molecule binding` (WITH/FROM partner cDIP).
+- **tartan (*trn*, M9PFH7)** — 6 annotations. LRR adhesion molecule; IBA
+  `signaling receptor activity` corrected to `cell-cell adhesion mediator
+  activity` (propagated from a TLR-containing family).
+- **capricious (*caps*, A0A0S0WP14)** — 11 annotations. LRR adhesion molecule
+  (trn paralog); core homophilic-adhesion / axon-target-recognition accepted,
+  tissue-specific contexts (some the cited papers found caps dispensable for)
+  kept non-core.
+- **kekkon-1 (*kek1*, Q9VK54)** — 22 annotations. Dedicated negative-feedback
+  inhibitor of EGFR signalling; the EGF-receptor-binding / receptor-inhibitor /
+  neg-reg-EGFR core is strongly experimentally supported and accepted.
+- **Kurtz (*krz*, Q9V393)** — 20 annotations. Non-visual β-arrestin; core
+  GPCR-binding/internalization adaptor accepted, the many pleiotropic
+  signalling-attenuation roles (MAPK/Toll/Hedgehog/Notch) kept non-core.
+- **inscuteable (*insc*, Q9W2R4)** — 30 annotations. Cytoskeletal
+  spindle-orientation adaptor; `establishment of mitotic spindle localization`
+  corrected to `…orientation`; two mis-cited/unverifiable references flagged in
+  `reference_review`.
+
+All eight reviews validate clean, with every `supporting_text` quote
+independently confirmed verbatim against the cached literature. Each bare
+`protein binding` IPI was resolved through the GOA `WITH/FROM` partner to a
+specific binding term. The full candidate set named in the paper is now reviewed;
+next steps are the GO-CAM/module angle (e.g. an ecdysteroid-biosynthesis-
+regulation module) and, optionally, the secondary mentions (*deadpan*).
+
+**Data-provenance note.** For *klingon* and *inscuteable*, `fetch-gene` first
+resolved sparse TrEMBL accessions (3 and 1 annotations); the reviews use the
+annotation-rich accessions **Q9VCT4** and **Q9W2R4** instead.
