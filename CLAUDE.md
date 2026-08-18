@@ -234,6 +234,48 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+### PANTHER ids: never write a family label from memory
+
+PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
+modules are now hard-validated against `interpro/panther/panther.obo`, built from
+PANTHER's own HMM classifications. Two rules follow:
+
+- **`term.label` must be PANTHER's official name, verbatim.** It is not a place for your
+  description of the protein. Writing a plausible-sounding label is exactly how a wrong
+  family id stays hidden — the id is real, so nothing else catches it. Put your readable
+  description in `preferred_term`, which is free text and is not label-checked. Look the
+  name up:
+  `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
+- **The declared family must contain its own `representative_members`.** This is checked
+  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
+  the representative protein is usually right and the family id is wrong — look up the
+  member's real family rather than deleting the member. Accessions missing from the index
+  only warn; run `just refresh-panther-members` to add newly cited proteins.
+- **If a label mismatch names a *different protein*, fix the ID, not the label.** A
+  wildly-wrong label is weak evidence of a typo and strong evidence that the id was
+  guessed. An id invented at random is still a hallucination when it happens to resolve
+  to a real family, and rewriting its label to the official name converts a visible error
+  into an invisible one. `just fix-panther-labels` therefore refuses to touch these and
+  reports them for review (`--allow-divergent` overrides, only after you have checked the
+  id). Beware the inverse too: PANTHER family names are often dominated by one member, so
+  a correct id can legitimately carry a surprising name (`PTHR24322` = "PKSB" really does
+  contain DHRS3). The representative-member check is what tells the two cases apart.
+
+PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
+`validate_paint_ptns`. Their label is conventionally just the bare id.
+
+**If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
+When you cannot establish that a PANTHER family corresponds to what the descriptor
+means, omit `term` entirely and keep `preferred_term` (free-text intent) and
+`representative_members` (the proteins themselves). An omitted id says "not
+established"; a wrong id says something false, and says it in a machine-readable
+field other tooling will believe. Never invent a plausible id to fill the slot, and
+never guess a replacement for one that failed validation -- re-pointing a family is
+a judgement about evolutionary placement, and doing it mechanically has previously
+broken real PAINT links. The same rule applies to evolutionary claims generally: if
+the PAINT evidence for a step is not clear, say nothing about it rather than
+asserting an inference the data does not support.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording
