@@ -13,7 +13,7 @@ UniProt: Q9V393 (Q9V393_DROME) · FlyBase: FBgn0040206 · CG1487 · 470 aa.
 - Direct receptor binding demonstrated for the GPCR-family receptor Smoothened: co-IP shows Krz–Smo interaction; "these results... suggest that Krz binds to Smo and internalizes it via clathrin-coated vesicles" [PMID:21437272].
 
 ## MAP-kinase (ERK) sequestration — a distinctive Krz molecular function
-- Krz directly binds ERK (rolled). "Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK" [PMID:20802461]. IntAct records the Krz–rl interaction with NbExp=12 (UniProt Q9V393 INTERACTION block). This is the basis of the bare `GO:0005515 protein binding` IPI (PMID:20802461) → should be an informative MF (mitogen-activated protein kinase binding, GO:0051019).
+- Krz directly binds ERK (rolled). "Krz can directly bind and sequester an inactive form of ERK, thus preventing its activation by the upstream kinase, MEK" [PMID:20802461]. IntAct records the Krz–rl interaction with NbExp=12 (UniProt Q9V393 INTERACTION block). This is the basis of one of the two bare `GO:0005515 protein binding` IPI rows from PMID:20802461 (the row whose WITH/FROM is rolled/ERK) → should be an informative MF (mitogen-activated protein kinase binding, GO:0051019). The second IPI row from the same paper has WITH/FROM = UniProtKB:Q03017 (Cactus) and is handled separately, below.
 - Consequence: "loss of krz function results in an overall increase in ERK activity" [PMID:20802461] → negative regulation of the MAPK cascade (rolled/ERK) and of the Torso RTK pathway.
 
 ## Biological processes (mostly pleiotropic developmental-signalling roles)
@@ -30,7 +30,7 @@ UniProt: Q9V393 (Q9V393_DROME) · FlyBase: FBgn0040206 · CG1487 · 470 aa.
 ## Curation synthesis
 - **Core** (canonical, evolutionarily conserved arrestin functions): GPCR binding (GO:0001664), GPCR internalization (GO:0002031), positive regulation of receptor-mediated endocytosis (GO:0048260), cytoplasm/cytosol localization. A second, well-supported direct MF is MAP-kinase (ERK) binding (GO:0051019), underlying ERK/Torso/MAPK inhibition.
 - **Non-core** (pleiotropic developmental / immune signalling-attenuation roles, many seen only on over-expression): negative regulation of Toll (×2), Torso, Smoothened (×2), MAPK cascade, Notch; protein destabilization; positive regulation of protein desumoylation; locomotory exploration behavior; sensory perception.
-- **`GO:0005515 protein binding` (IPI, PMID:20802461)** is uninformative → MODIFY to `GO:0051019 mitogen-activated protein kinase binding` (Krz–ERK/rolled).
+- **`GO:0005515 protein binding` (IPI, PMID:20802461)** — two rows from this reference, adjudicated separately. The rolled/ERK row is uninformative → MODIFY to `GO:0051019 mitogen-activated protein kinase binding` (Krz–ERK/rolled). The Cactus (Q03017) row is well supported experimentally (co-IP from S2 cells plus in vitro translated proteins) but GO has no `I-kappaB binding` MF to sharpen it to (`GO:0051059 NF-kappaB binding` names the wrong target, since Cactus is the inhibitor), so no replacement is proposed and it is `KEEP_AS_NON_CORE`; the biology is already captured by GO:0045751.
 - **`GO:0007165 signal transduction` (IEA)** is very general but not wrong (arrestin is a signalling regulator) → ACCEPT.
 - No REMOVE calls: every experimental annotation is supported by its cited paper; abstract-only Notch (PMID:16284625) is directly supported by its own abstract.
 

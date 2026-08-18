@@ -32,7 +32,10 @@ memory/ethanol mutant allele **ruslan (rus)** [PMID:19104051].
 - **"Axon guidance receptor activity" (GO:0008046, IBA).** Phylogenetic (GO_Central) inference from the
   IgSF adhesion/guidance family. No direct experimental demonstration that klg transduces a guidance
   signal, and as a GPI-anchored protein it lacks a cytoplasmic signaling domain (would require a
-  co-receptor). Treated as a plausible family-level inference but non-core.
+  co-receptor). The family-level term therefore overstates what klg does: MODIFY to
+  cell-cell adhesion mediator activity (GO:0098632), which matches the demonstrated homophilic
+  adhesion. Knock-on: the GO:0007411 axon guidance annotation is a GO_REF:0000108 inter-ontology
+  link whose WITH/FROM is this GO:0008046 IBA, so it inherits this term's weakness.
 
 ## Biological process
 - **R7 photoreceptor development (core).** klg is expressed in the R7 precursor throughout its
@@ -73,7 +76,8 @@ memory/ethanol mutant allele **ruslan (rus)** [PMID:19104051].
   (GO:0045466 / GO:0007465).
 - Core CC: plasma membrane / extrinsic component of plasma membrane (GO:0005886 / GO:0019897).
 - MODIFY bare protein binding (GO:0005515) → cell adhesion molecule binding (GO:0050839).
-- KEEP_AS_NON_CORE: axon guidance (GO:0007411), axon guidance receptor activity (GO:0008046),
-  synapse organization (GO:0050808), long-term memory (GO:0007616), behavioral response to ethanol (GO:0048149).
+- MODIFY axon guidance receptor activity (GO:0008046) → cell-cell adhesion mediator activity (GO:0098632).
+- KEEP_AS_NON_CORE: axon guidance (GO:0007411), synapse organization (GO:0050808),
+  long-term memory (GO:0007616), behavioral response to ethanol (GO:0048149).
 - ACCEPT (negated) the NOT anesthesia-resistant memory annotation (GO:0007615).
 - Broad ARBA/IEA parents (GO:0009653, GO:0030154, GO:0160108) accepted as correct-but-general.

@@ -161,7 +161,10 @@ reviewed:
 - **klingon (*klg*, Q9VCT4)** — 19 annotations. GPI-anchored IgSF adhesion
   molecule; core homophilic-adhesion and R7 photoreceptor roles accepted, distal
   ethanol/long-term-memory behaviours kept non-core, bare `protein binding`
-  redirected to `cell adhesion molecule binding` (WITH/FROM partner cDIP).
+  redirected to `cell adhesion molecule binding` (WITH/FROM partner cDIP), and the
+  IBA `axon guidance receptor activity` corrected to `cell-cell adhesion mediator
+  activity` (as in *trn*), since a GPI-anchored protein cannot itself transduce a
+  guidance signal.
 - **tartan (*trn*, M9PFH7)** — 6 annotations. LRR adhesion molecule; IBA
   `signaling receptor activity` corrected to `cell-cell adhesion mediator
   activity` (propagated from a TLR-containing family).
@@ -172,7 +175,7 @@ reviewed:
 - **kekkon-1 (*kek1*, Q9VK54)** — 22 annotations. Dedicated negative-feedback
   inhibitor of EGFR signalling; the EGF-receptor-binding / receptor-inhibitor /
   neg-reg-EGFR core is strongly experimentally supported and accepted.
-- **Kurtz (*krz*, Q9V393)** — 20 annotations. Non-visual β-arrestin; core
+- **Kurtz (*krz*, Q9V393)** — 21 annotations. Non-visual β-arrestin; core
   GPCR-binding/internalization adaptor accepted, the many pleiotropic
   signalling-attenuation roles (MAPK/Toll/Hedgehog/Notch) kept non-core.
 - **inscuteable (*insc*, Q9W2R4)** — 30 annotations. Cytoskeletal

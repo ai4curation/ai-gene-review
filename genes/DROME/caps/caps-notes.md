@@ -112,7 +112,11 @@ UniProt: A0A0S0WP14 (isoform E, TrEMBL) · FlyBase: FBgn0023095 · CG11282 · Dr
   De Celis 2003) and PMID:12508275 ("Size isn't everything", Tyler & Baker 2003) are review
   articles; both cached entries are abstract-only and neither abstract mentions caps. They are the
   cited support for GO:0007155 (cell adhesion, NAS) and GO:0016477 (cell migration, TAS)
-  respectively. The underlying functions are only weakly/indirectly tied to these specific reviews.
+  respectively. The underlying functions are only weakly/indirectly tied to these specific reviews,
+  so both are flagged `MISCITED` in `reference_review` (matching the trn review, which carries the
+  same two GOA rows). GO:0016477 itself is kept: Caps acts non-cell-autonomously as a bridge-cell
+  cue for outgrowing tracheal branch cells, so the row is `KEEP_AS_NON_CORE` with its support
+  re-drawn from the tracheal study [PMID:16764850] rather than from the commentary.
 - The synapse-assembly annotation (GO:0007416) cites PMID:24386266, which actually concludes Caps
   is largely dispensable for R8 synaptogenesis — the annotation is better supported at the NMJ
   (PMID:19270171); treated as non-core.
