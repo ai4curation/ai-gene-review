@@ -13,7 +13,7 @@ representatives. Generated against PANTHER 19.0.
 | declared at family level | 907 |
 | declared at subfamily level | 101 |
 | family descriptors asserting no id | 163 (across 50 modules) |
-| PAINT nodes resolved | 372 |
+| PAINT node citations | 372 (of 195 distinct nodes) |
 | prose PANTHER claims checked | 168 / 168 |
 | cited accessions resolved to a PANTHER family | 1,457 / 1,492 |
 
@@ -122,9 +122,15 @@ consistent with what PAINT struck out:
 Smoothened losing its ancestral Wnt functions while retaining Hh signalling is
 exactly the evolutionary story the node encodes, and the module reflects it.
 
-**Evidence depth.** 82 of 372 resolved nodes are reconstructed from ≤3 seed
-proteins, and none has zero seeds. Reconstructions that thin are weak support
-for propagating a specific function and are worth a second look.
+**Evidence depth.** 82 of 372 node *citations* rest on a reconstruction from
+≤3 seed proteins (22%). Counted by distinct node — the better measure of how
+much of the evidence base is thin, since PTN001230349 alone is cited 29 times —
+it is 64 of 195 (33%). None has zero seeds. Reconstructions that thin are weak
+support for propagating a specific function and are worth a second look.
+
+Both halves of each ratio count the same population; mixing them (82 distinct
+nodes against 372 citations) would understate the thin fraction as 22% when it
+is 33%.
 
 Counting seeds requires care: PAINT records them as model-organism identifiers
 (MGI 4,514, RGD 2,807, FB 1,801, WB 1,067, SGD 511, ZFIN 479, ...) at least as

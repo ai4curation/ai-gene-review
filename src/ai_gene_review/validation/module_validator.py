@@ -1182,10 +1182,13 @@ def compare_label(
     ...     "PANTHER:PTHR1", "PTHR1", "REAL NAME", set())
     True
 
-    The same shape under another prefix must not, since that command only
-    knows PANTHER:
+    Another prefix gets the same diagnosis but not that remedy, since the
+    command only knows PANTHER:
 
-    >>> "fix-panther-labels" in compare_label("GO:1", "GO:1", "root", set())
+    >>> message = compare_label("GO:1", "GO:1", "root", set())
+    >>> "asserts nothing about the entity" in message
+    True
+    >>> "fix-panther-labels" in message or "ID is wrong" in message
     False
     """
     candidates = {c for c in ([primary] if primary else []) + list(aliases)}
@@ -1205,15 +1208,20 @@ def compare_label(
     # missing label -- undescribed. The fixer already knows this distinction;
     # the reporter has to agree with it or the two halves contradict.
     #
-    # Scoped to PANTHER because the remedy is: fix-panther-labels reads the
-    # PANTHER OBO only, so naming it for a GO or CHEBI placeholder would be
-    # advice that cannot work -- the same defect this branch fixed one register
-    # down, where the artifact claimed a lookup that had not run.
-    if curie.startswith("PANTHER:") and is_placeholder_label(provided, curie):
-        return message + (
+    # Detection is prefix-agnostic: a label restating its own id asserts
+    # nothing about any entity, whatever the prefix. Only the REMEDY is
+    # PANTHER-specific, because fix-panther-labels reads the PANTHER OBO and
+    # would not touch a GO or CHEBI label. Scoping the whole branch on the
+    # prefix would let the false wrong-id advice below survive one prefix over,
+    # which is the defect this exists to fix rather than relocate.
+    if is_placeholder_label(provided, curie):
+        message += (
             ". The label is just the id repeated, so it asserts nothing about "
-            "the protein -- fill it in with `just fix-panther-labels --apply`"
+            "the entity"
         )
+        if curie.startswith("PANTHER:"):
+            message += " -- fill it in with `just fix-panther-labels --apply`"
+        return message
     # A label naming a different entity entirely is weak evidence of a typo and
     # strong evidence of a wrong id -- an id guessed at random is still a
     # hallucination when it happens to resolve. Say so, so the reader fixes the

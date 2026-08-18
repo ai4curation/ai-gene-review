@@ -4316,13 +4316,16 @@ def panther_report_stats(
     files = sorted((repo_root / "modules").rglob("*.yaml"))
     family_level = subfamily_level = ungrounded = nodes = 0
     ungrounded_modules: set[str] = set()
+    distinct_nodes: set[str] = set()
     for path in files:
         document = yaml.safe_load(path.read_text())
         count = count_ungrounded_families(document)
         if count:
             ungrounded += count
             ungrounded_modules.add(path.name)
-        nodes += len(list(iter_ancestral_node_uses(document)))
+        for node_use in iter_ancestral_node_uses(document):
+            nodes += 1
+            distinct_nodes.add(node_use.ptn_curie)
         for use in iter_family_member_uses(document):
             match = family_re.match(sorted(use.declared_family_curies)[0])
             if not match:
@@ -4352,7 +4355,13 @@ def panther_report_stats(
         f"| family descriptors asserting no id | {ungrounded} "
         f"(across {len(ungrounded_modules)} modules) |"
     )
-    typer.echo(f"| PAINT nodes resolved | {nodes} |")
+    # Named "citations" because iter_ancestral_node_uses yields once per
+    # ancestral_nodes[] entry: PTN001230349 alone is cited 29 times. A ratio
+    # whose numerator counts distinct nodes and whose denominator counts
+    # citations would silently mix populations.
+    typer.echo(
+        f"| PAINT node citations | {nodes} (of {len(distinct_nodes)} distinct nodes) |"
+    )
     typer.echo(f"| prose PANTHER claims checked | {checked} / {len(claims)} |")
     typer.echo(
         "| cited accessions resolved to a PANTHER family | "
