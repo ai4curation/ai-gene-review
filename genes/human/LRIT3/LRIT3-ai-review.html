@@ -1,0 +1,3815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRIT3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRIT3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q3SXY7" target="_blank" class="term-link">
+                        Q3SXY7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRIT3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q3SXY7" data-a="DESCRIPTION: LRIT3 is a type-I single-pass membrane glycoprotei..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRIT3 is a type-I single-pass membrane glycoprotein with an extracellular leucine-rich-repeat region, immunoglobulin-like domain, and fibronectin type-III domain. In the retina it acts from rod and cone photoreceptor terminals as a trans-synaptic organizer of the depolarizing-bipolar-cell glutamate signalplex, enabling postsynaptic localization of nyctalopin and the TRPM1 channel and normal ON-pathway visual transmission. Biallelic human LRIT3 variants cause complete congenital stationary night blindness, and human retinal staining places LRIT3 puncta in the outer plexiform layer; endogenous mouse tagging and photoreceptor- specific rescue resolve the functional protein predominantly to the presynaptic side. Overexpressed human LRIT3 can alter FGFR1 maturation and PLC-gamma signaling in cultured cells, but this context is distinct from its established retinal role. Two splice isoforms are described; isoform 2 lacks the canonical five-LRR segment, without demonstrated isoform-specific localization or function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt&#39;s controlled-vocabulary mapping assigns the type-I membrane glycoprotein LRIT3 to the endoplasmic reticulum membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human LRIT3 expressed in HEK293 cells was predominantly ER-modified, and its single transmembrane helix makes ER-membrane residence during biosynthesis credible. This is retained as a non-core trafficking location because the physiological retinal protein acts principally at presynaptic photoreceptor terminals, while the ER observation comes from an overexpression system.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0097</span>
+
+                                    &middot; endoplasmic reticulum membrane controlled vocabulary
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22673519" target="_blank" class="term-link">
+                                        PMID:22673519
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Surprisingly, LRIT3 existed predominantly as ER-modified forms.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0030425" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated methods transfer dendritic localization from the exact mouse Lrit3 ortholog and the UniProt dendrite vocabulary mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct human antibody staining placed LRIT3 puncta in a pattern resembling ON-bipolar dendritic tips, so this curator-supported localization is retained. Later photoreceptor-specific rescue and endogenous mouse tagging resolve the functional protein presynaptically, making dendrite a non-core, cell-side- ambiguous observation rather than the principal site of action.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000140184</span>
+
+                                    &middot; mouse Lrit3 orthology source
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0283</span>
+
+                                    &middot; dendrite controlled vocabulary
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23246293" target="_blank" class="term-link">
+                                        PMID:23246293
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+cells; similar patterns have been observed for other proteins implicated in
+cCSNB.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                                        PMID:40263339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043204" target="_blank" class="term-link">
+                                    GO:0043204
+                                </a>
+                            </span>
+                            <span class="term-label">perikaryon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0043204" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt&#39;s controlled-vocabulary mapping places LRIT3 in the neuronal perikaryon.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This controlled-vocabulary assignment reflects an older retinal localization model but lacks direct positive evidence for a somatic LRIT3 pool. Current endogenous tagging instead confines mouse LRIT3 to presynaptic photoreceptor terminals, so perikaryon is marked over-annotated.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0197</span>
+
+                                    &middot; perikaryon controlled vocabulary
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                                        PMID:40263339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051286" target="_blank" class="term-link">
+                                    GO:0051286
+                                </a>
+                            </span>
+                            <span class="term-label">cell tip</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0051286" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers cell-tip localization from the exact mouse Lrit3 ortholog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse puncta were historically described at ON-bipolar dendritic tips, whereas photoreceptor-targeted rescue and endogenous tagging support a presynaptic rod- and cone-terminal origin. A photoreceptor terminal remains a specialized cell tip, so the generic term is retained outside the core while the more informative presynapse term identifies the principal site of action.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000140184</span>
+
+                                    &middot; mouse Lrit3 orthology source
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31189098" target="_blank" class="term-link">
+                                        PMID:31189098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In contrast, we
+demonstrate that LRIT3 is expressed presynaptically, in rod photoreceptors
+(rods), and when we restore LRIT3 expression in Lrit3-/- rods, we restore
+expression of the postsynaptic glutamate signalplex and rod-driven vision.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043204" target="_blank" class="term-link">
+                                    GO:0043204
+                                </a>
+                            </span>
+                            <span class="term-label">perikaryon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0043204" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Manual sequence-similarity transfer assigns perikaryon localization from the exact mouse Lrit3 ortholog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact mouse ortholog makes the sequence-similarity transfer mechanically traceable, but there is no positive evidence for a somatic LRIT3 pool. Newer endogenous tagging establishes mouse LRIT3 at presynaptic photoreceptor terminals, so perikaryon is marked over-annotated.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                                        PMID:40263339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040036" target="_blank" class="term-link">
+                                    GO:0040036
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of fibroblast growth factor receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22673519" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22673519
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Leucine-rich repeat, immunoglobulin-like and transmembrane d...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0040036" data-r="PMID:22673519" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In transfected human HEK293 cells, LRIT3 increased the Golgi-modified pool of FGFR1 and altered the PLC-gamma branch of FGFR1 signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direction-neutral regulatory term is supported by direct experiments with human LRIT3 and FGFR1. However, the phenotype was measured under heterologous overexpression, did not enhance FGF-stimulated ERK or AKT signaling, and the PLC-gamma effect was ligand-independent. It therefore remains a supported but context-limited non-core activity rather than the established retinal function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22673519" target="_blank" class="term-link">
+                                        PMID:22673519
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results suggest that LRIT3 facilitates exit of FGFR1 from the ER.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22673519" target="_blank" class="term-link">
+                                        PMID:22673519
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">However, phosphorylation of PLC-γ was not dependent on bFGF1. These results suggest that LRIT3 can aberrantly activate the PLC-γ branch of the FGFR1-signaling pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099084" target="_blank" class="term-link">
+                                    GO:0099084
+                                </a>
+                            </span>
+                            <span class="term-label">postsynaptic specialization organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31189098" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31189098
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Presynaptic Expression of LRIT3 Transsynaptically Organizes ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0099084" data-r="PMID:31189098" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed human annotation by orthology for presynaptic LRIT3 organizing the postsynaptic depolarizing-bipolar-cell signalplex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Photoreceptor-specific expression in Lrit3-null mice restores postsynaptic signalplex assembly and rod-driven vision, while nyctalopin/TRPM1 dependence and domain-rescue experiments define the organized postsynaptic specialization. GO:0099084 captures assembly and arrangement of that postsynaptic structure without claiming that human LRIT3 is itself postsynaptic.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31189098" target="_blank" class="term-link">
+                                        PMID:31189098
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our
+results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+as a transsynaptic organizer of the postsynaptic complex required for normal
+synaptic function.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050804" target="_blank" class="term-link">
+                                    GO:0050804
+                                </a>
+                            </span>
+                            <span class="term-label">modulation of chemical synaptic transmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28334377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28334377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRIT3 Differentially Affects Connectivity and Synaptic Trans...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0050804" data-r="PMID:28334377" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed human annotation by orthology for LRIT3-dependent modulation of retinal photoreceptor-to-bipolar-cell transmission.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse loss-of-function and rescue establish that LRIT3 is required for normal ON-bipolar signaling and also affects downstream OFF-pathway responses. The direction-neutral term is appropriate because LRIT3 organizes the signalplex rather than uniformly increasing or decreasing all retinal transmission.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28334377" target="_blank" class="term-link">
+                                        PMID:28334377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CONCLUSIONS: These results suggest that LRIT3 is likely involved in coordination
+of the transsynaptic communication between cones and ON-BCs during synapse
+formation and function.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098793" target="_blank" class="term-link">
+                                    GO:0098793
+                                </a>
+                            </span>
+                            <span class="term-label">presynapse</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40263339
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Efficient in vivo labeling of endogenous proteins with SMART...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q3SXY7" data-a="GO:0098793" data-r="PMID:40263339" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed human annotation by orthology for LRIT3 localization to the presynaptic photoreceptor side of rod and cone synapses.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Endogenous mouse tagging and photoreceptor-specific rescue independently place LRIT3 in presynaptic rods and cone pedicles. GO:0098793 captures the functional side of the synapse more accurately than the historical dendrite/cell-tip descriptions, while the human annotation remains explicitly orthology-based.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:W8DXL4</span>
+
+                                    &middot; mouse Lrit3
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                                        PMID:40263339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>At rod and cone photoreceptor terminals, LRIT3 acts presynaptically to organize the opposing depolarizing-bipolar-cell postsynaptic specialization. Mouse knockout, photoreceptor-specific rescue, endogenous tagging, and domain-deletion rescue show that LRIT3 is required for nyctalopin and TRPM1 assembly at bipolar-cell dendritic tips and for normal ON-pathway transmission; loss also alters downstream OFF- pathway responses. Human biallelic loss causes complete congenital stationary night blindness, connecting this conserved organizer mechanism to disease. The evidence supports a trans-synaptic organizing role but does not yet define a purified direct human binding interface or obligate stable complex.</h3>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="FUNCTION: At rod and cone photoreceptor terminals, LRIT3 act..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099084" target="_blank" class="term-link">
+                                postsynaptic specialization organization
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050804" target="_blank" class="term-link">
+                                modulation of chemical synaptic transmission
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098793" target="_blank" class="term-link">
+                                presynapse
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31189098" target="_blank" class="term-link">
+                                PMID:31189098
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our
+results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+as a transsynaptic organizer of the postsynaptic complex required for normal
+synaptic function.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31959619" target="_blank" class="term-link">
+                                PMID:31959619
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In both male and female mice, we demonstrate
+that LRIT3 interacts with and is required for expression of nyctalopin, and thus
+TRPM1 at all DBC dendritic tips, but DBC signalplex components are not required
+for LRIT3 expression.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                                PMID:40263339
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42055330" target="_blank" class="term-link">
+                                PMID:42055330
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The IG domain is required for the localization of TRPM1 to the
+signalplex and thus its function.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22673519" target="_blank" class="term-link">
+                            PMID:22673519
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leucine-rich repeat, immunoglobulin-like and transmembrane domain 3 (LRIT3) is a modulator of FGFR1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpressed human LRIT3 increased FGFR1 exit from the ER in HEK293 cells.</div>
+
+                        <div class="finding-text">"These results suggest that LRIT3 facilitates exit of FGFR1 from the ER."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors explicitly frame the LRIT3-FGFR1 mechanism as unresolved and potentially influenced by receptor overexpression or serum growth factors.</div>
+
+                        <div class="finding-text">"Perhaps highly over-expressed FGFR1s can interact and phosphorylate each other at the cell surface without a ligand [22]. Alternatively, stabilization and over-expression of FGFR1 simply allow cells to respond to even small amounts of growth factors in the culture medium (serum) rather than these cells become truly FGF-independent. Although the exact mechanism of action is not clear, our results strongly suggest that LRIT3 facilitates ER export of FGFR1, that FGFR1 exits the ER not in a constitutive fashion, but in a regulated fashion, and that LRIT3 modulates the FGFR-signaling pathway."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23246293" target="_blank" class="term-link">
+                            PMID:23246293
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Whole-exome sequencing identifies LRIT3 mutations as a cause of autosomal-recessive complete congenital stationary night blindness.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic LRIT3 variants were identified in human complete congenital stationary night blindness.</div>
+
+                        <div class="finding-text">"Whole-exome sequencing in
+one simplex cCSNB case lacking mutations in the known genes led to the
+identification of a missense mutation (c.983G&gt;A [p.Cys328Tyr]) and a nonsense
+mutation (c.1318C&gt;T [p.Arg440(∗)]) in LRIT3, encoding leucine-rich-repeat (LRR),
+immunoglobulin-like, and transmembrane-domain 3 (LRIT3). Subsequent Sanger
+sequencing of 89 individuals with CSNB identified another cCSNB case harboring a
+nonsense mutation (c.1151C&gt;G [p.Ser384(∗)]) and a deletion predicted to lead to
+a premature stop codon (c.1538_1539del [p.Ser513Cysfs(∗)59]) in the same gene."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human retinal antibody staining placed LRIT3 puncta in the outer plexiform layer near bipolar-cell dendritic tips.</div>
+
+                        <div class="finding-text">"Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+cells; similar patterns have been observed for other proteins implicated in
+cCSNB."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28334377" target="_blank" class="term-link">
+                            PMID:28334377
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRIT3 Differentially Affects Connectivity and Synaptic Transmission of Cones to ON- and OFF-Bipolar Cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lrit3-deficient mice lose ON-pathway function and show disorganized cone-to-ON- bipolar contacts while preserving major presynaptic ultrastructure.</div>
+
+                        <div class="finding-text">"Finally, synaptic contacts made
+by ON-BC but not OFF-BC neurons with the cone pedicles were disorganized without
+ultrastructural alterations in cone terminals, horizontal cell processes, or
+synaptic ribbons."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study assigns LRIT3 a role in cone-to-ON-bipolar trans-synaptic organization.</div>
+
+                        <div class="finding-text">"CONCLUSIONS: These results suggest that LRIT3 is likely involved in coordination
+of the transsynaptic communication between cones and ON-BCs during synapse
+formation and function."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31189098" target="_blank" class="term-link">
+                            PMID:31189098
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Presynaptic Expression of LRIT3 Transsynaptically Organizes the Postsynaptic Glutamate Signaling Complex Containing TRPM1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse rod-photoreceptor LRIT3 acts presynaptically and restores the postsynaptic depolarizing-bipolar-cell signalplex and rod-driven vision.</div>
+
+                        <div class="finding-text">"In contrast, we
+demonstrate that LRIT3 is expressed presynaptically, in rod photoreceptors
+(rods), and when we restore LRIT3 expression in Lrit3-/- rods, we restore
+expression of the postsynaptic glutamate signalplex and rod-driven vision."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors identify LRIT3 as a trans-synaptic organizer of the postsynaptic glutamate signalplex.</div>
+
+                        <div class="finding-text">"Our
+results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+as a transsynaptic organizer of the postsynaptic complex required for normal
+synaptic function."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31959619" target="_blank" class="term-link">
+                            PMID:31959619
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRIT3 is Required for Nyctalopin Expression and Normal ON and OFF Pathway Signaling in the Retina.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRIT3 associates with nyctalopin and is required for nyctalopin and TRPM1 localization at mouse depolarizing-bipolar-cell dendritic tips.</div>
+
+                        <div class="finding-text">"In both male and female mice, we demonstrate
+that LRIT3 interacts with and is required for expression of nyctalopin, and thus
+TRPM1 at all DBC dendritic tips, but DBC signalplex components are not required
+for LRIT3 expression."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lrit3 loss disrupts both ON and OFF retinal pathway outputs.</div>
+
+                        <div class="finding-text">"Using whole-cell and multielectrode array (MEA)
+electrophysiology and glutamate imaging, we demonstrate that the loss of LRIT3
+impacts both ON and OFF signaling pathway function. Without LRIT3, excitatory
+input to type 1 BCs is reduced, as are the visually evoked responses of many OFF
+retinal ganglion cells (RGCs). We conclude that the absence of LRIT3 expression
+disrupts excitatory input to OFF BCs and, thus disrupts the normal function of
+OFF RGCs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40263339" target="_blank" class="term-link">
+                            PMID:40263339
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Efficient in vivo labeling of endogenous proteins with SMART delineates retina cellular and synaptic organization.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Endogenous mouse LRIT3 tagging supports a presynaptic photoreceptor origin.</div>
+
+                        <div class="finding-text">"These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Tagged LRIT3 was also detected in mouse cone pedicles.</div>
+
+                        <div class="finding-text">"This indicates that LRIT3 is prominently present in cone synapses too and confirms its pre-synaptic origin."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42055330" target="_blank" class="term-link">
+                            PMID:42055330
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Domain-specific functions of LRIT3 in synaptic assembly and retinal signal transmission.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse domain-deletion rescue shows that the LRIT3 Ig-like domain is required for TRPM1 localization and signalplex function.</div>
+
+                        <div class="finding-text">"The IG domain is required for the localization of TRPM1 to the
+signalplex and thus its function."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The LRIT3 LRR domain contributes to trafficking and signalplex reassembly in a photoreceptor-type-dependent manner.</div>
+
+                        <div class="finding-text">"We
+show the LRR domain may be required for trafficking LRIT3 to the synapse in
+cones, but not rods, and it is needed for reassembly and function of the rod BC
+signalplex."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRIT3/LRIT3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB/Swiss-Prot record for human LRIT3 (Q3SXY7)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human LRIT3 bind nyctalopin directly, and which LRIT3 domain or residues form the trans-synaptic interface?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Retinal synapse experts, Structural biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="Q: Does human LRIT3 bind nyctalopin directly, and whi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is endogenous human LRIT3 exclusively presynaptic in rods and cones, or is there a distinct postsynaptic pool at bipolar-cell dendritic tips?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Human retinal cell biologists, Advanced imaging experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="Q: Is endogenous human LRIT3 exclusively presynaptic ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which LRIT3-dependent step separately recruits nyctalopin and TRPM1 to the depolarizing-bipolar-cell signalplex?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ion-channel trafficking experts, Synaptic organizer experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="Q: Which LRIT3-dependent step separately recruits nyc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is LRIT3 isoform 2 expressed as a stable retinal protein, and can it reach the synapse or organize the signalplex without the canonical LRR region?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Isoform biology experts, Retinal proteomics experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="Q: Is LRIT3 isoform 2 expressed as a stable retinal p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LRIT3 regulate FGFR1 trafficking in any normal human cell type, and is that activity connected to retinal biology?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: FGF-signaling experts, Retinal developmental biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="Q: Does endogenous LRIT3 regulate FGFR1 trafficking i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure purified ectodomain binding by biolayer interferometry and crosslinking mass spectrometry, determine a complex structure if stable, and test interface mutants in photoreceptor-specific rescue of Lrit3-null mouse retina.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRIT3 directly binds nyctalopin through its LRR region to organize a trans-synaptic complex.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: quantitative biochemistry and structural rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="EXPERIMENT: Measure purified ectodomain binding by biolayer in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Introduce small endogenous tags into LRIT3 in human retinal organoids, image with expansion microscopy against pre- and postsynaptic landmarks, and validate the tagged protein&#39;s trafficking and signaling competence.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human LRIT3 is predominantly presynaptic at rod and cone terminals.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous tagging and spatial proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="EXPERIMENT: Introduce small endogenous tags into LRIT3 in huma..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform time-resolved photoreceptor-specific rescue with LRR, Ig-like, and cytoplasmic-tail mutants and quantify nyctalopin and TRPM1 localization, signalplex composition, and ON-bipolar electrophysiology independently.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRIT3 recruits nyctalopin and TRPM1 through separable domain-dependent steps.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: domain-resolved in vivo rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="EXPERIMENT: Perform time-resolved photoreceptor-specific rescu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine retinal long-read sequencing and targeted proteomics with matched isoform- specific trafficking, surface-expression, partner-binding, and functional rescue assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRIT3 isoform 2 is unstable or functionally deficient because it lacks the canonical LRR segment.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved structure-function analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="EXPERIMENT: Combine retinal long-read sequencing and targeted ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perturb endogenous LRIT3 in cells that naturally coexpress FGFR1, quantify ER-to- Golgi trafficking and ligand-dependent PLC-gamma/ERK/AKT outputs, and compare with the original HEK293 overexpression design.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRIT3 modulates FGFR1 only under overexpression and is dispensable for endogenous FGFR1 trafficking in retinal cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous signaling perturbation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q3SXY7" data-a="EXPERIMENT: Perturb endogenous LRIT3 in cells that naturally c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct extracellular binding interface by which LRIT3 organizes nyctalopin, TRPM1, and the depolarizing-bipolar-cell signalplex is unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Co-immunoprecipitation and domain-deletion rescue identify functional dependencies but do not distinguish direct binary contacts, multimerization, or an intervening synaptic partner.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute purified LRIT3 ectodomains with nyctalopin and TRPM1 extracellular regions, combine quantitative binding with crosslinking mass spectrometry and structural analysis, and validate interface mutants by retinal rescue.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"This may indicate that the LRR domain of LRIT3 interacts transsynaptically with the LRR domain of Nyctalopin."</em> — PMID:42055330</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The exact cell-side distribution and molecular partners of endogenous human LRIT3 at rod and cone synapses remain unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Human antibody staining resembled bipolar dendritic tips, whereas mouse endogenous tagging and rescue support a presynaptic photoreceptor origin; synaptic apposition can make these patterns difficult to distinguish.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LRIT3 in human retinal organoids or donor tissue and combine expansion microscopy with cell-type-specific proteomics to resolve pre- versus postsynaptic pools and their partners.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+cells; similar patterns have been observed for other proteins implicated in
+cCSNB."</em> — PMID:23246293</li>
+
+                <li><em>"This indicates that LRIT3 is prominently present in cone synapses too and confirms its pre-synaptic origin."</em> — PMID:40263339</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The expression, trafficking, and function of human LRIT3 isoform 2 are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform 2 removes the canonical five-LRR segment implicated by mouse rescue studies in trafficking and signalplex assembly, but no endogenous isoform-specific protein evidence exists.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use long-read retinal transcriptomics and isoform-specific proteomics, then compare the two isoforms in surface-trafficking, partner-binding, and Lrit3-null retinal rescue assays.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous physiological relevance of LRIT3-dependent FGFR1 maturation and signaling outside the overexpression assay is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The direct human-cell assay is reproducible evidence for FGFR-pathway modulation, but no retinal or other native tissue phenotype currently connects it to the core visual function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test endogenous FGFR1 trafficking and signaling after LRIT3 perturbation in human retinal and non-retinal cells that naturally coexpress both proteins, with ligand- controlled measurements and rescue at physiological expression levels.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Perhaps highly over-expressed FGFR1s can interact and phosphorylate each other at the cell surface without a ligand [22]. Alternatively, stabilization and over-expression of FGFR1 simply allow cells to respond to even small amounts of growth factors in the culture medium (serum) rather than these cells become truly FGF-independent. Although the exact mechanism of action is not clear, our results strongly suggest that LRIT3 facilitates ER export of FGFR1, that FGFR1 exits the ER not in a constitutive fashion, but in a regulated fashion, and that LRIT3 modulates the FGFR-signaling pathway."</em> — PMID:22673519</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRIT3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q3SXY7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrit3-review-notes">LRIT3 review notes</h1>
+<h2 id="identity-architecture-and-isoforms">Identity, architecture, and isoforms</h2>
+<p>Human LRIT3 (Q3SXY7) is a reviewed 679-residue type-I single-pass membrane<br />
+glycoprotein. UniProt maps a signal peptide at 1-19, an extracellular region with<br />
+five LRRs, an LRR C-terminal cap, an Ig-like domain, and an FN3 domain, a<br />
+transmembrane helix at 583-603, and a cytoplasmic tail. This architecture supports<br />
+an extracellular organizer role but does not itself establish adhesion, receptor,<br />
+or enzymatic activity [<code>file:human/LRIT3/LRIT3-uniprot.txt</code>].</p>
+<p>Two human isoforms are curated. Isoform 2 lacks canonical residues 46-183 and<br />
+replaces residues 184-196, removing the annotated five-LRR repeat region while<br />
+retaining the later Ig-like, FN3, transmembrane, and cytoplasmic regions by sequence.<br />
+The isoform-2 cDNA came from cerebellum, but no direct isoform-specific localization,<br />
+partner, retinal function, or disease effect has been established.</p>
+<h2 id="direct-human-evidence">Direct human evidence</h2>
+<p>Human genetics establishes LRIT3 as a cause of autosomal-recessive complete<br />
+congenital stationary night blindness. The discovery study identified compound<br />
+heterozygous and additional biallelic truncating/missense alleles and reported that<br />
+"Human LRIT3 antibody staining revealed in the outer plexiform layer of the human"<br />
+retina a punctate pattern resembling bipolar-cell dendritic tips<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23246293">PMID:23246293</a>. This is direct human disease and localization evidence, but the<br />
+apparent postsynaptic position from antibody apposition must be reconciled with<br />
+subsequent mouse endogenous-tagging and rescue studies that place LRIT3 presynaptically<br />
+in photoreceptors.</p>
+<h2 id="retinal-trans-synaptic-organizer-mechanism">Retinal trans-synaptic organizer mechanism</h2>
+<p>Mouse loss-of-function studies show that LRIT3 is required for ON-pathway retinal<br />
+signaling and organization of the depolarizing-bipolar-cell glutamate signalplex.<br />
+One study concludes that LRIT3 is involved in "coordination of the transsynaptic communication between cones and ON-BCs during synapse formation and function"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28334377">PMID:28334377</a>. Another demonstrated presynaptic rod expression and rescue, stating<br />
+that LRIT3 acts "as a transsynaptic organizer of the postsynaptic complex required for normal"<br />
+synaptic function <a href="https://pubmed.ncbi.nlm.nih.gov/31189098">PMID:31189098</a>.</p>
+<p>LRIT3 physically associates with nyctalopin in a heterologous co-immunoprecipitation<br />
+assay and is required for nyctalopin and downstream TRPM1 localization in mouse<br />
+retina: "LRIT3 interacts with and is required for expression of nyctalopin, and thus"<br />
+TRPM1 at depolarizing bipolar-cell dendritic tips <a href="https://pubmed.ncbi.nlm.nih.gov/31959619">PMID:31959619</a>. This supports an<br />
+organizer mechanism and a partner-specific binding hypothesis, but not an obligate<br />
+stable complex in every retinal synapse.</p>
+<p>Endogenous SMART tagging in mouse retina further supports a photoreceptor origin:<br />
+"LRIT3 is confined to pre-synaptic compartment" <a href="https://pubmed.ncbi.nlm.nih.gov/40263339">PMID:40263339</a>. The study also detected tagged<br />
+LRIT3 in cone pedicles. The review therefore treats dendritic-tip/perikaryon terms as<br />
+historical localization descriptions that require careful cell-side interpretation,<br />
+not proof that LRIT3 is synthesized or functions postsynaptically.</p>
+<p>The 2026 domain-deletion rescue study reports that "The IG domain is required for the localization of TRPM1 to the"<br />
+signalplex and that the LRR domain is needed for key<br />
+trafficking/assembly functions <a href="https://pubmed.ncbi.nlm.nih.gov/42055330">PMID:42055330</a>. The proposed direct LRR-nyctalopin and<br />
+Ig-TRPM1 interfaces remain models rather than purified binary-interface<br />
+demonstrations.</p>
+<h2 id="fgfr1-assay-context">FGFR1 assay context</h2>
+<p>The original human LRIT3 study used overexpressed proteins in cultured cells and<br />
+reported that LRIT3 influences FGFR1 maturation and signaling. Its discussion states<br />
+that "our results strongly suggest that LRIT3 facilitates ER export of FGFR1" while<br />
+also considering receptor overexpression and growth factors in serum as alternatives<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22673519">PMID:22673519</a>. This supports the existing experimental regulation-of-FGFR-signaling<br />
+annotation as a real assay result, but it is kept outside the retinal core and is not<br />
+generalized to an endogenous human developmental pathway or autonomous LRIT3 receptor<br />
+activity.</p>
+<h2 id="curation-boundaries">Curation boundaries</h2>
+<ul>
+<li>The core is a trans-synaptic organization role at photoreceptor-to-ON-bipolar<br />
+  synapses, grounded mechanistically in mouse and connected to direct human disease.</li>
+<li>LRIT3 is not annotated as a glutamate receptor, ion channel, FGFR, kinase, or enzyme.</li>
+<li>Nyctalopin association and TRPM1 localization are distinguished from direct LRIT3-<br />
+  TRPM1 biochemical binding.</li>
+<li>LRIT1 and LRIT2 biology is not transferred from shared LRR-Ig-FN3 architecture.</li>
+<li>Isoform 2's missing LRR region is a sequence fact only; functional specialization is<br />
+  an open question.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q3SXY7
+gene_symbol: LRIT3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRIT3 is a type-I single-pass membrane glycoprotein with an extracellular
+  leucine-rich-repeat region, immunoglobulin-like domain, and fibronectin type-III
+  domain. In the retina it acts from rod and cone photoreceptor terminals as a
+  trans-synaptic organizer of the depolarizing-bipolar-cell glutamate signalplex,
+  enabling postsynaptic localization of nyctalopin and the TRPM1 channel and normal
+  ON-pathway visual transmission. Biallelic human LRIT3 variants cause complete
+  congenital stationary night blindness, and human retinal staining places LRIT3
+  puncta in the outer plexiform layer; endogenous mouse tagging and photoreceptor-
+  specific rescue resolve the functional protein predominantly to the presynaptic
+  side. Overexpressed human LRIT3 can alter FGFR1 maturation and PLC-gamma signaling
+  in cultured cells, but this context is distinct from its established retinal role.
+  Two splice isoforms are described; isoform 2 lacks the canonical five-LRR segment,
+  without demonstrated isoform-specific localization or function.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q3SXY7-1
+- name: &#39;2&#39;
+  id: Q3SXY7-2
+  sequence_note: VSP_029126, VSP_029127
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0097
+  review:
+    summary: &gt;-
+      UniProt&#39;s controlled-vocabulary mapping assigns the type-I membrane
+      glycoprotein LRIT3 to the endoplasmic reticulum membrane.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Human LRIT3 expressed in HEK293 cells was predominantly ER-modified, and its
+      single transmembrane helix makes ER-membrane residence during biosynthesis
+      credible. This is retained as a non-core trafficking location because the
+      physiological retinal protein acts principally at presynaptic photoreceptor
+      terminals, while the ER observation comes from an overexpression system.
+    additional_reference_ids:
+    - PMID:22673519
+    supported_by:
+    - reference_id: PMID:22673519
+      supporting_text: Surprisingly, LRIT3 existed predominantly as ER-modified forms.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0097
+        source_label: endoplasmic reticulum membrane controlled vocabulary
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  - ensembl:ENSMUSP00000140184
+  - UniProtKB-SubCell:SL-0283
+  review:
+    summary: &gt;-
+      Combined automated methods transfer dendritic localization from the exact
+      mouse Lrit3 ortholog and the UniProt dendrite vocabulary mapping.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Direct human antibody staining placed LRIT3 puncta in a pattern resembling
+      ON-bipolar dendritic tips, so this curator-supported localization is retained.
+      Later photoreceptor-specific rescue and endogenous mouse tagging resolve the
+      functional protein presynaptically, making dendrite a non-core, cell-side-
+      ambiguous observation rather than the principal site of action.
+    additional_reference_ids:
+    - PMID:23246293
+    - PMID:31189098
+    - PMID:40263339
+    supported_by:
+    - reference_id: PMID:23246293
+      supporting_text: |-
+        Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+        retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+        cells; similar patterns have been observed for other proteins implicated in
+        cCSNB.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:40263339
+      supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SUPPORTS_TRANSFER
+      - source_id: ensembl:ENSMUSP00000140184
+        source_label: mouse Lrit3 orthology source
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB-SubCell:SL-0283
+        source_label: dendrite controlled vocabulary
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0043204
+    label: perikaryon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0197
+  review:
+    summary: &gt;-
+      UniProt&#39;s controlled-vocabulary mapping places LRIT3 in the neuronal
+      perikaryon.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This controlled-vocabulary assignment reflects an older retinal localization
+      model but lacks direct positive evidence for a somatic LRIT3 pool. Current
+      endogenous tagging instead confines mouse LRIT3 to presynaptic photoreceptor
+      terminals, so perikaryon is marked over-annotated.
+    additional_reference_ids:
+    - PMID:40263339
+    supported_by:
+    - reference_id: PMID:40263339
+      supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0197
+        source_label: perikaryon controlled vocabulary
+        source_status: SOURCE_WEAK_OR_INFERRED
+- term:
+    id: GO:0051286
+    label: cell tip
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: is_active_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  - ensembl:ENSMUSP00000140184
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers cell-tip localization from the exact mouse Lrit3
+      ortholog.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mouse puncta were historically described at ON-bipolar dendritic tips, whereas
+      photoreceptor-targeted rescue and endogenous tagging support a presynaptic rod-
+      and cone-terminal origin. A photoreceptor terminal remains a specialized cell
+      tip, so the generic term is retained outside the core while the more informative
+      presynapse term identifies the principal site of action.
+    additional_reference_ids:
+    - PMID:31189098
+    - PMID:40263339
+    supported_by:
+    - reference_id: PMID:31189098
+      supporting_text: |-
+        In contrast, we
+        demonstrate that LRIT3 is expressed presynaptically, in rod photoreceptors
+        (rods), and when we restore LRIT3 expression in Lrit3-/- rods, we restore
+        expression of the postsynaptic glutamate signalplex and rod-driven vision.
+      reference_section_type: ABSTRACT
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SUPPORTS_TRANSFER
+      - source_id: ensembl:ENSMUSP00000140184
+        source_label: mouse Lrit3 orthology source
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0043204
+    label: perikaryon
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  review:
+    summary: &gt;-
+      Manual sequence-similarity transfer assigns perikaryon localization from the
+      exact mouse Lrit3 ortholog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The exact mouse ortholog makes the sequence-similarity transfer mechanically
+      traceable, but there is no positive evidence for a somatic LRIT3 pool. Newer
+      endogenous tagging establishes mouse LRIT3 at presynaptic photoreceptor terminals,
+      so perikaryon is marked over-annotated.
+    additional_reference_ids:
+    - PMID:40263339
+    supported_by:
+    - reference_id: PMID:40263339
+      supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SOURCE_WEAK_OR_INFERRED
+- term:
+    id: GO:0040036
+    label: regulation of fibroblast growth factor receptor signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:22673519
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      In transfected human HEK293 cells, LRIT3 increased the Golgi-modified pool of
+      FGFR1 and altered the PLC-gamma branch of FGFR1 signaling.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The direction-neutral regulatory term is supported by direct experiments with
+      human LRIT3 and FGFR1. However, the phenotype was measured under heterologous
+      overexpression, did not enhance FGF-stimulated ERK or AKT signaling, and the
+      PLC-gamma effect was ligand-independent. It therefore remains a supported but
+      context-limited non-core activity rather than the established retinal function.
+    supported_by:
+    - reference_id: PMID:22673519
+      supporting_text: These results suggest that LRIT3 facilitates exit of FGFR1 from the ER.
+      reference_section_type: RESULTS
+    - reference_id: PMID:22673519
+      supporting_text: However, phosphorylation of PLC-γ was not dependent on bFGF1. These results suggest that LRIT3 can aberrantly activate the PLC-γ branch of the FGFR1-signaling pathway.
+      reference_section_type: RESULTS
+- term:
+    id: GO:0099084
+    label: postsynaptic specialization organization
+  evidence_type: ISO
+  original_reference_id: PMID:31189098
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  review:
+    summary: &gt;-
+      Proposed human annotation by orthology for presynaptic LRIT3 organizing the
+      postsynaptic depolarizing-bipolar-cell signalplex.
+    action: NEW
+    reason: &gt;-
+      Photoreceptor-specific expression in Lrit3-null mice restores postsynaptic
+      signalplex assembly and rod-driven vision, while nyctalopin/TRPM1 dependence and
+      domain-rescue experiments define the organized postsynaptic specialization.
+      GO:0099084 captures assembly and arrangement of that postsynaptic structure
+      without claiming that human LRIT3 is itself postsynaptic.
+    additional_reference_ids:
+    - PMID:31959619
+    - PMID:42055330
+    supported_by:
+    - reference_id: PMID:31189098
+      supporting_text: |-
+        Our
+        results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+        as a transsynaptic organizer of the postsynaptic complex required for normal
+        synaptic function.
+      reference_section_type: ABSTRACT
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0050804
+    label: modulation of chemical synaptic transmission
+  evidence_type: ISO
+  original_reference_id: PMID:28334377
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  review:
+    summary: &gt;-
+      Proposed human annotation by orthology for LRIT3-dependent modulation of retinal
+      photoreceptor-to-bipolar-cell transmission.
+    action: NEW
+    reason: &gt;-
+      Mouse loss-of-function and rescue establish that LRIT3 is required for normal
+      ON-bipolar signaling and also affects downstream OFF-pathway responses. The
+      direction-neutral term is appropriate because LRIT3 organizes the signalplex
+      rather than uniformly increasing or decreasing all retinal transmission.
+    additional_reference_ids:
+    - PMID:31189098
+    - PMID:31959619
+    supported_by:
+    - reference_id: PMID:28334377
+      supporting_text: |-
+        CONCLUSIONS: These results suggest that LRIT3 is likely involved in coordination
+        of the transsynaptic communication between cones and ON-BCs during synapse
+        formation and function.
+      reference_section_type: ABSTRACT
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0098793
+    label: presynapse
+  evidence_type: ISO
+  original_reference_id: PMID:40263339
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB:W8DXL4
+  review:
+    summary: &gt;-
+      Proposed human annotation by orthology for LRIT3 localization to the presynaptic
+      photoreceptor side of rod and cone synapses.
+    action: NEW
+    reason: &gt;-
+      Endogenous mouse tagging and photoreceptor-specific rescue independently place
+      LRIT3 in presynaptic rods and cone pedicles. GO:0098793 captures the functional
+      side of the synapse more accurately than the historical dendrite/cell-tip
+      descriptions, while the human annotation remains explicitly orthology-based.
+    additional_reference_ids:
+    - PMID:31189098
+    supported_by:
+    - reference_id: PMID:40263339
+      supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+      reference_section_type: RESULTS
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:W8DXL4
+        source_label: mouse Lrit3
+        source_status: SUPPORTS_TRANSFER
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correct method reference for manual ISS transfer. W8DXL4 is the exact mouse
+      Lrit3 ortholog, but perikaryon is marked over-annotated because current tagging
+      supports the presynaptic photoreceptor terminal instead of a somatic pool.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correct UniProt subcellular-location mapping reference. ER membrane is retained
+      as biosynthetic non-core context, whereas perikaryon is marked over-annotated for
+      lack of positive support under the current presynaptic model.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correct Ensembl Compara method reference and exact mouse ortholog. The generic
+      cell-tip result is retained as non-core because later endogenous tagging resolves
+      LRIT3 to the presynaptic photoreceptor side.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The combined IEA sources are mechanically traceable, and direct human antibody
+      staining supports retaining dendrite as non-core. Later mouse tagging refines the
+      functional protein to the presynaptic photoreceptor side.
+- id: PMID:22673519
+  title: Leucine-rich repeat, immunoglobulin-like and transmembrane domain 3 (LRIT3)
+    is a modulator of FGFR1.
+  findings:
+  - statement: &gt;-
+      Overexpressed human LRIT3 increased FGFR1 exit from the ER in HEK293 cells.
+    supporting_text: These results suggest that LRIT3 facilitates exit of FGFR1 from the ER.
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      The authors explicitly frame the LRIT3-FGFR1 mechanism as unresolved and
+      potentially influenced by receptor overexpression or serum growth factors.
+    supporting_text: Perhaps highly over-expressed FGFR1s can interact and phosphorylate each other at the cell surface without a ligand [22]. Alternatively, stabilization and over-expression of FGFR1 simply allow cells to respond to even small amounts of growth factors in the culture medium (serum) rather than these cells become truly FGF-independent. Although the exact mechanism of action is not clear, our results strongly suggest that LRIT3 facilitates ER export of FGFR1, that FGFR1 exits the ER not in a constitutive fashion, but in a regulated fashion, and that LRIT3 modulates the FGFR-signaling pathway.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. This is direct human HEK293 overexpression
+      evidence for FGFR1 trafficking/signaling modulation, but it is context-limited
+      and independent of the retinal loss-of-function mechanism.
+- id: PMID:23246293
+  title: Whole-exome sequencing identifies LRIT3 mutations as a cause of autosomal-recessive complete congenital stationary night blindness.
+  findings:
+  - statement: &gt;-
+      Biallelic LRIT3 variants were identified in human complete congenital stationary
+      night blindness.
+    supporting_text: |-
+      Whole-exome sequencing in
+      one simplex cCSNB case lacking mutations in the known genes led to the
+      identification of a missense mutation (c.983G&gt;A [p.Cys328Tyr]) and a nonsense
+      mutation (c.1318C&gt;T [p.Arg440(∗)]) in LRIT3, encoding leucine-rich-repeat (LRR),
+      immunoglobulin-like, and transmembrane-domain 3 (LRIT3). Subsequent Sanger
+      sequencing of 89 individuals with CSNB identified another cCSNB case harboring a
+      nonsense mutation (c.1151C&gt;G [p.Ser384(∗)]) and a deletion predicted to lead to
+      a premature stop codon (c.1538_1539del [p.Ser513Cysfs(∗)59]) in the same gene.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      Human retinal antibody staining placed LRIT3 puncta in the outer plexiform layer
+      near bipolar-cell dendritic tips.
+    supporting_text: |-
+      Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+      retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+      cells; similar patterns have been observed for other proteins implicated in
+      cCSNB.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed metadata and the cached abstract were checked. This is the decisive direct
+      human disease and retinal-localization source. The cache is abstract-only, and
+      later mouse endogenous-tagging data refine the puncta to a presynaptic origin.
+- id: PMID:28334377
+  title: LRIT3 Differentially Affects Connectivity and Synaptic Transmission of Cones to ON- and OFF-Bipolar Cells.
+  findings:
+  - statement: &gt;-
+      Lrit3-deficient mice lose ON-pathway function and show disorganized cone-to-ON-
+      bipolar contacts while preserving major presynaptic ultrastructure.
+    supporting_text: |-
+      Finally, synaptic contacts made
+      by ON-BC but not OFF-BC neurons with the cone pedicles were disorganized without
+      ultrastructural alterations in cone terminals, horizontal cell processes, or
+      synaptic ribbons.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The study assigns LRIT3 a role in cone-to-ON-bipolar trans-synaptic organization.
+    supporting_text: |-
+      CONCLUSIONS: These results suggest that LRIT3 is likely involved in coordination
+      of the transsynaptic communication between cones and ON-BCs during synapse
+      formation and function.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. Human physiology is included, but the detailed
+      structural and mechanistic experiments are in the mouse nob6 model.
+- id: PMID:31189098
+  title: Presynaptic Expression of LRIT3 Transsynaptically Organizes the Postsynaptic Glutamate Signaling Complex Containing TRPM1.
+  findings:
+  - statement: &gt;-
+      Mouse rod-photoreceptor LRIT3 acts presynaptically and restores the postsynaptic
+      depolarizing-bipolar-cell signalplex and rod-driven vision.
+    supporting_text: |-
+      In contrast, we
+      demonstrate that LRIT3 is expressed presynaptically, in rod photoreceptors
+      (rods), and when we restore LRIT3 expression in Lrit3-/- rods, we restore
+      expression of the postsynaptic glutamate signalplex and rod-driven vision.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The authors identify LRIT3 as a trans-synaptic organizer of the postsynaptic
+      glutamate signalplex.
+    supporting_text: |-
+      Our
+      results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+      as a transsynaptic organizer of the postsynaptic complex required for normal
+      synaptic function.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. Photoreceptor-specific rescue supplies the
+      strongest causal evidence for the presynaptic organizer model in mouse retina;
+      human process annotations remain explicit orthology transfers.
+- id: PMID:31959619
+  title: LRIT3 is Required for Nyctalopin Expression and Normal ON and OFF Pathway Signaling in the Retina.
+  findings:
+  - statement: &gt;-
+      LRIT3 associates with nyctalopin and is required for nyctalopin and TRPM1
+      localization at mouse depolarizing-bipolar-cell dendritic tips.
+    supporting_text: |-
+      In both male and female mice, we demonstrate
+      that LRIT3 interacts with and is required for expression of nyctalopin, and thus
+      TRPM1 at all DBC dendritic tips, but DBC signalplex components are not required
+      for LRIT3 expression.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Lrit3 loss disrupts both ON and OFF retinal pathway outputs.
+    supporting_text: |-
+      Using whole-cell and multielectrode array (MEA)
+      electrophysiology and glutamate imaging, we demonstrate that the loss of LRIT3
+      impacts both ON and OFF signaling pathway function. Without LRIT3, excitatory
+      input to type 1 BCs is reduced, as are the visually evoked responses of many OFF
+      retinal ganglion cells (RGCs). We conclude that the absence of LRIT3 expression
+      disrupts excitatory input to OFF BCs and, thus disrupts the normal function of
+      OFF RGCs.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. The study supplies mouse co-IP, localization,
+      knockout, and electrophysiology evidence; it does not establish a purified
+      binary interface or direct human retinal mechanism.
+- id: PMID:40263339
+  title: Efficient in vivo labeling of endogenous proteins with SMART delineates retina cellular and synaptic organization.
+  findings:
+  - statement: &gt;-
+      Endogenous mouse LRIT3 tagging supports a presynaptic photoreceptor origin.
+    supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Tagged LRIT3 was also detected in mouse cone pedicles.
+    supporting_text: This indicates that LRIT3 is prominently present in cone synapses too and confirms its pre-synaptic origin.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. Endogenous tagging resolves the cell-side
+      ambiguity left by earlier puncta apposed to bipolar dendritic tips.
+- id: PMID:42055330
+  title: Domain-specific functions of LRIT3 in synaptic assembly and retinal signal transmission.
+  findings:
+  - statement: &gt;-
+      Mouse domain-deletion rescue shows that the LRIT3 Ig-like domain is required for
+      TRPM1 localization and signalplex function.
+    supporting_text: |-
+      The IG domain is required for the localization of TRPM1 to the
+      signalplex and thus its function.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The LRIT3 LRR domain contributes to trafficking and signalplex reassembly in a
+      photoreceptor-type-dependent manner.
+    supporting_text: |-
+      We
+      show the LRR domain may be required for trafficking LRIT3 to the synapse in
+      cones, but not rods, and it is needed for reassembly and function of the rod BC
+      signalplex.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text and title were checked. The 2026 mouse rAAV deletion-rescue study is
+      strong structure-function evidence, but its proposed LRR-nyctalopin and Ig-TRPM1
+      contacts remain mechanistic models rather than purified direct interfaces.
+- id: file:human/LRIT3/LRIT3-uniprot.txt
+  title: UniProtKB/Swiss-Prot record for human LRIT3 (Q3SXY7)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed source for human sequence, topology, domains, alternative products,
+      disease, localization, and curated literature links. Mouse-orthology statements
+      and direct human evidence are distinguished explicitly in the record.
+core_functions:
+- description: &gt;-
+    At rod and cone photoreceptor terminals, LRIT3 acts presynaptically to organize the
+    opposing depolarizing-bipolar-cell postsynaptic specialization. Mouse knockout,
+    photoreceptor-specific rescue, endogenous tagging, and domain-deletion rescue show
+    that LRIT3 is required for nyctalopin and TRPM1 assembly at bipolar-cell dendritic
+    tips and for normal ON-pathway transmission; loss also alters downstream OFF-
+    pathway responses. Human biallelic loss causes complete congenital stationary
+    night blindness, connecting this conserved organizer mechanism to disease. The
+    evidence supports a trans-synaptic organizing role but does not yet define a
+    purified direct human binding interface or obligate stable complex.
+  directly_involved_in:
+  - id: GO:0099084
+    label: postsynaptic specialization organization
+  - id: GO:0050804
+    label: modulation of chemical synaptic transmission
+  locations:
+  - id: GO:0098793
+    label: presynapse
+  supported_by:
+  - reference_id: PMID:31189098
+    supporting_text: |-
+      Our
+      results demonstrate that, in the retina, the LRR-containing protein LRIT3 acts
+      as a transsynaptic organizer of the postsynaptic complex required for normal
+      synaptic function.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:31959619
+    supporting_text: |-
+      In both male and female mice, we demonstrate
+      that LRIT3 interacts with and is required for expression of nyctalopin, and thus
+      TRPM1 at all DBC dendritic tips, but DBC signalplex components are not required
+      for LRIT3 expression.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:40263339
+    supporting_text: These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors.
+    reference_section_type: RESULTS
+  - reference_id: PMID:42055330
+    supporting_text: |-
+      The IG domain is required for the localization of TRPM1 to the
+      signalplex and thus its function.
+    reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct extracellular binding interface by which LRIT3 organizes nyctalopin,
+    TRPM1, and the depolarizing-bipolar-cell signalplex is unresolved.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Co-immunoprecipitation and domain-deletion rescue identify functional dependencies
+    but do not distinguish direct binary contacts, multimerization, or an intervening
+    synaptic partner.
+  resolution: &gt;-
+    Reconstitute purified LRIT3 ectodomains with nyctalopin and TRPM1 extracellular
+    regions, combine quantitative binding with crosslinking mass spectrometry and
+    structural analysis, and validate interface mutants by retinal rescue.
+  provenance:
+  - reference_id: PMID:42055330
+    supporting_text: This may indicate that the LRR domain of LRIT3 interacts transsynaptically with the LRR domain of Nyctalopin.
+    reference_section_type: DISCUSSION
+- gap_statement: &gt;-
+    The exact cell-side distribution and molecular partners of endogenous human LRIT3
+    at rod and cone synapses remain unresolved.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Human antibody staining resembled bipolar dendritic tips, whereas mouse endogenous
+    tagging and rescue support a presynaptic photoreceptor origin; synaptic apposition
+    can make these patterns difficult to distinguish.
+  resolution: &gt;-
+    Endogenously tag LRIT3 in human retinal organoids or donor tissue and combine
+    expansion microscopy with cell-type-specific proteomics to resolve pre- versus
+    postsynaptic pools and their partners.
+  provenance:
+  - reference_id: PMID:23246293
+    supporting_text: |-
+      Human LRIT3 antibody staining revealed in the outer plexiform layer of the human
+      retina a punctate-labeling pattern resembling the dendritic tips of bipolar
+      cells; similar patterns have been observed for other proteins implicated in
+      cCSNB.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: PMID:40263339
+    supporting_text: This indicates that LRIT3 is prominently present in cone synapses too and confirms its pre-synaptic origin.
+    reference_section_type: RESULTS
+- gap_statement: &gt;-
+    The expression, trafficking, and function of human LRIT3 isoform 2 are unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Isoform 2 removes the canonical five-LRR segment implicated by mouse rescue studies
+    in trafficking and signalplex assembly, but no endogenous isoform-specific protein
+    evidence exists.
+  resolution: &gt;-
+    Use long-read retinal transcriptomics and isoform-specific proteomics, then compare
+    the two isoforms in surface-trafficking, partner-binding, and Lrit3-null retinal
+    rescue assays.
+- gap_statement: &gt;-
+    The endogenous physiological relevance of LRIT3-dependent FGFR1 maturation and
+    signaling outside the overexpression assay is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    The direct human-cell assay is reproducible evidence for FGFR-pathway modulation,
+    but no retinal or other native tissue phenotype currently connects it to the core
+    visual function.
+  resolution: &gt;-
+    Test endogenous FGFR1 trafficking and signaling after LRIT3 perturbation in human
+    retinal and non-retinal cells that naturally coexpress both proteins, with ligand-
+    controlled measurements and rescue at physiological expression levels.
+  provenance:
+  - reference_id: PMID:22673519
+    supporting_text: Perhaps highly over-expressed FGFR1s can interact and phosphorylate each other at the cell surface without a ligand [22]. Alternatively, stabilization and over-expression of FGFR1 simply allow cells to respond to even small amounts of growth factors in the culture medium (serum) rather than these cells become truly FGF-independent. Although the exact mechanism of action is not clear, our results strongly suggest that LRIT3 facilitates ER export of FGFR1, that FGFR1 exits the ER not in a constitutive fashion, but in a regulated fashion, and that LRIT3 modulates the FGFR-signaling pathway.
+    reference_section_type: DISCUSSION
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does human LRIT3 bind nyctalopin directly, and which LRIT3 domain or residues form
+    the trans-synaptic interface?
+  experts:
+  - Retinal synapse experts
+  - Structural biologists
+- question: &gt;-
+    Is endogenous human LRIT3 exclusively presynaptic in rods and cones, or is there a
+    distinct postsynaptic pool at bipolar-cell dendritic tips?
+  experts:
+  - Human retinal cell biologists
+  - Advanced imaging experts
+- question: &gt;-
+    Which LRIT3-dependent step separately recruits nyctalopin and TRPM1 to the
+    depolarizing-bipolar-cell signalplex?
+  experts:
+  - Ion-channel trafficking experts
+  - Synaptic organizer experts
+- question: &gt;-
+    Is LRIT3 isoform 2 expressed as a stable retinal protein, and can it reach the
+    synapse or organize the signalplex without the canonical LRR region?
+  experts:
+  - Isoform biology experts
+  - Retinal proteomics experts
+- question: &gt;-
+    Does endogenous LRIT3 regulate FGFR1 trafficking in any normal human cell type,
+    and is that activity connected to retinal biology?
+  experts:
+  - FGF-signaling experts
+  - Retinal developmental biologists
+suggested_experiments:
+- hypothesis: &gt;-
+    LRIT3 directly binds nyctalopin through its LRR region to organize a trans-synaptic
+    complex.
+  description: &gt;-
+    Measure purified ectodomain binding by biolayer interferometry and crosslinking
+    mass spectrometry, determine a complex structure if stable, and test interface
+    mutants in photoreceptor-specific rescue of Lrit3-null mouse retina.
+  experiment_type: quantitative biochemistry and structural rescue
+- hypothesis: &gt;-
+    Human LRIT3 is predominantly presynaptic at rod and cone terminals.
+  description: &gt;-
+    Introduce small endogenous tags into LRIT3 in human retinal organoids, image with
+    expansion microscopy against pre- and postsynaptic landmarks, and validate the
+    tagged protein&#39;s trafficking and signaling competence.
+  experiment_type: endogenous tagging and spatial proteomics
+- hypothesis: &gt;-
+    LRIT3 recruits nyctalopin and TRPM1 through separable domain-dependent steps.
+  description: &gt;-
+    Perform time-resolved photoreceptor-specific rescue with LRR, Ig-like, and
+    cytoplasmic-tail mutants and quantify nyctalopin and TRPM1 localization, signalplex
+    composition, and ON-bipolar electrophysiology independently.
+  experiment_type: domain-resolved in vivo rescue
+- hypothesis: &gt;-
+    LRIT3 isoform 2 is unstable or functionally deficient because it lacks the
+    canonical LRR segment.
+  description: &gt;-
+    Combine retinal long-read sequencing and targeted proteomics with matched isoform-
+    specific trafficking, surface-expression, partner-binding, and functional rescue
+    assays.
+  experiment_type: isoform-resolved structure-function analysis
+- hypothesis: &gt;-
+    LRIT3 modulates FGFR1 only under overexpression and is dispensable for endogenous
+    FGFR1 trafficking in retinal cells.
+  description: &gt;-
+    Perturb endogenous LRIT3 in cells that naturally coexpress FGFR1, quantify ER-to-
+    Golgi trafficking and ligand-dependent PLC-gamma/ERK/AKT outputs, and compare with
+    the original HEK293 overexpression design.
+  experiment_type: endogenous signaling perturbation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

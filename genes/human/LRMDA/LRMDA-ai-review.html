@@ -1,0 +1,3491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRMDA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRMDA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H2I8" target="_blank" class="term-link">
+                        Q9H2I8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRMDA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H2I8" data-a="DESCRIPTION: LRMDA is a small leucine-rich-repeat protein that ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRMDA is a small leucine-rich-repeat protein that functions in pigment cells as a non-catalytic membrane-trafficking adaptor. At the limiting membrane of melanosomes, it binds active RAB32-family GTPases and the Retriever subcomplex of Commander, coupling Commander to RAB32-positive membranes during melanosome biogenesis. Human melanocytic-cell loss of LRMDA disrupts PMEL processing, stage-I-to-stage-II melanosome maturation, organelle pH, and melanin content. Biallelic human loss causes oculocutaneous albinism type 7, and zebrafish knockdown/rescue supports a conserved role in melanocyte differentiation. The reviewed human record encodes a 198-residue protein, whereas the direct RAB32/RAB38-binding, melanosome-localization, and Commander studies used a 226-residue human form; their relationship and functional equivalence remain unresolved.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RAB32-LRMDA-Commander complex</h3>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="RAB32-LRMDA-Commander complex" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A protein-containing complex composed of active RAB32, the LRMDA adaptor, and the Commander complex that associates with melanosomal membranes and participates in melanosome biogenesis.</p>
+
+
+
+            <p><strong>Justification:</strong> The named RAB32-LRMDA-Commander assembly is biochemically and functionally distinct from SNX17-Commander. A specific term would distinguish the LRMDA-containing pigment-organelle assembly from the constitutive Commander core and from other Commander adaptor complexes.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                    protein-containing complex
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link">
+                        PMID:41038817
+                    </a>
+
+
+                    : Here, we identify
+leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+Commander association, and that LRMDA simultaneously associates with Commander
+and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+SNX17-Commander assemblies.
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0005654" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked over-annotated because the source nucleoplasmic immunofluorescence is undermined by published evidence that available anti-OCA7 antibodies produced suspect nuclear and random cytoplasmic signal.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target appearing in its own IBA WITH/FROM is expected and is not evidence of circularity. The problem is instead the biological source: PMID:36334630 reports that immunofluorescence with available anti-OCA7 antibodies was suspect and gave nuclear plus random cytoplasmic signal, prompting the authors to abandon that assay for live imaging. This makes both the nucleoplasmic localization and the stronger `is_active_in` propagation biologically weak.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000058168</span>
+
+                                    &middot; PANTHER phylogenetic node supporting nucleoplasm inference
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">This is the phylogenetic node recorded by current QuickGO, but its propagated compartment claim depends on human localization evidence that a later primary study identifies as antibody-artifact-prone.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9H2I8</span>
+
+                                    &middot; human LRMDA
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">The target self-source is structurally expected in an IBA. It is classified as bad here because PMID:36334630 reports suspect nuclear signal from available anti-OCA7 antibodies, not because it is the target itself.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                        PMID:36334630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030318" target="_blank" class="term-link">
+                                    GO:0030318
+                                </a>
+                            </span>
+                            <span class="term-label">melanocyte differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0030318" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as a core conserved role. Current QuickGO and the local GOA agree on the ordered IBA support PANTHER:PTN002922344, human LRMDA, and zebrafish lrmda (ZFIN:ZDB-GENE-050522-285). The human target and zebrafish orthologue each also carry direct IMP support from PMID:23395477.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0030318 is current and describes acquisition of melanocyte features. PMID:23395477 reports human loss-of-function alleles causing recessive albinism and shows that zebrafish lrmda knockdown reduces pigmentation and the apparent number of pigmented melanocytes, with rescue by wild-type but not mutant C10orf11. The experimentally supported orthologue and concordant human evidence license the phylogenetic transfer without a species, paralog, or term-scope mismatch.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002922344</span>
+
+                                    &middot; PANTHER phylogenetic node for melanocyte differentiation
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO records this node as the IBA inference structure shared by human and zebrafish LRMDA.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9H2I8</span>
+
+                                    &middot; human LRMDA
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Human LRMDA independently carries GO:0030318 by IMP from PMID:23395477, and pathogenic human loss-of-function alleles cause OCA7.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ZFIN:ZDB-GENE-050522-285</span>
+
+                                    &middot; zebrafish lrmda (UniProtKB:Q501Y0)
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The zebrafish orthologue independently carries GO:0030318 by IMP from PMID:23395477; morpholino knockdown reduced pigmentation and pigmented melanocytes and was rescued by wild-type C10orf11.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23395477" target="_blank" class="term-link">
+                                        PMID:23395477
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Knockdown of the zebrafish ( Danio rerio ) homolog with the use of morpholinos resulted in substantially decreased pigmentation and a reduction of the apparent number of pigmented melanocytes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked over-annotated because later direct work reports that available anti-OCA7 antibodies produced suspect nuclear and random cytoplasmic immunofluorescence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Current QuickGO and the local GOA faithfully record the HPA IDA row, but PMID:36334630 directly cautions that immunofluorescence with available OCA7 antibodies was suspect and yielded nuclear plus random cytoplasmic signal. The authors therefore used live imaging of tagged OCA7 instead. Because the exact HPA reagent cannot be established here, the row is marked over-annotated rather than removed outright.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                        PMID:36334630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030318" target="_blank" class="term-link">
+                                    GO:0030318
+                                </a>
+                            </span>
+                            <span class="term-label">melanocyte differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23395477" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23395477
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in c10orf11, a melanocyte-differentiation gene, ca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0030318" data-r="PMID:23395477" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the experimentally established core biological-process role of LRMDA. The current term GO:0030318 precisely matches the human genetic and zebrafish loss-of-function/rescue evidence in PMID:23395477.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human recessive LRMDA/C10orf11 loss-of-function alleles segregate with albinism, and the study localizes the protein to human fetal melanoblasts and melanocytes. In zebrafish, orthologue knockdown substantially reduced pigmentation and apparent pigmented-melanocyte number, and wild-type but not mutant C10orf11 rescued the phenotype. This directly supports involvement in melanocyte differentiation rather than only a downstream pigmentation phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23395477" target="_blank" class="term-link">
+                                        PMID:23395477
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Knockdown of the zebrafish ( Danio rerio ) homolog with the use of morpholinos resulted in substantially decreased pigmentation and a reduction of the apparent number of pigmented melanocytes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:41038817
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a RAB32-LRMDA-Commander membrane trafficki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0030674" data-r="PMID:41038817" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRMDA acts as a non-catalytic adaptor linking active RAB32 to the VPS35L-containing Retriever subcomplex and the wider Commander assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The study demonstrates simultaneous association with active RAB32 and Commander, maps separable interaction regions, and functionally distinguishes the RAB32-LRMDA-Commander pathway in melanocytes. GO:0030674 captures the bridging activity more informatively than generic protein binding. All experiments in PMID:41038817 used the longer human A0A087WWI0 proteoform, so the gene-level annotation is retained with an explicit boundary against claiming that the reviewed 198-residue Q9H2I8 proteoform was directly tested.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link">
+                                        PMID:41038817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we identify
+leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+Commander association, and that LRMDA simultaneously associates with Commander
+and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+SNX17-Commander assemblies.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36334630
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OCA7 is a melanosome membrane protein that defines pigmentat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0031267" data-r="PMID:36334630" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRMDA binds the melanosomal small GTPases RAB32 and RAB38.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Recruitment through the canonical effector-binding surface of RAB32 and RAB38 directly supports small GTPase binding. The term does not imply that LRMDA has GTPase, exchange-factor, or GTPase-activating activity. The binding and recruitment constructs used the 226-residue form amplified from MNT1 cells, so the gene-level annotation does not assert that reviewed Q9H2I8 was directly tested.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                        PMID:36334630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that OCA7 is recruited through
+interaction with a canonical effector-binding surface of melanosome proteins
+Rab32 and Rab38.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032438" target="_blank" class="term-link">
+                                    GO:0032438
+                                </a>
+                            </span>
+                            <span class="term-label">melanosome organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36334630
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OCA7 is a melanosome membrane protein that defines pigmentat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0032438" data-r="PMID:36334630" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRMDA is required for normal melanosome maturation and organization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Knockout in human MNT1 cells altered PMEL processing, melanosome fibrillation and striation, organelle pH, and the transition from stage I to stage II. These perturbation phenotypes directly support melanosome organization rather than a generic pigmentation term alone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                        PMID:36334630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Using newly generated OCA7-KO MNT1 cells, we show OCA7
+regulates overall melanin levels in a melanocyte autonomous manner by
+controlling melanosome maturation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link">
+                                        PMID:41038817
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Functional analysis in melanocytes reveals distinct
+roles for RAB32-LRMDA-Commander and SNX17-Commander in melanosome biogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033162" target="_blank" class="term-link">
+                                    GO:0033162
+                                </a>
+                            </span>
+                            <span class="term-label">melanosome membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36334630
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OCA7 is a melanosome membrane protein that defines pigmentat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2I8" data-a="GO:0033162" data-r="PMID:36334630" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRMDA localizes to the melanosome limiting membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct pigment-cell localization places LRMDA at the melanosome limiting membrane. Because the reviewed protein lacks a transmembrane segment and is recruited by active RAB32/RAB38, the annotation describes membrane association rather than integral-membrane topology. The imaging construct was the 226-residue form amplified from MNT1 cells, not the reviewed 198-residue Q9H2I8 sequence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                        PMID:36334630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we discover that OCA7 localizes to the
+limiting membrane of melanosomes, the specialized pigment cell organelles where
+melanin is synthesized.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>At the melanosome limiting membrane, LRMDA bridges active RAB32-family GTPases to the Retriever subcomplex and thereby recruits a distinct Commander assembly during melanosome biogenesis. In human melanocytic cells, LRMDA loss perturbs PMEL processing, fibril and striation formation, organelle pH, melanosome maturation, and melanin content. Direct RAB32/RAB38-binding, localization, and Commander interaction experiments used a longer 226-residue human proteoform, whereas the reviewed target is 198 residues. The available sources do not establish their sequence relationship or functional equivalence.</h3>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="FUNCTION: At the melanosome limiting membrane, LRMDA bridges..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032438" target="_blank" class="term-link">
+                                melanosome organization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033162" target="_blank" class="term-link">
+                                melanosome membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link">
+                                PMID:41038817
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Here, we identify
+leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+Commander association, and that LRMDA simultaneously associates with Commander
+and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+SNX17-Commander assemblies.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                                PMID:36334630
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Importantly, we found that OCA7 regulates
+premelanosome protein (PMEL) processing, impacting fibrillation and the
+striations that define transition from melanosome stage I to stage II.
+Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+control cells.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LRMDA is required for normal vertebrate melanocyte differentiation. Human biallelic loss causes oculocutaneous albinism, while zebrafish orthologue knockdown reduces pigmentation and the apparent number of pigmented melanocytes; wild-type but not disease-mutant human C10orf11 rescues the morphant phenotype. This developmental role is retained separately from the later melanosome-organelle mechanism because their causal relationship remains unresolved.</h3>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="FUNCTION: LRMDA is required for normal vertebrate melanocyte..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030318" target="_blank" class="term-link">
+                                melanocyte differentiation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23395477" target="_blank" class="term-link">
+                                PMID:23395477
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Knockdown of the
+zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+substantially decreased pigmentation and a reduction of the apparent number of
+pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+but not by mutant C10orf11.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23395477" target="_blank" class="term-link">
+                            PMID:23395477
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in c10orf11, a melanocyte-differentiation gene, cause autosomal-recessive albinism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recessive human C10orf11/LRMDA loss-of-function alleles segregated with albinism in the studied families.</div>
+
+                        <div class="finding-text">"The region contains five protein-coding genes, and sequencing of one of these, C10orf11 , revealed a nonsense mutation that segregated with the disease and showed a recessive inheritance pattern."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In human fetal tissue, C10orf11 was detected in melanoblasts and melanocytes but not retinal pigment epithelial cells.</div>
+
+                        <div class="finding-text">"Immunohistochemistry showed localization
+of C10orf11 in melanoblasts and melanocytes in human fetal tissue, but no
+localization was seen in retinal pigment epithelial cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Zebrafish orthologue knockdown reduced pigmentation and apparent pigmented-melanocyte number, and wild-type but not mutant human C10orf11 rescued the morphant phenotype.</div>
+
+                        <div class="finding-text">"Knockdown of the
+zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+substantially decreased pigmentation and a reduction of the apparent number of
+pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+but not by mutant C10orf11."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36334630" target="_blank" class="term-link">
+                            PMID:36334630
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OCA7 is a melanosome membrane protein that defines pigmentation by regulating early stages of melanosome biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA7/LRMDA localizes to the limiting membrane of melanosomes in pigment cells.</div>
+
+                        <div class="finding-text">"Here, we discover that OCA7 localizes to the
+limiting membrane of melanosomes, the specialized pigment cell organelles where
+melanin is synthesized."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recruitment of OCA7/LRMDA depends on the canonical effector-binding surface of melanosomal RAB32 and RAB38.</div>
+
+                        <div class="finding-text">"We demonstrate that OCA7 is recruited through
+interaction with a canonical effector-binding surface of melanosome proteins
+Rab32 and Rab38."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA7 knockout in human MNT1 cells altered melanin content by impairing melanosome maturation in a melanocyte-autonomous setting.</div>
+
+                        <div class="finding-text">"Using newly generated OCA7-KO MNT1 cells, we show OCA7
+regulates overall melanin levels in a melanocyte autonomous manner by
+controlling melanosome maturation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA7 loss perturbed PMEL processing, stage-I-to-stage-II melanosome maturation, and melanosome lumen pH.</div>
+
+                        <div class="finding-text">"Importantly, we found that OCA7 regulates
+premelanosome protein (PMEL) processing, impacting fibrillation and the
+striations that define transition from melanosome stage I to stage II.
+Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+control cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The 2022 interaction and localization constructs used the 226-residue OCA7 transcript amplified from MNT1 cells; the candidate 198-residue transcript did not amplify in that experiment.</div>
+
+                        <div class="finding-text">"Attempts to amplify two potential transcript variants of OCA7 encoding a 226 or 198 amino acid protein from MNT1 complementary DNA (cDNA) were only successful for the first, suggesting it is the predominant variant."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41038817" target="_blank" class="term-link">
+                            PMID:41038817
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a RAB32-LRMDA-Commander membrane trafficking complex reveals the molecular mechanism of human oculocutaneous albinism type 7.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRMDA can bind Commander and active RAB32 simultaneously, defining a distinct RAB32-LRMDA-Commander assembly.</div>
+
+                        <div class="finding-text">"Here, we identify
+leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+Commander association, and that LRMDA simultaneously associates with Commander
+and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+SNX17-Commander assemblies."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Functional experiments in melanocytes distinguish an LRMDA-dependent Commander pathway in melanosome biogenesis.</div>
+
+                        <div class="finding-text">"Functional analysis in melanocytes reveals distinct
+roles for RAB32-LRMDA-Commander and SNX17-Commander in melanosome biogenesis."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OCA7-causing LRMDA mutations disrupt RAB32 and Commander binding, providing a mechanistic link from variants to defective pigment-organelle biogenesis.</div>
+
+                        <div class="finding-text">"We
+reveal how LRMDA mutations, causative for oculocutaneous albinism type 7, a
+hypopigmentation disorder accompanied by poor visual acuity, uncouple RAB32 and
+Commander binding thereby establishing the mechanistic basis of this disease."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">All experiments in this study used the longer 226-residue LRMDA proteoform represented by unreviewed UniProt accession A0A087WWI0, not the reviewed 198-residue Q9H2I8 record.</div>
+
+                        <div class="finding-text">"LRMDA-GFP, LRMDA-GFP(ΔC) and LRMDA-GFP(ΔC) in pEGFP-N3 plasmid were a gift from Prof. Santiago di Pietro, and the wild-type sequence encoded the longer LRMDA isoform with Uniprot accession A0A087WWI0. This isoform was used in all experiments."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRMDA/LRMDA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB/Swiss-Prot record for human LRMDA (Q9H2I8)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which LRMDA proteoform is expressed in normal human melanocytes, and do the 198- and 226-residue proteins differ in stability, localization, or partner binding?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Human melanocyte biologists, Proteoform and transcript experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="Q: Which LRMDA proteoform is expressed in normal huma..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which melanosome cargo is sorted by RAB32-LRMDA-Commander to control PMEL processing and organelle pH?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Melanosome trafficking experts, Commander complex experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="Q: Which melanosome cargo is sorted by RAB32-LRMDA-Co..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LRMDA act directly in melanocyte lineage differentiation, or does defective organelle maturation secondarily reduce the apparent number of pigmented cells?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pigment-cell developmental biologists, Human stem-cell model experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="Q: Does LRMDA act directly in melanocyte lineage diff..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the endogenous subunit stoichiometry and membrane assembly cycle of the RAB32-LRMDA-Commander complex?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Structural cell biologists, Small-GTPase trafficking experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="Q: What is the endogenous subunit stoichiometry and m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously express each proteoform in matched LRMDA-null human melanocytes and compare RAB32/Retriever binding, melanosome localization, organelle maturation, pH, and pigmentation rescue.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The reviewed 198-residue LRMDA protein can recapitulate the RAB32-Commander adaptor activity demonstrated with the 226-residue form.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteoform-resolved endogenous rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="EXPERIMENT: Endogenously express each proteoform in matched LR..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Couple acute LRMDA degradation to melanosome immunoisolation, quantitative membrane proteomics, cargo-trafficking assays, and candidate-cargo rescue or epistasis.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RAB32-LRMDA-Commander sorts a discrete melanosome membrane cargo whose loss causes the PMEL-processing and pH phenotypes.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: acute perturbation and organelle proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="EXPERIMENT: Couple acute LRMDA degradation to melanosome immun..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use inducible LRMDA knockout at successive stages of human melanocyte differentiation and quantify lineage markers, survival, organelle ultrastructure, melanin, and rescue by RAB32- or Commander-binding-selective mutants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRMDA&#39;s developmental melanocyte phenotype is separable from its role in mature melanosome organization.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: stage-resolved human differentiation genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="EXPERIMENT: Use inducible LRMDA knockout at successive stages ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine endogenous multicolor tagging, fluorescence-correlation measurements, native complex mass photometry, and in-situ cryo-electron tomography to determine recruitment order, stoichiometry, and residence time.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Active RAB32 nucleates a defined LRMDA-Commander assembly on melanosome membranes.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous complex assembly and structural analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H2I8" data-a="EXPERIMENT: Combine endogenous multicolor tagging, fluorescenc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The relative expression and functional equivalence of the reviewed 198-residue Q9H2I8 protein and the 226-residue A0A087WWI0 proteoform are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The 2022 RAB32/RAB38-binding and localization constructs and all 2025 RAB32-Commander interaction and mutagenesis experiments used a 226-residue form. The available papers and reviewed UniProt record do not establish the sequence relationship between that form and Q9H2I8, so construct-specific interface numbering and endogenous proteoform usage cannot be assumed for Q9H2I8.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Quantify both proteoforms by long-read transcriptomics and targeted proteomics in primary human melanocytes, then compare their melanosome recruitment, RAB32 and Commander binding, and rescue of LRMDA-null cells at endogenous expression levels.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Attempts to amplify two potential transcript variants of OCA7 encoding a 226 or 198 amino acid protein from MNT1 complementary DNA (cDNA) were only successful for the first, suggesting it is the predominant variant."</em> — PMID:36334630</li>
+
+                <li><em>"LRMDA-GFP, LRMDA-GFP(ΔC) and LRMDA-GFP(ΔC) in pEGFP-N3 plasmid were a gift from Prof. Santiago di Pietro, and the wild-type sequence encoded the longer LRMDA isoform with Uniprot accession A0A087WWI0. This isoform was used in all experiments."</em> — PMID:41038817</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The cargo and trafficking steps through which RAB32-LRMDA-Commander control PMEL processing, melanosome fibrillation, and lumen pH remain unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Knockout phenotypes establish organelle-level consequences, but they do not yet identify the membrane cargo whose sorting directly changes PMEL maturation or proton homeostasis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combine acute endogenous LRMDA degradation with organelle-resolved proteomics, trafficking kinetics, and CRISPR rescue to identify Commander-dependent melanosome cargo and distinguish primary transport defects from downstream maturation changes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Importantly, we found that OCA7 regulates
+premelanosome protein (PMEL) processing, impacting fibrillation and the
+striations that define transition from melanosome stage I to stage II.
+Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+control cells."</em> — PMID:36334630</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> How the melanosome-biogenesis mechanism relates to LRMDA&#39;s developmental role in melanocyte differentiation is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Zebrafish knockdown supports melanocyte differentiation, whereas the mechanistic human-cell studies examine melanosome maturation in differentiated melanoma-derived cells; these may represent linked but distinct developmental and organelle roles.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Perturb LRMDA at defined stages of human melanocyte differentiation and measure lineage specification, survival, organelle biogenesis, pigmentation, and rescue by interaction-selective alleles.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Knockdown of the
+zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+substantially decreased pigmentation and a reduction of the apparent number of
+pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+but not by mutant C10orf11."</em> — PMID:23395477</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous composition, stoichiometry, and lifetime of the RAB32-LRMDA-Commander assembly on human melanosomes are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Biochemical and proteomic evidence establishes a distinct assembly, but does not define whether one LRMDA bridges a complete Commander supercomplex to one active RAB32 molecule or how assembly is regulated on native organelles.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use endogenous tagging, quantitative native complex isolation, single-particle or in-situ structural analysis, and live-cell residence-time measurements in primary melanocytes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Here, we identify
+leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+Commander association, and that LRMDA simultaneously associates with Commander
+and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+SNX17-Commander assemblies."</em> — PMID:41038817</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRMDA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H2I8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrmda-literature-notes">LRMDA literature notes</h1>
+<h2 id="evidence-boundaries">Evidence boundaries</h2>
+<h3 id="identity-architecture-and-proteoforms">Identity, architecture, and proteoforms</h3>
+<p>The reviewed human target is UniProtKB Q9H2I8, a 198-residue leucine-rich-repeat<br />
+protein with four annotated LRRs and an LRR C-terminal domain. Its curated record<br />
+has no signal peptide, transmembrane helix, catalytic feature, or<br />
+alternative-products section. This architecture is compatible with a soluble<br />
+interaction adaptor, but LRR architecture alone does not establish an enzyme,<br />
+receptor, adhesion molecule, or transferable molecular function<br />
+[file:human/LRMDA/LRMDA-uniprot.txt].</p>
+<p>The 2025 mechanistic study has an important proteoform boundary: all experiments<br />
+used the longer A0A087WWI0 sequence [PMID:41038817 Identification of a<br />
+RAB32-LRMDA-Commander membrane trafficking complex, "This isoform was used in all experiments."].<br />
+The paper describes this tested form as 226 residues, whereas reviewed Q9H2I8 is<br />
+198 residues. The available paper and reviewed UniProt record do not establish<br />
+the sequence relationship between the two forms. Thus the sequence-numbered<br />
+interfaces and perturbations in PMID:41038817 directly describe the tested<br />
+A0A087WWI0 construct, and the paper does not establish endogenous<br />
+isoform-specific expression or function for Q9H2I8.</p>
+<p>The 2022 localization and RAB32/RAB38-interaction work used the same length<br />
+boundary: attempts to amplify 226- and 198-residue transcripts from MNT1 cDNA<br />
+recovered only the former [PMID:36334630 OCA7 is a melanosome membrane protein,<br />
+"Attempts to amplify two potential transcript variants of OCA7 encoding a 226 or 198 amino acid protein from MNT1 complementary DNA (cDNA) were only successful for the first, suggesting it is the predominant variant."].<br />
+Its OCA7-EGFP imaging, yeast-two-hybrid, and recruitment constructs therefore<br />
+describe the 226-residue form. The OCA7-knockout phenotypes remain gene-level<br />
+evidence, but the direct localization and binding results are proteoform-bounded.</p>
+<h3 id="human-zebrafish-and-mouse">Human, zebrafish, and mouse</h3>
+<p>The 2013 study directly links recessive human C10orf11/LRMDA alleles to albinism<br />
+and reports human fetal expression [PMID:23395477 Mutations in c10orf11, a<br />
+melanocyte-differentiation gene, "Immunohistochemistry showed localization"]. The<br />
+developmental perturbation itself was performed in zebrafish<br />
+[PMID:23395477 Mutations in c10orf11, a melanocyte-differentiation gene, "zebrafish (Danio rerio) homolog with the use of morpholinos resulted in"].<br />
+Rescue by wild-type but not mutant human C10orf11 strengthens orthology and<br />
+allele specificity, but it remains a zebrafish morpholino experiment rather than<br />
+human or mouse loss-of-function physiology. No decisive mouse pigment-cell<br />
+experiment was needed for this review. The mouse orthologue is useful as a<br />
+subfamily member, not as an experimental donor for claims made here.</p>
+<h3 id="melanocyte-differentiation-versus-pigment-synthesis">Melanocyte differentiation versus pigment synthesis</h3>
+<p>PMID:23395477 supports a conserved role in melanocyte development/differentiation<br />
+because the zebrafish phenotype included fewer apparent pigmented melanocytes.<br />
+It does not isolate a biochemical melanin-synthesis reaction, and pigmentation<br />
+loss alone cannot distinguish melanocyte number, differentiation, organelle<br />
+biogenesis, and pigment production.</p>
+<p>PMID:36334630 supplies a later, mechanistically distinct boundary in human MNT1<br />
+cells, where OCA7 knockout altered melanin through melanosome maturation<br />
+[PMID:36334630 OCA7 is a melanosome membrane protein, "Using newly generated OCA7-KO MNT1 cells, we show OCA7"].<br />
+It further reports effects on PMEL processing, the stage-I-to-stage-II transition,<br />
+and organelle pH [PMID:36334630 OCA7 is a melanosome membrane protein, "premelanosome protein (PMEL) processing, impacting fibrillation and the"].<br />
+These data directly support a melanocyte-autonomous role in melanosome biogenesis<br />
+and pigment output in an established human melanoma-derived melanocytic line.<br />
+They do not, by themselves, prove embryonic melanocyte differentiation or normal<br />
+in-vivo human physiology.</p>
+<h3 id="molecular-role-and-localization">Molecular role and localization</h3>
+<p>OCA7/LRMDA localizes to the melanosome limiting membrane and is recruited via<br />
+the RAB32/RAB38 effector-binding surface [PMID:36334630 OCA7 is a melanosome<br />
+membrane protein, "interaction with a canonical effector-binding surface of melanosome proteins"].<br />
+PMID:41038817 then shows simultaneous association with Commander and active RAB32<br />
+[PMID:41038817 Identification of a RAB32-LRMDA-Commander membrane trafficking<br />
+complex, "simultaneously associates with Commander"]. Together<br />
+the direct data support a peripheral membrane-associated adaptor that couples<br />
+active RAB32-family GTPases to Commander/Retriever during melanosome biogenesis;<br />
+they do not support a transmembrane-receptor or enzymatic interpretation.</p>
+<p>The Human Protein Atlas-derived nucleoplasm annotation is not reliable evidence<br />
+for a second localization. The 2022 primary study reports that available<br />
+anti-OCA7 antibodies produced suspect nuclear and random cytoplasmic signal<br />
+[PMID:36334630 OCA7 is a melanosome membrane protein,<br />
+"Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal."].<br />
+Both nucleoplasm rows are therefore marked over-annotated; targeted endogenous<br />
+localization with validated reagents would be needed to revisit a nuclear role.</p>
+<p>Historically LRMDA's molecular function was unknown, but the direct 2025<br />
+simultaneous RAB32/Commander-binding mechanism now supports considering current<br />
+GO:0030674 <code>protein-macromolecule adaptor activity</code> and GO:0031267 <code>small GTPase
+binding</code>, rather than generic <code>protein binding</code> [PMID:41038817 Identification of<br />
+a RAB32-LRMDA-Commander membrane trafficking complex, "simultaneously associates with Commander"]. Any authored MF must keep the<br />
+226-residue proteoform boundary explicit: the 2022 RAB32/RAB38-binding and<br />
+localization assays and all 2025 mechanism and sequence-numbered interface assays<br />
+used that longer form. Their relationship to reviewed Q9H2I8 is unresolved, and<br />
+the evidence does not support a catalytic or receptor activity.</p>
+<h3 id="disease-and-family-transfer-limits">Disease and family-transfer limits</h3>
+<p>Biallelic loss-of-function variants cause oculocutaneous albinism type 7. The<br />
+2013 fetal staining did not detect C10orf11 in retinal pigment epithelial cells<br />
+[PMID:23395477 Mutations in c10orf11, a melanocyte-differentiation gene, "no localization was seen in retinal pigment epithelial cells"], so ocular disease<br />
+must not be converted into a direct RPE localization claim. PMID:41038817<br />
+provides a molecular disease model in which LRMDA mutations disrupt both partner<br />
+interactions [PMID:41038817 Identification of a RAB32-LRMDA-Commander membrane<br />
+trafficking complex, "uncouple RAB32 and Commander binding"], but that mechanism<br />
+was established with the longer A0A087WWI0 construct and human cell models rather<br />
+than patient tissue.</p>
+<p>PANTHER places human LRMDA in PTHR46282:SF2 with the mouse orthologue, whereas<br />
+the broad PTHR46282 family contains multiple subfamilies. The LRR fold is widely<br />
+reused and cannot license transfer of localization, binding partners, or<br />
+pigment-cell function from unrelated LRR proteins or other PTHR46282 subfamilies.<br />
+Transfers should remain orthologue- and LRMDA-subfamily-specific and should<br />
+preserve the zebrafish-versus-human and proteoform boundaries above.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H2I8
+gene_symbol: LRMDA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRMDA is a small leucine-rich-repeat protein that functions in pigment cells as a
+  non-catalytic membrane-trafficking adaptor. At the limiting membrane of melanosomes,
+  it binds active RAB32-family GTPases and the Retriever subcomplex of Commander,
+  coupling Commander to RAB32-positive membranes during melanosome biogenesis. Human
+  melanocytic-cell loss of LRMDA disrupts PMEL processing, stage-I-to-stage-II
+  melanosome maturation, organelle pH, and melanin content. Biallelic human loss causes
+  oculocutaneous albinism type 7, and zebrafish knockdown/rescue supports a conserved
+  role in melanocyte differentiation. The reviewed human record encodes a 198-residue
+  protein, whereas the direct RAB32/RAB38-binding, melanosome-localization, and
+  Commander studies used a 226-residue human form; their relationship and functional
+  equivalence remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000058168
+  - UniProtKB:Q9H2I8
+  review:
+    summary: &gt;-
+      Marked over-annotated because the source nucleoplasmic immunofluorescence is
+      undermined by published evidence that available anti-OCA7 antibodies produced
+      suspect nuclear and random cytoplasmic signal.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The target appearing in its own IBA WITH/FROM is expected and is not evidence of
+      circularity. The problem is instead the biological source: PMID:36334630 reports
+      that immunofluorescence with available anti-OCA7 antibodies was suspect and gave
+      nuclear plus random cytoplasmic signal, prompting the authors to abandon that
+      assay for live imaging. This makes both the nucleoplasmic localization and the
+      stronger `is_active_in` propagation biologically weak.
+    additional_reference_ids:
+    - PMID:36334630
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: PANTHER:PTN000058168
+        source_label: PANTHER phylogenetic node supporting nucleoplasm inference
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          This is the phylogenetic node recorded by current QuickGO, but its propagated
+          compartment claim depends on human localization evidence that a later primary
+          study identifies as antibody-artifact-prone.
+      - source_id: UniProtKB:Q9H2I8
+        source_label: human LRMDA
+        source_status: SOURCE_BAD
+        comment: &gt;-
+          The target self-source is structurally expected in an IBA. It is classified
+          as bad here because PMID:36334630 reports suspect nuclear signal from
+          available anti-OCA7 antibodies, not because it is the target itself.
+    supported_by:
+    - reference_id: PMID:36334630
+      supporting_text: Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal.
+      reference_section_type: RESULTS
+- term:
+    id: GO:0030318
+    label: melanocyte differentiation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN002922344
+  - UniProtKB:Q9H2I8
+  - ZFIN:ZDB-GENE-050522-285
+  review:
+    summary: &gt;-
+      Accepted as a core conserved role. Current QuickGO and the local GOA agree
+      on the ordered IBA support PANTHER:PTN002922344, human LRMDA, and zebrafish
+      lrmda (ZFIN:ZDB-GENE-050522-285). The human target and zebrafish orthologue
+      each also carry direct IMP support from PMID:23395477.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0030318 is current and describes acquisition of melanocyte features.
+      PMID:23395477 reports human loss-of-function alleles causing recessive
+      albinism and shows that zebrafish lrmda knockdown reduces pigmentation and
+      the apparent number of pigmented melanocytes, with rescue by wild-type but
+      not mutant C10orf11. The experimentally supported orthologue and concordant
+      human evidence license the phylogenetic transfer without a species, paralog,
+      or term-scope mismatch.
+    supported_by:
+    - reference_id: PMID:23395477
+      supporting_text: Knockdown of the zebrafish ( Danio rerio ) homolog with the use of morpholinos resulted in substantially decreased pigmentation and a reduction of the apparent number of pigmented melanocytes.
+      reference_section_type: ABSTRACT
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: PANTHER:PTN002922344
+        source_label: PANTHER phylogenetic node for melanocyte differentiation
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Current QuickGO records this node as the IBA inference structure shared
+          by human and zebrafish LRMDA.
+      - source_id: UniProtKB:Q9H2I8
+        source_label: human LRMDA
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Human LRMDA independently carries GO:0030318 by IMP from PMID:23395477,
+          and pathogenic human loss-of-function alleles cause OCA7.
+      - source_id: ZFIN:ZDB-GENE-050522-285
+        source_label: zebrafish lrmda (UniProtKB:Q501Y0)
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The zebrafish orthologue independently carries GO:0030318 by IMP from
+          PMID:23395477; morpholino knockdown reduced pigmentation and pigmented
+          melanocytes and was rescued by wild-type C10orf11.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Marked over-annotated because later direct work reports that available anti-OCA7
+      antibodies produced suspect nuclear and random cytoplasmic immunofluorescence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Current QuickGO and the local GOA faithfully record the HPA IDA row, but
+      PMID:36334630 directly cautions that immunofluorescence with available OCA7
+      antibodies was suspect and yielded nuclear plus random cytoplasmic signal. The
+      authors therefore used live imaging of tagged OCA7 instead. Because the exact
+      HPA reagent cannot be established here, the row is marked over-annotated rather
+      than removed outright.
+    additional_reference_ids:
+    - PMID:36334630
+    supported_by:
+    - reference_id: PMID:36334630
+      supporting_text: Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal.
+      reference_section_type: RESULTS
+- term:
+    id: GO:0030318
+    label: melanocyte differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:23395477
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Accepted as the experimentally established core biological-process role of
+      LRMDA. The current term GO:0030318 precisely matches the human genetic and
+      zebrafish loss-of-function/rescue evidence in PMID:23395477.
+    action: ACCEPT
+    reason: &gt;-
+      Human recessive LRMDA/C10orf11 loss-of-function alleles segregate with
+      albinism, and the study localizes the protein to human fetal melanoblasts and
+      melanocytes. In zebrafish, orthologue knockdown substantially reduced
+      pigmentation and apparent pigmented-melanocyte number, and wild-type but not
+      mutant C10orf11 rescued the phenotype. This directly supports involvement in
+      melanocyte differentiation rather than only a downstream pigmentation
+      phenotype.
+    supported_by:
+    - reference_id: PMID:23395477
+      supporting_text: Knockdown of the zebrafish ( Danio rerio ) homolog with the use of morpholinos resulted in substantially decreased pigmentation and a reduction of the apparent number of pigmented melanocytes.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  evidence_type: IPI
+  original_reference_id: PMID:41038817
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q13637
+  - UniProtKB:Q7Z3J2
+  review:
+    summary: &gt;-
+      LRMDA acts as a non-catalytic adaptor linking active RAB32 to the
+      VPS35L-containing Retriever subcomplex and the wider Commander assembly.
+    action: NEW
+    reason: &gt;-
+      The study demonstrates simultaneous association with active RAB32 and Commander,
+      maps separable interaction regions, and functionally distinguishes the
+      RAB32-LRMDA-Commander pathway in melanocytes. GO:0030674 captures the bridging
+      activity more informatively than generic protein binding. All experiments in
+      PMID:41038817 used the longer human A0A087WWI0 proteoform, so the gene-level
+      annotation is retained with an explicit boundary against claiming that the
+      reviewed 198-residue Q9H2I8 proteoform was directly tested.
+    supported_by:
+    - reference_id: PMID:41038817
+      supporting_text: |-
+        Here, we identify
+        leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+        binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+        Commander association, and that LRMDA simultaneously associates with Commander
+        and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+        SNX17-Commander assemblies.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: IPI
+  original_reference_id: PMID:36334630
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q13637
+  - UniProtKB:P57729
+  review:
+    summary: LRMDA binds the melanosomal small GTPases RAB32 and RAB38.
+    action: NEW
+    reason: &gt;-
+      Recruitment through the canonical effector-binding surface of RAB32 and RAB38
+      directly supports small GTPase binding. The term does not imply that LRMDA has
+      GTPase, exchange-factor, or GTPase-activating activity. The binding and
+      recruitment constructs used the 226-residue form amplified from MNT1 cells, so
+      the gene-level annotation does not assert that reviewed Q9H2I8 was directly
+      tested.
+    supported_by:
+    - reference_id: PMID:36334630
+      supporting_text: |-
+        We demonstrate that OCA7 is recruited through
+        interaction with a canonical effector-binding surface of melanosome proteins
+        Rab32 and Rab38.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0032438
+    label: melanosome organization
+  evidence_type: IMP
+  original_reference_id: PMID:36334630
+  qualifier: involved_in
+  review:
+    summary: LRMDA is required for normal melanosome maturation and organization.
+    action: NEW
+    reason: &gt;-
+      Knockout in human MNT1 cells altered PMEL processing, melanosome fibrillation and
+      striation, organelle pH, and the transition from stage I to stage II. These
+      perturbation phenotypes directly support melanosome organization rather than a
+      generic pigmentation term alone.
+    additional_reference_ids:
+    - PMID:41038817
+    supported_by:
+    - reference_id: PMID:36334630
+      supporting_text: |-
+        Using newly generated OCA7-KO MNT1 cells, we show OCA7
+        regulates overall melanin levels in a melanocyte autonomous manner by
+        controlling melanosome maturation.
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:41038817
+      supporting_text: |-
+        Functional analysis in melanocytes reveals distinct
+        roles for RAB32-LRMDA-Commander and SNX17-Commander in melanosome biogenesis.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0033162
+    label: melanosome membrane
+  evidence_type: IDA
+  original_reference_id: PMID:36334630
+  qualifier: located_in
+  review:
+    summary: LRMDA localizes to the melanosome limiting membrane.
+    action: NEW
+    reason: &gt;-
+      Direct pigment-cell localization places LRMDA at the melanosome limiting
+      membrane. Because the reviewed protein lacks a transmembrane segment and is
+      recruited by active RAB32/RAB38, the annotation describes membrane association
+      rather than integral-membrane topology. The imaging construct was the 226-residue
+      form amplified from MNT1 cells, not the reviewed 198-residue Q9H2I8 sequence.
+    supported_by:
+    - reference_id: PMID:36334630
+      supporting_text: |-
+        Here, we discover that OCA7 localizes to the
+        limiting membrane of melanosomes, the specialized pigment cell organelles where
+        melanin is synthesized.
+      reference_section_type: ABSTRACT
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the current GO reference for PANTHER phylogenetic inference. It
+      documents the annotation method rather than primary LRMDA biology; the
+      biological transfer still requires LRMDA-subfamily and species review.
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the current GO reference for Human Protein Atlas
+      immunofluorescence curation. It explains the provenance of the nucleoplasm
+      record, but PMID:36334630 reports that available anti-OCA7 antibodies gave
+      suspect nuclear and random cytoplasmic signal. The row is therefore retained
+      only as a source record and marked over-annotated.
+- id: PMID:23395477
+  title: Mutations in c10orf11, a melanocyte-differentiation gene, cause autosomal-recessive
+    albinism.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Recessive human C10orf11/LRMDA loss-of-function alleles segregated with
+      albinism in the studied families.
+    supporting_text: &gt;-
+      The region contains five protein-coding genes, and sequencing of one of
+      these, C10orf11 , revealed a nonsense mutation that segregated with the
+      disease and showed a recessive inheritance pattern.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      In human fetal tissue, C10orf11 was detected in melanoblasts and
+      melanocytes but not retinal pigment epithelial cells.
+    supporting_text: |-
+      Immunohistochemistry showed localization
+      of C10orf11 in melanoblasts and melanocytes in human fetal tissue, but no
+      localization was seen in retinal pigment epithelial cells.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Zebrafish orthologue knockdown reduced pigmentation and apparent
+      pigmented-melanocyte number, and wild-type but not mutant human C10orf11
+      rescued the morphant phenotype.
+    supporting_text: |-
+      Knockdown of the
+      zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+      substantially decreased pigmentation and a reduction of the apparent number of
+      pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+      but not by mutant C10orf11.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational primary evidence combining human genetics and fetal-tissue
+      localization with zebrafish morpholino/rescue experiments. The functional
+      perturbation is zebrafish, not human or mouse, and the result supports
+      pigment-cell development/differentiation without isolating a direct
+      melanin-synthesis reaction. The local cache is abstract-only.
+- id: PMID:36334630
+  title: OCA7 is a melanosome membrane protein that defines pigmentation by regulating
+    early stages of melanosome biogenesis.
+  findings:
+  - statement: &gt;-
+      OCA7/LRMDA localizes to the limiting membrane of melanosomes in pigment
+      cells.
+    supporting_text: |-
+      Here, we discover that OCA7 localizes to the
+      limiting membrane of melanosomes, the specialized pigment cell organelles where
+      melanin is synthesized.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Recruitment of OCA7/LRMDA depends on the canonical effector-binding
+      surface of melanosomal RAB32 and RAB38.
+    supporting_text: |-
+      We demonstrate that OCA7 is recruited through
+      interaction with a canonical effector-binding surface of melanosome proteins
+      Rab32 and Rab38.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      OCA7 knockout in human MNT1 cells altered melanin content by impairing
+      melanosome maturation in a melanocyte-autonomous setting.
+    supporting_text: |-
+      Using newly generated OCA7-KO MNT1 cells, we show OCA7
+      regulates overall melanin levels in a melanocyte autonomous manner by
+      controlling melanosome maturation.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      OCA7 loss perturbed PMEL processing, stage-I-to-stage-II melanosome
+      maturation, and melanosome lumen pH.
+    supporting_text: |-
+      Importantly, we found that OCA7 regulates
+      premelanosome protein (PMEL) processing, impacting fibrillation and the
+      striations that define transition from melanosome stage I to stage II.
+      Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+      control cells.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The 2022 interaction and localization constructs used the 226-residue OCA7
+      transcript amplified from MNT1 cells; the candidate 198-residue transcript did
+      not amplify in that experiment.
+    supporting_text: Attempts to amplify two potential transcript variants of OCA7 encoding a 226 or 198 amino acid protein from MNT1 complementary DNA (cDNA) were only successful for the first, suggesting it is the predominant variant.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human MNT1-cell evidence for melanosomal localization and a
+      cell-autonomous role in organelle maturation and pigmentation. These data
+      define a pigment-synthesis/biogenesis mechanism in differentiated cells;
+      they do not independently establish embryonic melanocyte differentiation
+      or normal in-vivo human physiology. Full text was reviewed. The direct
+      RAB32/RAB38-binding and localization constructs used the 226-residue form
+      amplified from MNT1 cells; the relationship of that tested form to reviewed
+      Q9H2I8 is unresolved, while the knockout phenotype itself remains gene-level
+      evidence.
+- id: PMID:41038817
+  title: Identification of a RAB32-LRMDA-Commander membrane trafficking complex reveals
+    the molecular mechanism of human oculocutaneous albinism type 7.
+  findings:
+  - statement: &gt;-
+      LRMDA can bind Commander and active RAB32 simultaneously, defining a
+      distinct RAB32-LRMDA-Commander assembly.
+    supporting_text: |-
+      Here, we identify
+      leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+      binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+      Commander association, and that LRMDA simultaneously associates with Commander
+      and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+      SNX17-Commander assemblies.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Functional experiments in melanocytes distinguish an
+      LRMDA-dependent Commander pathway in melanosome biogenesis.
+    supporting_text: |-
+      Functional analysis in melanocytes reveals distinct
+      roles for RAB32-LRMDA-Commander and SNX17-Commander in melanosome biogenesis.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      OCA7-causing LRMDA mutations disrupt RAB32 and Commander binding, providing
+      a mechanistic link from variants to defective pigment-organelle biogenesis.
+    supporting_text: |-
+      We
+      reveal how LRMDA mutations, causative for oculocutaneous albinism type 7, a
+      hypopigmentation disorder accompanied by poor visual acuity, uncouple RAB32 and
+      Commander binding thereby establishing the mechanistic basis of this disease.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      All experiments in this study used the longer 226-residue LRMDA proteoform
+      represented by unreviewed UniProt accession A0A087WWI0, not the reviewed
+      198-residue Q9H2I8 record.
+    supporting_text: &gt;-
+      LRMDA-GFP, LRMDA-GFP(ΔC) and LRMDA-GFP(ΔC) in pEGFP-N3 plasmid were a
+      gift from Prof. Santiago di Pietro, and the wild-type sequence encoded the
+      longer LRMDA isoform with Uniprot accession A0A087WWI0. This isoform was
+      used in all experiments.
+    reference_section_type: METHODS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct biochemical, cell-biological, and mechanistic evidence for an
+      RAB32-LRMDA-Commander adaptor complex in human-cell models. A critical
+      proteoform boundary applies: every experiment used A0A087WWI0 (226 aa),
+      whereas the reviewed Q9H2I8 record is 198 aa. The source files do not establish
+      how these forms are related, so sequence-numbered interfaces belong directly to
+      the tested longer construct and should not be asserted as endogenous Q9H2I8
+      results without further evidence.
+- id: file:human/LRMDA/LRMDA-uniprot.txt
+  title: UniProtKB/Swiss-Prot record for human LRMDA (Q9H2I8)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed record for the 198-residue human target, its LRR architecture,
+      OCA7 association, and absence of a curated alternative-products section.
+      It does not by itself establish a molecular activity, and it must not be
+      conflated with the 226-residue forms used for the direct interaction and
+      localization work in PMID:36334630 and PMID:41038817; their sequence
+      relationship is not established by the reviewed record.
+core_functions:
+- description: &gt;-
+    At the melanosome limiting membrane, LRMDA bridges active RAB32-family GTPases to
+    the Retriever subcomplex and thereby recruits a distinct Commander assembly during
+    melanosome biogenesis. In human melanocytic cells, LRMDA loss perturbs PMEL
+    processing, fibril and striation formation, organelle pH, melanosome maturation,
+    and melanin content. Direct RAB32/RAB38-binding, localization, and Commander
+    interaction experiments used a longer 226-residue human proteoform, whereas the
+    reviewed target is 198 residues. The available sources do not establish their
+    sequence relationship or functional equivalence.
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  directly_involved_in:
+  - id: GO:0032438
+    label: melanosome organization
+  locations:
+  - id: GO:0033162
+    label: melanosome membrane
+  supported_by:
+  - reference_id: PMID:41038817
+    supporting_text: |-
+      Here, we identify
+      leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+      binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+      Commander association, and that LRMDA simultaneously associates with Commander
+      and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+      SNX17-Commander assemblies.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:36334630
+    supporting_text: |-
+      Importantly, we found that OCA7 regulates
+      premelanosome protein (PMEL) processing, impacting fibrillation and the
+      striations that define transition from melanosome stage I to stage II.
+      Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+      control cells.
+    reference_section_type: ABSTRACT
+- description: &gt;-
+    LRMDA is required for normal vertebrate melanocyte differentiation. Human
+    biallelic loss causes oculocutaneous albinism, while zebrafish orthologue
+    knockdown reduces pigmentation and the apparent number of pigmented melanocytes;
+    wild-type but not disease-mutant human C10orf11 rescues the morphant phenotype.
+    This developmental role is retained separately from the later melanosome-organelle
+    mechanism because their causal relationship remains unresolved.
+  directly_involved_in:
+  - id: GO:0030318
+    label: melanocyte differentiation
+  supported_by:
+  - reference_id: PMID:23395477
+    supporting_text: |-
+      Knockdown of the
+      zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+      substantially decreased pigmentation and a reduction of the apparent number of
+      pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+      but not by mutant C10orf11.
+    reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: &gt;-
+    The relative expression and functional equivalence of the reviewed 198-residue
+    Q9H2I8 protein and the 226-residue A0A087WWI0 proteoform are unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    The 2022 RAB32/RAB38-binding and localization constructs and all 2025
+    RAB32-Commander interaction and mutagenesis experiments used a 226-residue form.
+    The available papers and reviewed UniProt record do not establish the sequence
+    relationship between that form and Q9H2I8, so construct-specific interface
+    numbering and endogenous proteoform usage cannot be assumed for Q9H2I8.
+  resolution: &gt;-
+    Quantify both proteoforms by long-read transcriptomics and targeted proteomics in
+    primary human melanocytes, then compare their melanosome recruitment, RAB32 and
+    Commander binding, and rescue of LRMDA-null cells at endogenous expression levels.
+  provenance:
+  - reference_id: PMID:36334630
+    supporting_text: Attempts to amplify two potential transcript variants of OCA7 encoding a 226 or 198 amino acid protein from MNT1 complementary DNA (cDNA) were only successful for the first, suggesting it is the predominant variant.
+    reference_section_type: RESULTS
+  - reference_id: PMID:41038817
+    supporting_text: &gt;-
+      LRMDA-GFP, LRMDA-GFP(ΔC) and LRMDA-GFP(ΔC) in pEGFP-N3 plasmid were a
+      gift from Prof. Santiago di Pietro, and the wild-type sequence encoded the
+      longer LRMDA isoform with Uniprot accession A0A087WWI0. This isoform was
+      used in all experiments.
+    reference_section_type: METHODS
+- gap_statement: &gt;-
+    The cargo and trafficking steps through which RAB32-LRMDA-Commander control PMEL
+    processing, melanosome fibrillation, and lumen pH remain unresolved.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Knockout phenotypes establish organelle-level consequences, but they do not yet
+    identify the membrane cargo whose sorting directly changes PMEL maturation or
+    proton homeostasis.
+  resolution: &gt;-
+    Combine acute endogenous LRMDA degradation with organelle-resolved proteomics,
+    trafficking kinetics, and CRISPR rescue to identify Commander-dependent melanosome
+    cargo and distinguish primary transport defects from downstream maturation changes.
+  provenance:
+  - reference_id: PMID:36334630
+    supporting_text: |-
+      Importantly, we found that OCA7 regulates
+      premelanosome protein (PMEL) processing, impacting fibrillation and the
+      striations that define transition from melanosome stage I to stage II.
+      Furthermore, the melanosome lumen of OCA7-KO cells displays lower pH than
+      control cells.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    How the melanosome-biogenesis mechanism relates to LRMDA&#39;s developmental role in
+    melanocyte differentiation is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Zebrafish knockdown supports melanocyte differentiation, whereas the mechanistic
+    human-cell studies examine melanosome maturation in differentiated melanoma-derived
+    cells; these may represent linked but distinct developmental and organelle roles.
+  resolution: &gt;-
+    Perturb LRMDA at defined stages of human melanocyte differentiation and measure
+    lineage specification, survival, organelle biogenesis, pigmentation, and rescue by
+    interaction-selective alleles.
+  provenance:
+  - reference_id: PMID:23395477
+    supporting_text: |-
+      Knockdown of the
+      zebrafish (Danio rerio) homolog with the use of morpholinos resulted in
+      substantially decreased pigmentation and a reduction of the apparent number of
+      pigmented melanocytes. The morphant phenotype was rescued by wild-type C10orf11,
+      but not by mutant C10orf11.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The endogenous composition, stoichiometry, and lifetime of the
+    RAB32-LRMDA-Commander assembly on human melanosomes are unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Biochemical and proteomic evidence establishes a distinct assembly, but does not
+    define whether one LRMDA bridges a complete Commander supercomplex to one active
+    RAB32 molecule or how assembly is regulated on native organelles.
+  resolution: &gt;-
+    Use endogenous tagging, quantitative native complex isolation, single-particle or
+    in-situ structural analysis, and live-cell residence-time measurements in primary
+    melanocytes.
+  provenance:
+  - reference_id: PMID:41038817
+    supporting_text: |-
+      Here, we identify
+      leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+      binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+      Commander association, and that LRMDA simultaneously associates with Commander
+      and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+      SNX17-Commander assemblies.
+    reference_section_type: ABSTRACT
+proposed_new_terms:
+- proposed_name: RAB32-LRMDA-Commander complex
+  proposed_definition: &gt;-
+    A protein-containing complex composed of active RAB32, the LRMDA adaptor, and the
+    Commander complex that associates with melanosomal membranes and participates in
+    melanosome biogenesis.
+  justification: &gt;-
+    The named RAB32-LRMDA-Commander assembly is biochemically and functionally distinct
+    from SNX17-Commander. A specific term would distinguish the LRMDA-containing
+    pigment-organelle assembly from the constitutive Commander core and from other
+    Commander adaptor complexes.
+  proposed_parent:
+    id: GO:0032991
+    label: protein-containing complex
+  supported_by:
+  - reference_id: PMID:41038817
+    supporting_text: |-
+      Here, we identify
+      leucine rich melanocyte differentiation associated (LRMDA) as a Commander
+      binding protein. We reveal that LRMDA and SNX17 share a common mechanism of
+      Commander association, and that LRMDA simultaneously associates with Commander
+      and active RAB32, establishing distinct RAB32-LRMDA-Commander and
+      SNX17-Commander assemblies.
+    reference_section_type: ABSTRACT
+suggested_questions:
+- question: &gt;-
+    Which LRMDA proteoform is expressed in normal human melanocytes, and do the
+    198- and 226-residue proteins differ in stability, localization, or partner binding?
+  experts:
+  - Human melanocyte biologists
+  - Proteoform and transcript experts
+- question: &gt;-
+    Which melanosome cargo is sorted by RAB32-LRMDA-Commander to control PMEL
+    processing and organelle pH?
+  experts:
+  - Melanosome trafficking experts
+  - Commander complex experts
+- question: &gt;-
+    Does LRMDA act directly in melanocyte lineage differentiation, or does defective
+    organelle maturation secondarily reduce the apparent number of pigmented cells?
+  experts:
+  - Pigment-cell developmental biologists
+  - Human stem-cell model experts
+- question: &gt;-
+    What is the endogenous subunit stoichiometry and membrane assembly cycle of the
+    RAB32-LRMDA-Commander complex?
+  experts:
+  - Structural cell biologists
+  - Small-GTPase trafficking experts
+suggested_experiments:
+- hypothesis: &gt;-
+    The reviewed 198-residue LRMDA protein can recapitulate the RAB32-Commander adaptor
+    activity demonstrated with the 226-residue form.
+  description: &gt;-
+    Endogenously express each proteoform in matched LRMDA-null human melanocytes and
+    compare RAB32/Retriever binding, melanosome localization, organelle maturation,
+    pH, and pigmentation rescue.
+  experiment_type: proteoform-resolved endogenous rescue
+- hypothesis: &gt;-
+    RAB32-LRMDA-Commander sorts a discrete melanosome membrane cargo whose loss causes
+    the PMEL-processing and pH phenotypes.
+  description: &gt;-
+    Couple acute LRMDA degradation to melanosome immunoisolation, quantitative membrane
+    proteomics, cargo-trafficking assays, and candidate-cargo rescue or epistasis.
+  experiment_type: acute perturbation and organelle proteomics
+- hypothesis: &gt;-
+    LRMDA&#39;s developmental melanocyte phenotype is separable from its role in mature
+    melanosome organization.
+  description: &gt;-
+    Use inducible LRMDA knockout at successive stages of human melanocyte
+    differentiation and quantify lineage markers, survival, organelle ultrastructure,
+    melanin, and rescue by RAB32- or Commander-binding-selective mutants.
+  experiment_type: stage-resolved human differentiation genetics
+- hypothesis: &gt;-
+    Active RAB32 nucleates a defined LRMDA-Commander assembly on melanosome membranes.
+  description: &gt;-
+    Combine endogenous multicolor tagging, fluorescence-correlation measurements,
+    native complex mass photometry, and in-situ cryo-electron tomography to determine
+    recruitment order, stoichiometry, and residence time.
+  experiment_type: endogenous complex assembly and structural analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
