@@ -67,6 +67,14 @@ events of PDGFR and Akt in mouse embryonic fibroblasts (MEFs), which was
 distinct from the results of the present study."]. A general LRIG2-to-PDGFRB
 regulatory rule should therefore not be inferred beyond the tested tumor model.
 
+The paper has two corrigenda. The 2019 notice states that "the name of the second
+author was misspelt" and corrects only the author name [PMID:30942453]. The 2022
+notice identifies "replacement data for the p-Akt and Cyclin D1 experiments" in
+Figure 7 after the experiment was repeated [PMID:35014687]. It does not correct
+the Figure 8 colocalization or reciprocal co-immunoprecipitation used for the
+LRIG2-PDGFRB association, and the notice states that the main conclusions remain
+supported.
+
 ## Human developmental evidence
 
 Biallelic LRIG2 variants cause a subset of human urofacial syndrome
