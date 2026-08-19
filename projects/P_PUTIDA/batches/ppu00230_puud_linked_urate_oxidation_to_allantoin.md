@@ -39,12 +39,12 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 EC-derived GO:0004846 annotation created a false route assignment. Its
 IPR010269/IPR044031/IPR044032, PF05943/PF18945, and PTHR35565:SF3
 classifications identify a TssC1/VipB type VI secretion sheath protein. It is
-not a member of the urate module. The canonical review in approved PR #2515
+not a member of the urate module. The canonical review in open draft PR #2515
 removes its urate-oxidase annotation and curates its T6SS role; this PR records
 the independently researched pathway-boundary decision without duplicating
 that review.
 
-The canonical PP_3099 gene review is already owned by the approved type VI
+The canonical PP_3099 gene review is already owned by the open draft type VI
 secretion apparatus PR
 [#2515](https://github.com/ai4curation/ai-gene-review/pull/2515). This urate PR
 does not add a competing copy of that review. It retains the independently
