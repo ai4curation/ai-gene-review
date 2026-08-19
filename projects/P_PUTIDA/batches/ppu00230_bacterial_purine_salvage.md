@@ -11,9 +11,9 @@ autolink_gene_symbols: false
 - Module seed: `bacterial_purine_salvage`
 - Candidate genes from membership table: 65
 - Primary bucket genes: 36
-- Existing review files: 24
-- Curated review files: 21
-- Existing OpenScientist research files: 5
+- Existing review files: 25
+- Curated review files: 25
+- Existing OpenScientist research files: 10
 
 ## Curation Boundary
 
@@ -65,9 +65,9 @@ MTA/SAH nucleosidase rather than a phosphate-dependent PNP.
 | [ ] | `nudE` | PP_0260 | Q88R74 | kegg:ppu00230 | MISSING | MISSING | MISSING | ADP-sugar pyrophosphorylase (EC 3.6.1.21) |
 | [ ] | `apaH` | PP_0399 | Q88QT8 | kegg:ppu00230 | PRESENT | CURATED | MISSING | Bis(5'-nucleosyl)-tetraphosphatase, symmetrical (EC 3.6.1.41) (Ap4A hydrolase) (Diadenosine 5',5'''-P1,P4-tetraphosphate |
 | [ ] | `PP_0591` | PP_0591 | Q88QA3 | kegg:ppu00230 | MISSING | MISSING | MISSING | Adenine deaminase (ADE) (EC 3.5.4.2) (Adenine aminohydrolase) (AAH) |
-| [x] | `yfiH` | PP_0624 | Q88Q72 | kegg:ppu00270 | MISSING | MISSING | MISSING | Purine nucleoside phosphorylase |
+| [x] | `yfiH` | PP_0624 | Q88Q72 | kegg:ppu00270 | PRESENT | CURATED | PRESENT | Purine nucleoside phosphorylase |
 | [ ] | `prs` | PP_0722 | Q88PX6 | kegg:ppu00030 | PRESENT | CURATED | MISSING | Ribose-phosphate pyrophosphokinase (RPPK) (EC 2.7.6.1) (5-phospho-D-ribosyl alpha-1-diphosphate synthase) (Phosphoribosy |
-| [x] | `PP_0747` | PP_0747 | Q88PV1 | kegg:ppu00230 | PRESENT | PENDING | MISSING | Hypoxanthine-guanine phosphoribosyltransferase |
+| [x] | `PP_0747` | PP_0747 | Q88PV1 | kegg:ppu00230 | PRESENT | CURATED | PRESENT | Hypoxanthine-guanine phosphoribosyltransferase |
 | [ ] | `ndk` | PP_0849 | Q88PK1 | kegg:ppu00240 | MISSING | MISSING | MISSING | Nucleoside diphosphate kinase (NDK) (NDP kinase) (EC 2.7.4.6) (Nucleoside-2-P kinase) |
 | [ ] | `arcC` | PP_0999 | Q88P54 | kegg:ppu00910 | MISSING | MISSING | MISSING | Carbamate kinase |
 | [ ] | `guaB` | PP_1031 | Q88P22 | kegg:ppu00230 | MISSING | MISSING | MISSING | Inosine-5'-monophosphate dehydrogenase (IMP dehydrogenase) (IMPD) (IMPDH) (EC 1.1.1.205) |
@@ -101,8 +101,8 @@ MTA/SAH nucleosidase rather than a phosphate-dependent PNP.
 | [ ] | `pgm` | PP_3578 | Q88GY7 | kegg:ppu00052 | PRESENT | CURATED | MISSING | Phosphoglucomutase (EC 5.4.2.2) |
 | [ ] | `PP_3662` | PP_3662 | Q88GQ6 | kegg:ppu00240 | MISSING | MISSING | MISSING | AMP nucleosidase (EC 3.2.2.4) (AMP nucleosidase) |
 | [ ] | `purB` | PP_4016 | Q88FR7 | kegg:ppu00250 | PRESENT | CURATED | MISSING | Adenylosuccinate lyase (ASL) (EC 4.3.2.2) (Adenylosuccinase) |
-| [x] | `ppnP` | PP_4248 | Q88F51 | kegg:ppu00240 | PRESENT | CURATED | MISSING | Pyrimidine/purine nucleoside phosphorylase (EC 2.4.2.1) (EC 2.4.2.2) (Adenosine phosphorylase) (Cytidine phosphorylase)  |
-| [x] | `apt` | PP_4266 | Q88F33 | kegg:ppu00230 | PRESENT | PENDING | MISSING | Adenine phosphoribosyltransferase (APRT) (EC 2.4.2.7) |
+| [x] | `ppnP` | PP_4248 | Q88F51 | kegg:ppu00240 | PRESENT | CURATED | PRESENT | Pyrimidine/purine nucleoside phosphorylase (EC 2.4.2.1) (EC 2.4.2.2) (Adenosine phosphorylase) (Cytidine phosphorylase)  |
+| [x] | `apt` | PP_4266 | Q88F33 | kegg:ppu00230 | PRESENT | CURATED | PRESENT | Adenine phosphoribosyltransferase (APRT) (EC 2.4.2.7) |
 | [ ] | `xdhA` | PP_4278 | Q88F21 | kegg:ppu00230 | MISSING | MISSING | MISSING | Xanthine dehydrogenase subunit XdhA (EC 1.17.1.4) |
 | [ ] | `xdhB` | PP_4279 | Q88F20 | kegg:ppu00230 | MISSING | MISSING | MISSING | Xanthine dehydrogenase subunit XdhB (EC 1.17.1.4) |
 | [ ] | `guaD` | PP_4281 | Q88F18 | kegg:ppu00230 | MISSING | MISSING | MISSING | Guanine deaminase (Guanase) (EC 3.5.4.3) (Guanine aminohydrolase) |
@@ -120,7 +120,7 @@ MTA/SAH nucleosidase rather than a phosphate-dependent PNP.
 | [ ] | `PP_5100` | PP_5100 | Q88CT0 | kegg:ppu00230 | MISSING | MISSING | MISSING | dITP/XTP pyrophosphatase (EC 3.6.1.66) (Non-canonical purine NTP pyrophosphatase) (Non-standard purine NTP pyrophosphata |
 | [ ] | `ppx` | PP_5216 | Q88CG5 | kegg:ppu00230 | MISSING | MISSING | MISSING | Exopolyphosphatase (EC 3.6.1.11) |
 | [ ] | `cyaA` | PP_5222 | Q88CF9 | kegg:ppu00230 | MISSING | MISSING | MISSING | Adenylate cyclase (EC 4.6.1.1, EC 4.6.1.6) |
-| [x] | `xpt` | PP_5265 | Q88CB6 | kegg:ppu00230 | PRESENT | PENDING | MISSING | Xanthine phosphoribosyltransferase (XPRTase) (EC 2.4.2.22) |
+| [x] | `xpt` | PP_5265 | Q88CB6 | kegg:ppu00230 | PRESENT | CURATED | PRESENT | Xanthine phosphoribosyltransferase (XPRTase) (EC 2.4.2.22) |
 | [ ] | `algC` | PP_5288 | Q88C93 | kegg:ppu00052 | PRESENT | CURATED | MISSING | Phosphomannomutase/phosphoglucomutase (PMM / PGM) (EC 5.4.2.2) (EC 5.4.2.8) |
 | [ ] | `gmk` | PP_5296 | Q88C87 | kegg:ppu00230 | MISSING | MISSING | MISSING | Guanylate kinase (EC 2.7.4.8) (GMP kinase) |
 | [ ] | `spoT` | PP_5302 | Q88C81 | kegg:ppu00230 | MISSING | MISSING | MISSING | guanosine-3',5'-bis(diphosphate) 3'-diphosphatase (EC 3.1.7.2) |
@@ -128,5 +128,12 @@ MTA/SAH nucleosidase rather than a phosphate-dependent PNP.
 | [ ] | `purE` | PP_5336 | Q88C47 | kegg:ppu00230 | PRESENT | CURATED | MISSING | N5-carboxyaminoimidazole ribonucleotide mutase (N5-CAIR mutase) (EC 5.4.99.18) (5-(carboxyamino)imidazole ribonucleotide |
 
 ## Notes
+
+The apt gene-level report independently recovers Q88F33/PP_4266 as the exact
+adenine phosphoribosyltransferase and explicitly notes the absence of a
+target-specific structure, kinetic study, or knockout phenotype. Its
+homodimer, detailed mechanism, MTAN coupling, non-essentiality, and toxic-analog
+phenotype claims are ortholog- or screen-derived and were not imported as
+KT2440-specific evidence.
 
 Generated UTC: 2026-08-13T15:16:00.996332+00:00
