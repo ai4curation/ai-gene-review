@@ -3,25 +3,27 @@
 ## Scope and bottom line
 
 This note evaluates source evidence for human **LRP5L** (UniProtKB A4QPB2;
-NCBI Gene 91355) without assuming that the locus encodes a stable protein. The
-evidence supports transcription/cDNA models and one reported cataract-family and
-cell-perturbation study. It does **not** establish an intrinsic molecular
+NCBI Gene 91355; HGNC:25323) without assuming that the locus encodes a stable
+protein. The evidence supports transcription/cDNA models and one reported
+cataract-family and cell-perturbation study. It does **not** establish an intrinsic molecular
 function, a native biological process, a native subcellular location, a signal
 peptide, or a transmembrane topology. No LRP5- or LRP6-like receptor/Wnt function
 should be transferred by name or broad-family membership.
 
-There is a current database-model conflict. NCBI Gene, updated 2026-08-06,
-labels the official full name **“LDL receptor related protein 5 like
-(pseudogene)”**, gives **“Gene type pseudo”**, and states for both former
-protein-coding RefSeqs: **“This RefSeq was removed because it is now thought that
-this gene is a pseudogene.”** (NM_001135772.2 and NM_182492.3)
-[NCBI Gene 91355, accessed 2026-08-19,
-https://www.ncbi.nlm.nih.gov/gene/91355]. In contrast, the cached UniProtKB flat
-file still says **“ID   LRP5L_HUMAN             Reviewed;         252 AA.”** and
+There is a current database-model conflict. The official NCBI Datasets Gene API
+labels LRP5L **`"type": "PSEUDO"`** and exposes 2 `NON_CODING` plus 16
+`NON_CODING_MODEL` transcripts
+[file:human/LRP5L/LRP5L-ncbi-gene.json, fetched 2026-08-19]. HGNC independently
+assigns **`"locus_type": "pseudogene"`** while cross-referencing A4QPB2
+[file:human/LRP5L/LRP5L-hgnc.json, fetched 2026-08-19]. In contrast, the cached
+UniProtKB flat file still says **“ID   LRP5L_HUMAN             Reviewed;
+252 AA.”** and
 **“PE   2: Evidence at transcript level;”**
 [file:human/LRP5L/LRP5L-uniprot.txt]. “Reviewed” denotes record curation; PE2 is
-explicitly transcript-level rather than protein-level evidence. The protein-
-coding status therefore remains unresolved and should be treated conservatively.
+explicitly transcript-level rather than protein-level evidence. The two current
+official gene authorities independently support the `PSEUDOGENE` product type
+used in the review, while whether any stable endogenous translation nevertheless
+occurs remains an empirical knowledge gap.
 
 ## UniProtKB sequence model and explicit limits
 
@@ -45,6 +47,21 @@ positive evidence: they do not prove cytosolic localization, lack of secretion
 in every possible product, or any molecular activity. They do show that the
 reviewed UniProtKB record itself supplies no function/localization claim and no
 annotated signal peptide or membrane span.
+
+## Proteomics cross-reference audit
+
+The UniProtKB record lists **MassIVE A4QPB2**, **PaxDb
+9606-ENSP00000482378**, **PeptideAtlas A4QPB2**, **ProteomicsDB 689
+(A4QPB2-1)**, and **ProteomicsDB 690 (A4QPB2-2)**
+[file:human/LRP5L/LRP5L-uniprot.txt, exact `DR` records]. These are database
+cross-references: their presence shows that the protein model or identifiers are
+indexed by proteomics resources, but the flat file contains no peptide sequence,
+sample, spectrum, locus-uniqueness assessment, or protein-existence upgrade tied
+to them. UniProtKB still assigns **“PE   2: Evidence at transcript level;”**, so
+it has not treated these links as accepted protein-level confirmation. The
+conservative conclusion is not that proteomics resources lack LRP5L records, but
+that the reviewed evidence does not establish a locus-unique endogenous LRP5L
+polypeptide.
 
 ## Transcript and clone evidence
 
@@ -113,7 +130,8 @@ dismissed.
 - Not established: stable endogenous protein production, molecular function,
   direct binding partners, receptor activity, Wnt signaling, native biological
   process, subcellular location, signal peptide, or transmembrane topology.
-- Current blocker: NCBI Gene/RefSeq treats LRP5L as a pseudogene while UniProtKB
-  retains a reviewed transcript-evidence protein record. Resolving the conflict
+- Unresolved evidence boundary: NCBI Gene and HGNC treat LRP5L as a pseudogene
+  while UniProtKB retains a reviewed transcript-evidence protein record and
+  links to proteomics aggregators. Resolving the conflict
   requires endogenous protein evidence tied unambiguously to the locus and
   re-evaluation of the 2020 constructs against current transcript models.
