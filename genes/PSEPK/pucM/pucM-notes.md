@@ -10,3 +10,9 @@
   context. GO:0019628 is added because HIU hydrolysis is explicitly the second
   reaction of urate oxidation [PMID:26349049 "In the second step, HIU is
   hydrolysed to 2-oxo-4-hydroxy-4-carboxy-5-ureidoimidazoline (OHCU)"].
+- The OpenScientist report independently recovers the exact function but states
+  that there is `No direct biochemical characterization of Q88F14.` Its
+  tetramer, residue-level, and cytoplasmic-location claims are transferred from
+  other HIU hydrolases. In particular, its claim that Q88F14 is co-localized
+  with a soluble uricase is incompatible with the curated Q88F11/PP_4289
+  membrane PuuD route and was not imported.

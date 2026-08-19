@@ -16,13 +16,13 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 ## Workflow
 
 - [x] Fetch the four gene records needed to establish the module and boundary correction.
-- [ ] Complete full OpenScientist research for all four selected/boundary genes.
-- [ ] Integrate the completed gene reports after checking claims against primary evidence.
+- [x] Complete full OpenScientist research for all four selected/boundary genes.
+- [x] Integrate the completed gene reports after checking claims against primary evidence.
 - [x] Curate all current GOA rows and the missing pathway/process annotations.
 - [x] Create and validate the species-neutral `puud_linked_urate_oxidation_to_allantoin` module.
 - [x] Complete full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00230` + PSEPK research.
-- [ ] Render the module, gene reviews, and project page.
+- [x] Render the module, gene reviews, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
@@ -30,8 +30,8 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
 | [x] | `PP_4289` | PP_4289 | Q88F11 | COG3748 PuuD candidate; membrane urate-oxidation entry step |
-| [ ] | `pucM` | PP_4285 | Q88F14 | 5-hydroxyisourate hydrolase |
-| [ ] | `pucL` | PP_4287 | Q88F12 | OHCU decarboxylase |
+| [x] | `pucM` | PP_4285 | Q88F14 | 5-hydroxyisourate hydrolase |
+| [x] | `pucL` | PP_4287 | Q88F12 | OHCU decarboxylase |
 
 ## Boundary Correction
 
@@ -39,8 +39,10 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 EC-derived GO:0004846 annotation created a false route assignment. Its
 IPR010269/IPR044031/IPR044032, PF05943/PF18945, and PTHR35565:SF3
 classifications identify a TssC1/VipB type VI secretion sheath protein. It is
-not a member of the urate module; its urate-oxidase annotation is removed and
-its T6SS role is curated instead.
+not a member of the urate module. The canonical review in approved PR #2515
+removes its urate-oxidase annotation and curates its T6SS role; this PR records
+the independently researched pathway-boundary decision without duplicating
+that review.
 
 The canonical PP_3099 gene review is already owned by the approved type VI
 secretion apparatus PR
@@ -58,7 +60,10 @@ That conclusion is superseded: the report's own locus table includes Q88F11 as
 a cytochrome c domain protein, but it did not inspect Q88F11's COG3748,
 IPR010389/PF06181, eight-transmembrane-helix, and cytochrome c architecture.
 PMID:26349049 identifies precisely that architecture as PuuD and directly tests
-the A. fabrum A9CI11/Atu2314 exemplar.
+the A. fabrum Atu2314 exemplar. UniProtKB:A9CI11 was checked directly and maps
+that accession to ordered locus Atu2314 with COG3748, IPR010389, and the
+cytochrome c domain; the report's pairwise-identity value is not needed as
+evidence.
 
 The generated report remains unchanged at
 `../deep-research/PSEPK__bacterial-urate-oxidation-to-allantoin__ppu00230-deep-research-openscientist.md`.
@@ -71,9 +76,19 @@ the unresolved electron acceptor as O2 and asserted direct respiratory-chain
 coupling. Those claims were not imported. GO:0004846 and RHEA:21368 explicitly
 produce hydrogen peroxide, whereas the PuuD study distinguishes the
 cytochrome-mediated route from that soluble-Uox chemistry. The review therefore
-uses GO:0009055 for the supported electron-transfer component, adds
-GO:0019628 for pathway participation, and proposes a mechanism-appropriate GO
-MF rather than applying GO:0004846 as a false exact match.
+uses GO:0016491 for the supported oxidoreductase class, retains GO:0009055 for
+the electron-transfer component, adds GO:0019628 for pathway participation,
+and proposes a mechanism-appropriate GO MF rather than applying GO:0004846 as a
+false exact match.
+
+The Q88F14 report correctly recovers HIU hydrolase activity and explicitly
+states that no target-specific biochemical characterization was found. Its
+tetramer, residue-level, localization, and co-localization-with-soluble-uricase
+claims are homolog-derived; the last conflicts with the curated membrane PuuD
+route and was rejected. The Q88F12 report likewise recovers the exact terminal
+OHCU-decarboxylase reaction, but overlooks Q88F11 and incorrectly declares the
+entry step a divergent, unannotated pathway hole. That conclusion, along with
+target-level oligomer and localization claims, was not imported.
 
 The completed reusable-module report supports the three-reaction boundary and
 explicitly says that PuuD's physiological electron acceptor is unresolved. It

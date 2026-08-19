@@ -4,10 +4,10 @@
 
 - The imported `puuD` name and EC 1.7.3.3 assignment are contradicted by the
   sequence classification: Q88IA0 is a 500-aa TssC1/VipB-family protein with
-  IPR010269, IPR044031, IPR044032, PF05943, PF18945, and
-  PTHR35565:SF3 [file:PSEPK/puuD/puuD-uniprot.txt "InterPro; IPR010269;
-  T6SS_TssC-like"; "PANTHER; PTHR35565:SF3; TYPE VI SECRETION SYSTEM SHEATH
-  PROTEIN TSSC1"].
+  IPR010269, IPR044031, IPR044032, PF05943, and PF18945. The independently
+  generated report records that `Every InterPro/Pfam signature on the protein
+  is a Type VI secretion sheath domain`
+  [file:PSEPK/puuD/puuD-deep-research-openscientist.md].
 - The authentic PuuD architecture is a COG3748 integral membrane domain fused
   to a C-terminal cytochrome c domain [PMID:26349049 "the identified gene
   (puuD) encodes a membrane protein with a C-terminal cytochrome c"]. In

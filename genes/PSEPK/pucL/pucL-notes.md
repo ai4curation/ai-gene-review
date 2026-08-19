@@ -12,3 +12,10 @@
   terminal OHCU-decarboxylation step of urate catabolism
   [file:PSEPK/pucL/pucL-uniprot.txt "Purine metabolism; urate degradation;
   (S)-allantoin from urate: step 3/3"].
+- The OpenScientist report independently recovers the exact OHCU-decarboxylase
+  role and explicitly says the target lacks a direct experimental study. Its
+  homolog-derived cytoplasmic, homodimeric, and His73 claims remain hypotheses.
+  More importantly, its pathway-completeness section overlooks the
+  COG3748/IPR010389 Q88F11/PP_4289 candidate and incorrectly declares the urate
+  entry step a divergent, unannotated hole. That conclusion was rejected rather
+  than propagated into this review or module.
