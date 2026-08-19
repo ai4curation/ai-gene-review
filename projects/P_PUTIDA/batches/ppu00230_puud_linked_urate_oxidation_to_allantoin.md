@@ -60,10 +60,9 @@ That conclusion is superseded: the report's own locus table includes Q88F11 as
 a cytochrome c domain protein, but it did not inspect Q88F11's COG3748,
 IPR010389/PF06181, eight-transmembrane-helix, and cytochrome c architecture.
 PMID:26349049 identifies precisely that architecture as PuuD and directly tests
-the A. fabrum Atu2314 exemplar. UniProtKB:A9CI11 was checked directly and maps
-that accession to ordered locus Atu2314 with COG3748, IPR010389, and the
-cytochrome c domain; the report's pairwise-identity value is not needed as
-evidence.
+the A. fabrum Atu2314 exemplar. The cached UniProtKB:A9CI11 record maps that
+accession to ordered locus Atu2314 with COG3748, IPR010389, and the cytochrome c
+domain; the report's pairwise-identity value is not needed as evidence.
 
 The generated report remains unchanged at
 `../deep-research/PSEPK__bacterial-urate-oxidation-to-allantoin__ppu00230-deep-research-openscientist.md`.
@@ -76,10 +75,10 @@ the unresolved electron acceptor as O2 and asserted direct respiratory-chain
 coupling. Those claims were not imported. GO:0004846 and RHEA:21368 explicitly
 produce hydrogen peroxide, whereas the PuuD study distinguishes the
 cytochrome-mediated route from that soluble-Uox chemistry. The review therefore
-uses GO:0016491 for the supported oxidoreductase class, retains GO:0009055 for
-the electron-transfer component, adds GO:0019628 for pathway participation,
-and proposes a mechanism-appropriate GO MF rather than applying GO:0004846 as a
-false exact match.
+uses GO:0016661 for the supported nitrogenous-donor oxidoreductase class without
+specifying the acceptor, retains GO:0009055 for the electron-transfer component,
+adds GO:0019628 for pathway participation, and proposes a mechanism-appropriate
+GO MF rather than applying GO:0004846 as a false exact match.
 
 The Q88F14 report correctly recovers HIU hydrolase activity and explicitly
 states that no target-specific biochemical characterization was found. Its
