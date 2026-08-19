@@ -11,7 +11,7 @@
 ## Curation decisions
 
 - Change complete xanthine dehydrogenase activity from `enables` to `contributes_to` and add a corresponding hypoxanthine dehydrogenase contribution.
-- Retain broad oxidoreductase activity as the available intrinsic catalytic-subunit function.
+- Retain broad oxidoreductase activity deliberately as the available intrinsic catalytic-subunit function. The substrate-specific GO terms describe contributions by the assembled XdhAB enzyme and therefore remain under `contributes_to_molecular_function`.
 - Replace free molybdenum-ion binding with molybdopterin cofactor binding.
 - Remove iron-ion binding: it appears to cross the multi-subunit enzyme boundary from the Fe-S-bearing XdhA module.
 - Do not assign a homodimeric XDH complex term to the heteromeric XdhAB realization.
