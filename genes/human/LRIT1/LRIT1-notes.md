@@ -50,8 +50,9 @@ allele, assay, or analysis.
 
 - The human core is an explicit exact-ortholog transfer from mouse Q8K099; direct
   human retinal physiology has not been demonstrated.
-- Glutamate receptor binding is supported by mGluR6 co-immunoprecipitation. LRIT1
-  is not itself a glutamate receptor, kinase, or signaling enzyme.
+- G protein-coupled glutamate receptor binding is supported by mGluR6
+  co-immunoprecipitation. LRIT1 is not itself a glutamate receptor, kinase, or
+  signaling enzyme.
 - Regulation of synapse assembly is used for the LRIT1–mGluR6/FRMPD2 organizer
   role and cone-connectivity phenotype. Synaptic membrane adhesion is not asserted
   because direct membrane-attachment evidence is absent, and no permanently stable
