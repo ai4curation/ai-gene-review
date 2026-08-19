@@ -25,7 +25,7 @@ urate to allantoin are separate modules.
 - [x] Integrate provider reports after checking every imported claim.
 - [x] Complete and validate the three gene reviews and module.
 - [x] Render the gene reviews, module, and project page.
-- [ ] Open one PR for this module and clear review and CI.
+- [x] Open one PR for this module: [PR #2643](https://github.com/ai4curation/ai-gene-review/pull/2643) (review and CI in progress).
 
 ## Selected Genes
 
