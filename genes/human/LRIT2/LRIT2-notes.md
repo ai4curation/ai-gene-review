@@ -49,3 +49,24 @@ non-core. No current evidence justifies a human retinal-process, synapse, adhesi
 LRIT1-binding, or receptor-binding annotation. The appropriate synthesis is therefore
 DRAFT with an empty core until endogenous human localization, partners, and function
 are demonstrated.
+
+## Literature-search scope and family boundary
+
+The negative-function conclusion follows a search of PubMed/PMC, the reviewed human
+and mouse UniProt records, current GO/QuickGO annotations, and LRIT-specific PANTHER
+subfamilies through August 2026. Searches used `LRIT2`, `LRRC22`, A6NDA9, mouse
+`Lrit2`, and combinations with retina, synapse, interaction, isoform, knockout, and
+disease. The only functional LRIT2-specific primary result found beyond clone and
+topology resources was the zebrafish morpholino eye-size phenotype in PMID:31934309;
+the mouse LRIT1 association remains accessible only through the curated orthology
+statement and an abstract that foregrounds LRIT1.
+
+The same search recovered extensive retinal mechanisms for close family members
+LRIT1 and LRIT3. Those papers are not interchangeable evidence. For example,
+endogenous tagging indicates that mouse LRIT3 is presynaptic and photoreceptor-derived
+[PMID:40263339 "These observations suggest that LRIT3 is confined to pre-synaptic compartment and is expressed solely by photoreceptors."].
+LRIT1 has a distinct mGluR6/FRMPD2 cone-synapse role, while LRIT3 organizes the
+depolarizing-bipolar-cell signalplex. No source demonstrates either mechanism for
+LRIT2, and PANTHER places LRIT1, LRIT2, and LRIT3 in separate gene-specific
+subfamilies. These positive paralog data therefore strengthen, rather than weaken, the
+decision to leave LRIT2 wholly dark.
