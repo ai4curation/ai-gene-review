@@ -15,14 +15,12 @@ receptor, adhesion molecule, or transferable molecular function
 The 2025 mechanistic study has an important proteoform boundary: all experiments
 used the longer A0A087WWI0 sequence [PMID:41038817 Identification of a
 RAB32-LRMDA-Commander membrane trafficking complex, "This isoform was used in all experiments."].
-A0A087WWI0 is 226 residues and Q9H2I8 is 198 residues. Their official sequences
-share Q9H2I8 residues 22-198 with A0A087WWI0 residues 50-226, including the
-terminal IRDDQL motif, but have alternative N termini rather than a simple
-N-terminal extension. Thus the sequence-numbered interfaces and perturbations in
-PMID:41038817 directly describe the tested A0A087WWI0 construct. Conservation
-makes transfer to the common C-terminal region plausible, not experimentally
-identical, and the paper does not establish endogenous isoform-specific
-expression or function for Q9H2I8.
+The paper describes this tested form as 226 residues, whereas reviewed Q9H2I8 is
+198 residues. The available paper and reviewed UniProt record do not establish
+the sequence relationship between the two forms. Thus the sequence-numbered
+interfaces and perturbations in PMID:41038817 directly describe the tested
+A0A087WWI0 construct, and the paper does not establish endogenous
+isoform-specific expression or function for Q9H2I8.
 
 The 2022 localization and RAB32/RAB38-interaction work used the same length
 boundary: attempts to amplify 226- and 198-residue transcripts from MNT1 cDNA
@@ -75,10 +73,13 @@ the direct data support a peripheral membrane-associated adaptor that couples
 active RAB32-family GTPases to Commander/Retriever during melanosome biogenesis;
 they do not support a transmembrane-receptor or enzymatic interpretation.
 
-The Human Protein Atlas-derived nucleoplasm annotation is an independent
-high-throughput localization observation. Neither decisive pigment paper
-establishes a nuclear molecular activity, so nucleoplasm should remain
-non-core unless targeted nuclear evidence emerges.
+The Human Protein Atlas-derived nucleoplasm annotation is not reliable evidence
+for a second localization. The 2022 primary study reports that available
+anti-OCA7 antibodies produced suspect nuclear and random cytoplasmic signal
+[PMID:36334630 OCA7 is a melanosome membrane protein,
+"Immunofluorescence experiments with available antibodies for endogenous OCA7 were suspect, resulting in nuclear and random cytoplasmic signal."].
+Both nucleoplasm rows are therefore marked over-annotated; targeted endogenous
+localization with validated reagents would be needed to revisit a nuclear role.
 
 Historically LRMDA's molecular function was unknown, but the direct 2025
 simultaneous RAB32/Commander-binding mechanism now supports considering current
@@ -87,9 +88,8 @@ binding`, rather than generic `protein binding` [PMID:41038817 Identification of
 a RAB32-LRMDA-Commander membrane trafficking complex, "simultaneously associates with Commander"]. Any authored MF must keep the
 226-residue proteoform boundary explicit: the 2022 RAB32/RAB38-binding and
 localization assays and all 2025 mechanism and sequence-numbered interface assays
-used that longer form, while transfer to the shared region of reviewed Q9H2I8 is
-strongly sequence-supported but not an endogenous Q9H2I8 isoform experiment. The
-evidence does not support a catalytic or receptor activity.
+used that longer form. Their relationship to reviewed Q9H2I8 is unresolved, and
+the evidence does not support a catalytic or receptor activity.
 
 ### Disease and family-transfer limits
 
