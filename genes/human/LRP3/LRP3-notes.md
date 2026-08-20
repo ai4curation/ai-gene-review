@@ -88,9 +88,30 @@ IBA draws on many distant LDLR-family source proteins, and the vesicle-transport
 IEA is an automated ARBA transfer. Family membership supports cautious topology
 and trafficking plausibility; it does not license transferring the ligand,
 cargo, signaling pathway, tissue role, or disease mechanism of another paralog to
-LRP3. LRP10 and LRP12 are the more relevant compact LRP comparators, but their
-reported cargo or integrin-regulatory biology is not interchangeable with LRP3;
-functions of the larger LDLR/LRP1/LRP2/LRP4/LRP8 receptors are still more distant.
+LRP3. LRP10 is a more relevant compact comparator because its predicted ectodomain
+also contains two CUB and four LDL-receptor class-A domains
+[file:human/LRP10/LRP10-uniprot.txt "FT   DOMAIN          28..136
+FT                   /note=\"CUB 1\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"
+FT   DOMAIN          139..175
+FT                   /note=\"LDL-receptor class A 1\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          192..305
+FT                   /note=\"CUB 2\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"
+FT   DOMAIN          307..354
+FT                   /note=\"LDL-receptor class A 2\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          355..397
+FT                   /note=\"LDL-receptor class A 3\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          398..434
+FT                   /note=\"LDL-receptor class A 4\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\""]. Even so, LRP10's
+predicted internalization role [file:human/LRP10/LRP10-uniprot.txt "CC   -!- FUNCTION: Probable receptor, which is involved in the internalization"]
+cannot be transferred to LRP3, whose own record says only that it may participate in
+internalization and whose reported VLDL/LRPAP1 binding test was negative. Functions of
+the larger LDLR/LRP1/LRP2/LRP4/LRP8 receptors are still more distant.
 
 ## Cancer and disease boundary
 
