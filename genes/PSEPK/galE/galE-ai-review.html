@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>galE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>galE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I72" target="_blank" class="term-link">
+                        Q88I72
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "galE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I72" data-a="DESCRIPTION: galE encodes a cytoplasmic, NAD-dependent UDP-gluc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>galE encodes a cytoplasmic, NAD-dependent UDP-glucose 4-epimerase that reversibly interconverts UDP-glucose and UDP-galactose. In Pseudomonas putida KT2440, GalE most plausibly supplies UDP-galactose for cell-surface glycan biosynthesis; the proteome lacks identifiable GalK and GalT enzymes required for a complete catabolic Leloir pathway.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003978" target="_blank" class="term-link">
+                                    GO:0003978
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-glucose 4-epimerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I72" data-a="GO:0003978" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GalE reversibly interconverts UDP-glucose and UDP-galactose.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 5.1.3.2, Rhea 22168, the UDP_G4E domain, and the galE family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/galE/galE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006012" target="_blank" class="term-link">
+                                    GO:0006012
+                                </a>
+                            </span>
+                            <span class="term-label">galactose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I72" data-a="GO:0006012" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UDP-galactose is a direct substrate/product of GalE, so the broad galactose-metabolism context is defensible.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as broad substrate context without implying a complete galactose-catabolic route.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/galE/galE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Carbohydrate metabolism; galactose metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033499" target="_blank" class="term-link">
+                                    GO:0033499
+                                </a>
+                            </span>
+                            <span class="term-label">beta-D-galactose catabolic process via UDP-galactose, Leloir pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I72" data-a="GO:0033499" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GalE supplies one reversible UDP-sugar reaction, but KT2440 lacks identifiable GalK and GalT steps required for Leloir catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This TreeGrafter process propagation over-interprets a broadly used nucleotide-sugar epimerase as evidence for a complete pathway that is not satisfiable in this proteome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/galE/galE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GalE reversibly epimerizes UDP-glucose and UDP-galactose using a tightly bound NAD cofactor.</h3>
+                <span class="vote-buttons" data-g="Q88I72" data-a="FUNCTION: GalE reversibly epimerizes UDP-glucose and UDP-gal..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003978" target="_blank" class="term-link">
+                            UDP-glucose 4-epimerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/galE/galE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/galE/galE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 GalE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns the exact UDP-glucose/UDP-galactose epimerase reaction but provides no organism-specific evidence for upstream GalK or GalT reactions.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/galE/galE-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of Pseudomonas putida KT2440 GalE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The conserved SDR catalytic architecture supports canonical UDP-glucose/UDP-galactose 4-epimerase activity.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Absence of GalK and GalT and placement of galE in an exopolysaccharide locus support a biosynthetic nucleotide-sugar role rather than catabolic Leloir flux.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which nucleotide-sugar biosynthetic products depend on GalE in KT2440 under growth and envelope-stress conditions?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pseudomonas nucleotide-sugar and cell-envelope metabolism experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I72" data-a="Q: Which nucleotide-sugar biosynthetic products depen..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare UDP-glucose and UDP-galactose pools and envelope glycans in a galE deletion and complemented strain without assuming growth on free galactose.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted nucleotide-sugar metabolomics and glycan profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I72" data-a="EXPERIMENT: Compare UDP-glucose and UDP-galactose pools and en..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(galE-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I72" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *galE* (UDP-glucose 4-epimerase) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">15 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-10T23:53:23.640666</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="galE-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="galE-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-gale-udp-glucose-4-epimerase-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>galE</em> (UDP-glucose 4-epimerase) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt:</strong> Q88I72 | <strong>Locus:</strong> PP_3129 | <strong>Gene:</strong> <em>galE</em> | <strong>EC:</strong> 5.1.3.2<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <em>galE</em> (locus PP_3129; UniProt Q88I72) of <em>Pseudomonas putida</em> KT2440 encodes a <strong>UDP-glucose 4-epimerase</strong> (EC 5.1.3.2), a cytoplasmic, NAD⁺-dependent enzyme of the short-chain dehydrogenase/reductase (SDR) / NAD(P)-dependent epimerase–dehydratase superfamily. Its primary and defining biochemical function is the <strong>reversible epimerization of carbon-4 of the hexose ring, interconverting UDP-α-D-glucose (UDP-Glc) and UDP-α-D-galactose (UDP-Gal)</strong>. This is a single-substrate, single-product isomerization that requires no net input of reducing equivalents: the enzyme uses a tightly (effectively irreversibly) bound NAD⁺ cofactor that transiently oxidizes the sugar to a UDP-4-ketopyranose intermediate, allows the intermediate to rotate within the active site, and then returns the hydride to the opposite face of C4, thereby inverting the stereochemistry.</p>
+<p>The identity of Q88I72 as a canonical GalE is supported by convergent lines of evidence: (i) UniProt/InterPro/Pfam domain diagnostics (IPR005886 UDP_glucose_4-epimerase, IPR001509, IPR036291, PF01370); (ii) an exactly conserved catalytic architecture — the Rossmann dinucleotide-binding motif GxxGxxG (residues 7–13) and the SDR catalytic Ser111/Tyr135/Lys139 triad that maps residue-for-residue onto the biochemically characterized <em>E. coli</em> GalE triad Ser124/Tyr149/Lys153; and (iii) 43% global sequence identity to <em>E. coli</em> GalE, well above the ~30% threshold for confident functional transfer. On these grounds the enzyme is assigned to substrate-specificity <strong>"group 1"</strong> (UDP-Glc/Gal-specific, not UDP-GlcNAc/GalNAc-active).</p>
+<p>Physiologically, the enzyme sits at the junction between galactose (Leloir) metabolism and cell-surface glycan biosynthesis. A distinctive genomic observation for <em>P. putida</em> KT2440 is that the organism <strong>lacks the catabolic Leloir enzymes galactokinase (galK) and galactose-1-phosphate uridylyltransferase (galT)</strong>, and PP_3129 is physically <strong>embedded within an exopolysaccharide (EPS) biosynthesis/export gene cluster</strong> (PP_3126–PP_3132). This strongly implies that in KT2440 GalE acts predominantly in the <strong>anabolic (biosynthetic) direction</strong> — generating UDP-galactose from UDP-glucose (supplied via pgm → galU) to provide the galactosyl donor for lipopolysaccharide (LPS)/O-antigen and exopolysaccharide biosynthesis — rather than in the classic catabolic role of funneling dietary galactose into glycolysis. The gene product functions in the <strong>cytoplasm</strong>; the 321-residue protein has a soluble SDR fold with no signal peptide or transmembrane segment.</p>
+<hr />
+<h2 id="geneprotein-identification-verification">Gene/Protein Identification — Verification</h2>
+<p>Before presenting findings, the mandatory identity check was completed and <strong>passed</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Verification step</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "galE" matches protein description</td>
+<td>✅ UniProt RecName = UDP-glucose 4-epimerase; EC 5.1.3.2</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>P. putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ SDR / NAD(P)-epimerase-dehydratase; IPR005886, IPR001509, IPR036291, PF01370</td>
+</tr>
+<tr>
+<td>No confusion with a same-symbol gene in another organism</td>
+<td>✅ GalE is a conserved, universally named enzyme; homology to characterized bacterial GalEs is direct</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>galE</em> is <strong>not ambiguous</strong> here — it denotes the canonical UDP-glucose 4-epimerase, a well-characterized enzyme conserved from bacteria to humans. Literature for GalE from many organisms (<em>E. coli</em>, <em>Aeromonas hydrophila</em>, <em>Bifidobacterium longum</em>, archaea, human) is directly relevant, and the functional annotation is transferable with high confidence.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-gale-is-a-udp-glucose-4-epimerase-catalyzing-reversible-udp-glc-udp-gal-interconversion-ec-5132">F001 — GalE is a UDP-glucose 4-epimerase catalyzing reversible UDP-Glc ⇌ UDP-Gal interconversion (EC 5.1.3.2)</h3>
+<p>The core function of the PP_3129 gene product is the reversible interconversion of the two UDP-hexose diastereomers. UniProt Q88I72 (321 aa) annotates the catalytic activity as <strong>"UDP-alpha-D-glucose = UDP-alpha-D-galactose"</strong>, with cofactor NAD⁺ and pathway assignment "Carbohydrate metabolism; galactose metabolism." This is corroborated by database cross-references (KEGG <code>ppu:PP_3129</code>; orthology K01784; BioCyc PPUT160488:G1G01-3347-MONOMER) and by InterPro diagnostics — most tellingly IPR005886 (UDP_glucose_4-epimerase), a diagnostic TIGRFAM signature specific to this enzyme.</p>
+<p>The reaction is the defining chemistry of the enzyme family. As stated for GalE enzymes generally, <em>"UDP-glucose 4-epimerase (GalE) catalyzes the interconversion of UDP-glucose (UDP-Glc) and UDP-galactose (UDP-Gal)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/33171387/">PMID: 33171387</a>). GalE is one of the enzymes of the Leloir pathway and belongs to the SDR superfamily: <em>"UDP-sugar 4-epimerase (GalE) belongs to the short-chain dehydrogenase/reductase (SDR) superfamily of proteins and is one of enzymes in the Leloir pathway"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26162744/">PMID: 26162744</a>).</p>
+<h3 id="f002-sdr-type-mechanism-with-a-tightlyirreversibly-bound-nad-cofactor-and-a-transient-4-keto-intermediate">F002 — SDR-type mechanism with a tightly/irreversibly bound NAD⁺ cofactor and a transient 4-keto intermediate</h3>
+<p>The mechanism is redox-neutral overall. Although the reaction proceeds through oxidation at C4, the enzyme consumes no net NAD⁺/NADH because the cofactor is <strong>tightly (effectively irreversibly) bound</strong> and is oxidized and re-reduced within a single catalytic cycle. Sequence analysis of Q88I72 confirms the requisite machinery: the N-terminal Rossmann dinucleotide-binding motif GxxGxxG (residues 7–13, "GGAGYIGS") for NAD⁺ binding, and the SDR catalytic Tyr-x-x-x-Lys motif (Tyr135…Lys139, "YGLSK") corresponding to the catalytic Tyr149/Lys153 couple of <em>E. coli</em> GalE.</p>
+<p>Literature establishes each feature. The GalE family uses <em>"a conserved 'transient keto intermediate' mechanism and [has] variable substrate specificity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/33171387/">PMID: 33171387</a>). The cofactor is retained: reviews document <em>"irreversible binding of the cofactor NAD and uridine nucleotide-induced activation of this cofactor"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26162744/">PMID: 26162744</a>). Structural work on the archaeal <em>Pyrobaculum calidifontis</em> enzyme identifies the mechanism of retention: <em>"the presence of the NAD-binding loop in GalE is largely responsible for preventing the release of the cofactor from the holoenzyme"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21645492/">PMID: 21645492</a>).</p>
+<h3 id="f006-catalytic-residues-and-stereochemistry-conserved-sertyrlys-triad-and-nonstereospecific-hydride-return">F006 — Catalytic residues and stereochemistry: conserved Ser–Tyr–Lys triad and nonstereospecific hydride return</h3>
+<p>The stereochemical inversion at C4 is achieved by a well-understood two-part mechanism, defined by gold-standard studies of <em>E. coli</em> GalE (catalytic triad Ser124/Tyr149/Lys153). In Q88I72 the homologous catalytic couple maps to <strong>Tyr135/Lys139</strong> with the triad serine upstream (Ser111). The mechanism: <strong>Tyr149 (Tyr135 in PP_3129) acts as the catalytic base</strong>, abstracting the C4-hydroxyl proton; the C4 hydride is transferred to NAD⁺, forming NADH and a <strong>UDP-4-ketopyranose intermediate</strong>. Because the UDP moiety is tightly bound but the ketopyranose ring is only weakly held, the sugar can <strong>rotate</strong> in the pocket so that the returning hydride adds to the opposite face of C4 — a <strong>nonstereospecific hydride transfer</strong> that inverts the C4 configuration. Lysine lowers the pK_a of the tyrosine phenol/positions NAD⁺; the active site accommodates both glucose and galactose configurations mainly through water rearrangement.</p>
+<p>Supporting literature: <em>"These include practically irreversible binding of NAD, nonstereospecific hydride transfer, uridine nucleotide-induced activation of NAD, Tyr149 as a base catalyst"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23339688/">PMID: 23339688</a>); the two-part chemistry involves <em>"the abstraction of a proton from the 4'-hydroxyl group of glucose or galactose by an active site base and the rotation of a 4-ketopyranose intermediate in the active site pocket"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9174344/">PMID: 9174344</a>); and <em>"UDP-galactose 4-epimerase belongs to a family of enzymes known as the short-chain dehydrogenases, which contain a characteristic Tyr-Lys couple thought to be important for catalysis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/8931134/">PMID: 8931134</a>).</p>
+<h3 id="f009-quantitative-ortholog-evidence-43-identity-to-characterized-e-coli-gale-with-a-fully-conserved-catalytic-triad">F009 — Quantitative ortholog evidence: 43% identity to characterized <em>E. coli</em> GalE with a fully conserved catalytic triad</h3>
+<p>A direct pairwise comparison anchors the annotation quantitatively. Global (Needleman–Wunsch) alignment gives:</p>
+<table>
+<thead>
+<tr>
+<th>Pair</th>
+<th>Global identity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3129 (Q88I72) vs <em>E. coli</em> GalE (P09147)</td>
+<td><strong>43.3%</strong></td>
+</tr>
+<tr>
+<td>PP_3129 vs paralog PP_0501</td>
+<td>35.1%</td>
+</tr>
+<tr>
+<td>PP_0501 vs <em>E. coli</em> GalE</td>
+<td>33.2%</td>
+</tr>
+</tbody>
+</table>
+<p>The alignment maps the <em>E. coli</em> catalytic triad <strong>Ser124/Tyr149/Lys153 exactly onto PP_3129 Ser111/Tyr135/Lys139</strong> (no gaps at these positions), and the Rossmann GxxGxxG motif (residues 7–13) is conserved. At 43% identity — comfortably above the ~30% threshold generally accepted for confident functional transfer between enzymes — and with the complete catalytic apparatus conserved, functional assignment as a bona fide UDP-glucose 4-epimerase is secure. Notably, PP_3129 is more similar to <em>E. coli</em> GalE than to its own paralog PP_0501, indicating the two <em>P. putida</em> paralogs have diverged.</p>
+<h3 id="f004-group-1-substrate-specificity-udp-glcgal-not-udp-glcnacgalnac">F004 — Group-1 substrate specificity (UDP-Glc/Gal, not UDP-GlcNAc/GalNAc)</h3>
+<p>GalE enzymes are classified into three groups by substrate specificity: <em>"GalEs have been classified into three groups based on substrate specificity: group 1 prefers UDP-Glc/Gal, group 3 prefers UDP-GlcNAc/GalNAc, and group 2 has comparable activities for both types of the substrates"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/33171387/">PMID: 33171387</a>). Q88I72 carries the diagnostic IPR005886 (UDP_glucose_4-epimerase) TIGRFAM signature — the same assignment as enteric group-1 enzymes such as <em>E. coli</em> GalE — and lacks the enlarged/mobile active-site loop that allows human and group-2 enzymes to accommodate the bulky N-acetyl group. The structural determinant is established: <em>"Greater active site loop mobility in human GALE compared to the equivalent loop in Escherichia coli GALE explains why the former can catalyze the interconversion of UDP-N-acetylga[lactosamine]…"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23732289/">PMID: 23732289</a>). PP_3129 is therefore inferred to be <strong>UDP-Glc/UDP-Gal-specific</strong>. (This is an inference by homology/domain diagnostics; no direct enzymology on the <em>P. putida</em> protein exists.)</p>
+<h3 id="f003-cytoplasmic-localization-and-role-in-supplying-udp-galactose-for-cell-surface-glycoconjugates">F003 — Cytoplasmic localization and role in supplying UDP-galactose for cell-surface glycoconjugates</h3>
+<p>The enzyme functions in the <strong>cytoplasm</strong>. The 321-residue protein has a soluble SDR fold with no signal peptide or transmembrane segment, consistent with the cytosolic location where nucleotide-sugar interconversion occurs. Functionally, GalE catalyzes the last step of the Leloir pathway and supplies the UDP-galactose precursor for extracellular glycans: <em>"UDP-galactose 4-epimerase (GalE) catalyses the last step in the Leloir pathway of galactose metabolism and provides precursor for the biosynthesis of extracellular LPS and capsule"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20461162/">PMID: 20461162</a>). Knockout evidence in Gram-negative pathogens links GalE-derived nucleotide sugars to O-antigen synthesis: in Shiga toxin–producing <em>E. coli</em>, <em>"galE plays a significant roles in O-antigen biosynthesis and contributes to STEC pathogenicity"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/40783826/">PMID: 40783826</a>).</p>
+<h3 id="f005-f008-genomic-context-and-absent-catabolic-leloir-genes-reframe-gale-as-a-biosynthetic-udp-galactose-supplier">F005 &amp; F008 — Genomic context and absent catabolic Leloir genes reframe GalE as a biosynthetic UDP-galactose supplier</h3>
+<p>Two genomic observations specific to KT2440 sharpen the physiological interpretation:</p>
+<ol>
+<li>
+<p><strong>Genomic embedding in an EPS cluster (F005).</strong> In the KT2440 genome, PP_3129 <em>galE</em> is flanked by PP_3126 (polysaccharide export protein), PP_3127 (exopolysaccharide transport protein), PP_3128 (exopolysaccharide biosynthesis/transport protein), and PP_3132 (polysaccharide transporter). The gene maps to KEGG pathways ppu00052 (Galactose metabolism), ppu00520 (Amino sugar and nucleotide sugar metabolism), and ppu01250 (Biosynthesis of nucleotide sugars); orthology K01784 (EC 5.1.3.2). The gene occupies position complement(3541757..3542722), 966 nt / 321 aa, protein AAN68737. Its location within a polysaccharide biosynthesis/export operon argues that its primary output — UDP-galactose — feeds cell-surface glycan synthesis.</p>
+</li>
+<li>
+<p><strong>Missing galK and galT (F008).</strong> KEGG ortholog mapping shows that KT2440 <strong>lacks galactokinase (galK, K00849) and Gal-1-P uridylyltransferase (galT, K00965)</strong>, while retaining galU (K00963, PP_3821), pgm (K01835, PP_3578), and galM (K01785, PP_1165), plus <strong>two galE paralogs</strong> (PP_3129 in the EPS cluster and PP_0501 at a separate locus, both K01784). Without galK and galT, exogenous galactose cannot be funneled into UDP-Gal via the canonical catabolic Leloir route. Therefore, rather than running catabolically (galactose → Gal-1-P → UDP-Gal → UDP-Glc → glycolysis), GalE in KT2440 most plausibly runs <strong>anabolically</strong>: UDP-glucose (from glucose-1-P via galU) is epimerized to UDP-galactose to supply glycan biosynthesis.</p>
+</li>
+</ol>
+<h3 id="f007-dual-physiological-logic-across-bacteria-catabolism-anabolism-and-udp-gal-toxicity">F007 — Dual physiological logic across bacteria: catabolism, anabolism, and UDP-Gal toxicity</h3>
+<p>Across bacteria, GalE sits at a metabolic branch-point and its product UDP-galactose is both an EPS precursor and, when it accumulates, a toxic metabolite. In <em>Bacillus subtilis</em>, galE deletion causes galactose sensitivity because UDP-galactose accumulates: <em>"We propose that UDP-galactose is the toxic galactose metabolite and that it is used in the synthesis of EPS"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22893383/">PMID: 22893383</a>). In <em>Acidithiobacillus ferrooxidans</em>, galE lies in a gal/EPS cluster and supplies EPS precursors: <em>"The data suggest that A. ferrooxidans is capable of synthesizing the EPS precursors UDP-glucose and UDP-galactose"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15932984/">PMID: 15932984</a>). This parallels the <em>P. putida</em> genomic context and reinforces the biosynthetic interpretation for PP_3129.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-catalytic-cycle">The catalytic cycle</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="nt">NAD</span><span class="o">+</span><span class="w"> </span><span class="o">(</span><span class="nt">tightly</span><span class="w"> </span><span class="nt">bound</span><span class="o">)</span><span class="w">                 </span><span class="nt">NADH</span>
+<span class="w">     </span><span class="err">│</span><span class="w">                                  </span><span class="err">│</span>
+<span class="w">   </span><span class="nt">UDP-Glc</span><span class="w"> </span><span class="err">──────────▼──────────►</span><span class="w">  </span><span class="nt">UDP-4-ketopyranose</span><span class="w"> </span><span class="err">──▼──</span><span class="w"> </span><span class="o">(</span><span class="nt">ring</span><span class="w"> </span><span class="nt">rotates</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">pocket</span><span class="o">)</span>
+<span class="w">   </span><span class="o">(</span><span class="nt">C4-OH</span><span class="w"> </span><span class="s2">&quot;down&quot;</span><span class="o">)</span><span class="w">   </span><span class="nt">Tyr135</span><span class="w"> </span><span class="nt">abstracts</span><span class="w">     </span><span class="nt">intermediate</span><span class="w">       </span><span class="nt">hydride</span><span class="w"> </span><span class="nt">returns</span><span class="w"> </span><span class="nt">to</span>
+<span class="w">    </span><span class="nt">C4-OH</span><span class="w"> </span><span class="nt">proton</span><span class="o">;</span><span class="w">                            </span><span class="nt">OPPOSITE</span><span class="w"> </span><span class="nt">face</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">C4</span>
+<span class="w">    </span><span class="nt">C4-H</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nt">NAD</span><span class="o">+</span><span class="w">                                    </span><span class="err">│</span>
+<span class="w">                                                  </span><span class="err">▼</span>
+<span class="w">                                             </span><span class="nt">UDP-Gal</span>
+<span class="w">                                            </span><span class="o">(</span><span class="nt">C4-OH</span><span class="w"> </span><span class="s2">&quot;up&quot;</span><span class="o">)</span>
+<span class="w">   </span><span class="nt">Net</span><span class="o">:</span><span class="w"> </span><span class="nt">no</span><span class="w"> </span><span class="nt">consumption</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">NAD</span><span class="o">+/</span><span class="nt">NADH</span><span class="o">;</span><span class="w"> </span><span class="nt">only</span><span class="w"> </span><span class="nt">C4</span><span class="w"> </span><span class="nt">stereochemistry</span><span class="w"> </span><span class="nt">inverted</span><span class="o">.</span>
+<span class="w">   </span><span class="nt">Catalytic</span><span class="w"> </span><span class="nt">triad</span><span class="o">:</span><span class="w"> </span><span class="nt">Ser111</span><span class="w"> </span><span class="o">(</span><span class="nt">H-bond</span><span class="o">/</span><span class="nt">positioning</span><span class="o">)</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">Tyr135</span><span class="w"> </span><span class="o">(</span><span class="nt">base</span><span class="o">)</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="nt">Lys139</span><span class="w"> </span><span class="o">(</span><span class="nt">lowers</span><span class="w"> </span><span class="nt">Tyr</span><span class="w"> </span><span class="nt">pKa</span><span class="o">,</span><span class="w"> </span><span class="nt">positions</span><span class="w"> </span><span class="nt">NAD</span><span class="o">+)</span>
+</code></pre></div>
+
+<p>The redox-neutrality — transient oxidation followed by re-reduction with the <em>same</em> tightly held cofactor — is the elegant hallmark of this SDR enzyme. Substrate discrimination between the glucose and galactose configurations is subtle, handled largely by reorganization of active-site water rather than by large conformational change; the enzyme's inability to bind the N-acetylated substrates (group-3/group-2 activity) reflects a comparatively rigid, small active-site loop.</p>
+<h3 id="metabolic-placement-in-p-putida-kt2440">Metabolic placement in <em>P. putida</em> KT2440</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">      </span><span class="n">glucose</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">phosphate</span>
+<span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="n">galU</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3821</span><span class="p">,</span><span class="w"> </span><span class="n">UTP</span><span class="p">:</span><span class="n">Glc</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">P</span><span class="w"> </span><span class="n">uridylyltransferase</span><span class="p">)</span>
+<span class="w">     </span><span class="err">▼</span>
+<span class="n">UDP</span><span class="o">-</span><span class="n">glucose</span><span class="w">  </span><span class="err">◄────────────────┐</span>
+<span class="w">     </span><span class="err">│</span><span class="w">                        </span><span class="err">│</span><span class="w">  </span><span class="n">pgm</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3578</span><span class="p">,</span><span class="w"> </span><span class="n">phosphoglucomutase</span><span class="p">)</span>
+<span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="n">galE</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3129</span><span class="p">)</span><span class="w">  </span><span class="err">⇌</span><span class="w">     </span><span class="err">│</span>
+<span class="w">     </span><span class="err">▼</span><span class="w">   </span><span class="p">[</span><span class="mi">4</span><span class="o">-</span><span class="n">epimerization</span><span class="p">]</span><span class="w">    </span><span class="err">│</span>
+<span class="n">UDP</span><span class="o">-</span><span class="n">galactose</span><span class="w">                 </span><span class="err">│</span>
+<span class="w">     </span><span class="err">│</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">     </span><span class="err">▼</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────┐</span><span class="w">    </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">LPS</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">O</span><span class="o">-</span><span class="n">antigen</span><span class="w">             </span><span class="err">│</span><span class="w">    </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">KT2440</span><span class="w"> </span><span class="n">LACKS</span><span class="w"> </span><span class="n">galK</span><span class="p">,</span><span class="w"> </span><span class="n">galT</span><span class="w"> </span><span class="err">→</span>
+<span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">Exopolysaccharide</span><span class="w"> </span><span class="p">(</span><span class="n">EPS</span><span class="p">)</span><span class="w">     </span><span class="err">│</span><span class="w">    </span><span class="err">│</span><span class="w">    </span><span class="n">no</span><span class="w"> </span><span class="n">catabolic</span><span class="w"> </span><span class="n">galactose</span><span class="w"> </span><span class="n">entry</span><span class="p">;</span>
+<span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="p">[</span><span class="n">PP_3126</span><span class="err">–</span><span class="mi">3132</span><span class="w"> </span><span class="k">export</span><span class="w"> </span><span class="n">cluster</span><span class="p">]</span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">    </span><span class="n">GalE</span><span class="w"> </span><span class="n">runs</span><span class="w"> </span><span class="n">biosynthetically</span><span class="p">)</span>
+<span class="w">   </span><span class="err">└─────────────────────────────┘</span>
+</code></pre></div>
+
+<p>Because KT2440 has no galactokinase (galK) or Gal-1-P uridylyltransferase (galT), the classic catabolic Leloir loop is broken. The retained enzymes galU, pgm, galM, and two galE paralogs point to a network geared toward <strong>nucleotide-sugar biosynthesis</strong> rather than galactose catabolism. GalE (PP_3129), sitting inside an EPS export operon, is therefore best interpreted as the <strong>galactosyl-donor supplier</strong> for surface glycan assembly — the flux runs predominantly UDP-Glc → UDP-Gal.</p>
+<h3 id="two-paralogs">Two paralogs</h3>
+<p>KT2440 encodes two K01784-annotated epimerases: PP_3129 (this protein, in the EPS cluster) and PP_0501 (a separate "NAD-dependent epimerase/dehydratase" locus). At 35% mutual identity they have diverged; the EPS-cluster location and higher (43%) identity of PP_3129 to characterized <em>E. coli</em> GalE make PP_3129 the stronger candidate for the canonical, glycan-supplying UDP-Glc/Gal epimerase.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33171387/">33171387</a></td>
+<td><em>Molecular evolution and functional divergence of UDP-hexose 4-epimerases</em></td>
+<td>Defines the GalE reaction (UDP-Glc ⇌ UDP-Gal), the transient-keto mechanism, and the 3-group substrate-specificity classification used to place Q88I72 in group 1</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26162744/">26162744</a></td>
+<td><em>UDP-hexose 4-epimerases: structure, mechanism, substrate specificity</em></td>
+<td>Places GalE in SDR superfamily/Leloir pathway; documents irreversible NAD binding and nucleotide-induced cofactor activation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21645492/">21645492</a></td>
+<td><em>Crystal structure of GalE from Pyrobaculum calidifontis</em></td>
+<td>Structural basis for retention of tightly bound NAD⁺ (NAD-binding loop)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23339688/">23339688</a></td>
+<td><em>Chemical and stereochemical actions of GalE</em></td>
+<td>Establishes Tyr149 as base catalyst, nonstereospecific hydride transfer, irreversible NAD binding</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9174344/">9174344</a></td>
+<td><em>Structural analysis of UDP-sugar binding to E. coli GalE</em></td>
+<td>Defines base-mediated C4-OH proton abstraction + rotation of 4-ketopyranose intermediate</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8931134/">8931134</a></td>
+<td><em>High-resolution structure of GalE with UDP-phenol</em></td>
+<td>Confirms conserved SDR Tyr-Lys catalytic couple (Tyr135/Lys139 in PP_3129)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23732289/">23732289</a></td>
+<td><em>Dynamics of wildtype vs V94M human GALE</em></td>
+<td>Active-site loop mobility distinguishes group-1 (E. coli-type) from broader-specificity GALEs</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20461162/">20461162</a></td>
+<td><em>Cloning/modeling of galE from Aeromonas hydrophila</em></td>
+<td>Links GalE's last-step Leloir reaction to provision of UDP-Gal precursor for LPS and capsule</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40783826/">40783826</a></td>
+<td><em>GalE in LPS O-antigen synthesis, STEC O5</em></td>
+<td>Knockout evidence that galE-derived nucleotide sugars are required for O-antigen/LPS</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22893383/">22893383</a></td>
+<td><em>Galactose metabolism in B. subtilis biofilm</em></td>
+<td>GalE product UDP-Gal is both toxic metabolite and EPS precursor — links catabolism/anabolism</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15932984/">15932984</a></td>
+<td><em>EPS precursor gene cluster in A. ferrooxidans</em></td>
+<td>galE within a gal/EPS cluster supplies UDP-Glc/UDP-Gal EPS precursors — parallels KT2440 context</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting structural context also comes from crystallographic studies of GalE and GalE-like enzymes (<a href="https://pubmed.ncbi.nlm.nih.gov/31366978/">PMID: 31366978</a>, <em>Bifidobacterium longum</em> broad-specificity GalE; <a href="https://pubmed.ncbi.nlm.nih.gov/20587332/">PMID: 20587332</a>, monomeric <em>Aeromonas hydrophila</em> GalE active site; <a href="https://pubmed.ncbi.nlm.nih.gov/11478886/">PMID: 11478886</a>, the homologous Ser/Thr–Tyr–Lys triad in dTDP-glucose 4,6-dehydratase). An important comparative caution: in <em>Vibrio vulnificus</em> biotype 2 it was <em>gne</em> (UDP-GalNAc 4-epimerase), not <em>galE</em>, that proved essential for LPS and virulence (<a href="https://pubmed.ncbi.nlm.nih.gov/18227162/">PMID: 18227162</a>) — a reminder that GalE contributions to surface glycans are organism- and glycan-specific.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental data on the <em>P. putida</em> protein.</strong> Every functional claim about Q88I72 rests on homology, domain diagnostics, and sequence-mapped catalytic residues. There is no published enzymology (kinetics, k_cat/K_m, substrate panel), crystal structure, or knockout phenotype for PP_3129 specifically. The group-1 (UDP-Glc/Gal-only) assignment is an inference, not a measurement.</p>
+</li>
+<li>
+<p><strong>Direction of flux is inferred, not demonstrated.</strong> The "biosynthetic" interpretation follows from the absence of galK/galT and the EPS-cluster genomic context, but the enzyme is intrinsically reversible; in vivo net flux direction has not been measured (e.g., by ¹³C flux analysis) in KT2440.</p>
+</li>
+<li>
+<p><strong>Paralog ambiguity.</strong> KT2440 carries two K01784 epimerases (PP_3129 and PP_0501). Their respective in vivo roles, substrate ranges, and possible functional redundancy are unresolved. Which paralog dominates UDP-Gal supply for LPS vs EPS is unknown.</p>
+</li>
+<li>
+<p><strong>Localization inferred from sequence.</strong> Cytoplasmic localization is deduced from the soluble SDR fold and absence of a signal peptide/TM segment; it has not been experimentally verified (e.g., fractionation) for this protein.</p>
+</li>
+<li>
+<p><strong>Glycan destination unmapped.</strong> Which specific KT2440 surface glycans (O-antigen structures, specific EPS such as alginate/Pea/Bce-type polymers) actually incorporate GalE-derived galactose has not been established.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Express His-tagged PP_3129, confirm bound NAD⁺, and measure epimerase activity and kinetics on UDP-Glc/UDP-Gal versus UDP-GlcNAc/UDP-GalNAc to test the group-1 specificity prediction directly.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal structure (or high-confidence AlphaFold model + docking) to verify the Ser111/Tyr135/Lys139 triad geometry and active-site loop rigidity that underlie substrate selectivity.</p>
+</li>
+<li>
+<p><strong>Genetics.</strong> Construct single (ΔPP_3129, ΔPP_0501) and double knockouts; assay for growth on galactose, LPS/O-antigen profile changes (SDS-PAGE/silver stain), EPS/biofilm phenotypes, and any UDP-Gal-accumulation toxicity — mirroring the <em>B. subtilis</em> and STEC studies.</p>
+</li>
+<li>
+<p><strong>Complementation and paralog dissection.</strong> Cross-complement the two paralogs and complement <em>E. coli</em> ΔgalE to quantify functional equivalence and resolve redundancy.</p>
+</li>
+<li>
+<p><strong>Flux analysis.</strong> Use ¹³C-labeled substrates and metabolomics to determine the net in vivo direction of the UDP-Glc ⇌ UDP-Gal reaction in KT2440 and confirm the predicted biosynthetic bias.</p>
+</li>
+<li>
+<p><strong>Glycan tracing.</strong> Combine glycan compositional analysis of LPS/EPS from wild-type vs mutant strains to pinpoint which surface glycoconjugates depend on GalE-derived galactose.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>galE</em> (PP_3129; Q88I72) of <em>P. putida</em> KT2440 encodes a cytoplasmic, NAD⁺-dependent <strong>UDP-glucose 4-epimerase</strong> (EC 5.1.3.2) that reversibly epimerizes C4 to interconvert UDP-glucose and UDP-galactose, using a tightly bound NAD⁺, a catalytic Ser111/Tyr135/Lys139 triad, and a transient UDP-4-ketopyranose intermediate with nonstereospecific hydride return. Its substrate specificity is group-1 (UDP-Glc/Gal). Because KT2440 lacks the catabolic Leloir enzymes galK and galT, and because PP_3129 lies within an exopolysaccharide biosynthesis/export cluster, the enzyme most likely operates <strong>biosynthetically</strong> — supplying UDP-galactose (from UDP-glucose via pgm/galU) as the galactosyl donor for LPS/O-antigen and exopolysaccharide assembly. All conclusions rest on strong homology and genomic evidence (43% identity to characterized <em>E. coli</em> GalE with a fully conserved catalytic apparatus); direct experimental characterization of the <em>P. putida</em> protein remains the principal knowledge gap.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="galE-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="galE-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:33171387</li>
+<li>PMID:26162744</li>
+<li>PMID:21645492</li>
+<li>PMID:23339688</li>
+<li>PMID:9174344</li>
+<li>PMID:8931134</li>
+<li>PMID:23732289</li>
+<li>PMID:20461162</li>
+<li>PMID:40783826</li>
+<li>PMID:22893383</li>
+<li>PMID:15932984</li>
+<li>PMID:31366978</li>
+<li>PMID:20587332</li>
+<li>PMID:11478886</li>
+<li>PMID:18227162</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I72
+gene_symbol: galE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: galE encodes a cytoplasmic, NAD-dependent UDP-glucose 4-epimerase that reversibly interconverts UDP-glucose and UDP-galactose. In Pseudomonas putida KT2440, GalE most plausibly supplies UDP-galactose for cell-surface glycan biosynthesis; the proteome lacks identifiable GalK and GalT enzymes required for a complete catabolic Leloir pathway.
+existing_annotations:
+- term:
+    id: GO:0003978
+    label: UDP-glucose 4-epimerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: GalE reversibly interconverts UDP-glucose and UDP-galactose.
+    action: ACCEPT
+    reason: UniProt assigns EC 5.1.3.2, Rhea 22168, the UDP_G4E domain, and the galE family.
+    supported_by:
+    - reference_id: file:PSEPK/galE/galE-uniprot.txt
+      supporting_text: Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;
+- term:
+    id: GO:0006012
+    label: galactose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: UDP-galactose is a direct substrate/product of GalE, so the broad galactose-metabolism context is defensible.
+    action: KEEP_AS_NON_CORE
+    reason: Retain as broad substrate context without implying a complete galactose-catabolic route.
+    supported_by:
+    - reference_id: file:PSEPK/galE/galE-uniprot.txt
+      supporting_text: &#39;PATHWAY: Carbohydrate metabolism; galactose metabolism.&#39;
+- term:
+    id: GO:0033499
+    label: beta-D-galactose catabolic process via UDP-galactose, Leloir pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: GalE supplies one reversible UDP-sugar reaction, but KT2440 lacks identifiable GalK and GalT steps required for Leloir catabolism.
+    action: REMOVE
+    reason: This TreeGrafter process propagation over-interprets a broadly used nucleotide-sugar epimerase as evidence for a complete pathway that is not satisfiable in this proteome.
+    supported_by:
+    - reference_id: file:PSEPK/galE/galE-uniprot.txt
+      supporting_text: Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/galE/galE-uniprot.txt
+  title: UniProtKB entry for Pseudomonas putida KT2440 GalE
+  findings:
+  - statement: UniProt assigns the exact UDP-glucose/UDP-galactose epimerase reaction but provides no organism-specific evidence for upstream GalK or GalT reactions.
+- id: file:PSEPK/galE/galE-deep-research-openscientist.md
+  title: OpenScientist functional review of Pseudomonas putida KT2440 GalE
+  findings:
+  - statement: The conserved SDR catalytic architecture supports canonical UDP-glucose/UDP-galactose 4-epimerase activity.
+  - statement: Absence of GalK and GalT and placement of galE in an exopolysaccharide locus support a biosynthetic nucleotide-sugar role rather than catabolic Leloir flux.
+core_functions:
+- description: GalE reversibly epimerizes UDP-glucose and UDP-galactose using a tightly bound NAD cofactor.
+  molecular_function:
+    id: GO:0003978
+    label: UDP-glucose 4-epimerase activity
+  supported_by:
+  - reference_id: file:PSEPK/galE/galE-uniprot.txt
+    supporting_text: Reaction=UDP-alpha-D-glucose = UDP-alpha-D-galactose;
+proposed_new_terms: []
+suggested_questions:
+- question: Which nucleotide-sugar biosynthetic products depend on GalE in KT2440 under growth and envelope-stress conditions?
+  experts:
+  - Pseudomonas nucleotide-sugar and cell-envelope metabolism experts
+suggested_experiments:
+- description: Compare UDP-glucose and UDP-galactose pools and envelope glycans in a galE deletion and complemented strain without assuming growth on free galactose.
+  experiment_type: targeted nucleotide-sugar metabolomics and glycan profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
