@@ -345,10 +345,27 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Complete Falcon module + pathway + PSEPK research for `ppu00400`.
 - [x] Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG `ppu00400` members.
 - [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
+- [ ] Publish the focused five-part `bacterial_aspartate_to_threonine_biosynthesis`
+  batch with eight reviewed PSEPK pathway/paralog candidates.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
 - [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
 
 # NOTES
+
+## 2026-08-11
+
+Started the focused bacterial aspartate-to-threonine batch from current
+`origin/main`. The new boundary contains five ordered reactions: two shared
+aspartate-family trunk reactions, homoserine formation shared with methionine,
+and the ThrB/ThrC threonine-specific pair. Exact PSEPK representatives are
+Q88EI9, Q88LE4, Q88MU8, Q88RK8, and Q88MU7. Q88LE2, Q88Q34, and Q88Q36 are
+reviewed as paralog candidates without assuming equivalent in-vivo flux.
+
+OpenScientist jobs were started for all eight genes, the reusable module, and
+the module + ppu00260 + PSEPK satisfiability question with the full 8100/7200
+allowances. The annotation-reviewer was consulted explicitly. Historical
+commit `86cf4fd8e9` was inspected read-only; no giant cherry-pick or old broad
+module restoration was used.
 
 ## 2026-07-05
 
