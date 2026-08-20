@@ -73,6 +73,15 @@ negative binding result in transfected CHO cells [PMID:9693042 "not bind beta-mi
 cargo. Therefore membrane localization is supported, while receptor-mediated
 endocytosis remains curator-deferred and mechanistically unresolved.
 
+UniProt additionally asserts GGA1/GGA2 binding only by similarity
+[file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBUNIT: Binds GGA1 and GGA2. {ECO:0000250}."],
+which is not direct experimental evidence for adaptor recruitment by human LRP3.
+Its DR block also carries an IEA keyword mapping to clathrin-coated pit
+[file:human/LRP3/LRP3-uniprot.txt "DR   GO; GO:0005905; C:clathrin-coated pit; IEA:UniProtKB-KW."],
+but GO:0005905 is absent from the local LRP3 GOA snapshot and therefore is not an
+existing-annotation row in this review. Neither database statement establishes a
+directly demonstrated coated-pit mechanism for human LRP3.
+
 ## BBB citation and family-transfer limits
 
 PMID:30280653 is a broad BBB physiology review [PMID:30280653 "Blood-Brain Barrier: From Physiology to Disease and Back."]. An exact, case-insensitive search
