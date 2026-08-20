@@ -40,8 +40,11 @@ random subset of new partners was validated
 The cached abstract/main text does not name LRP11; the protein lists and validation
 details reside in supplementary tables that are not present in the project cache.
 Therefore the IMP phosphoprotein-binding annotation and the dependent IC
-plasma-membrane annotation remain UNDECIDED. A beta-arrestin-screen hit does not by
-itself show that LRP11 binds a phosphorylated partner, and the study explicitly
+plasma-membrane annotation cannot be judged from PMID:17620599 alone. However,
+PMID:38272565 used LRP11 blocking antibody on intact T cells and agonistic antibody
+in vivo, independently supporting an accessible cell-surface pool; the
+plasma-membrane row is therefore accepted. The beta-arrestin-screen hit does not by itself
+show that LRP11 binds a phosphorylated partner, and the study explicitly
 places interactors in multiple compartments
 [PMID:17620599 "in the cytoplasm, but also in the nucleus as well as other subcellular"].
 
@@ -51,11 +54,15 @@ The seven human stress-process IEAs all transfer from mouse Lrp11 (Q8CB67) throu
 Ensembl Compara. The actual donor paper is PMID:25262641. It measured Lrp11 mRNA and
 protein in mouse amygdala after stress
 [PMID:25262641 "investigate the expression variation of Lrp11 in amygdala tissue after exposure"].
+Live QuickGO donor inspection on 2026-08-19 showed that each of the seven mouse
+Q8CB67 source rows uses IEP with PMID:25262641. IEP is valid evidence for a response
+annotation; the concern is instead the second-step transfer to human, the single-tissue
+mouse context, and the accessible abstract's failure to identify which individual
+stress paradigm supports each term.
 The authors observed higher abundance in stressed mice
 [PMID:25262641 "We found the quantity of Lrp11 was more obvious in stress models than"].
-That is IEP/expression-response evidence, not proof that Lrp11 causally executes
-heat, cold, water-deprivation, mechanical, immobilization, starvation, or general
-organismal-stress responses.
+That expression-response evidence is informative in mouse amygdala but is too
+underspecified for seven term-level human orthology transfers.
 
 The paper also depleted Lrp11 in HEK293T and SH-SY5Y cells and observed altered
 expression of Xpnpep1, Maneal, Pgap1, and Uprt
