@@ -53,10 +53,11 @@ endocytosis remains curator-deferred and mechanistically unresolved.
 ## BBB citation and family-transfer limits
 
 PMID:30280653 is a broad BBB physiology review [PMID:30280653 "Blood-Brain Barrier: From Physiology to Disease and Back."]. An exact, case-insensitive search
-of its cached full text finds no `LRP3` occurrence. Its discussion of other
-LDLR-family receptors and general barrier transport cannot support the seeded
-LRP3 annotation to transport across the blood-brain barrier; this is a miscitation,
-not merely incomplete abstract access.
+of the local file finds no `LRP3` occurrence, but the cache ends after the introduction
+despite being flagged as full text. That incomplete local copy cannot establish that
+the curator miscited the review or that the inaccessible remainder lacks LRP3-specific
+evidence. The transport-across-BBB annotation therefore remains UNDECIDED pending
+verification of the complete article.
 
 The GO_REF/PANTHER/ARBA rows document propagation mechanisms. The local record
 places LRP3 in the broad LDLR family [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SIMILARITY: Belongs to the LDLR family. {ECO:0000305}."], but the plasma-membrane
