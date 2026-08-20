@@ -41,8 +41,8 @@ The cached abstract/main text does not name LRP11; the protein lists and validat
 details reside in supplementary tables that are not present in the project cache.
 Therefore the IMP phosphoprotein-binding annotation and the dependent IC
 plasma-membrane annotation cannot be judged from PMID:17620599 alone. However,
-PMID:38272565 used LRP11 blocking antibody on intact T cells and agonistic antibody
-in vivo, independently supporting an accessible cell-surface pool; the
+PMID:38272565 used LRP11 blocking antibody on intact T cells, independently
+supporting an accessible cell-surface pool; the
 plasma-membrane row is therefore accepted. The beta-arrestin-screen hit does not by itself
 show that LRP11 binds a phosphorylated partner, and the study explicitly
 places interactors in multiple compartments
