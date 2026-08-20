@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>imuB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>imuB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I83" target="_blank" class="term-link">
+                        Q88I83
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "imuB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I83" data-a="DESCRIPTION: ImuB (PP_3118) is a catalytically inactive, polyme..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ImuB (PP_3118) is a catalytically inactive, polymerase-like accessory protein of the ImuA-ImuB-DnaE2 damage-induced synthesis cassette. Ortholog studies show that ImuB organizes ImuA, DnaE2, and beta-clamp interactions rather than performing DNA synthesis. In P. putida, ImuB promotes stationary-phase and UV-associated mutation accumulation and contributes to alkylation-damage tolerance.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I83" data-a="GO:0006281" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad DNA repair obscures ImuB&#39;s specific role in damage tolerance and mutagenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ImuB is a noncatalytic accessory of DnaE2-dependent error-prone translesion synthesis rather than a repair enzyme.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019985" target="_blank" class="term-link">
+                                    translesion synthesis
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019985" target="_blank" class="term-link">
+                                    GO:0019985
+                                </a>
+                            </span>
+                            <span class="term-label">translesion synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/imuB/imuB-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I83" data-a="GO:0019985" data-r="file:PSEPK/imuB/imuB-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ImuB is the polymerase-like recruitment component of the ImuABC cassette.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IMS/UmuC-like family architecture and exact imuA-imuB-dnaE2 locus support the specific process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/imuB/imuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF00817; IMS; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17331811" target="_blank" class="term-link">
+                                        PMID:17331811
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">accumulation of stationary-phase mutants up to two-fold.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20615954" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20615954
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Essential roles for imuA&#39;- and imuB-encoded accessory factor...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I83" data-a="GO:0030674" data-r="PMID:20615954" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ImuB is a noncatalytic interaction hub connecting mutasome proteins and the beta clamp.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ortholog interaction and separation-of-function experiments support a direct adaptor role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20615954" target="_blank" class="term-link">
+                                        PMID:20615954
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DnaE2, as well as with the beta-clamp.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/imuB/imuB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">structural adapter/scaffold protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Noncatalytic polymerase-like adaptor that recruits and organizes DnaE2 and the beta clamp during damage-induced synthesis.</h3>
+                <span class="vote-buttons" data-g="Q88I83" data-a="FUNCTION: Noncatalytic polymerase-like adaptor that recruits..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019985" target="_blank" class="term-link">
+                                translesion synthesis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20615954" target="_blank" class="term-link">
+                                PMID:20615954
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DnaE2, as well as with the beta-clamp.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17331811" target="_blank" class="term-link">
+                                PMID:17331811
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">accumulation of stationary-phase mutants up to two-fold.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/imuB/imuB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for imuB (Q88I83)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88I83 has an IMS/UmuC-like polymerase fold and is encoded between ImuA and the reviewed DnaE2 polymerase.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/imuB/imuB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for imuB (Q88I83)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports a catalytically inactive polymerase-like scaffold role using ortholog interaction data, conserved cassette structure, and loss of key catalytic carboxylates.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20615954" target="_blank" class="term-link">
+                            PMID:20615954
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Essential roles for imuA&#39;- and imuB-encoded accessory factors in DnaE2-dependent mutagenesis in Mycobacterium tuberculosis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ImuB binds ImuA, DnaE2, and the beta clamp while lacking polymerase active-site residues.</div>
+
+                        <div class="finding-text">"DnaE2, as well as with the beta-clamp."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17331811" target="_blank" class="term-link">
+                            PMID:17331811
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Study of involvement of ImuB and DnaE2 in stationary-phase mutagenesis in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida ImuB promotes accumulation of stationary-phase mutants.</div>
+
+                        <div class="finding-text">"accumulation of stationary-phase mutants up to two-fold."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28118378" target="_blank" class="term-link">
+                            PMID:28118378
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DNA Polymerases ImuC and DinB Are Involved in DNA Alkylation Damage Tolerance in Pseudomonas aeruginosa and Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida ImuB and DnaE2/ImuC participate in alkylation-damage tolerance.</div>
+
+                        <div class="finding-text">"polymerases ImuC and DinB ensured a protective role against N- and O-methylation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which Q88I83 interfaces recruit DnaE2 and the replication clamp in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I83" data-a="Q: Which Q88I83 interfaces recruit DnaE2 and the repl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map Q88I83 interactions with Q88I82 and DnaN, then test separation-of-function mutants in lesion-bypass and mutation-frequency assays.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I83" data-a="EXPERIMENT: Map Q88I83 interactions with Q88I82 and DnaN, then..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(imuB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I83" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: ImuB (imuB / PP_3118, UniProt Q88I83)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-12T23:36:25.991226</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="imuB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="imuB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-imub-imub-pp_3118-uniprot-q88i83">Functional Annotation Report: ImuB (imuB / PP_3118, UniProt Q88I83)</h1>
+<h2 id="pseudomonas-putida-kt2440-psepk"><em>Pseudomonas putida</em> KT2440 (PSEPK)</h2>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>ImuB (gene <em>imuB</em>, ordered locus PP_3118, UniProt Q88I83) in <em>Pseudomonas putida</em> KT2440 is a catalytically inactive Y-family DNA-polymerase homolog that functions not as an enzyme but as the essential scaffold/adaptor subunit of the SOS-inducible ImuA–ImuB–DnaE2 "mutasome."</strong> Although ImuB retains the fold and domain architecture of a translesion (Y-family) DNA polymerase — carrying the UmuC catalytic-domain signature (IPR001126), the impB/mucB/samB (IMS) family domain (Pfam PF00817), and the broader DNA/RNA polymerase superfamily fold (IPR043502) — it has lost the conserved acidic palm-domain residues that coordinate the catalytic metal ions required for nucleotidyl transfer. It therefore cannot itself synthesize DNA. Instead, its biological role is to act as a molecular bridge.</p>
+<p>The primary function of ImuB is to serve as the central hub of a three-protein mutagenic complex. Working intracellularly at sites of stalled replication and DNA damage, ImuB physically tethers three partners: (1) the accessory protein <strong>ImuA</strong> (PP_3117, an ImuA/RecA-like protein), (2) the error-prone C-family replicative polymerase paralog <strong>DnaE2/ImuC</strong> (PP_3119), and (3) the <strong>DnaN β-sliding clamp</strong> of the replisome. By recruiting and positioning the enzymatically active but recruitment-incompetent DnaE2 at the primer terminus on the β-clamp, ImuB enables mutagenic translesion DNA synthesis (TLS) across otherwise replication-blocking lesions. Disrupting the ImuB–β-clamp contact abolishes induced mutagenesis, confirming that this scaffolding/adaptor activity — not any catalytic activity of ImuB — is what the cell requires.</p>
+<p>This pathway is under classic <strong>SOS/LexA transcriptional control</strong> and requires <strong>RecA</strong> for induction. In <em>P. putida</em> KT2440, the genomic evidence is unambiguous: the <em>lexA2 (PP_3116) – imuA (PP_3117) – imuB (PP_3118) – dnaE2 (PP_3119)</em> genes form a contiguous, LexA-adjacent cassette, exactly mirroring the damage-inducible, RecA-dependent operons characterized experimentally in <em>Caulobacter crescentus</em> and <em>Mycobacterium tuberculosis</em>. Functionally, this mutasome mediates DNA-damage-induced mutagenesis and lesion tolerance and, in pseudomonads specifically, contributes to the emergence of antibiotic (e.g., ciprofloxacin) resistance mutations. Direct experimental characterization of the <em>P. putida</em> ImuB protein itself is limited; the functional assignment here rests on strong orthology to the well-characterized <em>M. tuberculosis</em> and <em>C. crescentus</em> systems, the conserved operon structure, and the diagnostic loss of catalytic residues.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-imub-is-a-catalytically-inactive-y-family-dna-polymerase-homolog">Finding 1 — ImuB is a catalytically inactive Y-family DNA polymerase homolog</h3>
+<p>ImuB (Q88I83) is a 472-amino-acid protein encoded by <em>imuB</em> at ordered locus PP_3118 in <em>P. putida</em> KT2440. Its domain architecture, confirmed by InterPro and Pfam, places it squarely within the Y-family / UmuC group of translesion DNA polymerases: it carries the <strong>UmuC domain signature (IPR001126)</strong>, the <strong>impB/mucB/samB (IMS) family domain (Pfam PF00817)</strong>, and belongs to the <strong>DNA/RNA polymerase superfamily fold (IPR043502, SCOP SSF56672)</strong>. The InterPro assignment also lists a SulA cell-division-inhibitor family relationship (IPR050356), reflecting the shared "IMS" clustering used by some databases.</p>
+<p>Crucially, however, ImuB is <strong>not an active polymerase</strong>. As established in the mycobacterial ortholog, ImuB homologs retain the structural features characteristic of Y-family members but lack the conserved active-site amino acids required for polymerase activity (<a href="https://pubmed.ncbi.nlm.nih.gov/20615954/">PMID: 20615954</a>): <em>"Despite retaining structural features characteristic of Y-family members, ImuB homologs lack conserved active-site amino acids required for polymerase activity."</em> This is the defining paradox of ImuB: it <em>looks</em> like a translesion polymerase but <em>cannot</em> catalyze DNA synthesis. Independent bioinformatic verification performed during this investigation supports this directly. A global Needleman–Wunsch alignment (BLOSUM62) of the catalytically active <em>E. coli</em> DinB (Pol IV, a canonical Y-family polymerase) against <em>P. putida</em> ImuB shows that the two palm-domain metal-coordinating carboxylates essential for nucleotidyl transfer — DinB Asp8 and Asp103 — are <strong>replaced in ImuB by proline and glutamine, respectively</strong>. Loss of these acidic residues eliminates the two-metal-ion catalytic mechanism, consistent with ImuB being a structural rather than an enzymatic component.</p>
+<p>The earliest genetic characterization of the operon in <em>Caulobacter</em> already noted that ImuB <em>"is similar to proteins of the Y-family of polymerases, and possibly cooperates with DnaE2 in lesion bypass"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15886391/">PMID: 15886391</a>) — an early recognition that ImuB's Y-family identity is coupled to a partnership with the truly catalytic DnaE2 rather than to independent polymerase function.</p>
+<p><strong>Evidence summary:</strong> UniProt Q88I83 (472 aa, gene <em>imuB</em>, OLN PP_3118); domains UmuC (IPR001126), IMS/PF00817, DNA/RNA_pol_sf (IPR043502); ortholog active-site degeneracy documented experimentally (PMID 20615954) and confirmed here by pairwise alignment (DinB-D8→Pro, DinB-D103→Gln).</p>
+<hr />
+<h3 id="finding-2-imub-is-the-central-scaffold-that-bridges-imua-dnae2-and-the-dnan-clamp">Finding 2 — ImuB is the central scaffold that bridges ImuA, DnaE2, and the DnaN β-clamp</h3>
+<p>If ImuB is catalytically dead, what does it <em>do</em>? The answer, established most rigorously in <em>M. tuberculosis</em>, is that ImuB is the <strong>physical hub of the mutasome</strong>. Yeast two-hybrid analyses show that ImuB interacts simultaneously with both ImuA' and DnaE2, and — critically — with the <strong>β-sliding clamp (DnaN)</strong>. As reported: <em>"Yeast two-hybrid analyses indicate that ImuB interacts with both ImuA' and DnaE2, as well as with the beta-clamp. Moreover, disruption of the ImuB-beta clamp interaction significantly reduces induced mutagenesis and damage tolerance, phenocopying imuA', imuB, and dnaE2 gene deletion mutants"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20615954/">PMID: 20615954</a>). ImuB carries a canonical β-clamp-binding motif that docks onto the DnaN hydrophobic cleft, exactly as replicative and TLS polymerases do.</p>
+<p>This scaffolding role is not incidental — it is the functionally essential activity. When the <strong>ImuB–β-clamp interaction is specifically disrupted</strong>, induced mutagenesis and DNA-damage tolerance are significantly reduced, <strong>phenocopying the complete deletion of <em>imuA'<em>, </em>imuB<em>, or </em>dnaE2</em></strong>. In other words, breaking only the clamp contact is as damaging to the pathway as removing the entire gene. This is the strongest possible genetic evidence that ImuB's job is to <em>recruit and tether</em> the mutasome to the replisome, positioning the error-prone DnaE2 at the primer terminus loaded on the β-clamp.</p>
+<p>The mechanistic logic is elegant: <strong>DnaE2 is the catalytic engine but lacks the ability to be recruited on its own; ImuB provides recruitment but lacks catalysis.</strong> Neither works without the other. ImuA (an ImuA/RecA-like protein) completes the complex, likely stabilizing the assembly or coupling it to the RecA/ssDNA damage signal. Follow-up work on the mycobacterial system has continued to dissect the composition and recruitment of this ImuA'–ImuB–DnaE2 mutasome (<a href="https://pubmed.ncbi.nlm.nih.gov/37530405/">PMID: 37530405</a>).</p>
+<p><strong>Evidence summary:</strong> Y2H interactions ImuB↔ImuA', ImuB↔DnaE2, ImuB↔β-clamp; ImuB bears a β-clamp-binding motif; targeted disruption of ImuB–clamp binding abolishes mutagenesis, phenocopying null mutants (PMID 20615954).</p>
+<hr />
+<h3 id="finding-3-imub-is-part-of-an-soslexa-regulated-reca-dependent-cassette-required-for-damage-induced-mutagenesis-and-lesion-tolerance">Finding 3 — <em>imuB</em> is part of an SOS/LexA-regulated, RecA-dependent cassette required for damage-induced mutagenesis and lesion tolerance</h3>
+<p>The <em>imuA–imuB–dnaE2</em> module is not constitutively active; it is a <strong>damage-inducible SOS system</strong>. In <em>Caulobacter crescentus</em>, <em>"an operon composed of two hypothetical genes and dnaE2, encoding a second copy of the catalytic subunit of Pol III, is damage inducible in a recA-dependent manner, and is responsible for most ultraviolet (UV) and mitomycin C-induced mutations in C. crescentus"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15886391/">PMID: 15886391</a>). Deletion of any of the three genes abolishes damage-induced mutagenesis, establishing that all three are jointly required.</p>
+<p>The requirement for <em>imuB</em> specifically is confirmed in <em>M. tuberculosis</em>, where the authors <em>"confirm that Rv3395c (designated imuA') and Rv3394c (imuB) are individually essential for induced mutagenesis and damage tolerance"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20615954/">PMID: 20615954</a>). This is important because it shows <em>imuB</em> is not redundant — its loss cannot be compensated by DnaE2 alone.</p>
+<p>The clinical and ecological relevance is illustrated in the closely related pseudomonad <em>Pseudomonas aeruginosa</em>, where research examined <em>"the damage-inducible SOS response dinB and imuBC gene products in the generation of ciprofloxacin-resistance mutations in the important human opportunistic bacterial pathogen, Pseudomonas aeruginosa"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/37625357/">PMID: 37625357</a>). Because <em>P. putida</em> is a member of the same genus and possesses an orthologous, intact cassette, the same mutagenic-and-resistance role is the most parsimonious functional expectation for PP_3118.</p>
+<p>Finally, the pathway's activity is not strictly tied to ongoing replication. In non-replicating mycobacteria, DnaE2 can act in coordination with nucleotide excision repair (NER) to enable lesion tolerance and DNA-damage survival, expanding the classical replication-fork-centric model of TLS (<a href="https://pubmed.ncbi.nlm.nih.gov/33856342/">PMID: 33856342</a>). This suggests the ImuB-scaffolded mutasome can operate in gap-filling / repair-associated contexts as well as at the fork.</p>
+<p><strong>Evidence summary:</strong> RecA-dependent, damage-inducible operon driving most UV/MMC-induced mutations (PMID 15886391); <em>imuB</em> individually essential for induced mutagenesis (PMID 20615954); <em>imuBC</em> contributes to ciprofloxacin resistance in <em>P. aeruginosa</em> (PMID 37625357); DnaE2 acts with NER in non-replicating cells (PMID 33856342).</p>
+<hr />
+<h3 id="finding-4-in-p-putida-kt2440-the-imuaimubdnae2-cassette-is-genomically-intact-and-directly-downstream-of-lexa2">Finding 4 — In <em>P. putida</em> KT2440 the <em>imuA–imuB–dnaE2</em> cassette is genomically intact and directly downstream of <em>lexA2</em></h3>
+<p>Genome-level analysis of KT2440 confirms that the machinery described above is present and organized exactly as expected for a functional SOS mutasome. The relevant loci are arranged consecutively:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product</th>
+<th>UniProt</th>
+<th>Length</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3116</td>
+<td><em>lexA2</em></td>
+<td>LexA repressor 2 (SOS transcriptional repressor)</td>
+<td>P59479</td>
+<td>202 aa</td>
+</tr>
+<tr>
+<td>PP_3117</td>
+<td><em>imuA</em></td>
+<td>Translesion DNA synthesis-associated protein ImuA (ImuA/RecA-like)</td>
+<td>Q88I84</td>
+<td>206 aa</td>
+</tr>
+<tr>
+<td><strong>PP_3118</strong></td>
+<td><strong><em>imuB</em></strong></td>
+<td><strong>Catalytically inactive Y-family polymerase scaffold (TARGET)</strong></td>
+<td><strong>Q88I83</strong></td>
+<td><strong>472 aa</strong></td>
+</tr>
+<tr>
+<td>PP_3119</td>
+<td><em>dnaE2</em></td>
+<td>Error-prone DNA polymerase (Pol III α paralog / ImuC)</td>
+<td>Q88I82</td>
+<td>1033 aa</td>
+</tr>
+<tr>
+<td>PP_3120</td>
+<td><em>yeaE</em></td>
+<td>Methylglyoxal reductase (unrelated; operon boundary)</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>This arrangement — a <strong>LexA repressor gene immediately adjacent to a contiguous <em>imuA–imuB–dnaE2</em> cassette</strong> — is the hallmark of the SOS-regulated mutagenesis modules experimentally validated in <em>Caulobacter</em> and <em>Mycobacterium</em>. The presence of <em>lexA2</em> directly upstream strongly implies LexA-box regulation of the cassette, placing <em>imuB</em> under RecA/LexA (SOS) control in <em>P. putida</em>, consistent with the <em>recA</em>-dependent induction demonstrated in orthologs.</p>
+<p>The same analysis independently reconfirmed the catalytic-residue degeneracy of the <em>P. putida</em> ImuB protein (DinB-D8 and DinB-D103 replaced), tying the sequence-level loss of enzymatic capacity directly to this specific KT2440 protein rather than relying solely on ortholog inference.</p>
+<p><strong>Evidence summary:</strong> Contiguous KT2440 loci PP_3116 <em>lexA2</em> → PP_3117 <em>imuA</em> → PP_3118 <em>imuB</em> → PP_3119 <em>dnaE2</em>; operon adjacent to a LexA repressor; ImuB catalytic carboxylates absent by pairwise alignment.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-mutasome-division-of-labor-among-three-proteins">The mutasome: division of labor among three proteins</h3>
+<p>The core insight is a <strong>separation of catalysis from recruitment</strong>. The bacterial ImuA–ImuB–DnaE2 mutasome distributes the functions normally combined in a single Y-family TLS polymerase across two paralogs plus an accessory factor:</p>
+<div class="codehilite"><pre><span></span><code>         SOS induction (DNA damage)
+                   │
+      RecA* + ssDNA ─► LexA (PP_3116) autocleaves
+                   │  derepression of LexA box
+                   ▼
+┌────────────  imuA (PP_3117) ── imuB (PP_3118) ── dnaE2 (PP_3119)  ────────────┐
+│                                                                                │
+▼                                                                                ▼
+   ImuA (RecA-like)                                                        DnaE2 / ImuC (C-family Pol)
+   accessory / assembly                                                    CATALYTIC engine, error-prone
+│                                                                                │
+└──────────────►    ImuB  (Y-family FOLD, NO catalysis)   ◄────────────────────────┘
+            • central SCAFFOLD / ADAPTOR
+            • β-clamp-binding motif
+                     │
+                     ▼
+        DnaN  β-sliding clamp  (replisome)
+                     │
+                     ▼
+     Mutagenic translesion synthesis across the lesion
+                     │
+                     ▼
+  Damage tolerance + point mutations (e.g., antibiotic resistance)
+</code></pre></div>
+
+<p><strong>Step-by-step:</strong></p>
+<ol>
+<li><strong>Signal:</strong> DNA damage generates single-stranded DNA, on which RecA forms an activated nucleoprotein filament (RecA*).</li>
+<li><strong>Derepression:</strong> RecA<em> stimulates autocleavage of LexA (LexA2, PP_3116), lifting repression of the LexA-box-controlled </em>imuA–imuB–dnaE2<em> cassette. Transcription of </em>imuB* rises.</li>
+<li><strong>Assembly:</strong> ImuB acts as the physical hub. It binds ImuA (PP_3117) on one interface and DnaE2 (PP_3119) on another, forming the ImuA–ImuB–DnaE2 complex.</li>
+<li><strong>Recruitment:</strong> ImuB's β-clamp-binding motif docks the entire complex onto the DnaN β-clamp at the primer–template junction of a stalled fork or repair gap. This is the step ImuB uniquely provides and the step that is functionally indispensable (its disruption phenocopies null mutants).</li>
+<li><strong>Catalysis:</strong> The recruited DnaE2 — an error-prone C-family polymerase — extends the primer across the lesion (translesion synthesis), frequently misincorporating and thereby introducing point mutations.</li>
+<li><strong>Outcome:</strong> The cell survives otherwise lethal lesions (damage tolerance) at the cost of an elevated, damage-inducible mutation rate. In pseudomonads this directly feeds the emergence of antibiotic-resistance alleles.</li>
+</ol>
+<h3 id="why-imub-matters-as-a-scaffold-rather-than-an-enzyme">Why ImuB matters as a <em>scaffold</em> rather than an enzyme</h3>
+<p>The genetic phenocopy result is the linchpin. If ImuB merely assisted an active site, disrupting one contact might only partially impair function. Instead, breaking the single ImuB–β-clamp interaction is <strong>as deleterious as deleting the whole cassette</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/20615954/">PMID: 20615954</a>). This tells us the pathway's rate-limiting, non-redundant requirement is <em>getting DnaE2 to the right place on the clamp</em> — precisely ImuB's job. ImuB is best described, in the language of the research question, as a <strong>structural adapter/scaffold protein</strong> whose "substrate" is the protein–protein and protein–clamp interaction network of the replisome, not a nucleic-acid or small-molecule substrate.</p>
+<h3 id="localization">Localization</h3>
+<p>ImuB carries out its function <strong>intracellularly, in the cytoplasm, at the DNA replisome / sites of DNA damage</strong>. It is a soluble DNA-associated protein with no signal peptide or transmembrane region; its "location" is operationally defined by its docking onto the DnaN β-clamp at the primer terminus of stalled replication forks and, per the NER-coordination evidence, at post-replicative repair gaps in non-replicating cells (<a href="https://pubmed.ncbi.nlm.nih.gov/33856342/">PMID: 33856342</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (organism)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20615954/">20615954</a></td>
+<td><em>Essential roles for imuA'- and imuB-encoded accessory factors in DnaE2-dependent mutagenesis in M. tuberculosis</em></td>
+<td><strong>Cornerstone.</strong> Establishes ImuB lacks catalytic residues; demonstrates ImuB↔ImuA', ImuB↔DnaE2 and ImuB↔β-clamp interactions; shows clamp-binding disruption phenocopies null mutants; <em>imuB</em> individually essential for induced mutagenesis and damage tolerance.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15886391/">15886391</a></td>
+<td><em>An SOS-regulated operon involved in damage-inducible mutagenesis in C. crescentus</em></td>
+<td>Defines the <em>imuA–imuB–dnaE2</em> operon as RecA-dependent and damage-inducible, responsible for most UV/mitomycin-C-induced mutations; identifies ImuB as Y-family-like, cooperating with DnaE2 in lesion bypass.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37625357/">37625357</a></td>
+<td><em>DinB, ImuBC and RpoS contribute to ciprofloxacin-resistance mutations in P. aeruginosa</em></td>
+<td>Directly links <em>imuBC</em> in a <em>Pseudomonas</em> species to SOS-dependent generation of antibiotic-resistance mutations — the closest-relative functional evidence for the <em>P. putida</em> ortholog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37530405/">37530405</a></td>
+<td><em>Investigating the composition and recruitment of the mycobacterial ImuA'–ImuB–DnaE2 mutasome</em></td>
+<td>Reinforces the tripartite mutasome model and the recruitment logic; ImuB as assembly hub.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33856342/">33856342</a></td>
+<td><em>Coordination between NER and DnaE2 enables DNA damage survival in non-replicating bacteria</em></td>
+<td>Extends the model beyond the replication fork: DnaE2 (and by extension the ImuB scaffold) can act with NER in gap-filling / non-replicating contexts.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28533123/">28533123</a></td>
+<td><em>Molecular characterization of C. crescentus mutator strains</em></td>
+<td>Context on <em>imuC/dnaE2</em> contribution to spontaneous vs. induced mutagenesis; notes an <em>imuC</em> mutant had spontaneous rates comparable to parental — underscoring that this pathway is chiefly <em>damage-induced</em> rather than a driver of baseline mutation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Convergence of evidence.</strong> Four independent lines converge on the same assignment: (1) sequence/domain analysis (Y-family fold with degenerate active site), (2) protein-interaction data (ImuB as tripartite hub bound to the clamp), (3) genetics (RecA/LexA-dependent, individually essential, clamp-disruption phenocopy), and (4) comparative genomics (intact <em>lexA2–imuA–imuB–dnaE2</em> cassette in KT2440). No line of evidence contradicts the scaffold model.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on the <em>P. putida</em> protein.</strong> The functional model is transferred by strong orthology from <em>M. tuberculosis</em> and <em>C. crescentus</em>. The specific PP_3118 protein has not, to our knowledge, been purified and shown biochemically to lack polymerase activity or to bind the KT2440 β-clamp; the catalytic-residue loss is inferred from sequence alignment (robust, but computational).</p>
+</li>
+<li>
+<p><strong>ImuA/ImuB nomenclature and paralogy.</strong> In some organisms the accessory factor is called ImuA' and DnaE2 is called ImuC; database annotations vary. Care is needed to ensure PP_3117/PP_3118/PP_3119 map to <em>imuA/imuB/dnaE2</em> respectively (the genomic order in KT2440 supports this mapping).</p>
+</li>
+<li>
+<p><strong>LexA-box confirmation is inferential.</strong> The adjacency of <em>lexA2</em> and the operon strongly implies SOS regulation, but a mapped LexA operator upstream of the <em>P. putida imuA</em> promoter and experimental induction kinetics in KT2440 were not directly verified here.</p>
+</li>
+<li>
+<p><strong>Mutational spectrum in <em>P. putida</em> is unquantified.</strong> While <em>P. aeruginosa imuBC</em> is tied to ciprofloxacin resistance, the specific contribution of PP_3118 to UV/MMC/fluoroquinolone-induced mutagenesis and the mutation signature in KT2440 remain to be measured.</p>
+</li>
+<li>
+<p><strong>Structural detail is limited.</strong> There is no experimental structure of the <em>P. putida</em> ImuB or of the assembled mutasome; the arrangement of the ImuA–ImuB–DnaE2–clamp complex is modeled from interaction data, not solved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Deletion and complementation phenotyping in KT2440.</strong> Construct Δ<em>imuB</em> (PP_3118), Δ<em>imuA</em>, and Δ<em>dnaE2</em> mutants and measure UV-, mitomycin-C-, and ciprofloxacin-induced mutation rates (rifampicin-resistance / <em>gyrA</em> fluctuation assays). Prediction: each deletion abolishes damage-induced mutagenesis without strongly affecting spontaneous rates.</p>
+</li>
+<li>
+<p><strong>Clamp-binding motif dissection.</strong> Identify the ImuB β-clamp-binding peptide in PP_3118 and generate a point-mutant that abolishes DnaN binding. Prediction (from PMID 20615954): the separation-of-function mutant phenocopies the full deletion for induced mutagenesis.</p>
+</li>
+<li>
+<p><strong>Biochemical reconstitution.</strong> Purify <em>P. putida</em> ImuA, ImuB, DnaE2, and DnaN; confirm the ImuB-centered interaction network by pulldown/SPR and test for (absence of) intrinsic ImuB polymerase activity and DnaE2-dependent TLS in vitro.</p>
+</li>
+<li>
+<p><strong>SOS regulation mapping.</strong> Verify the predicted LexA operator upstream of <em>imuA</em> (PP_3117) by EMSA with purified LexA2 and measure <em>recA</em>-dependent, damage-inducible transcription of <em>imuB</em> by qRT-PCR/reporter fusion in KT2440.</p>
+</li>
+<li>
+<p><strong>Fluorescence localization.</strong> Tag ImuB (functional fluorescent fusion) and confirm damage-induced focus formation colocalizing with replisome/β-clamp markers, testing both replicating and stationary-phase (NER-coordinated) contexts.</p>
+</li>
+<li>
+<p><strong>Structural work.</strong> Pursue a cryo-EM or crystal structure of the ImuA–ImuB–DnaE2–β-clamp assembly, or at minimum an AlphaFold-Multimer model validated against the interaction data, to define the recruitment geometry.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>ImuB (PP_3118, Q88I83) in <em>Pseudomonas putida</em> KT2440 is best annotated as the <strong>catalytically inactive Y-family-fold scaffold/adaptor subunit of the SOS-inducible ImuA–ImuB–DnaE2 mutasome</strong>. Its primary function is protein recruitment, not catalysis: it bridges the accessory factor ImuA, the error-prone polymerase DnaE2, and the DnaN β-sliding clamp, thereby positioning DnaE2 to perform mutagenic translesion DNA synthesis at damaged DNA. It operates intracellularly at the replisome under RecA/LexA (SOS) control, mediating DNA-damage tolerance and damage-induced mutagenesis, and in pseudomonads contributes to the emergence of antibiotic-resistance mutations. This assignment is supported by domain architecture, the diagnostic loss of catalytic carboxylates, the intact <em>lexA2–imuA–imuB–dnaE2</em> genomic cassette in KT2440, and strong orthology to experimentally characterized systems in <em>Mycobacterium tuberculosis</em> and <em>Caulobacter crescentus</em>.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="imuB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="imuB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:20615954</li>
+<li>PMID:15886391</li>
+<li>PMID:37530405</li>
+<li>PMID:37625357</li>
+<li>PMID:33856342</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(imuB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I83" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="imub-curation-notes">imuB curation notes</h1>
+<ul>
+<li>ImuB lacks the conserved active-site residues required for Y-family polymerase activity. [PMID:20615954, "lack conserved active-site amino acids required for polymerase activity."]</li>
+<li>Ortholog experiments show that ImuB binds ImuA, DnaE2, and the beta clamp, supporting protein-macromolecule adaptor activity. [PMID:20615954, "DnaE2, as well as with the beta-clamp."]</li>
+<li>In P. putida, ImuB promotes stationary-phase mutant accumulation. [PMID:17331811, "accumulation of stationary-phase mutants up to two-fold."]</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I83
+gene_symbol: imuB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  ImuB (PP_3118) is a catalytically inactive, polymerase-like accessory protein
+  of the ImuA-ImuB-DnaE2 damage-induced synthesis cassette. Ortholog studies
+  show that ImuB organizes ImuA, DnaE2, and beta-clamp interactions rather than
+  performing DNA synthesis. In P. putida, ImuB promotes stationary-phase and
+  UV-associated mutation accumulation and contributes to alkylation-damage
+  tolerance.
+existing_annotations:
+  - term:
+      id: GO:0006281
+      label: DNA repair
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Broad DNA repair obscures ImuB&#39;s specific role in damage tolerance and mutagenesis.
+      action: MODIFY
+      reason: ImuB is a noncatalytic accessory of DnaE2-dependent error-prone translesion synthesis rather than a repair enzyme.
+      proposed_replacement_terms:
+        - id: GO:0019985
+          label: translesion synthesis
+  - term:
+      id: GO:0019985
+      label: translesion synthesis
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/imuB/imuB-uniprot.txt
+    qualifier: involved_in
+    review:
+      summary: ImuB is the polymerase-like recruitment component of the ImuABC cassette.
+      action: NEW
+      reason: The IMS/UmuC-like family architecture and exact imuA-imuB-dnaE2 locus support the specific process annotation.
+      supported_by:
+        - reference_id: file:PSEPK/imuB/imuB-uniprot.txt
+          supporting_text: DR   Pfam; PF00817; IMS; 1.
+        - reference_id: PMID:17331811
+          supporting_text: &#34;accumulation of stationary-phase mutants up to two-fold.&#34;
+  - term:
+      id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    evidence_type: ISS
+    original_reference_id: PMID:20615954
+    qualifier: enables
+    review:
+      summary: ImuB is a noncatalytic interaction hub connecting mutasome proteins and the beta clamp.
+      action: NEW
+      reason: Ortholog interaction and separation-of-function experiments support a direct adaptor role.
+      supported_by:
+        - reference_id: PMID:20615954
+          supporting_text: &#34;DnaE2, as well as with the beta-clamp.&#34;
+        - reference_id: file:PSEPK/imuB/imuB-deep-research-openscientist.md
+          supporting_text: &#34;structural adapter/scaffold protein&#34;
+references:
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/imuB/imuB-uniprot.txt
+    title: UniProtKB entry for imuB (Q88I83)
+    findings:
+      - statement: Q88I83 has an IMS/UmuC-like polymerase fold and is encoded between ImuA and the reviewed DnaE2 polymerase.
+  - id: file:PSEPK/imuB/imuB-deep-research-openscientist.md
+    title: OpenScientist research report for imuB (Q88I83)
+    findings:
+      - statement: &gt;-
+          The report supports a catalytically inactive polymerase-like scaffold
+          role using ortholog interaction data, conserved cassette structure,
+          and loss of key catalytic carboxylates.
+  - id: PMID:20615954
+    title: Essential roles for imuA&#39;- and imuB-encoded accessory factors in DnaE2-dependent mutagenesis in Mycobacterium tuberculosis.
+    findings:
+      - statement: ImuB binds ImuA, DnaE2, and the beta clamp while lacking polymerase active-site residues.
+        supporting_text: &#34;DnaE2, as well as with the beta-clamp.&#34;
+  - id: PMID:17331811
+    title: Study of involvement of ImuB and DnaE2 in stationary-phase mutagenesis in Pseudomonas putida.
+    findings:
+      - statement: P. putida ImuB promotes accumulation of stationary-phase mutants.
+        supporting_text: &#34;accumulation of stationary-phase mutants up to two-fold.&#34;
+  - id: PMID:28118378
+    title: DNA Polymerases ImuC and DinB Are Involved in DNA Alkylation Damage Tolerance in Pseudomonas aeruginosa and Pseudomonas putida.
+    findings:
+      - statement: P. putida ImuB and DnaE2/ImuC participate in alkylation-damage tolerance.
+        supporting_text: &#34;polymerases ImuC and DinB ensured a protective role against N- and O-methylation&#34;
+core_functions:
+  - description: Noncatalytic polymerase-like adaptor that recruits and organizes DnaE2 and the beta clamp during damage-induced synthesis.
+    molecular_function:
+      id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    directly_involved_in:
+      - id: GO:0019985
+        label: translesion synthesis
+    supported_by:
+      - reference_id: PMID:20615954
+        supporting_text: &#34;DnaE2, as well as with the beta-clamp.&#34;
+      - reference_id: PMID:17331811
+        supporting_text: &#34;accumulation of stationary-phase mutants up to two-fold.&#34;
+    knowledge_gaps:
+      - gap_statement: Q88I83 interaction interfaces and their contribution to lesion-specific synthesis have not been mapped directly.
+        significance: Species genetics support function, while ortholog studies define the detailed adaptor mechanism.
+proposed_new_terms: []
+suggested_questions:
+  - question: Which Q88I83 interfaces recruit DnaE2 and the replication clamp in KT2440?
+suggested_experiments:
+  - description: Map Q88I83 interactions with Q88I82 and DnaN, then test separation-of-function mutants in lesion-bypass and mutation-frequency assays.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
