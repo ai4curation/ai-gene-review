@@ -35,15 +35,32 @@ autolink_gene_symbols: false
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Review the existing Falcon deep-research reports for selected genes.
 - [x] Curate each selected gene review.
+- [x] Re-audit all seven selected reviews as annotation reviewer.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [#2325](https://github.com/ai4curation/ai-gene-review/pull/2325).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd PR through review, CI, and merge readiness; PR #2325 is merged.
 
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
 
 2026-07-26: The generic module-level OpenScientist run also timed out after
 7200s without producing a report.
+
+2026-08-13: Fresh OpenScientist retries for the seven genes, the generic
+module, and the module + `ppu00760` + PSEPK combination returned no artifacts.
+They were not restarted during annotation review. The existing PSEPK
+`ppu00760` OpenScientist synthesis was inspected, but it models NAD+
+biosynthesis/salvage and explicitly excludes nicotinate degradation; it
+therefore supports separation of these boundaries rather than the chemistry of
+this catabolic module.
+
+2026-08-13: Annotation re-review retained the GOA-sourced `enables` relations
+for NicA and NicB while recording complex-level contribution semantics in the
+core functions. It also replaced broad monooxygenase retention with
+specific-term modifications for NicC, treated MaiA oligomerization as
+unresolved, and replaced overbroad pathway selectors with
+reaction-constrained ortholog selectors. PR #2571 records this refinement of
+the canonical module.
 
 ## Candidate Genes
 
