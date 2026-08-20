@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dadX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dadX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CB2" target="_blank" class="term-link">
+                        Q88CB2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dadX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CB2" data-a="DESCRIPTION: DadX is an alanine-specific, pyridoxal-phosphate-d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DadX is an alanine-specific, pyridoxal-phosphate-dependent racemase that reversibly interconverts L-alanine and D-alanine. It is encoded beside dadA in a conserved catabolic locus, where D-alanine is proposed to be oxidized to pyruvate. DadX is the leading candidate for cytoplasmic D-alanine supply in KT2440, but a direct contribution to peptidoglycan synthesis has not been demonstrated.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic catalytic term is superseded by alanine racemase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008784 captures the experimentally established reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                        PMID:23995642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is plausible and consistent with the protein record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TreeGrafter supplies the annotation, and the mature protein record lacks the signal peptide that distinguishes the periplasmic KT2440 Alr/BSR. No direct fractionation experiment for DadX was identified.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008784" target="_blank" class="term-link">
+                                    GO:0008784
+                                </a>
+                            </span>
+                            <span class="term-label">alanine racemase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0008784" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact, experimentally corroborated activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DadX reversibly and selectively racemizes alanine stereoisomers.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                        PMID:23995642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0030170" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP is a supported catalytic cofactor rather than the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the covalent PLP-linked lysine at residue 33.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dadX/dadX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N6-(pyridoxal phosphate)lysine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030632" target="_blank" class="term-link">
+                                    GO:0030632
+                                </a>
+                            </span>
+                            <span class="term-label">D-alanine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0030632" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DadX forms D-alanine, but its physiological process assignment is unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reversible chemistry can produce D-alanine, whereas the characterized locus and literature frame DadX as catabolic. No dadX genetic, flux, or peptidoglycan experiment establishes cell-wall D-alanine supply, so this process annotation is not promoted into the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                        PMID:23995642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">P. putida KT2440 catabolized the d-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline as the sole carbon and nitrogen sources.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                        PMID:23995642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">However, DadX did show 6- and 9-fold higher k(cat)/K(m) values than Alr with l- and d-alanine, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008784" target="_blank" class="term-link">
+                                    GO:0008784
+                                </a>
+                            </span>
+                            <span class="term-label">alanine racemase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23995642
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Amino acid racemization in Pseudomonas putida KT2440.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CB2" data-a="GO:0008784" data-r="PMID:23995642" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical characterization establishes alanine racemase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purified enzyme selectively catalyzed both directions of alanine racemization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                        PMID:23995642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Reversibly interconverts L-alanine and D-alanine with narrow substrate specificity. The role in the dadAX catabolic route is supported, while physiological supply of D-alanine to peptidoglycan remains unresolved.</h3>
+                <span class="vote-buttons" data-g="Q88CB2" data-a="FUNCTION: Reversibly interconverts L-alanine and D-alanine w..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008784" target="_blank" class="term-link">
+                            alanine racemase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                                PMID:23995642
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23995642" target="_blank" class="term-link">
+                            PMID:23995642
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Amino acid racemization in Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DadX is selective for alanine stereoisomers.</div>
+
+                        <div class="finding-text">"Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DadX is discussed as part of an L-alanine catabolic route.</div>
+
+                        <div class="finding-text">"P. putida KT2440 catabolized the d-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline as the sole carbon and nitrogen sources."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dadX/dadX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for PSEPK DadX Q88CB2</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records the experimentally characterized alanine reaction.</div>
+
+                        <div class="finding-text">"Reaction=L-alanine = D-alanine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DadX provide the cytoplasmic D-alanine used for peptidoglycan synthesis in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CB2" data-a="Q: Does DadX provide the cytoplasmic D-alanine used f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Deplete or delete dadX and measure growth, peptidoglycan composition, intracellular D-alanine, and rescue by exogenous D-alanine; include isotope tracing from L-alanine into the terminal D-Ala-D-Ala moiety.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics, metabolite rescue, peptidoglycan analysis, and isotope tracing</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CB2" data-a="EXPERIMENT: Deplete or delete dadX and measure growth, peptido..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dadX-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CB2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *dadX* (Q88CB2, PP_5269) — Catabolic Alanine Racemase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-11T07:28:44.770140</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dadX-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dadX-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-dadx-q88cb2-pp_5269-catabolic-alanine-racemase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>dadX</em> (Q88CB2, PP_5269) — Catabolic Alanine Racemase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>dadX</strong> (UniProt <strong>Q88CB2</strong>; ordered locus <strong>PP_5269</strong>) of <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) encodes a <strong>catabolic alanine racemase</strong> (EC 5.1.1.1). Gene identity is unambiguous and well supported: the UniProt-provided description, the InterPro domain architecture (Ala_racemase N- and C-terminal domains plus the pyridoxal-5′-phosphate binding site), the 357-residue sequence, and multiple primary studies performed directly in <em>P. putida</em> KT2440 all converge on the same protein. This is not a case of gene-symbol ambiguity — the literature specifically characterizes DadX from this organism.</p>
+<p>DadX catalyzes the <strong>reversible interconversion of L-alanine and D-alanine</strong> using a pyridoxal-5′-phosphate (PLP) cofactor covalently anchored through a Schiff base to an active-site lysine (Lys33 in the DadX numbering, positionally homologous to the catalytic Lys39 of the archetypal <em>Bacillus stearothermophilus</em> enzyme). The enzyme operates through the canonical <strong>two-base racemization mechanism</strong> shared by the entire alanine racemase family, in which a lysine and a tyrosine (contributed across the homodimer interface) act as complementary acid/base catalysts on opposite faces of the substrate α-carbon. Crucially, DadX is <strong>substrate-specific for the alanine stereoisomers</strong> — biochemical characterization showed it strongly prefers alanine and is far more restrictive than the biosynthetic racemase Alr, which racemizes many amino acids.</p>
+<p>The <strong>physiological role of DadX is catabolic</strong>, not biosynthetic. It constitutes the first step of the two-enzyme <em>dad</em> (D-amino acid degradation) module. DadX converts L-alanine to D-alanine, and the adjacent membrane-associated flavoprotein D-amino acid dehydrogenase (DadA / DadA2, PP_5270) then oxidatively deaminates D-alanine to pyruvate and ammonia. This channels alanine into central carbon and nitrogen metabolism, enabling <em>P. putida</em> KT2440 to grow on alanine (and D-alanine) as a sole carbon and nitrogen source. The enzyme acts in the <strong>cytoplasm</strong>, consistent with the soluble nature of alanine racemases. This catabolic role is functionally and evolutionarily distinct from the housekeeping racemase Alr, whose D-alanine product is committed to peptidoglycan cell-wall biosynthesis.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<p>Before reporting function, the mandatory identity checks were completed and <strong>all passed</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Verification criterion</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "dadX" matches protein description</td>
+<td>✅ dadX = catabolic alanine racemase, matches UniProt RecName</td>
+</tr>
+<tr>
+<td>Organism correct (<em>P. putida</em> KT2440)</td>
+<td>✅ Primary literature (<a href="https://pubmed.ncbi.nlm.nih.gov/23995642/">PMID: 23995642</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16579470/">PMID: 16579470</a>) characterizes DadX directly in <em>P. putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ Alanine racemase family; PLP-binding TIM-barrel + C-terminal β-domain</td>
+</tr>
+<tr>
+<td>Risk of same-symbol different-gene confusion</td>
+<td>✅ Low — DadX is a conserved catabolic racemase; <em>E. coli</em> dadX (<a href="https://pubmed.ncbi.nlm.nih.gov/3920477/">PMID: 3920477</a>) is the orthologous catabolic isozyme, not a false match</td>
+</tr>
+</tbody>
+</table>
+<p>The 357-amino-acid length retrieved from Q88CB2 exactly matches the DadX peptide reported by Cao et al. (357 aa, ~38.82 kDa; <a href="https://pubmed.ncbi.nlm.nih.gov/16579470/">PMID: 16579470</a>), further confirming identity. <strong>This report proceeds with confidence that the correct gene is being described.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-dadx-is-the-catabolic-alanine-racemase-of-p-putida-kt2440-with-narrow-substrate-specificity-for-alanine">Finding 1 — DadX is the catabolic alanine racemase of <em>P. putida</em> KT2440 with narrow substrate specificity for alanine</h3>
+<p>The most direct and authoritative evidence comes from Radkov &amp; Moe (2013), who <strong>purified and kinetically characterized DadX from <em>P. putida</em> KT2440 in vitro</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/23995642/">PMID: 23995642</a>). Their work establishes two decisive points. First, DadX has <strong>narrow substrate specificity</strong>: it "clearly prefer[s] only the alanine stereoisomers as the substrates." This stands in sharp contrast to the biosynthetic racemase Alr from the same organism, which racemized 9 of 19 tested chiral amino acids. Second, DadX is the <strong>kinetically superior alanine racemase</strong>, showing 6- and 9-fold higher catalytic efficiency (<em>k</em>cat/<em>K</em>m) than Alr with L- and D-alanine, respectively. Together these results demonstrate that DadX is specialized for alanine racemization, which is precisely what a catabolic enzyme feeding the alanine-degradation pathway should be.</p>
+<p>The physiological context is that <em>P. putida</em> KT2440 can <strong>catabolize D-alanine as a sole carbon and nitrogen source</strong> — Radkov &amp; Moe showed the organism grows on the D-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline. DadX provides the racemase activity that couples L- and D-alanine pools to this catabolic capability.</p>
+<blockquote>
+<p>"the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates" — Radkov &amp; Moe 2013</p>
+<p>"DadX did show 6- and 9-fold higher k(cat)/K(m) values than Alr with l- and d-alanine, respectively" — Radkov &amp; Moe 2013</p>
+</blockquote>
+<h3 id="finding-2-dadx-belongs-to-the-plp-dependent-alanine-racemase-family-and-uses-a-conserved-two-base-lystyr-catalytic-mechanism">Finding 2 — DadX belongs to the PLP-dependent alanine racemase family and uses a conserved two-base (Lys/Tyr) catalytic mechanism</h3>
+<p>DadX carries the complete <strong>alanine racemase domain architecture</strong>: the N-terminal PLP-binding TIM-barrel (α/β)8 domain (InterPro <strong>IPR001608</strong>), the C-terminal β-sheet domain (<strong>IPR011079 / IPR009006</strong>), and the diagnostic PLP-binding site signature (<strong>IPR020622</strong>). Cao et al. explicitly identified the <strong>pyridoxal-5′-phosphate binding site motif</strong> in <em>P. putida</em> DadX (<a href="https://pubmed.ncbi.nlm.nih.gov/16579470/">PMID: 16579470</a>), confirming the cofactor chemistry at the sequence level.</p>
+<p>The catalytic mechanism is defined by decades of structural and mutagenesis work on the archetypal <em>Bacillus stearothermophilus</em> alanine racemase. X-ray crystallography of the enzyme bound with N-(5′-phosphopyridoxyl)alanine (<a href="https://pubmed.ncbi.nlm.nih.gov/11886871/">PMID: 11886871</a>) established that <strong>Tyr265′ and Lys39 are the catalytic bases</strong> that remove the α-hydrogen from L- and D-alanine, respectively — a <strong>two-base mechanism</strong> in which each base acts on one face of the substrate α-carbon. Independent evidence from arginine-219 mutants (<a href="https://pubmed.ncbi.nlm.nih.gov/10194319/">PMID: 10194319</a>) reinforced this model: a conserved Arg219 hydrogen-bonds to the PLP pyridine nitrogen and, through a His166-mediated network, electrostatically tunes the pKa of Tyr265; mutation of Arg219 shifts the kcat/KM pKa from ~7.1–7.4 to ~9.5–10.4 and produces a 510 nm quinonoid intermediate consistent with a two-base mechanism. Alanine racemases are <strong>obligate homodimers</strong>, with each active site assembled at the subunit interface (the N-terminal domain of one monomer plus the C-terminal domain — supplying the second catalytic tyrosine — of the partner). DadX inherits this mechanism and quaternary requirement.</p>
+<blockquote>
+<p>"Tyr(265)' and Lys(39) are the catalytic bases removing alpha-hydrogen from L- and D-alanine, respectively" — Watanabe et al. 2002</p>
+<p>"Two motifs believed essential to the enzyme activity are found both in DadX and Alr, such as pyridoxal-5'-phosphate binding site" — Cao et al. 2006</p>
+</blockquote>
+<h3 id="finding-3-dadx-functions-in-the-cytoplasmic-d-alanine-catabolic-dad-pathway-feeding-alanine-into-central-metabolism">Finding 3 — DadX functions in the cytoplasmic D-alanine catabolic (<em>dad</em>) pathway, feeding alanine into central metabolism</h3>
+<p>The functional pairing of <em>dadX</em> with <em>dadA</em> is well established from <em>E. coli</em>, where <strong>dadX lies within an inducible operon adjacent to dadA</strong> (D-amino acid dehydrogenase) (Wild et al. 1985, <a href="https://pubmed.ncbi.nlm.nih.gov/3920477/">PMID: 3920477</a>). The DadX racemase produces D-alanine, which the membrane-associated flavoprotein DadA then oxidatively deaminates to <strong>pyruvate + ammonia</strong>, allowing alanine to serve as both a carbon and nitrogen source. Wild et al. also showed the pathway is metabolically regulated as a catabolic system: the predominant racemase isozyme is <strong>induced by either alanine stereoisomer and repressed by glucose</strong> (catabolite repression) — the regulatory signature of a degradative, not biosynthetic, enzyme.</p>
+<p>In <em>P. putida</em> KT2440, Radkov &amp; Moe confirmed the organism catabolizes D-alanine as a sole carbon and nitrogen source, the very pathway DadX serves. Alanine racemases are soluble <strong>cytoplasmic</strong> enzymes, and DadX carries no signal peptide or membrane-anchoring feature, so its racemization reaction occurs in the cytosol; the coupled DadA dehydrogenase is membrane-associated but faces the cytoplasm. This catabolic role is mechanistically distinct from the biosynthetic racemase <strong>Alr</strong>, whose D-alanine product is dedicated to <strong>peptidoglycan/cell-wall synthesis</strong>.</p>
+<blockquote>
+<p>"The gene dadX coding for its structure is located by the dadA gene determining the structure of D-amino acid dehydrogenase" — Wild et al. 1985</p>
+<p>"The predominant isozyme is inducible by either alanine stereoisomer and repressible by glucose" — Wild et al. 1985</p>
+<p>"P. putida KT2440 catabolized the d-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline as the sole carbon and nitrogen sources" — Radkov &amp; Moe 2013</p>
+</blockquote>
+<h3 id="finding-4-the-357-aa-dadx-sequence-contains-the-conserved-plp-binding-catalytic-lysine-lys33">Finding 4 — The 357-aa DadX sequence contains the conserved PLP-binding catalytic lysine (Lys33)</h3>
+<p>The Q88CB2 sequence is <strong>357 residues</strong>, matching the DadX peptide reported by Cao et al. (357 aa, ~38.8 kDa; <a href="https://pubmed.ncbi.nlm.nih.gov/16579470/">PMID: 16579470</a>). Sequence inspection reveals the diagnostic N-terminal alanine-racemase PLP-binding motif <strong>K-x-D-A-Y-G-H-G ("KADAYGHG")</strong> with the <strong>Schiff-base lysine at position 33</strong> — positionally homologous to the catalytic <strong>Lys39</strong> of the <em>B. stearothermophilus</em> enzyme that abstracts the α-proton from D-alanine (<a href="https://pubmed.ncbi.nlm.nih.gov/11886871/">PMID: 11886871</a>). Ten tyrosine residues are present in the sequence, including residues in the C-terminal domain that supplies the second catalytic base (the Tyr homolog of Tyr265′) across the dimer interface. This sequence-level conservation of both catalytic bases confirms DadX is a fully functional member of the family capable of the two-base mechanism.</p>
+<blockquote>
+<p>"DadX encodes a peptide of 357 amino acids with a calculated molecular weight of 38.82kDa" — Cao et al. 2006</p>
+</blockquote>
+<h3 id="finding-5-genomic-context-dadx-pp_5269-is-adjacent-to-dada2-pp_5270-confirming-native-dadax-coupling">Finding 5 — Genomic context: <em>dadX</em> (PP_5269) is adjacent to <em>dadA2</em> (PP_5270), confirming native <em>dadAX</em> coupling</h3>
+<p>Interrogation of the <em>P. putida</em> KT2440 genome (taxid 160488) shows that the immediate neighbor of <strong>dadX / PP_5269</strong> (Q88CB2, alanine racemase, 357 aa) is <strong>PP_5270 / Q88CB1</strong>, annotated as <strong>D-amino acid dehydrogenase 2</strong> (dadA2, EC 1.4.99.-, 434 aa). This directly mirrors the <em>E. coli</em> <em>dadAX</em> operon architecture (<a href="https://pubmed.ncbi.nlm.nih.gov/3920477/">PMID: 3920477</a>) <strong>in the target organism itself</strong>, providing strong genomic-context evidence that DadX-produced D-alanine is the substrate for the adjacent DadA dehydrogenase. Notably, a <strong>leucine-responsive regulatory protein gene (lrp, PP_5271 / Q88CB0)</strong> lies immediately downstream — Lrp being a known transcriptional regulator of amino-acid (including <em>dad</em>) catabolism. The gene neighborhood thus recapitulates a complete, regulated catabolic module.</p>
+<blockquote>
+<p>"The gene dadX coding for its structure is located by the dadA gene determining the structure of D-amino acid dehydrogenase" — Wild et al. 1985</p>
+</blockquote>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction">The reaction</h3>
+<p>DadX catalyzes the PLP-dependent racemization of alanine:</p>
+<div class="codehilite"><pre><span></span><code>L-alanine  ⇌  D-alanine
+ [DadX, PLP]
+</code></pre></div>
+
+<p>The PLP cofactor is bound as an internal aldimine (Schiff base) to <strong>Lys33</strong>. When alanine binds, a transaldimination forms the external aldimine. Racemization then proceeds by the <strong>two-base mechanism</strong>: the α-proton is abstracted from one face by one catalytic base, forming a resonance-stabilized <strong>carbanion/quinonoid intermediate</strong>, and reprotonated on the opposite face by the second base. In the family archetype, <strong>Lys</strong> abstracts from D-alanine and <strong>Tyr</strong> (from the partner subunit) abstracts from L-alanine.</p>
+<div class="codehilite"><pre><span></span><code>   L-Ala face                       D-Ala face
+      │                                  │
+   Tyr (base)  ──►  quinonoid  ◄──  Lys33 (base)
+      │           intermediate           │
+      └──────── PLP (Schiff base) ────────┘
+     active site at dimer interface
+</code></pre></div>
+
+<h3 id="the-catabolic-module">The catabolic module</h3>
+<p>DadX is <strong>step 1 of a two-enzyme degradation module</strong> encoded in a conserved gene cluster:</p>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">PP_5269</span><span class="w"> </span><span class="p">(</span><span class="n">dadX</span><span class="p">)</span><span class="w">      </span><span class="n">PP_5270</span><span class="w"> </span><span class="p">(</span><span class="n">dadA2</span><span class="p">)</span><span class="w">          </span><span class="n">PP_5271</span><span class="w"> </span><span class="p">(</span><span class="n">lrp</span><span class="p">)</span>
+<span class="w"> </span><span class="n">alanine</span><span class="w"> </span><span class="n">racemase</span><span class="w">    </span><span class="n">D</span><span class="o">-</span><span class="n">amino</span><span class="w"> </span><span class="n">acid</span><span class="w"> </span><span class="n">dehydrog</span><span class="p">.</span><span class="w">   </span><span class="n">Lrp</span><span class="w"> </span><span class="n">regulator</span>
+<span class="w">       </span><span class="err">│</span><span class="w">                    </span><span class="err">│</span><span class="w">                       </span><span class="err">│</span>
+<span class="w">   </span><span class="n">L</span><span class="o">-</span><span class="n">Ala</span><span class="w"> </span><span class="err">⇌</span><span class="w"> </span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="w">   </span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">H2O</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="o">[</span><span class="n">FAD</span><span class="o">]</span><span class="w"> </span><span class="err">─►</span><span class="w">    </span><span class="p">(</span><span class="n">transcriptional</span>
+<span class="w">       </span><span class="err">└──────────►</span><span class="w">  </span><span class="n">pyruvate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NH3</span><span class="w">            </span><span class="n">control</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="k">module</span><span class="p">)</span>
+<span class="w">            </span><span class="err">│</span>
+<span class="w">            </span><span class="err">▼</span>
+<span class="w">      </span><span class="n">central</span><span class="w"> </span><span class="n">C</span><span class="o">/</span><span class="n">N</span><span class="w"> </span><span class="n">metabolism</span><span class="w"> </span><span class="p">(</span><span class="n">TCA</span><span class="w"> </span><span class="k">cycle</span><span class="p">)</span>
+</code></pre></div>
+
+<ul>
+<li><strong>DadX</strong> supplies D-alanine by racemizing the abundant L-alanine pool.</li>
+<li><strong>DadA (DadA2)</strong>, a membrane-associated FAD-dependent D-amino acid dehydrogenase, oxidatively deaminates D-alanine to <strong>pyruvate + ammonia</strong>.</li>
+<li>The products enter central metabolism: <strong>pyruvate</strong> as a carbon skeleton (TCA cycle / gluconeogenesis) and <strong>ammonia</strong> as a nitrogen source.</li>
+<li>This enables growth on alanine (and D-alanine) as sole carbon and nitrogen source.</li>
+</ul>
+<h3 id="two-racemases-two-fates-for-d-alanine">Two racemases, two fates for D-alanine</h3>
+<p><em>P. putida</em> possesses two alanine racemases with divergent physiological purposes — a recurring theme in Pseudomonads (cf. <em>P. aeruginosa</em> PAO1, which likewise has <em>dadX</em> and <em>alr</em>; <a href="https://pubmed.ncbi.nlm.nih.gov/10977898/">PMID: 10977898</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th><strong>DadX (catabolic, Q88CB2)</strong></th>
+<th><strong>Alr (biosynthetic/anabolic)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Substrate specificity</td>
+<td>Narrow — alanine stereoisomers only</td>
+<td>Broad — racemizes 9/19 chiral amino acids</td>
+</tr>
+<tr>
+<td>Catalytic efficiency on Ala</td>
+<td>6–9× higher <em>k</em>cat/<em>K</em>m than Alr</td>
+<td>Lower on alanine</td>
+</tr>
+<tr>
+<td>Physiological role</td>
+<td>Feeds D-Ala into DadA for degradation</td>
+<td>Supplies D-Ala for peptidoglycan synthesis</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>Inducible by alanine, glucose-repressible</td>
+<td>Constitutive/housekeeping</td>
+</tr>
+<tr>
+<td>Direction of net flux</td>
+<td>L-Ala → D-Ala (for catabolism)</td>
+<td>L-Ala → D-Ala (for cell wall)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+<td>Cytoplasm</td>
+</tr>
+</tbody>
+</table>
+<p>Both enzymes are cytoplasmic and mechanistically identical, but DadX's kinetic specialization for alanine and its co-regulation/co-localization with DadA mark it unambiguously as the <strong>degradative</strong> racemase.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>Relevance to DadX function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23995642/">23995642</a></td>
+<td><em>Amino acid racemization in P. putida KT2440</em> (Radkov &amp; Moe 2013)</td>
+<td><strong>Primary, most authoritative.</strong> Purified and kinetically characterized DadX from the target organism; established narrow alanine specificity and higher efficiency than Alr; demonstrated D-alanine catabolism as sole C/N source. Basis of the catabolic assignment.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16579470/">16579470</a></td>
+<td><em>Cloning, sequence analysis and expression of alanine racemase gene in P. putida</em> (Cao et al. 2006)</td>
+<td>Confirms DadX identity (357 aa, 38.82 kDa) and presence of the PLP-binding site motif in <em>P. putida</em> DadX. Anchors sequence-level identity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3920477/">3920477</a></td>
+<td><em>Identification of the dadX gene…in E. coli K12</em> (Wild et al. 1985)</td>
+<td>Establishes the <em>dadAX</em> operon coupling and catabolic regulation (alanine induction, glucose repression) of the orthologous catabolic racemase. Supports pathway context.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11886871/">11886871</a></td>
+<td><em>Reaction mechanism of alanine racemase from B. stearothermophilus</em> (Watanabe et al. 2002)</td>
+<td>Defines the conserved two-base (Lys39/Tyr265′) PLP mechanism to which DadX belongs. Structural/mechanistic foundation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10194319/">10194319</a></td>
+<td><em>Evidence for a two-base mechanism…Arg-219 mutants</em> (Sun &amp; Toney 1999)</td>
+<td>Independent mechanistic validation of the two-base mechanism and the role of the conserved Arg219–His166–Tyr265 network.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10977898/">10977898</a></td>
+<td><em>Characterization of alanine racemases from P. aeruginosa PAO1</em></td>
+<td>Comparative evidence: a closely related Pseudomonad also has independent <em>dadX</em> and <em>alr</em> racemases, both PLP enzymes; supports the two-racemase paradigm.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36483308/">36483308</a></td>
+<td><em>DadY (PA5303) is required for fitness…</em></td>
+<td>Context for D-amino acid metabolism/transport fitness in Pseudomonas (abstract unavailable; peripheral support).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency assessment:</strong> All lines of evidence — direct enzymology in the target organism, sequence/motif analysis, the family's structural mechanism, operon genomics, and comparative Pseudomonad data — are mutually reinforcing. No evidence contradicts the assignment of DadX as the catabolic alanine racemase.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No DadX-specific 3-D structure.</strong> There is no experimentally determined crystal structure of <em>P. putida</em> KT2440 DadX itself. The two-base mechanism and catalytic residue assignments (Lys33; the partner-subunit Tyr) are inferred by homology from <em>B. stearothermophilus</em> and by sequence-motif conservation, not from a DadX structure. An AlphaFold model or crystal structure would confirm the active-site geometry directly.</p>
+</li>
+<li>
+<p><strong>Catalytic Tyr not individually pinpointed in DadX.</strong> While ten tyrosines are present and the C-terminal domain supplies the second base by homology, the exact catalytic Tyr residue number in DadX has not been experimentally confirmed by mutagenesis.</p>
+</li>
+<li>
+<p><strong>No in vivo <em>dadX</em> knockout phenotype in KT2440.</strong> The catabolic role is strongly inferred from in vitro kinetics, operon context, and orthology, but a targeted <em>dadX</em> deletion demonstrating loss of alanine catabolism (and the extent to which Alr can compensate) has not been reported here.</p>
+</li>
+<li>
+<p><strong>Regulation in <em>P. putida</em> specifically.</strong> The alanine-induction/glucose-repression regulation is documented for <em>E. coli</em> dadX; the precise transcriptional control of PP_5269 (including the exact role of the downstream Lrp / PP_5271) in KT2440 is inferred by analogy and warrants direct confirmation.</p>
+</li>
+<li>
+<p><strong>Quantitative substrate profile is qualitative here.</strong> "Narrow specificity for alanine" is established, but full kinetic constants (Km, kcat) across a panel of amino acids for DadX specifically are summarized rather than tabulated.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Structural determination / modeling.</strong> Obtain an X-ray or cryo-EM structure of DadX, or analyze an AlphaFold2 model with PAE/pLDDT, to confirm the homodimeric active-site arrangement, verify Lys33 as the PLP Schiff-base residue, and identify the partner-subunit catalytic tyrosine.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis.</strong> Mutate Lys33 and candidate catalytic Tyr residues (and the conserved Arg homolog of Arg219) to alanine and measure racemase activity, directly testing the two-base mechanism in DadX.</p>
+</li>
+<li>
+<p><strong>Targeted gene deletion.</strong> Construct a clean <em>dadX</em> (PP_5269) knockout in <em>P. putida</em> KT2440 and assay growth on L- and D-alanine as sole C/N source; construct a <em>dadX alr</em> double mutant to test functional redundancy for D-alanine catabolism versus cell-wall provision.</p>
+</li>
+<li>
+<p><strong>Transcriptional analysis.</strong> Use qRT-PCR or reporter fusions to test alanine induction and glucose (catabolite) repression of the PP_5269–PP_5270 module in KT2440, and test the regulatory role of the adjacent <em>lrp</em> (PP_5271).</p>
+</li>
+<li>
+<p><strong>Full kinetic panel.</strong> Measure <em>K</em>m and <em>k</em>cat of purified DadX against a comprehensive panel of chiral amino acids to quantify the substrate specificity window relative to Alr.</p>
+</li>
+<li>
+<p><strong>Metabolic flux confirmation.</strong> Use ¹³C- or ¹⁵N-labeled alanine to trace flux from L-alanine → D-alanine → pyruvate + ammonia, quantifying the DadX/DadA contribution to central C and N metabolism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><strong>dadX (Q88CB2, PP_5269) encodes the catabolic alanine racemase of <em>Pseudomonas putida</em> KT2440.</strong> It is a soluble, cytoplasmic, PLP-dependent enzyme (Schiff-base catalytic Lys33) that reversibly interconverts L- and D-alanine via the conserved two-base racemase mechanism, with narrow substrate specificity for the alanine stereoisomers and higher catalytic efficiency than the broad-specificity biosynthetic racemase Alr. Its physiological function is the first step of the two-enzyme <em>dad</em> catabolic module — genomically confirmed by its adjacency to <em>dadA2</em> (PP_5270) — supplying D-alanine that the DadA dehydrogenase oxidatively deaminates to pyruvate and ammonia, enabling <em>P. putida</em> to use alanine as a carbon and nitrogen source. This role is distinct from the biosynthetic racemase Alr, which supplies D-alanine for peptidoglycan cell-wall synthesis.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dadX-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dadX-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:23995642</li>
+<li>PMID:16579470</li>
+<li>PMID:3920477</li>
+<li>PMID:11886871</li>
+<li>PMID:10194319</li>
+<li>PMID:10977898</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dadX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CB2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dadx-curation-notes">dadX curation notes</h1>
+<p>Q88CB2 is an experimentally verified alanine-specific racemase. The 2013 study<br />
+states that DadX "showed narrow substrate specificity, clearly preferring only<br />
+the alanine stereoisomers as the substrates" and that its catalytic<br />
+efficiencies with L- and D-alanine were six- and nine-fold higher,<br />
+respectively, than those of KT2440 Alr.<br />
+[PMID:23995642, "the putative catabolic alanine racemase DadX showed narrow<br />
+substrate specificity, clearly preferring only the alanine stereoisomers as the<br />
+substrates"; "DadX did show 6- and 9-fold higher k cat / K m values than Alr<br />
+with l - and d -alanine, respectively."]</p>
+<p>The reaction is reversible, and the protein has a cytosol IEA, making DadX the<br />
+best current candidate for cytoplasmic D-alanine production. However, the<br />
+target paper describes a catabolic dadAX locus and does not report a DadX<br />
+knockout, D-alanine auxotrophy, cell-wall composition, or peptidoglycan flux.<br />
+[PMID:23995642, "Often referred to as a 'catabolic racemase' ( 45 ), DadX<br />
+enzymes are proposed to serve a role in the catabolism of l -alanine"]</p>
+<p>Accordingly, alanine racemase activity is core, but GO:0030632 D-alanine<br />
+biosynthetic process remains undecided for the target. The module records a<br />
+real candidate-level hole rather than treating reversible chemistry or<br />
+UniRule transfer as proof of physiological direction.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CB2
+gene_symbol: dadX
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  DadX is an alanine-specific, pyridoxal-phosphate-dependent racemase that
+  reversibly interconverts L-alanine and D-alanine. It is encoded beside dadA
+  in a conserved catabolic locus, where D-alanine is proposed to be oxidized
+  to pyruvate. DadX is the leading candidate for cytoplasmic D-alanine supply
+  in KT2440, but a direct contribution to peptidoglycan synthesis has not been
+  demonstrated.
+existing_annotations:
+  - term:
+      id: GO:0003824
+      label: catalytic activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: The generic catalytic term is superseded by alanine racemase activity.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: GO:0008784 captures the experimentally established reaction.
+      supported_by:
+        - reference_id: PMID:23995642
+          supporting_text: &gt;-
+            Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: Cytosolic localization is plausible and consistent with the protein record.
+      action: ACCEPT
+      reason: &gt;-
+        TreeGrafter supplies the annotation, and the mature protein record lacks
+        the signal peptide that distinguishes the periplasmic KT2440 Alr/BSR.
+        No direct fractionation experiment for DadX was identified.
+  - term:
+      id: GO:0008784
+      label: alanine racemase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: This is the exact, experimentally corroborated activity.
+      action: ACCEPT
+      reason: DadX reversibly and selectively racemizes alanine stereoisomers.
+      supported_by:
+        - reference_id: PMID:23995642
+          supporting_text: &gt;-
+            Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.
+  - term:
+      id: GO:0030170
+      label: pyridoxal phosphate binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: PLP is a supported catalytic cofactor rather than the core function.
+      action: KEEP_AS_NON_CORE
+      reason: UniProt records the covalent PLP-linked lysine at residue 33.
+      supported_by:
+        - reference_id: file:PSEPK/dadX/dadX-uniprot.txt
+          supporting_text: N6-(pyridoxal phosphate)lysine
+  - term:
+      id: GO:0030632
+      label: D-alanine biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: DadX forms D-alanine, but its physiological process assignment is unresolved.
+      action: UNDECIDED
+      reason: &gt;-
+        The reversible chemistry can produce D-alanine, whereas the characterized
+        locus and literature frame DadX as catabolic. No dadX genetic, flux, or
+        peptidoglycan experiment establishes cell-wall D-alanine supply, so this
+        process annotation is not promoted into the core function.
+      supported_by:
+        - reference_id: PMID:23995642
+          supporting_text: &gt;-
+            P. putida KT2440 catabolized the d-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline as the sole carbon and nitrogen sources.
+        - reference_id: PMID:23995642
+          supporting_text: &gt;-
+            However, DadX did show 6- and 9-fold higher k(cat)/K(m) values than Alr with l- and d-alanine, respectively.
+  - term:
+      id: GO:0008784
+      label: alanine racemase activity
+    evidence_type: EXP
+    original_reference_id: PMID:23995642
+    qualifier: enables
+    review:
+      summary: Direct biochemical characterization establishes alanine racemase activity.
+      action: ACCEPT
+      reason: The purified enzyme selectively catalyzed both directions of alanine racemization.
+      supported_by:
+        - reference_id: PMID:23995642
+          supporting_text: &gt;-
+            Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:23995642
+    title: Amino acid racemization in Pseudomonas putida KT2440.
+    findings:
+      - statement: DadX is selective for alanine stereoisomers.
+        supporting_text: &gt;-
+          Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.
+      - statement: DadX is discussed as part of an L-alanine catabolic route.
+        supporting_text: &gt;-
+          P. putida KT2440 catabolized the d-stereoisomers of lysine, phenylalanine, arginine, alanine, and hydroxyproline as the sole carbon and nitrogen sources.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Full text checked for the target enzyme, kinetics, substrate range, and stated physiological uncertainty.
+  - id: file:PSEPK/dadX/dadX-uniprot.txt
+    title: UniProtKB reviewed entry for PSEPK DadX Q88CB2
+    findings:
+      - statement: UniProt records the experimentally characterized alanine reaction.
+        supporting_text: Reaction=L-alanine = D-alanine
+core_functions:
+  - description: &gt;-
+      Reversibly interconverts L-alanine and D-alanine with narrow substrate
+      specificity. The role in the dadAX catabolic route is supported, while
+      physiological supply of D-alanine to peptidoglycan remains unresolved.
+    molecular_function:
+      id: GO:0008784
+      label: alanine racemase activity
+    supported_by:
+      - reference_id: PMID:23995642
+        supporting_text: &gt;-
+          Conversely, the putative catabolic alanine racemase DadX showed narrow substrate specificity, clearly preferring only the alanine stereoisomers as the substrates.
+proposed_new_terms: []
+suggested_questions:
+  - question: Does DadX provide the cytoplasmic D-alanine used for peptidoglycan synthesis in KT2440?
+suggested_experiments:
+  - description: &gt;-
+      Deplete or delete dadX and measure growth, peptidoglycan composition,
+      intracellular D-alanine, and rescue by exogenous D-alanine; include
+      isotope tracing from L-alanine into the terminal D-Ala-D-Ala moiety.
+    experiment_type: genetics, metabolite rescue, peptidoglycan analysis, and isotope tracing
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

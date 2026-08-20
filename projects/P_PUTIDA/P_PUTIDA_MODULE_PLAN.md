@@ -251,7 +251,30 @@ Each module batch should leave behind:
 - One focused pull request containing the module, its selected gene reviews,
   research artifacts, batch record, rendered outputs, and validation results.
 
-## Active batch: ppu00220 / arginine_biosynthesis
+## Active batch: ppu00470 / d_amino_acid_cell_wall_precursor_supply
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00470_d_amino_acid_cell_wall_precursor_supply.tsv`
+- `projects/P_PUTIDA/batches/ppu00470_d_amino_acid_cell_wall_precursor_supply.md`
+
+Status as of 2026-08-11:
+
+- A reusable three-part module covers D-glutamate production, cytoplasmic
+  D-alanine production, and D-Ala-D-Ala ligation while excluding downstream
+  Mur ligases and D-amino-acid catabolism.
+- MurI covers D-glutamate production. DdlA and DdlB ground two PANTHER
+  orthology variants that perform the same ligation reaction.
+- Periplasmic Q88GJ9 Alr/BSR is excluded from cytoplasmic D-alanine supply.
+  DadX is the leading cytoplasmic candidate, but direct genetic or flux
+  evidence for peptidoglycan supply is absent, so the step remains an honest
+  `candidate_uncertain` hole.
+- PP_5673 is assigned to the DdlB-like family and retained as a second concrete
+  exemplar of that variant. Convergent HAMAP, catalytic-site, and PANTHER
+  evidence supports its function, while the UniProt record itself remains
+  unreviewed.
+
+## Completed batch: ppu00220 / arginine_biosynthesis
 
 Batch files:
 
