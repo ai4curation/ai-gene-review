@@ -39,12 +39,31 @@ the lineage phenotype but does not itself enumerate the marker entities.
 
 ## Topology, motif, and uptake boundary
 
-The cloned sequence supports a type-I membrane architecture containing a putative
-signal sequence, an ectodomain with two CUB domains and four LDL-receptor class-A
-domains, a transmembrane segment, and a proline-rich cytoplasmic region
-[PMID:9693042 "region with a tyrosine-based internalization signal."].
-The reviewed database record independently represents it as a predicted
-single-pass type-I membrane protein [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I"]. These are
+The cloning paper describes a type-I membrane protein with extracellular repeat
+regions, a transmembrane segment, and a proline-rich cytoplasmic region
+[PMID:9693042 "region with a tyrosine-based internalization signal."]. UniProt's
+predicted feature table (ECO:0000255/PROSITE-ProRule) assigns the extracellular
+domains more specifically as CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4
+[file:human/LRP3/LRP3-uniprot.txt "FT   DOMAIN          43..159
+FT                   /note=\"CUB 1\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"
+FT   DOMAIN          165..201
+FT                   /note=\"LDL-receptor class A 1\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          211..250
+FT                   /note=\"LDL-receptor class A 2\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          254..365
+FT                   /note=\"CUB 2\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"
+FT   DOMAIN          415..453
+FT                   /note=\"LDL-receptor class A 3\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"
+FT   DOMAIN          454..490
+FT                   /note=\"LDL-receptor class A 4\"
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\""]. The
+reviewed database record independently represents LRP3 as a predicted single-pass
+type-I membrane protein [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I"]. These are
 sequence/topology statements, not an experimentally resolved three-dimensional
 structure.
 
