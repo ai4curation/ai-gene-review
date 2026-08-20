@@ -33,6 +33,9 @@ reaction, or biochemical receptor activity. The ALPL, SPP1, ITGA10, CDH11,
 DKK2, ADIPOQ, FABP4, LPL, and PPARG expression changes are downstream lineage
 readouts; they should not be generalized into nine independent direct regulatory
 activities of LRP3 or into a role in every tissue where LRP3 transcript occurs.
+Those nine entities and the bone-marrow-cell context are transcribed from the
+current QuickGO annotation API extension payload; the accessible abstract supports
+the lineage phenotype but does not itself enumerate the marker entities.
 
 ## Topology, motif, and uptake boundary
 
