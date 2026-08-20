@@ -59,10 +59,6 @@ Q8CB67 source rows uses IEP with PMID:25262641. IEP is valid evidence for a resp
 annotation; the concern is instead the second-step transfer to human, the single-tissue
 mouse context, and the accessible abstract's failure to identify which individual
 stress paradigm supports each term.
-A local PANTHER lookup fetched on 2026-08-19 returned human Q86VZ4 and mouse Q8CB67
-together in PTHR46876:SF1
-[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q86VZ4,Low-density lipoprotein receptor-related protein 11,protein,9606,Homo sapiens,Homo sapiens (Human),LRP11,500,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"]
-[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q8CB67,Low-density lipoprotein receptor-related protein 11,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp11,483,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"].
 The authors observed higher abundance in stressed mice
 [PMID:25262641 "We found the quantity of Lrp11 was more obvious in stress models than"].
 That expression-response evidence is informative in mouse amygdala but is too
@@ -74,6 +70,11 @@ expression of Xpnpep1, Maneal, Pgap1, and Uprt
 This supports a candidate regulatory network but still does not establish the seven
 specific stress processes in human LRP11. Accordingly, those transfers are marked
 over-annotated rather than treated as core functions.
+
+A local PANTHER lookup fetched on 2026-08-19 returned human Q86VZ4 and mouse Q8CB67
+together in PTHR46876:SF1
+[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q86VZ4,Low-density lipoprotein receptor-related protein 11,protein,9606,Homo sapiens,Homo sapiens (Human),LRP11,500,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"]
+[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q8CB67,Low-density lipoprotein receptor-related protein 11,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp11,483,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"].
 
 ## Direct primary studies and biological scope
 
