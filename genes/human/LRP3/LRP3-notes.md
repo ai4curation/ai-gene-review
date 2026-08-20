@@ -37,8 +37,9 @@ activities of LRP3 or into a role in every tissue where LRP3 transcript occurs.
 ## Topology, motif, and uptake boundary
 
 The cloned sequence supports a type-I membrane architecture containing a putative
-signal sequence, extracellular repeat regions, a transmembrane segment, and a
-proline-rich cytoplasmic region [PMID:9693042 "region with a tyrosine-based internalization signal."].
+signal sequence, an ectodomain with two CUB domains and four LDL-receptor class-A
+domains, a transmembrane segment, and a proline-rich cytoplasmic region
+[PMID:9693042 "region with a tyrosine-based internalization signal."].
 The reviewed database record independently represents it as a predicted
 single-pass type-I membrane protein [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I"]. These are
 sequence/topology statements, not an experimentally resolved three-dimensional
@@ -64,8 +65,10 @@ places LRP3 in the broad LDLR family [file:human/LRP3/LRP3-uniprot.txt "CC   -!-
 IBA draws on many distant LDLR-family source proteins, and the vesicle-transport
 IEA is an automated ARBA transfer. Family membership supports cautious topology
 and trafficking plausibility; it does not license transferring the ligand,
-cargo, signaling pathway, tissue role, or disease mechanism of LDLR, LRP1,
-LRP2, LRP4, LRP8, or other paralogs to LRP3.
+cargo, signaling pathway, tissue role, or disease mechanism of another paralog to
+LRP3. LRP10 and LRP12 are the more relevant compact LRP comparators, but their
+reported cargo or integrin-regulatory biology is not interchangeable with LRP3;
+functions of the larger LDLR/LRP1/LRP2/LRP4/LRP8 receptors are still more distant.
 
 ## Cancer and disease boundary
 
