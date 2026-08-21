@@ -4013,8 +4013,10 @@ def refresh_panther_members(
 ):
     """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
 
-    Builds a pruned UniProt-accession -> PANTHER-family index covering every
-    accession cited in modules/: all ``representative_members`` whether or not
+    Builds a UniProt-accession -> PANTHER-family index. It carries every
+    accession the organism classifications cover, not only the cited ones, and
+    merges into whatever is already committed so no previously resolved row is
+    ever dropped. On top of that it resolves every accession cited in modules/: all ``representative_members`` whether or not
     their descriptor carries a family id (an ungrounded descriptor is precisely
     the one whose members need resolving), plus accessions appearing only in
     prose. Accessions that resolve nowhere are recorded in the file. This is what
@@ -4029,6 +4031,8 @@ def refresh_panther_members(
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
+        load_member_index,
+        load_member_index_gaps,
         write_member_index,
     )
     import yaml
@@ -4066,12 +4070,32 @@ def refresh_panther_members(
 
     index = build_member_index(accessions, paths)
     from_files = len(index)
+    # Measured BEFORE the merge: a carried-over row came from a previous run's
+    # UniProt lookup, and counting it here would credit the organism files with
+    # coverage they do not provide.
+    covered_from_files = len(accessions & set(index))
+
+    # Merge into what is already committed rather than replacing it. A UniProt
+    # xref row can only be produced by asking UniProt, so a run that skips the
+    # fallback would otherwise delete every such row -- the majority of what
+    # modules/ cites, since PANTHER publishes no P. putida classification at all.
+    # Now that a missing accession is an error, that would make the command
+    # documented as the remedy the thing that turns the repository red.
+    members_path = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    carried_over = 0
+    if members_path.exists():
+        existing = load_member_index(members_path)
+        for accession, family_sf in existing.items():
+            if accession not in index:
+                index[accession] = family_sf
+                carried_over += 1
+        if carried_over:
+            typer.echo(f"carried over {carried_over} row(s) already committed")
     # Coverage of what we CITE is the number that matters, and it is not the
     # size of the index: the index now carries every protein these organisms
     # classify, while the accessions we cite are mostly from an organism PANTHER
     # does not publish at all. Reporting len(index)/len(accessions) would print
     # a ratio far above 1 and read as success.
-    covered_from_files = len(accessions & set(index))
 
     if not no_uniprot_fallback:
         unresolved = accessions - set(index)
@@ -4082,11 +4106,20 @@ def refresh_panther_members(
             index.update(fetch_panther_from_uniprot(unresolved))
 
     unresolved = accessions - set(index)
+    # A skipped fallback must not relabel "PANTHER has no family for this" as
+    # "we never looked": the validator exempts the former and errors on the
+    # latter, so losing the distinction would fail the build on accessions no
+    # refresh can resolve. If every still-unresolved accession was already
+    # recorded absent, the previous run's verdict stands.
+    consulted = not no_uniprot_fallback
+    if no_uniprot_fallback and members_path.exists():
+        if unresolved and unresolved <= load_member_index_gaps(members_path).absent:
+            consulted = True
     out_path = write_member_index(
         index,
-        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        members_path,
         unresolved,
-        consulted_uniprot=not no_uniprot_fallback,
+        consulted_uniprot=consulted,
     )
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)} accessions indexed "
@@ -4096,7 +4129,8 @@ def refresh_panther_members(
     typer.echo(
         f"  cited by modules/: {len(accessions) - len(unresolved)}/{len(accessions)} "
         f"resolved ({covered_from_files} from organism files, "
-        f"{len(accessions) - len(unresolved) - covered_from_files} from UniProt); "
+        f"{len(accessions) - len(unresolved) - covered_from_files} from UniProt "
+        f"this run or carried over); "
         f"{len(unresolved)} unresolved, recorded in the file."
     )
 

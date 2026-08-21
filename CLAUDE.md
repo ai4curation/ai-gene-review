@@ -249,8 +249,13 @@ PANTHER's own HMM classifications. Two rules follow:
 - **The declared family must contain its own `representative_members`.** This is checked
   against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
   the representative protein is usually right and the family id is wrong — look up the
-  member's real family rather than deleting the member. Accessions missing from the index
-  only warn; run `just refresh-panther-members` to add newly cited proteins.
+  member's real family rather than deleting the member. An accession missing from the
+  index is a blocking error, not a warning: it is the case where the check that catches a
+  guessed family id cannot run, and it is exactly the case new curation produces. Run
+  `just refresh-panther-members` to resolve newly cited proteins — it reads the working
+  tree's `modules/`, so on your branch the file you just wrote is already included.
+  A handful of proteins resolve to no PANTHER family in either source; those are recorded
+  in the index under `# unresolved:` and do not fail the build.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve

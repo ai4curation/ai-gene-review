@@ -929,6 +929,48 @@ def test_validate_family_members_fails_when_accession_is_unindexed():
     assert "refresh-panther-members" in errors[0]
 
 
+def test_validate_family_members_does_not_demand_a_refresh_that_cannot_help():
+    """An accession PANTHER has no family for must not fail the build.
+
+    The index records two different gaps behind one blank: "both sources
+    consulted, no family exists" (permanent) and "not looked up yet" (a refresh
+    fixes it). Erroring on the first would fail the build forever while advising
+    a command that has already been run -- the failure the sibling prose scan
+    names verbatim. 35 accessions are in this state today, 20 of them P. putida.
+    """
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "Q00000")))
+
+    errors, warnings = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, permanently_absent={"Q00000"}
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "Q00000" in warnings[0]
+    assert "refresh-panther-members" not in warnings[0]
+
+
+def test_a_partially_absent_descriptor_still_errors():
+    """Exemption requires EVERY member to be permanently absent.
+
+    With one unresolved and one merely unindexed member, a refresh still helps,
+    so the build must still fail. Treating "some absent" as exempt would restore
+    the silent skip for any descriptor that happens to cite one such protein.
+    """
+    doc = _family_doc("PANTHER:PTHR13337", "Q00000")
+    members = doc["family"]["representative_members"]
+    members.append({"term": {"id": "UniProtKB:Q11111", "label": "other"}})
+    uses = list(iter_family_member_uses(doc))
+
+    errors, warnings = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, permanently_absent={"Q00000"}
+    )
+
+    assert warnings == []
+    assert len(errors) == 1
+    assert "refresh-panther-members" in errors[0]
+
+
 def test_validate_terms_skips_ptn_ids():
     """PTNs share the PANTHER prefix but are checked against PAINT, not the OBO."""
     terms = [("PANTHER:PTN000000001", "PTN000000001")]

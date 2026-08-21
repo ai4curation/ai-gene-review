@@ -335,3 +335,79 @@ def test_rewrite_panther_labels_still_defers_a_real_divergence():
     assert applied == []
     assert len(deferred) == 1
     assert new == text
+
+
+def test_refresh_merges_rather_than_replaces(tmp_path, monkeypatch):
+    """`--no-uniprot-fallback` must not delete UniProt-resolved rows.
+
+    A UniProt xref row can only be produced by asking UniProt, so a run that
+    skips the fallback rebuilds the index without them. Before this, that
+    dropped 436 of the 1,457 cited accessions -- and since a missing accession
+    is now an error, the command documented as the remedy would have been the
+    thing that turned the repository red.
+    """
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    # Q00000 could only have come from a previous UniProt lookup: it is in no
+    # organism classification here.
+    (panther / "panther-members.tsv").write_text(
+        "uniprot_accession\tpanther_family_sf\nQ00000\tPTHR9:SF1\n"
+    )
+    (repo / "modules" / "m.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "module": {
+                    "id": "m",
+                    "parts": [
+                        {
+                            "node": {
+                                "annotons": [
+                                    {
+                                        "participant": {
+                                            "family": {
+                                                "term": {
+                                                    "id": "PANTHER:PTHR9",
+                                                    "label": "f",
+                                                },
+                                                "representative_members": [
+                                                    {
+                                                        "term": {
+                                                            "id": "UniProtKB:Q00000",
+                                                            "label": "r",
+                                                        }
+                                                    }
+                                                ],
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        "ai_gene_review.etl.panther_families.fetch_sequence_classification",
+        lambda slug, cache: None,
+    )
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "refresh-panther-members",
+            "--output-dir",
+            str(repo),
+            "--no-uniprot-fallback",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert load_member_index(panther / "panther-members.tsv") == {"Q00000": "PTHR9:SF1"}

@@ -20,9 +20,12 @@ slot into the existing validation stack:
     family/subfamily hierarchy with no bespoke resolver code.
 
 ``PANTHER<REL>_<organism>`` sequence classifications -> ``panther-members.tsv``
-    A pruned ``UniProt accession -> PTHR family:SF`` index covering the
-    accessions actually cited in the repository. This is what catches a *wrong
-    grounding* as opposed to a wrong label: a family descriptor whose declared
+    A ``UniProt accession -> PTHR family:SF`` index covering every accession
+    these organisms classify, plus any cited accession resolved through the
+    UniProt cross-reference fallback. It is deliberately NOT pruned to what is
+    currently cited: pruning made the artifact lag the repository, so a PR citing
+    a new protein found the index silent about the protein under review. This is
+    what catches a *wrong grounding* as opposed to a wrong label: a family descriptor whose declared
     family provably does not contain the very protein it names as its
     representative member.
 
@@ -438,7 +441,13 @@ def write_member_index(
     unresolved: Optional[Set[str]] = None,
     consulted_uniprot: bool = True,
 ) -> Path:
-    """Write the pruned accession -> family index, returning the path written."""
+    """Write the accession -> family index, returning the path written.
+
+    ``unresolved`` accessions are recorded in the file rather than dropped, so a
+    later reader can tell "no PANTHER family exists for this protein" from "we
+    never looked it up" -- a distinction the validator depends on to avoid
+    demanding a refresh that cannot help.
+    """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
