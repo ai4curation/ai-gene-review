@@ -4096,13 +4096,16 @@ def refresh_panther_members(
         if carried_over:
             typer.echo(f"carried over {carried_over} row(s) already committed")
 
+    seen_by_uniprot: set[str] = set()
     if not no_uniprot_fallback:
         unresolved = accessions - set(index)
         if unresolved:
             typer.echo(
                 f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
             )
-            index.update(fetch_panther_from_uniprot(unresolved))
+            lookup = fetch_panther_from_uniprot(unresolved)
+            index.update(lookup.families)
+            seen_by_uniprot = lookup.seen
 
     unresolved = accessions - set(index)
     # Split per accession, not for the batch. A skipped fallback must not
@@ -4116,7 +4119,14 @@ def refresh_panther_members(
         absent = unresolved & previously_absent
         unchecked = unresolved - previously_absent
     else:
-        absent, unchecked = unresolved, set()
+        # Only accessions UniProt actually returned a record for can be called
+        # absent: that is "a real protein PANTHER does not classify". One UniProt
+        # never returned is a typo, an obsolete id, or invented -- calling it
+        # absent would commit the positive claim that a protein which may not
+        # exist has no PANTHER family, and downgrade its descriptor's grounding
+        # check from error to warning. Those stay unchecked, so they error.
+        absent = unresolved & seen_by_uniprot
+        unchecked = unresolved - seen_by_uniprot
     out_path = write_member_index(index, members_path, absent, unchecked)
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)} accessions indexed "

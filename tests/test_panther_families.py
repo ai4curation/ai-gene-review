@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from ai_gene_review.validation.module_validator import validate_family_members
 from ai_gene_review.etl.panther_families import (
     PantherEntry,
     emit_yaml_scalar,
@@ -19,6 +20,8 @@ from ai_gene_review.etl.panther_families import (
     build_member_index,
     load_member_index,
     load_member_index_gaps,
+    UniProtPantherLookup,
+    lookup_from_uniprot_payload,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
@@ -528,3 +531,126 @@ def test_fix_panther_labels_is_not_deadlocked_by_an_absent_member(tmp_path):
 
     assert result.exit_code == 0, result.output
     assert "OFFICIAL NAME" in module.read_text(), result.output
+
+
+def test_an_accession_uniprot_never_returned_is_not_recorded_as_absent(
+    tmp_path, monkeypatch
+):
+    """A typo'd or invented member must not be called "PANTHER has no family".
+
+    fetch_panther_from_uniprot used to return only successes, so a record that
+    came back without an xref_panther and an accession UniProt has never heard of
+    were indistinguishable. Both landed under `# unresolved:`, which feeds
+    permanently_absent, which downgrades the grounding check to a warning saying
+    "PANTHER has no family for (...)" -- committing a positive claim about a
+    protein that may not exist, and silencing the check on the permissive side of
+    a distinction nobody drew.
+    """
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    write_member_index({}, panther / "panther-members.tsv")
+
+    def _member(accession: str) -> dict:
+        return {"term": {"id": f"UniProtKB:{accession}", "label": accession}}
+
+    (repo / "modules" / "m.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "module": {
+                    "id": "m",
+                    "parts": [
+                        {
+                            "node": {
+                                "annotons": [
+                                    {
+                                        "participant": {
+                                            "family": {
+                                                "term": {
+                                                    "id": "PANTHER:PTHR9",
+                                                    "label": "f",
+                                                },
+                                                "representative_members": [
+                                                    _member("REAL"),
+                                                    _member("TYPO"),
+                                                ],
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        "ai_gene_review.etl.panther_families.fetch_sequence_classification",
+        lambda slug, cache: None,
+    )
+    # REAL exists but carries no PANTHER xref; TYPO is not in UniProt at all.
+    monkeypatch.setattr(
+        "ai_gene_review.etl.panther_families.fetch_panther_from_uniprot",
+        lambda accessions: UniProtPantherLookup({}, {"REAL"}),
+    )
+
+    result = CliRunner().invoke(
+        app, ["refresh-panther-members", "--output-dir", str(repo)]
+    )
+
+    assert result.exit_code == 0, result.output
+    gaps = load_member_index_gaps(panther / "panther-members.tsv")
+    assert gaps.absent == {"REAL"}, "a returned record with no xref is genuinely absent"
+    assert gaps.unchecked == {"TYPO"}, "an accession UniProt never returned is unknown"
+
+
+def test_a_record_without_a_panther_xref_is_still_seen():
+    """The distinction the whole exemption rests on, at its source.
+
+    Returning only successes discarded the fact that UniProt had answered at
+    all, so "real protein, PANTHER does not classify it" and "no such accession"
+    became the same thing one layer up.
+    """
+    payload = {
+        "results": [
+            {"primaryAccession": "HASXREF", "uniProtKBCrossReferences": [
+                {"database": "PANTHER", "id": "PTHR1:SF2"}
+            ]},
+            {"primaryAccession": "NOXREF", "uniProtKBCrossReferences": [
+                {"database": "Pfam", "id": "PF00001"}
+            ]},
+        ]
+    }
+
+    lookup = lookup_from_uniprot_payload(payload)
+
+    assert lookup.families == {"HASXREF": "PTHR1:SF2"}
+    assert lookup.seen == {"HASXREF", "NOXREF"}
+    # An accession never returned appears in neither.
+    assert "NEVERASKED" not in lookup.seen
+
+
+def test_validate_family_members_does_not_exempt_a_memberless_descriptor():
+    """An empty set is a subset of anything, so the guard must test emptiness.
+
+    Unreachable through iter_family_member_uses, which requires a member -- but
+    validate_family_members is public, and an exemption firing for a descriptor
+    naming no members would silently pass the one case with nothing to check.
+    """
+    from ai_gene_review.validation.module_validator import FamilyMemberUse
+
+    use = FamilyMemberUse(
+        path="$.family.term",
+        declared_family_curies=frozenset({"PANTHER:PTHR13337"}),
+        representative_accessions=frozenset(),
+    )
+
+    errors, warnings = validate_family_members([use], {}, permanently_absent={"X"})
+
+    assert not any("PANTHER has no family for" in w for w in warnings)

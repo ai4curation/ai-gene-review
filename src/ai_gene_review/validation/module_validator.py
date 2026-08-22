@@ -1152,7 +1152,10 @@ def validate_family_members(
             # informational. Anything else is a stale or never-looked-up index,
             # where the refresh is a real remedy.
             absent = permanently_absent or set()
-            if missing <= absent:
+            # `missing` is non-empty via iter_family_member_uses, but this is
+            # public: an empty set is a subset of anything, so an exemption
+            # would fire for a descriptor naming no members at all.
+            if missing and missing <= absent:
                 warnings.append(
                     f"{use.path}: PANTHER has no family for "
                     f"({_format_limited(missing)}), so family membership cannot "

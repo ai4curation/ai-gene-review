@@ -334,6 +334,25 @@ class MemberIndexGaps(NamedTuple):
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
 
+class UniProtPantherLookup(NamedTuple):
+    """What a UniProt xref lookup found, and what it merely saw.
+
+    ``seen`` is the point. Without it, "UniProt returned this protein and it has
+    no PANTHER cross-reference" is indistinguishable from "UniProt has never
+    heard of this accession" -- so a typo'd, obsolete, or invented accession gets
+    recorded as a protein PANTHER has no family for. That is a positive claim
+    about something that may not exist, and downstream it downgrades the
+    grounding check from error to warning: the exact shape of failure this
+    validation exists to prevent, reached through its own remedy command.
+    """
+
+    families: Dict[str, str]
+    """Accession -> ``PTHR…``/``PTHR…:SF…`` for those carrying an xref."""
+
+    seen: Set[str]
+    """Accessions UniProt returned a record for, xref or not."""
+
+
 def render_member_index(
     index: Dict[str, str],
     absent: Optional[Set[str]] = None,
@@ -888,7 +907,7 @@ def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
     return sorted(families)[0] if families else None
 
 
-def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
+def fetch_panther_from_uniprot(accessions: Iterable[str]) -> UniProtPantherLookup:
     """Resolve accession -> PANTHER family/subfamily via the UniProt REST API.
 
     PANTHER's per-organism classification files cover only its ~140 reference
@@ -902,6 +921,7 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
 
     pending = sorted(set(accessions))
     resolved: Dict[str, str] = {}
+    seen: Set[str] = set()
     for start in range(0, len(pending), UNIPROT_BATCH_SIZE):
         batch = pending[start : start + UNIPROT_BATCH_SIZE]
         query = urllib.parse.urlencode(
@@ -915,9 +935,43 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
             f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
         ) as handle:
             payload = json.load(handle)
-        for record in payload.get("results", []):
-            accession = record.get("primaryAccession")
-            best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
-            if accession and best:
-                resolved[accession] = best
-    return resolved
+        batch_lookup = lookup_from_uniprot_payload(payload)
+        resolved.update(batch_lookup.families)
+        seen |= batch_lookup.seen
+    return UniProtPantherLookup(resolved, seen)
+
+
+def lookup_from_uniprot_payload(payload: dict) -> UniProtPantherLookup:
+    """Split one UniProt accessions response into resolved and merely seen.
+
+    Separated from the HTTP call so the distinction can be tested against a real
+    payload shape rather than a mocked transport.
+
+    A record that came back without a PANTHER cross-reference is a real protein
+    PANTHER does not classify -- genuinely absent. An accession missing from
+    ``results`` entirely is one UniProt does not know, which is a typo, an
+    obsolete id, or invented; calling that absent would assert that a protein
+    which may not exist has no PANTHER family.
+
+    >>> payload = {"results": [
+    ...     {"primaryAccession": "P1", "uniProtKBCrossReferences": [
+    ...         {"database": "PANTHER", "id": "PTHR1:SF2"}]},
+    ...     {"primaryAccession": "P2", "uniProtKBCrossReferences": []},
+    ... ]}
+    >>> lookup = lookup_from_uniprot_payload(payload)
+    >>> lookup.families
+    {'P1': 'PTHR1:SF2'}
+    >>> sorted(lookup.seen)
+    ['P1', 'P2']
+    """
+    resolved: Dict[str, str] = {}
+    seen: Set[str] = set()
+    for record in payload.get("results", []):
+        accession = record.get("primaryAccession")
+        if not accession:
+            continue
+        seen.add(accession)
+        best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
+        if best:
+            resolved[accession] = best
+    return UniProtPantherLookup(resolved, seen)
