@@ -30,21 +30,48 @@ Inline check of catalytic residues (script over the sequence): the catalytic-dom
   - The screen explicitly cautions the phenotype does not prove a direct mitochondrial molecular role: [PMID:19300474 "many proteins not localized to mitochondria are vital for regulating mitochondrial function and biogenesis"] and [PMID:19300474 "raise the possibility that these mutants are somehow indirectly affecting biogenesis"].
 - SGD locus summary (web, 2026): **"Protein whose biological role and cellular location are unknown."** Verified ORF, non-essential. Additional deletion phenotypes catalogued at SGD (from various high-throughput datasets): inability to grow on glycerol, increased competitive fitness on fermentable medium, altered heat-stress survival, decreased H2S production with excess cysteine — all HTP, none establishing a molecular function.
 - Protein-level evidence (PE=1): detected by mass spectrometry ([PMID:29897761], proteogenomics of S. cerevisiae) and present in abundance datasets (~6,000 molecules/cell per SGD). Confirms the protein exists and is expressed; says nothing about function.
+- **ER localization in the SWAp-Tag/LoQAtE datasets.** The AIM6/YDL237W LoQAtE record
+  was manually checked on 2026-08-22. N-terminal NOP1pr-GFP and TEF2pr-mCherry constructs
+  were classified as ER, and the N-terminal NATIVEpr-GFP construct (which restores the
+  native promoter and native signal peptide) was classified as ambiguous/ER. The original
+  C-terminal GFP signal was below threshold. The native-promoter result and the independent
+  N-terminal constructs agree with AIM6's predicted signal peptide, so ER localization is
+  supported, but it remains high-throughput tag-based evidence rather than proof of topology
+  or catalytic residence. [PMID:29988094 describes the SWAT libraries and cautions that 636
+  proteins differed between N- and C-terminal tagging; PMID:24150937 describes the LoQAtE
+  atlas and its gene-level localization records.]
 
 ## What is NOT known
 - **Molecular function**: unknown. Only a fold-based PI-PLC/GDPD-like phosphodiesterase *prediction* (IEA). No demonstrated catalytic activity, no substrate, no assay. The specific claim "phosphoric *diester* hydrolase" and the "lipid metabolic process" inference (borrowing PI-PLC's lipid substrate) are unsupported over-reaches from the divergent fold.
-- **Cellular localization**: unknown/unresolved. UniProt gives no subcellular-location CC. There is a predicted N-terminal signal peptide (suggesting entry into the secretory pathway / a non-cytosolic destination), which is hard to reconcile with a direct intramitochondrial role — so the mitochondrial phenotype is plausibly indirect. SGD: "cellular location ... unknown."
+- **Cellular localization/topology**: ER localization is supported by the high-throughput
+  SWAp-Tag/LoQAtE datasets and is consistent with the predicted N-terminal signal peptide.
+  The protein's membrane topology, signal-peptide cleavage, and precise ER subcompartment
+  remain unknown. The N- versus C-terminal tag discrepancy warrants caution, but the data no
+  longer support describing AIM6's cellular location as wholly unknown.
 - **Biological role / mechanism behind the AIM screen phenotype**: unknown. The petite/respiratory phenotype places AIM6 loss upstream of normal respiratory competence, but whether this is a direct role in mitochondrial biogenesis or an indirect/pleiotropic effect (e.g. via a secretory-pathway or lipid-related activity) is undetermined.
 
 ## Annotation plan
 GOA has 5 annotations:
-1. GO:0006629 lipid metabolic process — IEA (InterPro, IPR017946). MARK_AS_OVER_ANNOTATED: extrapolates PI-PLC's lipid role to a divergent uncharacterized domain; no evidence AIM6 acts on lipids.
-2. GO:0008081 phosphoric diester hydrolase activity — IEA (InterPro, IPR017946). UNDECIDED/MARK_AS_OVER_ANNOTATED: fold-level prediction from an "uncharacterized" CDD group; retain awareness but not as a confident core function.
-3. GO:0003674 molecular_function — ND (SGD). ACCEPT (root/ND placeholder; correctly signals unknown MF).
-4. GO:0005575 cellular_component — ND (SGD). ACCEPT (root/ND placeholder).
+1. GO:0006629 lipid metabolic process — IEA (InterPro, IPR017946).
+   KEEP_AS_NON_CORE: retain the intended superfamily prediction, since PI-PLC and GDPD branches
+   both participate in lipid metabolism and ER localization is compatible, but no AIM6 lipid
+   substrate or metabolic effect has been demonstrated.
+2. GO:0008081 phosphoric diester hydrolase activity — IEA (InterPro, IPR017946).
+   KEEP_AS_NON_CORE: the PLC/GDPD-like fold and retained candidate catalytic scaffold make the
+   broad activity a defensible computational prediction, but the AIM6-specific family has no
+   experimental catalytic anchor. Do not narrow to PI-PLC or GDPD activity.
+3. GO:0003674 molecular_function — ND (SGD). ACCEPT as the historical root/ND placeholder;
+   the superfamily-based molecular-function prediction remains unassayed.
+4. GO:0005575 cellular_component — ND (SGD). ACCEPT as the historical root/ND placeholder,
+   now superseded by a proposed high-throughput ER annotation.
 5. GO:0008150 biological_process — ND (SGD). ACCEPT (root/ND placeholder).
+6. GO:0005783 endoplasmic reticulum — proposed NEW/HDA from PMID:29988094 and the gene-level
+   LoQAtE record. The native-promoter and two additional N-terminal variants agree on ER;
+   retain a tag-orientation caveat.
 
-core_functions: minimal/none with confidence (dark gene). knowledge_gaps is the primary deliverable.
+core_functions: record the experimentally supported ER location and the PLC/GDPD-like fold, while
+keeping the MF/BP claims explicitly predicted and unverified. Knowledge gaps remain the primary
+deliverable.
 
 ## Deep research provenance
 Falcon deep research was attempted twice (`just deep-research-falcon yeast AIM6`) and both attempts
@@ -55,3 +82,11 @@ review is therefore grounded in: the UniProt record (Q07716), the GOA TSV, the c
 PMID:19300474 (verbatim-quoted), and manually verified public resources (SGD locus page, InterPro
 IPR039559 / IPR017946 REST API, CDD cd08577, PANTHER PTHR31571). All non-PMID assertions are recorded
 here with their source.
+
+OpenScientist hypothesis research was subsequently run through the public
+`just gene-hypothesis-research` wrapper for GO:0008081. It independently concluded that the term is
+partially supported as a computational prediction and should be retained without upgrade or
+narrowing. Its numerical AlphaFold-distance and pan-family audit claims were not accompanied by
+executable analysis provenance, so those details remain leads rather than independently reproduced
+facts. The report also missed the AIM6-specific LoQAtE ER calls; the review corrects that omission
+using PMID:29988094, PMID:24150937, and the gene-level atlas record.
