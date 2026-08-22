@@ -219,7 +219,20 @@ def main() -> int:
     assigned, other = bucket_names(names)
 
     print("\n== protein-name census ==")
+    # Percentages below are over the protein names actually retrieved from UniProt, NOT over
+    # the annotation count or the distinct-protein count. Those denominators differ: one
+    # protein can carry several annotations, and UniProt may not return a name for every
+    # accession. State all three so the figures cannot be misread as shares of 8,974.
     total = len(names) or 1
+    print(
+        f"denominator: {len(names)} retrieved protein names "
+        f"({len(accessions)} distinct proteins, {len(annotations)} annotations)"
+    )
+    if len(names) < len(accessions):
+        print(
+            f"WARNING: UniProt returned no name for {len(accessions) - len(names)} "
+            "accession(s); they are excluded from the percentages below"
+        )
     for label, _ in BUCKETS:
         count = assigned[label]
         if count:

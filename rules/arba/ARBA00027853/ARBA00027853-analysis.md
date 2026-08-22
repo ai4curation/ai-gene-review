@@ -148,12 +148,19 @@ steroid metabolic process is not under GO:0006720 (§1). Empirically the steroid
 
 ## 5. Per-condition-set triage
 
-65 of 94 branches are on-target, 13 are off-target, 16 cannot be resolved from their
-identifiers. Full per-set reasoning is in the `notes:` field of each condition set in
+64 of 94 branches are on-target, 13 should be removed, 16 cannot be resolved from their
+identifiers, and one (CS39) is mixed and needs splitting. (An earlier draft of this table
+gave 65/13/16: it omitted CS39 entirely and counted CS89 in both the on-target set and the
+hold set. The two errors cancelled to 94, which is why the total looked right.) Full per-set reasoning is in the `notes:` field of each condition set in
 `ARBA00027853-review.yaml`; the summary is:
 
-**Off-target — remove (13):** CS14 (bare UGT family + Caryophyllaceae), CS37 (CYP2C9),
-CS43 (ALDH2 + generic ALDH + ALDH1A3), CS44 (hormone-sensitive lipase), CS51 (ADH class
+**Remove (13):** twelve off-target, plus CS43, which is removable as an *unsatisfiable*
+branch rather than an off-target one — it requires two distinct FunFams from within the
+same CATH superfamily (3.40.605.10 FF:000026 and FF:000054), which a single ALDH catalytic
+domain cannot satisfy; read as the conjunction it is, its most specific conjunct would
+confine it to ALDH1A3-like proteins, which are on-target via GO:0001523. The list: CS14
+(bare UGT family + Caryophyllaceae), CS37 (CYP2C9),
+CS43 (unsatisfiable ALDH FunFam conjunction), CS44 (hormone-sensitive lipase), CS51 (ADH class
 4), CS55 (ADH5/formaldehyde dehydrogenase, *Mus*-only), CS63 (LDLR/LRP1), CS64
 (PNPLA2/ATGL), CS66 (phenylalanine aminomutase), CS73 (CYP83B1, glucosinolate), CS78
 (bare P450 FunFam, *Homo*-only), CS83 (bare "Glycosyltransferase" FunFam), CS94 (bare
@@ -162,7 +169,11 @@ Rossmann/SDR FunFam).
 **Unresolved — hold (16):** CS6, CS23, CS35, CS38, CS49, CS65, CS75, CS77, CS80, CS82,
 CS84, CS85, CS87, CS89, CS90, CS92.
 
-**On-target (65):** the terpene synthase/cyclase branches, the carotenoid backbone and
+**Mixed — split (1):** CS39 (FunFam 3.40.50.720:FF:000808 "Iridoid synthase", asterids);
+see §7 — the PRISE family mixes isoprenoid iridoid synthases with steroid
+5-beta-reductases.
+
+**On-target (64):** the terpene synthase/cyclase branches, the carotenoid backbone and
 cleavage branches, the MVA/MEP and prenyl-diphosphate branches, the gibberellin/ABA
 branches, the named retinoid branches, and JHAMT.
 
@@ -195,6 +206,16 @@ FunFams belong to different CATH superfamilies — 1.10.600.10 is the isoprenoid
 α-helical fold and 1.50.10.130 is the terpene-cyclase βγ fold — and plant class-I
 diterpene synthases carry both. The conjunction is a domain-architecture requirement and
 is one of the better-constructed branches in the rule. The same reading applies to CS61.
+
+It applies to the ALDH branches too, and this analysis did not originally apply it there.
+CS65 pairs one FunFam from each of the two ALDH-fold superfamilies (3.40.309.10 and
+3.40.605.10) exactly as CS20 pairs its two, so its broad "Aldehyde dehydrogenase 1"
+conjunct cannot widen the match set — the specific ALDH8A1 conjunct binds it, and the
+branch is better-founded than a first reading suggested. CS43 is the instructive
+counter-case: it draws *two* FunFams from within the single superfamily 3.40.605.10, which
+one ALDH catalytic domain cannot satisfy, so it is near-certainly a dead branch — and a
+dead branch is itself further evidence for the section 3 finding that the emitted set
+cannot be reproduced from the published condition sets.
 
 ### 5.2 Named FunFams whose taxon constraint contradicts the name
 
@@ -256,9 +277,11 @@ All six are cached under `publications/`.
 - [PMID:36830762] Werck-Reichhart (2023) *Promiscuity, a Driver of Plant Cytochrome P450
   Evolution?* Biomolecules 13:394 — CYP706A3 "oxidizes more than twenty different mono- and
   sesquiterpenes"; CYP720B4 "catalyzes the three successive oxidations at C18 of 8 out of 24
-  different diterpenoid olefin skeletons". Note that the Falcon report's additional figure of
-  "29 documented substrates" for CYP706A3 could **not** be located in the cached full text and
-  should not be reused.
+  different diterpenoid olefin skeletons". The Falcon report's additional figure of "29
+  documented substrates" for CYP706A3 is **accurate** — the paper states "A total of 29
+  different substrates are thus currently reported for this enzyme" — but that total includes
+  the dinitroaniline herbicides as well as the terpenoids, so it measures overall substrate
+  breadth and should not be cited as a count of terpenoid substrates.
 - [PMID:31632418] Karunanithi & Zerbe (2019) *Terpene Synthases as Metabolic Gatekeepers in
   the Evolution of Plant Terpenoid Chemical Diversity.* Front Plant Sci — TPS product
   specificity is not diagnosable from a broad TPS domain.
