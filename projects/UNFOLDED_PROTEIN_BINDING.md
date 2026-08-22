@@ -558,7 +558,7 @@ established:
 | SHR3 | *S. cerevisiae* | Q02774 | 18 | MODIFY | Amino acid permease chaperone |
 | SHY1 | *S. cerevisiae* | P53266 | 14 | OVER_ANNOTATED | Cox assembly factor |
 | SQT1 | *S. cerevisiae* | P35184 | 9 | MODIFY | Ribosome assembly |
-| SSA1 | *S. cerevisiae* | P10591 | 70 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; 70 review records collapse 242 pinned GOA rows |
+| SSA1 | *S. cerevisiae* | P10591 | 242 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; ATP-driven folding/refolding and proteostasis |
 | SSA2 | *S. cerevisiae* | P10592 | 57 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; 57 review records collapse 278 pinned GOA rows |
 | SSA3 | *S. cerevisiae* | P09435 | 55 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSA4 | *S. cerevisiae* | P22202 | 33 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
