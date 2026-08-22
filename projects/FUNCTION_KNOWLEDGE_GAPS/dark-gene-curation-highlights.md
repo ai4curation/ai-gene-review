@@ -81,8 +81,9 @@ paralog or distant ortholog whose function does not hold for the target:
 - **`NVJ3` (yeast)** — PI3P-binding transferred from paralog Mdm1, but NVJ3 shares only the PXA
   domain and **lacks the PX domain** that carries the activity — removed.
 - **`AAD3` (yeast)** — aryl-alcohol dehydrogenase activity propagated from a lignin-degrader
-  enzyme; the AAD deletants are phenotype-null and budding yeast is not a lignin degrader —
-  demoted to the honest superfamily-level oxidoreductase term.
+  enzyme; direct assays found Aad3 inactive and catalytic-Tyr repair did not restore activity
+  (PMID:29079624) — the transferred activity and process annotations were removed, leaving its
+  present role open.
 - **`THI22` (yeast)** — HMP-P kinase activity: the one direct assay found **no activity** for
   THI22, so the propagated kinase term was marked over-annotated (residues intact → not a
   pseudoenzyme, but activity unproven).

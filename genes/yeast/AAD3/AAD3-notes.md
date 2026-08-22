@@ -2,6 +2,25 @@
 
 Journal of research and reasoning for the AI GO-annotation review. Provenance recorded inline.
 
+## 2026-08 re-review correction
+
+The original review missed a decisive later primary study. Yang et al. purified all seven
+*S. cerevisiae* AAD proteins and found aldehyde-reductase activity only for Aad4 and Aad14.
+Aad3 carries Cys73 in place of a catalytically essential tyrosine; replacing Cys73 with Tyr
+still did not produce a functional enzyme [PMID:29079624, "correction of the missense
+mutation in ScAadCys73Tyrp failed to produce a functional enzyme"]. The paper classifies
+the other five family members, including AAD3, as undergoing pseudogenization.
+
+This evidence supersedes the earlier inference below that a full-length AKR fold warrants a
+broad positive oxidoreductase annotation. Fold membership describes ancestry, not retained
+activity. The final review therefore:
+
+- removes both GO:0047681 activity annotations and GO:0006081 aldehyde metabolism;
+- withdraws the proposed GO:0016616 annotation and leaves `core_functions` empty;
+- retains only the ND cellular-component placeholder; and
+- reframes the knowledge gap around possible residual or nonenzymatic roles rather than an
+  assumed functional reductase.
+
 ## Deep research status (provenance)
 
 Automated deep research was attempted but did not produce a report:
@@ -9,11 +28,14 @@ Automated deep research was attempted but did not produce a report:
   perplexity-lite fallback returned HTTP 401 "insufficient_quota" (billing/quota exhausted).
 - Retry `just deep-research-falcon yeast AAD3`: falcon timed out again (SIGTERM at the 600s cap).
 
-No `-deep-research-{provider}.md` file was fabricated (per repo policy). The review is instead
-grounded in the primary sources actually available: the UniProt record (P25612), the QuickGO GOA
-export, the cached Delneri et al. 1999 abstract (PMID:10572264), and the InterPro/PANTHER family
-metadata (PTHR43364), plus the inline sequence/domain analysis recorded below. This documentation
-serves in place of a deep-research report.
+No `-deep-research-{provider}.md` file was fabricated (per repo policy). The initial review used
+the UniProt record, GOA, PMID:10572264, and family metadata. The re-review additionally searched
+the literature and retrieved the full text of PMID:29079624, which provides the decisive direct
+biochemical and catalytic-site evidence above. A focused OpenScientist job then tested the
+proposed broad oxidoreductase term. It independently found PMID:29079624 and rejected GO:0016616
+as an asserted molecular function because even the broad term claims catalysis contradicted by
+the direct Aad3 assays. The report is retained as an audited secondary analysis; the curation
+decision rests on the primary paper.
 
 ## Identity
 
@@ -31,9 +53,9 @@ serves in place of a deep-research report.
 The AAD (Aryl-Alcohol Dehydrogenase) genes are a family of paralogous ORFs in S. cerevisiae,
 most located in subtelomeric regions. Members include AAD3 (YCR107W), AAD4 (YDL243C),
 AAD6 (YFL056C), AAD10 (YJR155W), AAD14 (YNL331C), AAD15 (YOL165C), AAD16 (YFL057C).
-They were identified by in-silico similarity to a *bona fide* fungal enzyme, and none has a
-demonstrated enzymatic activity or loss-of-function phenotype in S. cerevisiae. Evidence for
-AAD3-specific function must therefore be distinguished carefully from family-level statements.
+They were identified by in-silico similarity to a *bona fide* fungal enzyme. Later biochemical
+work showed that Aad4 and Aad14 are active enzymes, while Aad3 and four other members are
+pseudogenizing [PMID:29079624]. Evidence must therefore be resolved per paralog.
 
 ## KNOWN (evidence-supported)
 
@@ -60,10 +82,15 @@ AAD3-specific function must therefore be distinguished carefully from family-lev
    all seven AAD genes, implying the measured cellular AAD activity is contributed by other (non-AAD)
    enzymes, and that the AAD genes are functionally redundant or silent under the conditions tested.
 
+4. **Aad3 is inactive in the expected chemistry and has an eroded catalytic site.** Only Aad4
+   and Aad14 reduced the tested aldehydes with NADPH. Aad3 substitutes Cys for the essential
+   catalytic Tyr73, and restoring Tyr73 did not rescue activity [PMID:29079624].
+
 ## NOT known / open (knowledge gaps)
 
-- Whether AAD3 encodes a catalytically active enzyme at all. No in vitro activity, no substrate,
-  and no kcat/Km have ever been reported for the AAD3 gene product specifically. EC is 1.1.1.- .
+- Whether Aad3 retains an untested residual activity or a nonenzymatic role. The published
+  aldehyde panel and catalytic-site repair were negative, so any positive function now requires
+  new direct evidence.
 - The physiological substrate and biological role (if any). The "aryl-alcohol dehydrogenase" name is
   purely a homology transfer from the *P. chrysosporium* enzyme; S. cerevisiae is not a lignin
   degrader, so the ancestral aryl-alcohol/lignin-related context does not obviously apply.
@@ -81,44 +108,27 @@ I inspected the UniProt sequence directly (no sub-agent).
   complete ~360-aa AKR (AKRs are ~320-360 aa). There is no `FT ... FRAGMENT`, no premature-stop
   evidence, and the Pfam PF00248 match covers the full ORF. So AAD3 is NOT a truncated ORF/relic at
   the sequence level; it is an intact reading frame.
-- **AKR fold features present**: the N-terminal glycine-containing cofactor-loop region is present
-  (`...PLILGEV...` around residues 29-34), the AKR core His/Trp region is present
-  (`...DILYVHWWDY...` around residues 143-152, containing His147 and the conserved Trp pair), and a
-  C-terminal NADP-binding-loop-like region is present (`...AYVRSKA...` around 294-300). These are
-  consistent with a foldable AKR domain.
-- **BUT**: presence of the fold and generic catalytic-type residues does NOT establish a specific,
-  physiologically relevant catalytic activity. AKR-fold proteins are notoriously promiscuous and
-  many paralogs are pseudo-/orphan enzymes. Given (a) no experimental activity for AAD3,
-  (b) the ISS is transferred from a distant fungal enzyme, and (c) the loss-of-phenotype on
-  septuple deletion, a *specific* "aryl-alcohol dehydrogenase (NADP+) activity" (GO:0047681)
-  assignment for AAD3 is an over-annotation. The defensible statement is superfamily-level
-  oxidoreductase/AKR membership, with substrate unknown.
-- I did not have a residue-level MSA against a curated AKR catalytic tetrad reference in the cache,
-  so I deliberately do NOT claim the catalytic tetrad is "intact and competent" or "degenerate" —
-  I claim only that the ORF is full-length and adopts an AKR fold, and that specific activity is
-  unproven. This keeps the review honest.
+- **Catalytic-site erosion despite an intact fold**: PMID:29079624 aligned the family against the
+  active reference enzyme and showed that Aad3 has Cys73 where the essential catalytic tyrosine
+  should occur. Native recombinant Aad3 was inactive, and Cys73-to-Tyr repair did not rescue it.
+  Thus the intact ORF/fold does not justify even a broad positive oxidoreductase claim.
 
 ## Annotation-by-annotation reasoning
 
 GOA (AAD3-goa.tsv) has 4 annotations:
 
 1. `GO:0047681 aryl-alcohol dehydrogenase (NADP+) activity` / IEA / GO_REF:0000117 (ARBA machine rule).
-   Over-annotation: an electronic rule assigning a *specific* activity to a putative enzyme with no
-   demonstrated activity and a full-family loss-of-phenotype. → MARK_AS_OVER_ANNOTATED
-   (propagation_review IEA rule; the correct grounded statement is superfamily-level AKR/oxidoreductase).
+   Electronic family transfer contradicted by direct Aad3 biochemistry. → REMOVE.
 
 2. `GO:0006081 aldehyde metabolic process` / ISS / PMID:10572264, with Q01752.
    ISS from the *P. chrysosporium* AAD. Family-level; not demonstrated for AAD3. Aldehyde metabolism
-   is the plausible superfamily-level process but is unproven for AAD3 and the deletion had no aldehyde
-   phenotype. → KEEP_AS_NON_CORE (retain as a plausible, unverified process-level annotation; do not
-   elevate to core). Consider MARK_AS_OVER_ANNOTATED — but the parent process is broad enough that it
-   is defensible as a low-confidence homology inference; keep non-core with caveat.
+   depends on an activity that direct assays did not detect. → REMOVE.
 
 3. `GO:0047681 aryl-alcohol dehydrogenase (NADP+) activity` / ISS / PMID:10572264, with Q01752.
    Same specific-activity over-annotation as (1), but via ISS from the fungal enzyme. The deletion
    phenotype directly argues against a demonstrable aryl-aldehyde activity for the yeast AAD genes.
-   → MARK_AS_OVER_ANNOTATED; propose generalization to superfamily-level oxidoreductase in the review
-   rationale. Do NOT REMOVE (defer: it is a curator ISS, and superfamily context is real).
+   Direct biochemical evidence shows loss/divergence of the donor activity. → REMOVE without a
+   replacement term.
 
 4. `GO:0005575 cellular_component` (root) / ND / GO_REF:0000015.
    Root "no data" placeholder. Standard. → ACCEPT (keep as-is; it is the GO ND convention for
@@ -127,6 +137,5 @@ GOA (AAD3-goa.tsv) has 4 annotations:
 ## Term-id notes
 
 - existing_annotations ids are from GOA and are trusted (not rewritten).
-- For core_functions I will use only well-supported author-checked ids. Candidate broader MF:
-  GO:0016616 "oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor"
-  (verified via OLS) — this is the honest superfamily-level activity I can defend from fold + family.
+- GO:0016616 is a valid GO term, but it is not a valid AAD3 annotation on current evidence. The
+  review leaves `core_functions` empty rather than turning fold ancestry into a function claim.
