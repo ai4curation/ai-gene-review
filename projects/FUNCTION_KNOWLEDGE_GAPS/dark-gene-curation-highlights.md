@@ -102,6 +102,12 @@ Dark-gene review is not only subtractive; deep reading also finds well-supported
   `mannosylphosphate transferase activity` (GO:0000031) added as an evidence-backed NEW MF.
 - **`spa1` (pombe)** — ornithine-decarboxylase-inhibitor activity confirmed directly for the
   fission-yeast protein (recombinant Spa1 inhibits *S. pombe* ODC) and kept as the core function.
+- **`AIM33` (yeast)** — the converse PAINT lesson: absence of an AIM33-specific enzyme assay is
+  not evidence that its IBAs are wrong. The curated tree places cytochrome-b5 reductase activity,
+  ergosterol biosynthesis, and plasma-membrane location on the AIM33 lineage, while an explicit
+  loss event removes the ancestral mitochondrial placement at the AIM33/PGA3 subfamily node.
+  Those predictions were retained with direct biochemical and localization tests recorded as
+  knowledge gaps.
 
 ## 5. Fabrication guardrails held
 

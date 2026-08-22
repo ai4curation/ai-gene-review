@@ -2,137 +2,93 @@
 
 UniProt: Q04516 | SGD: S000004552 | GeneID: 854887 | 312 aa | Chromosome XIII
 
-## Summary of the problem
-AIM33 ("Altered Inheritance of Mitochondria 33") is a **poorly characterized** *S. cerevisiae*
-protein. UniProt names it "Uncharacterized oxidoreductase AIM33" (EC=1.-.-.-). SGD calls it a
-"Protein of unknown function". It is a member (by sequence/domain) of the flavoprotein pyridine
-nucleotide cytochrome reductase family (the cytochrome-b5 reductase, CYB5R, superfamily), but
-its own catalytic activity, physiological electron acceptor, and cellular role are **not
-experimentally established**. This is a "dark gene": the deliverable is an honest knowledge_gaps
-section plus domain/orthology-grounded (not invented) reasoning.
+## Curation conclusion
 
-## KNOWN (evidence-supported)
+AIM33 is a poorly characterized, multi-pass membrane flavoprotein in the pyridine-nucleotide
+cytochrome-reductase family. There is still no AIM33-specific enzyme assay, but that absence does
+not invalidate its PAINT annotations. The IBA calls place the activity and ergosterol-process
+terms on the AIM33 lineage, and AIM33 carries the expected FAD- and NAD(P)H-binding reductase
+domains. In the absence of target-specific loss or active-site divergence, the correct review is
+to retain those phylogenetic annotations while stating explicitly that they remain predictions.
 
-### Domain architecture / family (from UniProt Q04516)
-- Belongs to the **flavoprotein pyridine nucleotide cytochrome reductase family**
-  (`SIMILARITY {ECO:0000305}`).
-- **FAD-binding FR-type domain** at residues 70–173 (`FT DOMAIN ... /evidence=ECO:0000255|PROSITE-ProRule:PRU00716`).
-- Pfam: **PF00970 FAD_binding_6** + **PF00175 NAD_binding_1** — the classic two-domain
-  FAD/NAD(P)H reductase module of cytochrome-b5 reductases.
-- InterPro: IPR001834 (CBR-like), IPR008333 (Cbr1-like FAD-bd dom), IPR017927 (FAD-bd FR-type),
-  IPR001709 (Flavoprotein pyridine nucleotide cytochrome reductase), IPR001433 (OxRdtase FAD/NAD-bd).
-- CDD cd06183 "cyt_b5_reduct_like".
-- **PANTHER PTHR19370** "NADH-CYTOCHROME B5 REDUCTASE"; subfamily **PTHR19370:SF143**
-  "PLASMA MEMBRANE-ASSOCIATED COENZYME Q6 REDUCTASE PGA3".
-- KW: FAD, Flavoprotein, NAD, Oxidoreductase, Membrane, Transmembrane.
-- COFACTOR: FAD (`{ECO:0000250}` — by similarity only, not measured for AIM33).
-- **Reasoning**: The FAD-binding + NAD-binding module is diagnostic of a flavin-dependent
-  pyridine-nucleotide:acceptor oxidoreductase. An oxidoreductase MF (GO:0016491) and even a
-  cytochrome-b5-reductase-type activity are therefore *domain-defensible*. What the domain does
-  NOT tell us is the physiological electron acceptor — cytochrome b5, coenzyme Q, a P450, or
-  something else — which is exactly the open question.
+The previous review also inferred a mitochondrial membrane location from the petite phenotype.
+That was not justified. The local PANTHER loss table records loss of the ancestral mitochondrion
+placement at PTN001064672, the AIM33/PGA3 subfamily node, while the current IBA places AIM33 at the
+plasma membrane. A mitochondrial-genome phenotype does not establish mitochondrial localization.
 
-### Membrane topology (multi-pass) — PMID:16847258 (global topology map)
-- UniProt SUBCELLULAR LOCATION: **Membrane; Multi-pass membrane protein** (`{ECO:0000305}`).
-- Predicted TM helices at 15–35, 42–62, 180–200 (ECO:0000255) with an N-in/loop-out topology;
-  the FAD-binding domain (70–173) sits in the large loop.
-- AIM33/YML087C is one of the 546 membrane proteins with an experimentally-constrained topology
-  model in [PMID:16847258 "we report the cloning and expression of 617 S. cerevisiae membrane
-  proteins as fusions to a C-terminal topology reporter and present experimentally constrained
-  topology models for 546 proteins."]. (AIM33 is in the dataset; the paper text is genome-wide
-  and does not discuss AIM33 individually.)
-- **Note**: This makes AIM33 structurally DISTINCT from most soluble CYB5R enzymes. Human
-  CYB5R4 (the SGD-stated homolog) is a **soluble** flavohemoprotein; MCR1 is anchored at the
-  mitochondrial outer membrane. AIM33 being a genuine *polytopic* membrane reductase is unusual
-  in this family and is itself a notable, under-explored feature.
+## Evidence
 
-### Disruption phenotype — PMID:19300474 (Hess et al., mitochondrial biogenesis screen)
-- UniProt DISRUPTION PHENOTYPE: "**Increases frequency of mitochondrial genome loss.**"
-  (`{ECO:0000269|PubMed:19300474}`).
-- This study systematically measured the **petite frequency** (rate of generation of cells
-  lacking respiratory-competent mitochondria) of ~193 deletion strains and confirmed 109 genes
-  (including the AIM-named genes) with altered mitochondrial transmission phenotypes. AIM33 is
-  one of these; the specific value is in the paper's supplementary tables (S2/S6), not the main
-  text, so no gene-specific verbatim quote is available from the cached full text.
-- WT S288C baseline: [PMID:19300474 "genetic background produce petite daughter cells at a
-  baseline frequency of ~20%"] and "mutation of genes involved in mitochondrial biogenesis can
-  significantly alter this rate."
-- The "AIM" name (Altered Inheritance of Mitochondria) was assigned to genes discovered/confirmed
-  in this class of screens for altered mitochondrial genome transmission.
+### Protein family and topology
 
-### DISCREPANCY on phenotype direction (record in knowledge_gaps)
-- UniProt curation of PMID:19300474: deletion **INCREASES** frequency of mitochondrial genome loss.
-- SGD gene description: "null mutant displays **REDUCED** frequency of mitochondrial genome loss."
-- Both cannot be literally true; the direction of the petite-frequency shift for AIM33 is
-  ambiguous between the two curated sources. Either way, AIM33 loss perturbs mitochondrial genome
-  maintenance/petite frequency. (Note: PMID:19300474 discusses that *decreased* petite frequency
-  can indicate a "petite-negative" synthetic-lethality phenotype, so a decrease is also
-  mechanistically meaningful.)
+- UniProt Q04516 is a reviewed 312-aa protein, not 363 aa.
+- UniProt assigns AIM33 to the flavoprotein pyridine nucleotide cytochrome reductase family and
+  predicts FAD as cofactor.
+- The protein has an FAD-binding FR-type domain (residues 70–173), an NAD-binding domain, and three
+  predicted transmembrane helices (15–35, 42–62, and 180–200).
+- PMID:16847258 is a genome-scale membrane-topology study. It supports the membrane-protein call,
+  but its cached prose does not provide an AIM33-specific localization statement.
 
-### Other large-scale phenotypes (SGD, from high-throughput surveys)
-- Null mutant: cannot grow on non-fermentable carbon sources (respiratory phenotype); decreased
-  calcium and sodium ion accumulation; reduced starvation and ethanol resistance; abnormal
-  mitochondrial genome maintenance. (These are HTP/large-scale phenotypes, not deep mechanism.)
+### PAINT interpretation
 
-### Family / paralog / ortholog context
-- **Paralog**: PGA3 (arose from the whole-genome duplication). PGA3 = plasma-membrane-associated
-  NADH:coenzyme-Q6 reductase (the PANTHER SF143 exemplar). [WebSearch: SGD/Wikidata]
-- Related family members in yeast: **MCR1** (YKL150W; mitochondrial OMM/IMS NADH-cytochrome b5
-  reductase; electron donor to sterol-biosynthetic cytochrome P450s Erg11/Erg5/Erg1 and to
-  fatty-acid/sterol desaturation; oxidative-stress response), **CBR1** (ER NADH-cytochrome b5
-  reductase). AIM33 is a fourth, distinct member.
-- **Human homolog/ortholog**: SGD states **CYB5R4**; NCBI Gene lists **CYB5R1/CYB5R3** as
-  orthologs. The mapping is family-level, not an unambiguous 1:1 ortholog. Human CYB5R4 is a
-  soluble flavohemoprotein (extra cytochrome-b5 and p23 domains) important for beta-cell/oxidative-
-  stress protection — a different domain architecture from the polytopic yeast AIM33.
+- GO:0004128 (cytochrome-b5 reductase activity, acting on NAD(P)H) is placed at PTN000452207 and
+  carried to AIM33 with MCR1 and PGA3 as supporting family members.
+- GO:0006696 (ergosterol biosynthetic process) is placed at PTN000452208 with MCR1 support.
+- GO:0005886 (plasma membrane) is carried from PTN001064672 with PGA3 support.
+- `projects/PANTHER_IBA_REVIEW/family_function_losses.tsv` records a mitochondrion loss for
+  PTHR19370 at PTN001064672/PTHR19370:SF143. Thus PAINT explicitly distinguishes the AIM33/PGA3
+  branch from the mitochondrial family placement; it does not support replacing plasma membrane
+  with a mitochondrial or generic location.
 
-## NOT known (the real knowledge gaps)
-1. **Catalytic activity of AIM33 itself.** No enzyme assay demonstrates cytochrome-b5 reductase
-   (or any) activity for AIM33. EC is 1.-.-.- (class assigned, sub-subclass unknown). The
-   GO:0004128 (cytochrome-b5 reductase acting on NAD(P)H) and GO:0016491 annotations are IBA/IEA
-   propagations from the family, not measurements on AIM33.
-2. **Physiological electron donor/acceptor.** NAD(P)H as donor is likely (NAD_binding_1 domain);
-   the acceptor (cytochrome b5? coenzyme Q? a P450? a desaturase? an as-yet-unknown mitochondrial
-   redox partner?) is unknown for AIM33.
-3. **Cellular localization.** UniProt/GO say "Membrane / plasma membrane (IBA)". But the AIM
-   phenotype and the CYB5R4 orthology imply a possible **mitochondrial** role. The IBA
-   plasma-membrane call is propagated (partly via the PGA3 branch) and is not experimentally
-   confirmed for AIM33; its true membrane (mitochondrial vs plasma vs ER) is unresolved.
-4. **Ergosterol-pathway involvement (GO:0006696, IBA).** Established for the paralog MCR1 (electron
-   donor to sterol P450s), NOT demonstrated for AIM33. This is a candidate over-annotation.
-5. **Mechanism behind the AIM (mitochondrial genome maintenance) phenotype**, and even its
-   direction (increase vs decrease in petite frequency; see discrepancy above).
+These annotations are phylogenetic predictions, not AIM33-specific biochemical or imaging
+measurements. That limitation belongs in the reasons and knowledge gaps, not in an assertion that
+the PAINT calls are wrong.
 
-## Annotation-by-annotation reasoning (see AIM33-ai-review.yaml)
-- GO:0005886 plasma membrane (IBA) — IBA-propagated location; contradicted by predicted polytopic
-  topology consistent with an internal membrane and by the mitochondrial phenotype. MODIFY toward
-  the more general/defensible GO:0016020 membrane (the location is real; "plasma membrane"
-  specificity is unsupported for AIM33).
-- GO:0004128 cytochrome-b5 reductase activity, acting on NAD(P)H (IBA and IEA) — domain-plausible
-  activity but not measured for AIM33 and possibly over-specific (electron acceptor unproven).
-  Keep as non-core / mark as over-annotated: retain the reductase idea but flag that the specific
-  cytochrome-b5 acceptor is not established for this paralog.
-- GO:0006696 ergosterol biosynthetic process (IBA) — propagated from MCR1/PGA3; no AIM33-specific
-  evidence; AIM33's phenotype points elsewhere (mitochondrial genome maintenance). Candidate
-  over-annotation → MARK_AS_OVER_ANNOTATED.
-- GO:0016020 membrane (IEA, UniProt SubCell) — defensible; membrane protein is well supported. ACCEPT.
-- GO:0016491 oxidoreductase activity (IEA, InterPro) — the safest, best-supported MF given the
-  FAD/NAD reductase module. ACCEPT (keep as the honest, general MF).
-- GO:0003674 / GO:0005575 / GO:0008150 ND root annotations — placeholder root annotations
-  (GO_REF:0000015). ACCEPT (standard; represent "not yet determined").
+### Mitochondrial-genome and respiratory-condition evidence
 
-## Provenance index
-- [PMID:19300474] Hess et al. 2009 PLoS Genet — mitochondrial biogenesis / petite frequency screen; source of DISRUPTION PHENOTYPE. Full text cached (abstract + body; AIM33 in supp tables only).
-- [PMID:16847258] Kim et al. 2006 PNAS — global membrane topology map; AIM33 topology model. Cache has abstract plus a partial full-text (Results intro) section only, not the complete article; the quoted supporting_text is a verbatim substring of that cached text.
-- [PMID:9169872] Bowman et al. 1997 Nature — chromosome XIII sequence (genome). Abstract only.
-- [PMID:24374639] Engel et al. 2014 G3 — reference genome reannotation. Full text cached.
-- SGD S000004552 (WebFetch), NCBI Gene 854887 (WebFetch), WebSearch — family/paralog/ortholog and additional phenotypes.
-- UniProt Q04516 (AIM33-uniprot.txt) — domains, cofactor, topology, family, disruption phenotype.
+- PMID:19300474 identified genes whose deletion alters mitochondrial biogenesis/inheritance. The
+  AIM33-specific measurement is in the supplement rather than the cached narrative text.
+- UniProt currently states that AIM33 deletion *increases* mitochondrial genome loss. Later primary
+  literature (PMID:40568959), restating the Hess result, says the deletion has a *reduced* frequency
+  of spontaneous mitochondrial genome loss and cannot grow on non-fermentable carbon. The later
+  direction is used here, with the UniProt discrepancy documented rather than treated as biological
+  ambiguity.
+- PMID:33984024 measured AIM33 expression in respiratory medium. AIM33 microarray signal increased
+  from 94 in YPD to 1658 in YPGL in wild type and fell to 773 in the `pbp1Δ` strain (0.47 of wild
+  type). The paper groups AIM33 among Pbp1-regulated genes associated with the mitochondrial-genome
+  phenotype. This is expression/regulation evidence, not a catalytic or localization assay.
+- PMID:40568959 found AIM33 consistently upregulated in `tda1Δ` cells during the post-diauxic phase
+  in three experiments (mean log2 fold change 0.42 ± 0.10). The authors later state that AIM33 is
+  mitochondrial without supplying AIM33-specific localization evidence; that sentence is not used
+  to override PAINT.
 
-## Deep research provenance
-- Falcon deep research was attempted (first run timed out at 600s; perplexity-lite fallback failed
-  with a 401 quota error). A single retry of falcon was run. This review is grounded directly in
-  UniProt (Q04516), GOA, cached primary literature (PMID:19300474, PMID:16847258), and
-  PubMed-verified secondary sources (SGD S000004552, NCBI Gene 854887); it does not depend on the
-  deep-research file. If the falcon retry produced `AIM33-deep-research-falcon.md`, it is included
-  for the record but was not the basis for any specific claim.
+## Annotation decisions
+
+- GO:0005886 plasma membrane (IBA): **ACCEPT**. The PAINT node and explicit mitochondrial-loss event
+  support lineage-specific plasma-membrane placement; direct endogenous imaging remains desirable.
+- GO:0004128 cytochrome-b5 reductase activity, acting on NAD(P)H (IBA): **ACCEPT**. The PAINT
+  placement plus the diagnostic reductase domains support the prediction. It is not a direct assay.
+- GO:0006696 ergosterol biosynthetic process (IBA): **ACCEPT**. Retain the PAINT process placement;
+  direct pathway evidence in AIM33 is still absent.
+- GO:0004128 (ARBA IEA): **ACCEPT** as independent electronic corroboration of the same family-level
+  prediction.
+- GO:0016020 membrane and GO:0016491 oxidoreductase activity (IEA): **ACCEPT**.
+- ND ontology roots: **ACCEPT** as historical no-data placeholders.
+
+## Remaining knowledge gaps
+
+1. Directly measure AIM33 reductase activity, donor preference, and physiological acceptor.
+2. Establish endogenous localization and topology with a functional tagged allele; do not infer
+   mitochondria solely from the deletion phenotype.
+3. Test whether AIM33 contributes directly to ergosterol biosynthesis and identify its redox partner.
+4. Reproduce the reduced-petite phenotype in a clean allele and determine how a plasma-membrane
+   reductase affects respiratory competence or mitochondrial-genome inheritance.
+
+## Provenance
+
+- PMID:19300474 — mitochondrial biogenesis/inheritance screen.
+- PMID:16847258 — global yeast membrane-topology map.
+- PMID:33984024 — Pbp1-dependent expression of AIM33 in non-fermentable medium.
+- PMID:40568959 — reproducible AIM33 upregulation in `tda1Δ` during post-diauxic growth and a later
+  statement of the reduced-petite phenotype.
+- UniProt Q04516, local GOA, and the local PANTHER family-function-loss table — sequence, topology,
+  annotation-node, and loss-event evidence.
