@@ -9,9 +9,9 @@ Status: **dark / understudied gene** — no direct biochemical or genetic charac
 - AMD2 is a member of the **amidase signature (AS) family** (Pfam PF01425 "Amidase"; InterPro IPR023631
   Amidase_dom, IPR020556 Amidase_CS, IPR036928 AS_sf; PROSITE PS00571 AMIDASES; Gene3D 3.90.1300.10;
   SUPFAM SSF75304; PIRSF001221 "Amidase_fungi"). It is inferred from homology (UniProt PE 3).
-- The protein carries the **conserved AS-family Ser–cisSer–Lys catalytic triad**: UniProt annotates
-  ACT_SITE at positions 132 and 209 ("Charge relay system") and 233 ("Acyl-ester intermediate"),
-  all by similarity (ECO:0000250). Presence of an intact triad is consistent with a catalytically
+- The protein carries the **conserved AS-family Lys–cisSer–Ser catalytic triad**: UniProt annotates
+  Lys132 and cisSer209 as the charge-relay residues and nucleophilic Ser233 as forming the
+  acyl-enzyme intermediate, all by similarity (ECO:0000250). Presence of an intact triad is consistent with a catalytically
   competent amidase rather than a pseudoenzyme.
 - The UniProt CATALYTIC ACTIVITY block records the generic AS-family reaction
   (Rhea:RHEA:12020; EC 3.5.1.4): "a monocarboxylic acid amide + H2O = a monocarboxylate + NH4(+)".
@@ -31,19 +31,21 @@ Status: **dark / understudied gene** — no direct biochemical or genetic charac
   hydrolysed by AMD2 in vivo has never been determined experimentally.
 - **In-vivo biological process is unknown.** No pathway placement; GOA carries only an ND
   (No biological Data) root annotation for BP.
-- **Subcellular localization is unknown.** No experimental localization; GOA carries only an ND root
-  annotation for CC. (UniProt gives no SUBCELLULAR LOCATION; there is no predicted signal peptide,
-  transit peptide or transmembrane segment in the record.)
+- **Native subcellular localization is unresolved.** The Huh et al. C-terminal GFP collection
+  classifies AMD2/YDR242W as mitochondrial [PMID:14562095], but the native protein ends in **SKI**,
+  a plausible noncanonical PTS1-like sequence that a C-terminal GFP fusion necessarily masks.
+  UniProt gives no SUBCELLULAR LOCATION, signal peptide, transit peptide, or transmembrane segment;
+  the current GOA therefore still carries only an ND root annotation for CC.
 - **Direction of the observed phenotypes is mechanistically unexplained** — why loss of a putative
   amidase would decrease resistance to nutrient starvation or to miconazole is not established.
 
 ## Inline domain reasoning (from the UniProt record)
 
 The AS (amidase signature) family (Pfam PF01425) is a large, functionally diverse enzyme family whose
-members hydrolyse a wide range of carboxamide substrates. They share the Ser-cisSer-Lys catalytic triad
+members hydrolyse a wide range of carboxamide substrates. They share the Lys-cisSer-Ser catalytic triad
 in the conserved "GGSS(G/S)GS" signature region. In P22580 the sequence around residue 209 is
 `...GGSSGGEGS...` (see SQ, "SGGSSGGEGSLIGAHG"), the canonical AS signature block, and the annotated
-active-site residues (Ser132, Ser209, Lys — annotated as 233 "acyl-ester intermediate") map onto the
+active-site residues (Lys132, cisSer209, and nucleophilic Ser233) map onto the
 expected triad geometry. This strongly supports assignment to the family and a **generic amidase
 (carboxamide hydrolase, EC 3.5.1.4)** activity, but the AS fold is notoriously substrate-promiscuous
 across the family, so fold membership alone does NOT license a specific-substrate MF term.
@@ -70,7 +72,8 @@ over-annotation and is not supported.
 2. GO:0003674 molecular_function — ND (GO_REF:0000015, SGD). Root placeholder. Now superseded by the
    IEA amidase MF → this is the standard "no experimental data" stub. Keep as non-core / note it is a
    root placeholder (do not treat as informative).
-3. GO:0005575 cellular_component — ND (GO_REF:0000015, SGD). Root placeholder; localization unknown.
+3. GO:0005575 cellular_component — ND (GO_REF:0000015, SGD). Root placeholder; native localization
+   unresolved despite a mitochondrial C-terminal-GFP lead and a terminal SKI PTS1-like motif.
 4. GO:0008150 biological_process — ND (GO_REF:0000015, SGD). Root placeholder; process unknown.
 
 Note: UniProt DR GO also lists GO:0043605 (amide catabolic process, IBA) but this is NOT in the GOA
@@ -85,7 +88,7 @@ TSV and the term is **OBSOLETE** ("unnecessary grouping term"), so it is not rev
 The falcon/Edison report (`AMD2-deep-research-falcon.md`, 1668 s runtime) reinforces the honest
 "dark enzyme, substrate unknown" framing. Load-bearing, independently verified point it surfaced:
 
-- **AMD2 is not a classical acetamidase.** Wild-type S. cerevisiae S288C does not grow on acetamide
+- **Native AMD2 is insufficient for classical acetamide utilization in the tested assay.** Wild-type S. cerevisiae S288C does not grow on acetamide
   as a nitrogen source and requires a heterologous acetamidase (A. nidulans amdS or Y. lipolytica
   YlAMD1). Verified directly in Hamilton et al. 2020 (PMC full text)
   [PMID:32024536 "Control transformations failed to form colonies while YlAMD1-transformed cells gave
@@ -93,7 +96,8 @@ The falcon/Edison report (`AMD2-deep-research-falcon.md`, 1668 s runtime) reinfo
   [PMID:32024536 "amdS can be recycled through counterselection with fluoroacetamide"]. S288C is the
   exact strain used, and it is described in that paper's Table 1 as
   "Mat-alpha ... ATCC 204508 strain S288C" — the reference proteome strain that carries AMD2. So the
-  native genome (with AMD2) does not confer acetamidase activity. This matches the PANTHER-subfamily
+  native genome (with AMD2) does not confer sufficient acetamide utilization under those conditions.
+  This does not formally exclude weak or condition-dependent AMD2 hydrolysis of acetamide. It matches the PANTHER-subfamily
   reasoning above (AMD2 in SF11, acetamidases in SF9) and is now cited in the review as MEDIUM-relevance
   supporting evidence for the MF knowledge gap.
 
@@ -101,11 +105,33 @@ Caveats / errors in the falcon report I deliberately did NOT propagate:
 - It states AMD2 is **598 aa** — WRONG; UniProt P22580 is **549 aa**. Not used.
 - It asserts a paralog **"AMD1 (YCR025C)"** — unverified (YCR025C is itself a dubious/uncharacterized
   ORF); not asserted in the review.
-- It cites cytoplasmic localization from Huh et al. 2003 GFP study — plausible but the paper is not in
-  cache and I did not verify a usable verbatim quote, so I kept CC as an open knowledge gap (ND retained,
-  not replaced by a specific CC term). This is the conservative choice for a dark gene.
+- It reports **cytoplasmic** localization from Huh et al. 2003, but the associated YeastGFP table
+  actually classifies YDR242W as **mitochondrial**. The generated report's localization statement
+  is therefore wrong. PMID:14562095 is already cached, and the review retains the gene-level dataset
+  call only as a high-throughput lead because AMD2's terminal SKI motif raises a competing
+  peroxisomal-targeting hypothesis and a C-terminal GFP tag masks that motif.
 
-All AS-family biochemistry statements (Ser-cisSer-Lys triad, generic R-CO-NH2 + H2O -> R-COOH + NH3
+All AS-family biochemistry statements (Lys-cisSer-Ser triad, generic R-CO-NH2 + H2O -> R-COOH + NH3
 reaction, family substrate diversity: FAAH/NAE, plant AMI1/IAM, malonamidase E2, peptide amidase) are
 consistent with the UniProt/InterPro record and general enzymology; they are used only as framing, with
 the concrete review anchored to UniProt + GOA + PMID:2263500 + PMID:32024536.
+
+## OpenScientist hypothesis audit (2026-08-22)
+
+The focused report for “AMD2 has amidase activity (GO:0004040)” reached the useful high-level
+conclusion: retain the generic IEA, do not narrow it to a substrate-specific child, and keep the
+substrate experimentally undetermined. That conclusion agrees with the independent curation above.
+
+The report is recorded as **DISPUTED**, not VERIFIED, because several details are demonstrably wrong
+or incomplete:
+
+- It assigns the catalytic triad to **K176/S210/S238**. UniProt P22580 instead annotates **Lys132**
+  and **cisSer209** as charge-relay residues and **Ser233** as the nucleophile/acyl-enzyme residue.
+- It says there is no localization evidence and no deletion phenotype. The Huh C-terminal-GFP
+  dataset classifies YDR242W as mitochondrial, and published screens report nutrient-deprivation
+  and miconazole-resistance phenotypes, although neither establishes the enzymatic substrate.
+- Its precise AlphaFold pLDDT and alignment-identity claims are not backed by reusable executed-code
+  provenance in the saved artifact and are not used in the review.
+
+Accordingly, the report supports the annotation decision only at the qualitative family level; all
+load-bearing coordinates and biological claims remain anchored to UniProt and primary sources.
