@@ -906,15 +906,69 @@ def test_validate_family_members_matches_on_family_when_declared_as_subfamily():
     assert errors == []
 
 
-def test_validate_family_members_warns_when_accession_is_unindexed():
-    """An uncited protein must not fail the build, only warn."""
+def test_validate_family_members_fails_when_accession_is_unindexed():
+    """An unindexed protein must FAIL, not warn.
+
+    This is the check that catches a guessed family id, and warning here made it
+    silently skip exactly when it matters: new curation cites new proteins, so
+    the unindexed case IS the under-review case. Measured across the open-PR
+    backlog, 78% of these checks never ran while the sweep reported zero
+    grounding failures -- a clean bill of health from a check that was dark.
+
+    An index that does not cover what we cite is a defect in the index, and
+    `just refresh-panther-members` resolves the accession from the PR branch's
+    own modules/, so the fix is always available to whoever hits the error.
+    """
     uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "Q00000")))
 
     errors, warnings = validate_family_members(uses, {"O14521": "PTHR13337:SF6"})
 
+    assert warnings == []
+    assert len(errors) == 1
+    assert "Q00000" in errors[0]
+    assert "refresh-panther-members" in errors[0]
+
+
+def test_validate_family_members_does_not_demand_a_refresh_that_cannot_help():
+    """An accession PANTHER has no family for must not fail the build.
+
+    The index records two different gaps behind one blank: "both sources
+    consulted, no family exists" (permanent) and "not looked up yet" (a refresh
+    fixes it). Erroring on the first would fail the build forever while advising
+    a command that has already been run -- the failure the sibling prose scan
+    names verbatim. 35 accessions are in this state today, 20 of them P. putida.
+    """
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337", "Q00000")))
+
+    errors, warnings = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, permanently_absent={"Q00000"}
+    )
+
     assert errors == []
     assert len(warnings) == 1
     assert "Q00000" in warnings[0]
+    assert "refresh-panther-members" not in warnings[0]
+
+
+def test_a_partially_absent_descriptor_still_errors():
+    """Exemption requires EVERY member to be permanently absent.
+
+    With one unresolved and one merely unindexed member, a refresh still helps,
+    so the build must still fail. Treating "some absent" as exempt would restore
+    the silent skip for any descriptor that happens to cite one such protein.
+    """
+    doc = _family_doc("PANTHER:PTHR13337", "Q00000")
+    members = doc["family"]["representative_members"]
+    members.append({"term": {"id": "UniProtKB:Q11111", "label": "other"}})
+    uses = list(iter_family_member_uses(doc))
+
+    errors, warnings = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, permanently_absent={"Q00000"}
+    )
+
+    assert warnings == []
+    assert len(errors) == 1
+    assert "refresh-panther-members" in errors[0]
 
 
 def test_validate_terms_skips_ptn_ids():

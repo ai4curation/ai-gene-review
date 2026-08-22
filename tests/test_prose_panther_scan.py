@@ -86,9 +86,14 @@ def test_collect_claims_walks_a_directory(modules_dir):
 
 
 def _run(monkeypatch, modules_dir, index, unresolved=None, consulted_uniprot=True):
+    # Kept as a boolean for these callers' readability; the writer itself now
+    # takes the two sets separately so a mixed batch cannot be mislabelled.
     """Point the scan at a temporary members file and modules directory."""
     members = modules_dir.parent / "panther-members.tsv"
-    write_member_index(index, members, unresolved, consulted_uniprot)
+    if consulted_uniprot:
+        write_member_index(index, members, unresolved, None)
+    else:
+        write_member_index(index, members, None, unresolved)
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT",
         modules_dir.parent,
