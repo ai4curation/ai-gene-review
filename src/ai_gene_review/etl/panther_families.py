@@ -336,21 +336,22 @@ class MemberIndexGaps(NamedTuple):
 
 def render_member_index(
     index: Dict[str, str],
-    unresolved: Optional[Set[str]] = None,
-    consulted_uniprot: bool = True,
+    absent: Optional[Set[str]] = None,
+    unchecked: Optional[Set[str]] = None,
 ) -> Iterator[str]:
     """Render a member index as a sorted two-column TSV.
 
-    ``unresolved`` accessions are recorded as a trailing comment block. Without
-    it the file holds only successes, so it cannot distinguish "asked PANTHER
+    Accessions with no family are recorded as trailing comment blocks. Without
+    them the file holds only successes, so it cannot distinguish "asked PANTHER
     and UniProt, no family exists" from "never asked" -- and any resolution rate
     read off the artifact is over an unknown denominator.
 
-    ``consulted_uniprot`` must say whether the UniProt fallback actually ran.
-    Recording "not found in UniProt" when ``--no-uniprot-fallback`` skipped that
-    lookup writes a false claim into a committed artifact, which is worse than
-    the omission this block replaced: a reader can recover from silence, not
-    from a confident wrong statement.
+    The two kinds are separate parameters rather than one set plus a
+    "did we consult UniProt" flag. A single flag picks one marker for the whole
+    set, so a run that skips the fallback while citing one new accession
+    relabels every previously-absent protein as unchecked -- emptying the set
+    the validator uses to exempt them, and asserting in a committed artifact
+    that 35 proteins were never looked up when they were.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
     uniprot_accession	panther_family_sf
@@ -366,39 +367,40 @@ def render_member_index(
     # per-organism classifications or in UniProt's xref_panther:
     # unresolved: P9
 
-    With the fallback skipped, the block says only what was actually checked:
+    Skipped lookups are recorded as unchecked, and the two can coexist -- which
+    is the case a single flag could not represent:
 
-    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, False):
+    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, {"P8"}):
     ...     print(line)
     uniprot_accession	panther_family_sf
     P1	PTHR1
     <BLANKLINE>
     # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
-    # per-organism classifications. UniProt was NOT consulted
+    # per-organism classifications or in UniProt's xref_panther:
+    # unresolved: P9
+    <BLANKLINE>
+    # 1 accession(s) whose UniProt lookup was NOT run
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
-    # unchecked: P9
-
-    The marker differs, not just the prose: a shared marker would let a
-    consumer read a skipped lookup as a completed one.
+    # unchecked: P8
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     for accession in sorted(index):
         yield f"{accession}\t{index[accession]}"
-    if unresolved:
+    if absent:
         yield ""
         yield (
-            f"# {len(unresolved)} accession(s) cited in modules/ with no PANTHER "
+            f"# {len(absent)} accession(s) cited in modules/ with no PANTHER "
             "family in PANTHER's"
         )
-        if consulted_uniprot:
-            yield "# per-organism classifications or in UniProt's xref_panther:"
-            marker = UNRESOLVED_MARKER
-        else:
-            yield "# per-organism classifications. UniProt was NOT consulted"
-            yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
-            marker = UNCHECKED_MARKER
-        for accession in sorted(unresolved):
-            yield f"{marker} {accession}"
+        yield "# per-organism classifications or in UniProt's xref_panther:"
+        for accession in sorted(absent):
+            yield f"{UNRESOLVED_MARKER} {accession}"
+    if unchecked:
+        yield ""
+        yield f"# {len(unchecked)} accession(s) whose UniProt lookup was NOT run"
+        yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
+        for accession in sorted(unchecked):
+            yield f"{UNCHECKED_MARKER} {accession}"
 
 
 def load_member_index_gaps(path: Path) -> MemberIndexGaps:
@@ -417,7 +419,7 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     >>> sorted(gaps.absent), sorted(gaps.unchecked)
     (['P9'], [])
 
-    >>> _ = write_member_index({"P1": "PTHR1"}, d / "skipped.tsv", {"P9"}, False)
+    >>> _ = write_member_index({"P1": "PTHR1"}, d / "skipped.tsv", None, {"P9"})
     >>> gaps = load_member_index_gaps(d / "skipped.tsv")
     >>> sorted(gaps.absent), sorted(gaps.unchecked)
     ([], ['P9'])
@@ -438,12 +440,12 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
 def write_member_index(
     index: Dict[str, str],
     out_path: Path,
-    unresolved: Optional[Set[str]] = None,
-    consulted_uniprot: bool = True,
+    absent: Optional[Set[str]] = None,
+    unchecked: Optional[Set[str]] = None,
 ) -> Path:
     """Write the accession -> family index, returning the path written.
 
-    ``unresolved`` accessions are recorded in the file rather than dropped, so a
+    Accessions with no family are recorded in the file rather than dropped, so a
     later reader can tell "no PANTHER family exists for this protein" from "we
     never looked it up" -- a distinction the validator depends on to avoid
     demanding a refresh that cannot help.
@@ -451,7 +453,7 @@ def write_member_index(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        "\n".join(render_member_index(index, unresolved, consulted_uniprot)) + "\n"
+        "\n".join(render_member_index(index, absent, unchecked)) + "\n"
     )
     return out_path
 
@@ -459,8 +461,10 @@ def write_member_index(
 def load_member_index(path: Path) -> Dict[str, str]:
     """Load a member index TSV written by :func:`write_member_index`.
 
-    Returns an empty mapping when the artifact is absent, so validation degrades
-    to "not checkable" rather than failing on a fresh checkout.
+    Returns an empty mapping when the artifact is absent. That no longer means
+    validation degrades to "not checkable": an unindexed member is now an error,
+    so a checkout without the artifact fails every grounded descriptor rather
+    than silently passing it. Regenerate with ``just refresh-panther-members``.
     """
     path = Path(path)
     if not path.exists():

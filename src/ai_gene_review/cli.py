@@ -4070,9 +4070,13 @@ def refresh_panther_members(
 
     index = build_member_index(accessions, paths)
     from_files = len(index)
-    # Measured BEFORE the merge: a carried-over row came from a previous run's
-    # UniProt lookup, and counting it here would credit the organism files with
-    # coverage they do not provide.
+    # Coverage of what we CITE is the number that matters, and it is not the
+    # size of the index: the index carries every protein these organisms
+    # classify, while what we cite is mostly from an organism PANTHER does not
+    # publish at all, so len(index)/len(accessions) would exceed 1 and read as
+    # success. Measured BEFORE the merge: a carried-over row came from a
+    # previous run's UniProt lookup, and counting it here would credit the
+    # organism files with coverage they do not provide.
     covered_from_files = len(accessions & set(index))
 
     # Merge into what is already committed rather than replacing it. A UniProt
@@ -4091,11 +4095,6 @@ def refresh_panther_members(
                 carried_over += 1
         if carried_over:
             typer.echo(f"carried over {carried_over} row(s) already committed")
-    # Coverage of what we CITE is the number that matters, and it is not the
-    # size of the index: the index now carries every protein these organisms
-    # classify, while the accessions we cite are mostly from an organism PANTHER
-    # does not publish at all. Reporting len(index)/len(accessions) would print
-    # a ratio far above 1 and read as success.
 
     if not no_uniprot_fallback:
         unresolved = accessions - set(index)
@@ -4106,25 +4105,24 @@ def refresh_panther_members(
             index.update(fetch_panther_from_uniprot(unresolved))
 
     unresolved = accessions - set(index)
-    # A skipped fallback must not relabel "PANTHER has no family for this" as
-    # "we never looked": the validator exempts the former and errors on the
-    # latter, so losing the distinction would fail the build on accessions no
-    # refresh can resolve. If every still-unresolved accession was already
-    # recorded absent, the previous run's verdict stands.
-    consulted = not no_uniprot_fallback
-    if no_uniprot_fallback and members_path.exists():
-        if unresolved and unresolved <= load_member_index_gaps(members_path).absent:
-            consulted = True
-    out_path = write_member_index(
-        index,
-        members_path,
-        unresolved,
-        consulted_uniprot=consulted,
-    )
+    # Split per accession, not for the batch. A skipped fallback must not
+    # relabel "PANTHER has no family for this" as "we never looked": the
+    # validator exempts the former and errors on the latter, so collapsing them
+    # fails the build on accessions no refresh can resolve. Deciding it for the
+    # whole set meant a single newly-cited accession defeated the guard for
+    # every previously-absent one.
+    if no_uniprot_fallback:
+        previously_absent = load_member_index_gaps(members_path).absent
+        absent = unresolved & previously_absent
+        unchecked = unresolved - previously_absent
+    else:
+        absent, unchecked = unresolved, set()
+    out_path = write_member_index(index, members_path, absent, unchecked)
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)} accessions indexed "
         f"({from_files} from {len(paths)} organism classification(s), "
-        f"{len(index) - from_files} from UniProt)."
+        f"{len(index) - from_files - carried_over} newly resolved via UniProt, "
+        f"{carried_over} carried over)."
     )
     typer.echo(
         f"  cited by modules/: {len(accessions) - len(unresolved)}/{len(accessions)} "
@@ -4256,6 +4254,7 @@ def fix_panther_labels(
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_gaps,
         load_obo_names,
         rewrite_panther_labels,
     )
@@ -4268,9 +4267,13 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    member_index = load_member_index(
-        repo_root / "interpro" / "panther" / "panther-members.tsv"
-    )
+    members_path = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    member_index = load_member_index(members_path)
+    # Without this the two tools deadlock on a provably-absent accession: the
+    # validator reports its label mismatch as a blocking error while this tool,
+    # seeing an unindexed member, files it under `skip` and refuses to touch the
+    # label forever. Right for a stale index, wrong when no refresh can help.
+    permanently_absent = load_member_index_gaps(members_path).absent
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4284,7 +4287,9 @@ def fix_panther_labels(
         skip: set[str] = set()
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
-            errors, _ = validate_family_members([use], member_index, paint_index)
+            errors, _ = validate_family_members(
+                [use], member_index, paint_index, permanently_absent=permanently_absent
+            )
             if errors:
                 skip.update(use.declared_family_curies)
             elif any(a in member_index for a in use.representative_accessions):

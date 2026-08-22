@@ -123,15 +123,15 @@ def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
     replaced, because silence is recoverable and a confident wrong claim is not.
     """
     checked = write_member_index(
-        {"P1": "PTHR1"}, tmp_path / "a.tsv", {"P9"}, consulted_uniprot=True
+        {"P1": "PTHR1"}, tmp_path / "a.tsv", {"P9"}
     ).read_text()
     skipped = write_member_index(
-        {"P1": "PTHR1"}, tmp_path / "b.tsv", {"P9"}, consulted_uniprot=False
+        {"P1": "PTHR1"}, tmp_path / "b.tsv", None, {"P9"}
     ).read_text()
 
     assert "UniProt's xref_panther" in checked
-    assert "NOT consulted" not in checked
-    assert "NOT consulted" in skipped
+    assert "NOT run" not in checked
+    assert "NOT run" in skipped
     assert "unchecked rather than absent" in skipped
 
     # The MARKER must differ too, not only the prose. A shared marker lets a
@@ -411,3 +411,120 @@ def test_refresh_merges_rather_than_replaces(tmp_path, monkeypatch):
 
     assert result.exit_code == 0, result.output
     assert load_member_index(panther / "panther-members.tsv") == {"Q00000": "PTHR9:SF1"}
+
+
+def test_a_skipped_refresh_preserves_absence_for_the_others(tmp_path, monkeypatch):
+    """One newly-cited accession must not relabel every absent one as unchecked.
+
+    The old guard was all-or-nothing: it kept the `# unresolved` markers only if
+    EVERY still-unresolved accession was already absent. Cite one new protein
+    and a `--no-uniprot-fallback` run rewrote all 35 absent lines as
+    `# unchecked`, emptying the set the validator uses to exempt them --
+    restoring the permanent-error bug via the command documented as its remedy,
+    and asserting in a committed artifact that 35 proteins were never looked up
+    when they were.
+    """
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    # OLD is known to have no PANTHER family; NEW has never been looked up.
+    write_member_index({}, panther / "panther-members.tsv", {"OLD"}, None)
+
+    def _member(accession: str) -> dict:
+        return {"term": {"id": f"UniProtKB:{accession}", "label": accession}}
+
+    (repo / "modules" / "m.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "module": {
+                    "id": "m",
+                    "parts": [
+                        {
+                            "node": {
+                                "annotons": [
+                                    {
+                                        "participant": {
+                                            "family": {
+                                                "term": {
+                                                    "id": "PANTHER:PTHR9",
+                                                    "label": "f",
+                                                },
+                                                "representative_members": [
+                                                    _member("OLD"),
+                                                    _member("NEW"),
+                                                ],
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                }
+            }
+        )
+    )
+    monkeypatch.setattr(
+        "ai_gene_review.etl.panther_families.fetch_sequence_classification",
+        lambda slug, cache: None,
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["refresh-panther-members", "--output-dir", str(repo), "--no-uniprot-fallback"],
+    )
+
+    assert result.exit_code == 0, result.output
+    gaps = load_member_index_gaps(panther / "panther-members.tsv")
+    assert gaps.absent == {"OLD"}, "a prior verdict must survive a skipped run"
+    assert gaps.unchecked == {"NEW"}
+
+
+def test_fix_panther_labels_is_not_deadlocked_by_an_absent_member(tmp_path):
+    """A provably-absent member must not freeze its label mismatch forever.
+
+    Escalating "unindexed" to an error puts the descriptor in `skip`, which is
+    right for a stale index -- a disputed grounding should not have its label
+    rewritten. But for an accession PANTHER has no family for, no refresh can
+    ever clear it, so the validator reports the label mismatch as a blocking
+    error while this tool permanently refuses to touch the label.
+    """
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    write_panther_obo([PantherEntry("PTHR9", "OFFICIAL NAME")], panther / "panther.obo")
+    write_member_index({}, panther / "panther-members.tsv", {"ABSENT"}, None)
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "module:\n"
+        "  id: m\n"
+        "  parts:\n"
+        "  - node:\n"
+        "      annotons:\n"
+        "      - participant:\n"
+        "          family:\n"
+        "            term:\n"
+        "              id: PANTHER:PTHR9\n"
+        "              label: official name\n"
+        "            representative_members:\n"
+        "            - term:\n"
+        "                id: UniProtKB:ABSENT\n"
+        "                label: rep\n"
+    )
+
+    result = CliRunner().invoke(
+        app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"]
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "OFFICIAL NAME" in module.read_text(), result.output
