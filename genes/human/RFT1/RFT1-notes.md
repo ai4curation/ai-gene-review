@@ -196,3 +196,43 @@ Man(5)GlcNAc(2)-PP-dolichol translocation protein, never on the bare symbol.
 Convergent with the curation already made: keep the MF at GO:0140303 anchored to the
 PMID:38886340 IDA, flag the debate, and do not assert the translocase mechanism as settled.
 Nothing in the run required a change of action on any annotation.
+
+### Framing correction: what of this bears on evolved function
+
+The run was anchored on the three RFT1-CDG missense positions, which is a disease-first
+framing and the wrong entry point for this repo. Disease alleles matter here only where they
+illuminate the evolved function, and by the run's own conclusion the allele *mapping* does
+not — substrate binding is required under both models, so where the alleles sit cannot
+separate them. Splitting the output on that criterion:
+
+**Bears on wild-type function (disease-independent):**
+
+- The MOP/MATE inverted-topology alternating-access fold is present in the human protein: a
+  two-lobed bundle enclosing a central pore axis geometrically separable from the lipid-facing
+  periphery, internal C2 repeat 40 Cα @ 3.07 Å RMSD. This is a statement about the architecture
+  the family evolved, and it is the structural basis for GO:0140303.
+- The near-axis basic positions are deeply conserved — an invariant Arg 9/9 and a conserved
+  basic K/R 7/9 across human → fungi → Dictyostelium. Deep conservation of buried, inward-facing
+  basic residues at the narrowest point of the axis marks the substrate-binding site as a
+  *selected* feature. This holds whether the selected activity is transport or capture-and-routing,
+  and it is independent of the fact that two of those positions happen to be mutated in patients.
+- The apo human axis lining is net-acidic (net −2). The cationic cavity of the published
+  mechanism is a property of substrate-docked yeast models, so the resting-state electrostatics
+  of the wild-type protein are unverified.
+- Position 298 is a conserved exposed acidic residue. Conservation of a solvent-exposed position
+  is the interesting part — exposed residues are usually less constrained, so this looks like a
+  functional interface rather than a folding requirement. Unexplained by either model.
+
+**Disease-only, no bearing on evolved function:** the pathogenicity of R67C/K152E/E298K, and
+the whole cavity-vs-portal-discriminates-the-models premise (which failed anyway).
+
+Consequently the review now states this gap in terms of *which activity RFT1 evolved to
+perform*, not *which activity's loss causes CDG*, and suggested experiment 3 is framed around
+the conserved substrate-site positions, with the CDG substitutions demoted to what they
+actually are here — convenient ready-made reagents at those positions.
+
+**Better question for a follow-up run, WT-first:** which positions in the family are most
+constrained across a deep MSA, and do they line the central cavity, the lateral portal, or
+neither? That asks what evolution actually conserved and where it sits in the transport
+machinery, with no disease input at all. The run itself flags the missing deep MSA as a
+limitation (it used pairwise Needleman-Wunsch against 9 orthologs).
