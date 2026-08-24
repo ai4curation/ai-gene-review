@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP5L - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRP5L</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A4QPB2" target="_blank" class="term-link">
+                        A4QPB2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRP5L";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A4QPB2" data-a="DESCRIPTION: LRP5L is a human transcribed locus represented in ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRP5L is a human transcribed locus represented in UniProtKB by a 252-amino-acid protein model composed of five LDL-receptor class B repeats; an alternative isoform changes residues 220-224 and lacks residues 225-252. In human lens epithelial cells and anterior lens capsules, plasmid-expression and siRNA experiments implicated LRP5L and the P36R variant in altered laminin gamma-1 and c-MAF expression associated with congenital membranous cataract. Endogenous protein production and the molecular basis of these effects remain unresolved. Current official NCBI Gene and HGNC records independently classify the locus as a pseudogene; UniProtKB retains a conflicting reviewed PE2 transcript-evidence protein model, which does not establish endogenous translation.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP5L/LRP5L-ncbi-gene.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NCBI Datasets Gene API record for human LRP5L (Gene ID 91355)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The current NCBI Gene record classifies human LRP5L as a pseudogene.</div>
+
+                        <div class="finding-text">"&#34;description&#34;: &#34;LDL receptor related protein 5 like (pseudogene)&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NCBI Datasets assigns LRP5L the PSEUDO gene type.</div>
+
+                        <div class="finding-text">"&#34;type&#34;: &#34;PSEUDO&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The current NCBI annotation exposes only non-coding and non-coding-model transcript classes for the locus.</div>
+
+                        <div class="finding-text">"&#34;transcript_type_counts&#34;: [
+    {
+      &#34;type&#34;: &#34;NON_CODING&#34;,
+      &#34;count&#34;: 2
+    },
+    {
+      &#34;type&#34;: &#34;NON_CODING_MODEL&#34;,
+      &#34;count&#34;: 16
+    }
+  ]"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP5L/LRP5L-hgnc.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HGNC REST record for human LRP5L (HGNC:25323)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGNC independently classifies the approved LRP5L locus as a pseudogene.</div>
+
+                        <div class="finding-text">"&#34;locus_type&#34;: &#34;pseudogene&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The HGNC record cross-references UniProtKB A4QPB2 despite its pseudogene locus classification.</div>
+
+                        <div class="finding-text">"&#34;uniprot_ids&#34;: [
+    &#34;A4QPB2&#34;
+  ]"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP5L/LRP5L-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB/Swiss-Prot A4QPB2 (LRP5L_HUMAN) record</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProtKB retains A4QPB2 as a reviewed 252-amino-acid LRP5L protein entry.</div>
+
+                        <div class="finding-text">"ID   LRP5L_HUMAN             Reviewed;         252 AA."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The UniProtKB protein-existence level is PE2, evidence at transcript level; this is not protein-level evidence.</div>
+
+                        <div class="finding-text">"PE   2: Evidence at transcript level;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProtKB lists MassIVE, PaxDb, PeptideAtlas, and two isoform-specific ProteomicsDB cross-references, but database-link presence is not itself evidence that locus-unique endogenous peptides were confirmed.</div>
+
+                        <div class="finding-text">"DR   MassIVE; A4QPB2; -.
+DR   PaxDb; 9606-ENSP00000482378; -.
+DR   PeptideAtlas; A4QPB2; -.
+DR   ProteomicsDB; 689; -. [A4QPB2-1]
+DR   ProteomicsDB; 690; -. [A4QPB2-2]"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The displayed sequence is annotated as five LDL-receptor class B repeats.</div>
+
+                        <div class="finding-text">"FT   REPEAT          3..45
+FT                   /note=&#34;LDL-receptor class B 1&#34;
+FT   REPEAT          46..88
+FT                   /note=&#34;LDL-receptor class B 2&#34;
+FT   REPEAT          89..132
+FT                   /note=&#34;LDL-receptor class B 3&#34;
+FT   REPEAT          133..175
+FT                   /note=&#34;LDL-receptor class B 4&#34;
+FT   REPEAT          176..218
+FT                   /note=&#34;LDL-receptor class B 5&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Isoform 2 changes residues 220-224 and deletes residues 225-252, altering and truncating the C terminus.</div>
+
+                        <div class="finding-text">"FT   VAR_SEQ         220..224
+FT                   /note=&#34;TNPHA -&gt; PGTAE (in isoform 2)&#34;
+FT                   /evidence=&#34;ECO:0000303|PubMed:15489334&#34;
+FT                   /id=&#34;VSP_026667&#34;
+FT   VAR_SEQ         225..252
+FT                   /note=&#34;Missing (in isoform 2)&#34;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR46513/PTHR46513-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR46513 family entries containing LRP5L, LRP5, and LRP6</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places the 252-amino-acid A4QPB2/LRP5L model in subfamily SF43.</div>
+
+                        <div class="finding-text">"A4QPB2,Low-density lipoprotein receptor-related protein 5-like protein,protein,9606,Homo sapiens,Homo sapiens (Human),LRP5L,252,PTHR46513:SF43,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 5-LIKE PROTEIN,True"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places the 1615-amino-acid human LRP5 protein in distinct subfamily SF16.</div>
+
+                        <div class="finding-text">"O75197,Low-density lipoprotein receptor-related protein 5,protein,9606,Homo sapiens,Homo sapiens (Human),LRP5,1615,PTHR46513:SF16,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 5,True"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places the 1613-amino-acid human LRP6 protein in distinct subfamily SF40.</div>
+
+                        <div class="finding-text">"O75581,Low-density lipoprotein receptor-related protein 6,protein,9606,Homo sapiens,Homo sapiens (Human),LRP6,1613,PTHR46513:SF40,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 6,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17974005" target="_blank" class="term-link">
+                            PMID:17974005
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The full-ORF clone resource of the German cDNA Consortium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This is a large-scale human ORF-clone resource paper; UniProtKB maps it to nucleotide sequence evidence for LRP5L isoform 1, but the article does not functionally characterize LRP5L.</div>
+
+                        <div class="finding-text">"The German cDNA Consortium ORFeome resource currently consists of
+more than 3,800 sequence-verified entry clones representing ORFs, cloned with
+and without stop codon, for about 1,700 different gene loci. 177 splice variants
+were cloned representing 121 of these genes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15489334" target="_blank" class="term-link">
+                            PMID:15489334
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The status, quality, and expansion of the NIH full-length cDNA project: the Mammalian Gene Collection (MGC).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This is a large-scale full-length cDNA resource paper; UniProtKB maps it to nucleotide sequence evidence for LRP5L isoforms 1 and 2, but the cached abstract does not functionally characterize LRP5L.</div>
+
+                        <div class="finding-text">"The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was designed to generate and sequence a publicly accessible cDNA resource containing a complete open reading frame (ORF) for every human and mouse gene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32789677" target="_blank" class="term-link">
+                            PMID:32789677
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The novel mutation P36R in LRP5L contributes to congenital membranous cataract via inhibition of laminin γ1 and c-MAF.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study identified LRP5L c.107C&gt;G (p.P36R) in a congenital membranous cataract family and reported that it was absent from two comparison groups.</div>
+
+                        <div class="finding-text">"We identified a novel suspected pathogenic mutation in LRP5L
+(c.107C &gt; G, p.P36R) in the congenital membranous cataract family. This mutation
+was absent in 300 normal controls and 300 age-related cataract patients."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In HLE B-3 cells and human anterior lens capsules, the authors report that wild-type LRP5L increased laminin gamma-1 and c-MAF expression, whereas P36R inhibited those effects.</div>
+
+                        <div class="finding-text">"LRP5L upregulated laminin γ1 expression in the cytoplasmic proteins
+of HLE B-3 cells and human anterior lens capsules, and LRP5L-P36R inhibited the
+effects of LRP5L. LRP5L upregulated c-MAF expression in the nucleus and
+cytoplasm of HLE B-3 cells, and LRP5L-P36R inhibited c-MAF expression via
+inhibition of laminin γ1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LRP5L produce a stable endogenous protein in the human lens or any other tissue, and which current transcript and isoform encode it if so?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Sun L, Ge H, Liu P</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="Q: Does LRP5L produce a stable endogenous protein in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P36R still map to a translated LRP5L open reading frame under the current human locus model, and does it segregate independently of other candidate variants in the cataract family?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Sun L, Song F, Liu H</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="Q: Does P36R still map to a translated LRP5L open rea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the reported laminin gamma-1 and c-MAF expression changes reproduced by endogenous locus-specific perturbation, and are they mediated by an LRP5L protein, an LRP5L RNA, or an indirect construct effect?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Sun L, Wang C, Tang X</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="Q: Are the reported laminin gamma-1 and c-MAF express..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform phased long-read RNA sequencing and ribosome profiling across the LRP5L locus in human lens tissue and HLE B-3 cells, followed by targeted parallel-reaction-monitoring mass spectrometry using peptides unique to the predicted isoform 1 and isoform 2 products. Include synthetic heavy-peptide standards, a confirmed low-abundance lens protein as a positive control, and genomic/transcript mapping filters that exclude homologous LRP-family reads.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The LRP5L locus is transcribed but does not produce a stable endogenous 252-amino-acid protein, consistent with the current NCBI pseudogene model.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: transcriptomics, ribosome profiling, and targeted proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="EXPERIMENT: Perform phased long-read RNA sequencing and riboso..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use multiple non-overlapping CRISPRi guides and transcript-targeted antisense oligonucleotides to perturb endogenous LRP5L in HLE B-3 cells and a human lens-organoid model. Rescue with sequence-verified isoform 1, isoform 2, and P36R constructs expressed at near-endogenous levels, then quantify LAMC1 and c-MAF RNA/protein over time. Pair the rescue with translation-dead RNA constructs to distinguish protein-mediated from RNA-mediated effects and include matched empty-vector and unrelated-repeat-protein controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The reported effects on laminin gamma-1 and c-MAF require a specific LRP5L transcript or translated isoform and are altered by P36R.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous perturbation and isoform-rescue assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="EXPERIMENT: Use multiple non-overlapping CRISPRi guides and tr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Conditional on detecting endogenous translation, introduce a small epitope tag at the endogenous locus without altering the alternative C terminus and analyze localization by orthogonal microscopy and biochemical fractionation. Identify reproducible proximity-labeling or affinity-purification partners for each supported isoform, with untagged cells and LRP5/LRP6 analyzed separately as controls rather than assumed homologues.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: If an endogenous LRP5L polypeptide exists, its native localization and interaction partners differ from those of the full-length LRP5 and LRP6 receptors.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous tagging, localization, and interaction proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A4QPB2" data-a="EXPERIMENT: Conditional on detecting endogenous translation, i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the human LRP5L locus produces a stable endogenous polypeptide is unknown, and the transcript(s), translation start site, and isoform(s) that could generate such a product have not been reconciled with the current pseudogene model.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Transcript-derived cDNA models historically supported the 252-amino-acid A4QPB2 sequence and its C-terminal alternative isoform, and UniProtKB retains a reviewed PE2 entry. In contrast, current NCBI Gene classifies LRP5L as a pseudogene and exposes only non-coding and non-coding-model transcript classes; HGNC independently assigns locus type pseudogene. UniProtKB lists MassIVE, PaxDb, PeptideAtlas, and ProteomicsDB 689/690 cross-references, but remains PE2. Those links establish database indexing, not locus-unique endogenous peptide detection, and no such confirmation is captured in the reviewed local evidence.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Protein existence is prerequisite to assigning any protein molecular function, localization, or biological process and to interpreting P36R as a protein-altering variant.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstruct the locus with phased long-read RNA sequencing, test translation by ribosome profiling, and seek locus-unique endogenous peptides with targeted mass spectrometry in human lens and other expressing tissues; then reconcile the RefSeq and UniProtKB records against those results.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"PE   2: Evidence at transcript level;"</em> — file:human/LRP5L/LRP5L-uniprot.txt</li>
+
+                <li><em>"&#34;type&#34;: &#34;PSEUDO&#34;"</em> — file:human/LRP5L/LRP5L-ncbi-gene.json</li>
+
+                <li><em>"&#34;locus_type&#34;: &#34;pseudogene&#34;"</em> — file:human/LRP5L/LRP5L-hgnc.json</li>
+
+                <li><em>"DR   MassIVE; A4QPB2; -.
+DR   PaxDb; 9606-ENSP00000482378; -.
+DR   PeptideAtlas; A4QPB2; -.
+DR   ProteomicsDB; 689; -. [A4QPB2-1]
+DR   ProteomicsDB; 690; -. [A4QPB2-2]"</em> — file:human/LRP5L/LRP5L-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular mechanism connecting LRP5L perturbation or the P36R construct to laminin gamma-1 and c-MAF expression is unknown, including whether the reported effects are direct, require an endogenous translated product, or are specific to a particular transcript or isoform.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> A single study reported P36R in a congenital membranous cataract family and reported that wild-type and P36R plasmids plus LRP5L siRNA altered laminin gamma-1 and c-MAF expression in HLE B-3 cells and human anterior lens capsules. The cached abstract establishes perturbation-dependent expression effects but not an intrinsic molecular activity, direct interaction, native localization, or endogenous protein production.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the mechanism is necessary to distinguish a protein-mediated lens phenotype from transcript-level regulation, construct-specific effects, or a linked variant and to determine whether any GO annotation is warranted.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reproduce the phenotype with locus-specific CRISPR perturbations in lens models, rescue with sequence-verified isoform 1, isoform 2, and P36R constructs matched to current genomic models, and test direct versus indirect control of laminin gamma-1 and c-MAF with time-resolved transcript and protein measurements.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"LRP5L upregulated laminin γ1 expression in the cytoplasmic proteins
+of HLE B-3 cells and human anterior lens capsules, and LRP5L-P36R inhibited the
+effects of LRP5L. LRP5L upregulated c-MAF expression in the nucleus and
+cytoplasm of HLE B-3 cells, and LRP5L-P36R inhibited c-MAF expression via
+inhibition of laminin γ1."</em> — PMID:32789677</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRP5L-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A4QPB2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrp5l-evidence-notes">LRP5L evidence notes</h1>
+<h2 id="scope-and-bottom-line">Scope and bottom line</h2>
+<p>This note evaluates source evidence for human <strong>LRP5L</strong> (UniProtKB A4QPB2;<br />
+NCBI Gene 91355; HGNC:25323) without assuming that the locus encodes a stable<br />
+protein. The evidence supports transcription/cDNA models and one reported<br />
+cataract-family and cell-perturbation study. It does <strong>not</strong> establish an intrinsic molecular<br />
+function, a native biological process, a native subcellular location, a signal<br />
+peptide, or a transmembrane topology. No LRP5- or LRP6-like receptor/Wnt function<br />
+should be transferred by name or broad-family membership.</p>
+<p>There is a current database-model conflict. The official NCBI Datasets Gene API<br />
+labels LRP5L <strong><code>"type": "PSEUDO"</code></strong> and exposes 2 <code>NON_CODING</code> plus 16<br />
+<code>NON_CODING_MODEL</code> transcripts<br />
+[file:human/LRP5L/LRP5L-ncbi-gene.json, fetched 2026-08-19]. HGNC independently<br />
+assigns <strong><code>"locus_type": "pseudogene"</code></strong> while cross-referencing A4QPB2<br />
+[file:human/LRP5L/LRP5L-hgnc.json, fetched 2026-08-19]. In contrast, the cached<br />
+UniProtKB flat file still says <strong>“ID   LRP5L_HUMAN             Reviewed;<br />
+252 AA.”</strong> and<br />
+<strong>“PE   2: Evidence at transcript level;”</strong><br />
+[file:human/LRP5L/LRP5L-uniprot.txt]. “Reviewed” denotes record curation; PE2 is<br />
+explicitly transcript-level rather than protein-level evidence. The two current<br />
+official gene authorities independently support the <code>PSEUDOGENE</code> product type<br />
+used in the review, while whether any stable endogenous translation nevertheless<br />
+occurs remains an empirical knowledge gap.</p>
+<h2 id="uniprotkb-sequence-model-and-explicit-limits">UniProtKB sequence model and explicit limits</h2>
+<p>The displayed A4QPB2 sequence is 252 aa. UniProtKB annotates five consecutive<br />
+<strong>“LDL-receptor class B”</strong> repeats at residues 3-45, 46-88, 89-132, 133-175,<br />
+and 176-218 [file:human/LRP5L/LRP5L-uniprot.txt, exact <code>FT REPEAT</code> records]. It<br />
+also annotates residues 223-247 as <strong>“Disordered”</strong>, with computational evidence<br />
+<strong>“ECO:0000256|SAM:MobiDB-lite”</strong> [file:human/LRP5L/LRP5L-uniprot.txt].</p>
+<p>Isoform 2 is a C-terminal variant, not evidence for a different function. The<br />
+record states <strong>“TNPHA -&gt; PGTAE (in isoform 2)”</strong> for residues 220-224 and<br />
+<strong>“Missing (in isoform 2)”</strong> for residues 225-252<br />
+[file:human/LRP5L/LRP5L-uniprot.txt]. Thus isoform 2 changes residues 220-224<br />
+and removes the final 28 residues.</p>
+<p>The complete cached record contains no <code>CC   -!- FUNCTION</code>, <code>CC   -!-
+SUBCELLULAR LOCATION</code>, <code>FT   SIGNAL</code>, or <code>FT   TRANSMEM</code> line. The positive<br />
+keyword list is only <strong>“Alternative splicing; Reference proteome; Repeat.”</strong><br />
+[file:human/LRP5L/LRP5L-uniprot.txt]. These absences are boundaries, not<br />
+positive evidence: they do not prove cytosolic localization, lack of secretion<br />
+in every possible product, or any molecular activity. They do show that the<br />
+reviewed UniProtKB record itself supplies no function/localization claim and no<br />
+annotated signal peptide or membrane span.</p>
+<h2 id="proteomics-cross-reference-audit">Proteomics cross-reference audit</h2>
+<p>The UniProtKB record lists <strong>MassIVE A4QPB2</strong>, <strong>PaxDb<br />
+9606-ENSP00000482378</strong>, <strong>PeptideAtlas A4QPB2</strong>, <strong>ProteomicsDB 689<br />
+(A4QPB2-1)</strong>, and <strong>ProteomicsDB 690 (A4QPB2-2)</strong><br />
+[file:human/LRP5L/LRP5L-uniprot.txt, exact <code>DR</code> records]. These are database<br />
+cross-references: their presence shows that the protein model or identifiers are<br />
+indexed by proteomics resources, but the flat file contains no peptide sequence,<br />
+sample, spectrum, locus-uniqueness assessment, or protein-existence upgrade tied<br />
+to them. UniProtKB still assigns <strong>“PE   2: Evidence at transcript level;”</strong>, so<br />
+it has not treated these links as accepted protein-level confirmation. The<br />
+conservative conclusion is not that proteomics resources lack LRP5L records, but<br />
+that the reviewed evidence does not establish a locus-unique endogenous LRP5L<br />
+polypeptide.</p>
+<h2 id="transcript-and-clone-evidence">Transcript and clone evidence</h2>
+<p>UniProtKB cites PMID:17974005 for large-scale mRNA sequencing of isoform 1. The<br />
+paper describes <strong>“more than 3,800 sequence-verified entry clones representing<br />
+ORFs, cloned with and without stop codon, for about 1,700 different gene loci”</strong><br />
+[PMID:17974005, Abstract]. It is a general ORFeome-resource paper and does not<br />
+directly characterize LRP5L function.</p>
+<p>UniProtKB cites PMID:15489334 for large-scale mRNA sequencing of isoforms 1 and<br />
+2. The cached abstract says the MGC was designed to generate <strong>“a publicly<br />
+accessible cDNA resource containing a complete open reading frame (ORF) for<br />
+every human and mouse gene”</strong> [PMID:15489334, Abstract; full text unavailable in<br />
+cache]. This supports historical transcript/cDNA-model provenance, not protein<br />
+expression or function. UniProtKB also cites the chromosome 22 genomic-sequence<br />
+paper PMID:10591208; it was not promoted to a top-level functional reference<br />
+because it establishes genomic context rather than LRP5L-specific transcript,<br />
+protein, or functional evidence.</p>
+<h2 id="panther-family-boundary">PANTHER family boundary</h2>
+<p>The locally fetched PANTHER table assigns A4QPB2/LRP5L to<br />
+<strong>PTHR46513:SF43</strong>, while human LRP5 (O75197; 1615 aa) is<br />
+<strong>PTHR46513:SF16</strong> and human LRP6 (O75581; 1613 aa) is<br />
+<strong>PTHR46513:SF40</strong><br />
+[file:interpro/panther/PTHR46513/PTHR46513-entries.csv, exact A4QPB2, O75197,<br />
+and O75581 rows]. The broad family also contains EGF and nidogen proteins, so<br />
+membership in PTHR46513 is far too broad for function transfer. The distinct<br />
+subfamilies, the approximately 252-aa versus approximately 1,600-aa lengths,<br />
+and the absence from A4QPB2 of an annotated signal peptide/transmembrane segment<br />
+make transfer of LRP5/LRP6 receptor, Wnt-coreceptor, ligand-binding, or membrane<br />
+localization annotations unsafe.</p>
+<h2 id="direct-cataract-study-pmid32789677">Direct cataract study (PMID:32789677)</h2>
+<p>The only located primary experimental paper directly centered on human LRP5L is<br />
+Sun et al. (2020). The cached abstract reports <strong>“a novel suspected pathogenic<br />
+mutation in LRP5L (c.107C &gt; G, p.P36R)”</strong>, absent from <strong>“300 normal controls<br />
+and 300 age-related cataract patients”</strong> [PMID:32789677, Abstract; full text<br />
+unavailable]. It also states that wild-type and mutant LRP5L plasmids were<br />
+transfected into HLE B-3 cells and human anterior lens capsules, and that<br />
+LRP5L/laminin gamma-1 were knocked down with siRNA [PMID:32789677, Abstract,<br />
+<strong>“Wild-type and mutant low-density lipoprotein receptor-related protein 5-like<br />
+(LRP5L) plasmids were constructed and transfected into human lens epithelial<br />
+cells (HLE B-3) and human anterior lens capsules.”</strong>].</p>
+<p>The reported result is that <strong>“LRP5L upregulated laminin γ1 expression”</strong> and<br />
+<strong>“LRP5L upregulated c-MAF expression”</strong>, with P36R inhibiting those effects<br />
+[PMID:32789677, Abstract]. This is direct perturbation evidence for expression<br />
+effects in the tested systems. It does not identify an intrinsic biochemical<br />
+activity, demonstrate a direct molecular interaction, establish native<br />
+localization/topology, or justify a receptor/Wnt annotation. The current NCBI<br />
+pseudogene classification and suppression of the exact historical coding<br />
+RefSeqs materially contest the protein-based interpretation. Because only the<br />
+abstract is cached, construct sequence/isoform identity, segregation details,<br />
+and assay controls could not be independently audited. The paper is retained as<br />
+highly relevant but its protein-causal interpretation is marked <code>DISPUTED</code>, not<br />
+dismissed.</p>
+<h2 id="curation-boundary">Curation boundary</h2>
+<ul>
+<li>Supported: a transcribed human locus; historical full-ORF/cDNA models; a<br />
+  retained UniProtKB 252-aa PE2 sequence model with five LDLR class B repeats;<br />
+  a C-terminal alternative splice model; and reported P36R-associated lens-cell<br />
+  expression phenotypes.</li>
+<li>Not established: stable endogenous protein production, molecular function,<br />
+  direct binding partners, receptor activity, Wnt signaling, native biological<br />
+  process, subcellular location, signal peptide, or transmembrane topology.</li>
+<li>Unresolved evidence boundary: NCBI Gene and HGNC treat LRP5L as a pseudogene<br />
+  while UniProtKB retains a reviewed transcript-evidence protein record and<br />
+  links to proteomics aggregators. Resolving the conflict<br />
+  requires endogenous protein evidence tied unambiguously to the locus and<br />
+  re-evaluation of the 2020 constructs against current transcript models.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A4QPB2
+gene_symbol: LRP5L
+product_type: PSEUDOGENE
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRP5L is a human transcribed locus represented in UniProtKB by a 252-amino-acid
+  protein model composed of five LDL-receptor class B repeats; an alternative
+  isoform changes residues 220-224 and lacks residues 225-252. In human lens
+  epithelial cells and anterior lens capsules, plasmid-expression and siRNA
+  experiments implicated LRP5L and the P36R variant in altered laminin gamma-1
+  and c-MAF expression associated with congenital membranous cataract. Endogenous
+  protein production and the molecular basis of these effects remain unresolved.
+  Current official NCBI Gene and HGNC records independently classify the locus
+  as a pseudogene; UniProtKB retains a conflicting reviewed PE2
+  transcript-evidence protein model, which does not establish endogenous
+  translation.
+alternative_products:
+- name: &#39;1&#39;
+  id: A4QPB2-1
+- name: &#39;2&#39;
+  id: A4QPB2-2
+  sequence_note: VSP_026667, VSP_026668
+existing_annotations: []
+references:
+- id: file:human/LRP5L/LRP5L-ncbi-gene.json
+  title: NCBI Datasets Gene API record for human LRP5L (Gene ID 91355)
+  findings:
+  - statement: &gt;-
+      The current NCBI Gene record classifies human LRP5L as a pseudogene.
+    supporting_text: &#39;&#34;description&#34;: &#34;LDL receptor related protein 5 like (pseudogene)&#34;&#39;
+  - statement: &gt;-
+      NCBI Datasets assigns LRP5L the PSEUDO gene type.
+    supporting_text: &#39;&#34;type&#34;: &#34;PSEUDO&#34;&#39;
+  - statement: &gt;-
+      The current NCBI annotation exposes only non-coding and non-coding-model
+      transcript classes for the locus.
+    supporting_text: |-
+      &#34;transcript_type_counts&#34;: [
+          {
+            &#34;type&#34;: &#34;NON_CODING&#34;,
+            &#34;count&#34;: 2
+          },
+          {
+            &#34;type&#34;: &#34;NON_CODING_MODEL&#34;,
+            &#34;count&#34;: 16
+          }
+        ]
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Fetched from the official NCBI Datasets Gene API for Gene ID 91355 on
+      2026-08-19 and cached as formatted JSON. This current official gene-model
+      evidence creates a material conflict with UniProtKB&#39;s retained reviewed
+      PE2 protein entry.
+- id: file:human/LRP5L/LRP5L-hgnc.json
+  title: HGNC REST record for human LRP5L (HGNC:25323)
+  findings:
+  - statement: &gt;-
+      HGNC independently classifies the approved LRP5L locus as a pseudogene.
+    supporting_text: &#39;&#34;locus_type&#34;: &#34;pseudogene&#34;&#39;
+  - statement: &gt;-
+      The HGNC record cross-references UniProtKB A4QPB2 despite its pseudogene
+      locus classification.
+    supporting_text: |-
+      &#34;uniprot_ids&#34;: [
+          &#34;A4QPB2&#34;
+        ]
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Fetched from the official HGNC REST API for HGNC:25323 on 2026-08-19 and
+      cached as formatted JSON. Its pseudogene locus type independently
+      corroborates NCBI while its A4QPB2 cross-reference makes the database-model
+      conflict explicit.
+- id: file:human/LRP5L/LRP5L-uniprot.txt
+  title: UniProtKB/Swiss-Prot A4QPB2 (LRP5L_HUMAN) record
+  findings:
+  - statement: &gt;-
+      UniProtKB retains A4QPB2 as a reviewed 252-amino-acid LRP5L protein entry.
+    supporting_text: &#34;ID   LRP5L_HUMAN             Reviewed;         252 AA.&#34;
+  - statement: &gt;-
+      The UniProtKB protein-existence level is PE2, evidence at transcript level;
+      this is not protein-level evidence.
+    supporting_text: &#34;PE   2: Evidence at transcript level;&#34;
+  - statement: &gt;-
+      UniProtKB lists MassIVE, PaxDb, PeptideAtlas, and two isoform-specific
+      ProteomicsDB cross-references, but database-link presence is not itself
+      evidence that locus-unique endogenous peptides were confirmed.
+    supporting_text: |-
+      DR   MassIVE; A4QPB2; -.
+      DR   PaxDb; 9606-ENSP00000482378; -.
+      DR   PeptideAtlas; A4QPB2; -.
+      DR   ProteomicsDB; 689; -. [A4QPB2-1]
+      DR   ProteomicsDB; 690; -. [A4QPB2-2]
+  - statement: &gt;-
+      The displayed sequence is annotated as five LDL-receptor class B repeats.
+    supporting_text: &#34;FT   REPEAT          3..45\nFT                   /note=\&#34;LDL-receptor class B 1\&#34;\nFT   REPEAT          46..88\nFT                   /note=\&#34;LDL-receptor class B 2\&#34;\nFT   REPEAT          89..132\nFT                   /note=\&#34;LDL-receptor class B 3\&#34;\nFT   REPEAT          133..175\nFT                   /note=\&#34;LDL-receptor class B 4\&#34;\nFT   REPEAT          176..218\nFT                   /note=\&#34;LDL-receptor class B 5\&#34;&#34;
+  - statement: &gt;-
+      Isoform 2 changes residues 220-224 and deletes residues 225-252, altering
+      and truncating the C terminus.
+    supporting_text: &#34;FT   VAR_SEQ         220..224\nFT                   /note=\&#34;TNPHA -&gt; PGTAE (in isoform 2)\&#34;\nFT                   /evidence=\&#34;ECO:0000303|PubMed:15489334\&#34;\nFT                   /id=\&#34;VSP_026667\&#34;\nFT   VAR_SEQ         225..252\nFT                   /note=\&#34;Missing (in isoform 2)\&#34;&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: DISPUTED
+    review_notes: &gt;-
+      The local flat file and accession were manually checked. It accurately
+      records UniProtKB&#39;s current reviewed PE2 assertion, sequence, repeats,
+      splice variants, and external proteomics database links, but the
+      protein-coding interpretation is disputed by current NCBI and HGNC
+      pseudogene classifications. The PE2 assignment shows that UniProtKB has
+      not accepted the linked resources as protein-level existence evidence. The
+      record contains no FUNCTION or SUBCELLULAR LOCATION comment and no SIGNAL
+      or TRANSMEM feature; these absences must not be converted into a positive
+      localization or topology claim.
+- id: file:interpro/panther/PTHR46513/PTHR46513-entries.csv
+  title: PANTHER PTHR46513 family entries containing LRP5L, LRP5, and LRP6
+  findings:
+  - statement: &gt;-
+      PANTHER places the 252-amino-acid A4QPB2/LRP5L model in subfamily SF43.
+    supporting_text: &#34;A4QPB2,Low-density lipoprotein receptor-related protein 5-like protein,protein,9606,Homo sapiens,Homo sapiens (Human),LRP5L,252,PTHR46513:SF43,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 5-LIKE PROTEIN,True&#34;
+  - statement: &gt;-
+      PANTHER places the 1615-amino-acid human LRP5 protein in distinct subfamily
+      SF16.
+    supporting_text: &#34;O75197,Low-density lipoprotein receptor-related protein 5,protein,9606,Homo sapiens,Homo sapiens (Human),LRP5,1615,PTHR46513:SF16,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 5,True&#34;
+  - statement: &gt;-
+      PANTHER places the 1613-amino-acid human LRP6 protein in distinct subfamily
+      SF40.
+    supporting_text: &#34;O75581,Low-density lipoprotein receptor-related protein 6,protein,9606,Homo sapiens,Homo sapiens (Human),LRP6,1613,PTHR46513:SF40,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 6,True&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Manually checked in the locally fetched PANTHER family table. The exact
+      subfamily separation and large length/domain-architecture difference make
+      transfer of LRP5/LRP6 receptor or Wnt-coreceptor functions to LRP5L unsafe;
+      the broad PTHR46513 family is not itself functional evidence for A4QPB2.
+- id: PMID:17974005
+  title: The full-ORF clone resource of the German cDNA Consortium.
+  findings:
+  - statement: &gt;-
+      This is a large-scale human ORF-clone resource paper; UniProtKB maps it to
+      nucleotide sequence evidence for LRP5L isoform 1, but the article does not
+      functionally characterize LRP5L.
+    supporting_text: &#34;The German cDNA Consortium ORFeome resource currently consists of \nmore than 3,800 sequence-verified entry clones representing ORFs, cloned with \nand without stop codon, for about 1,700 different gene loci. 177 splice variants \nwere cloned representing 121 of these genes.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: false
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identifier/title and full cached text were manually checked. The
+      paper supports the provenance and sequencing quality of a large-scale ORF
+      clone resource only; the LRP5L-specific mapping comes from UniProtKB and it
+      supplies no molecular-function, process, or localization evidence.
+- id: PMID:15489334
+  title: &#39;The status, quality, and expansion of the NIH full-length cDNA project: the Mammalian Gene Collection (MGC).&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      This is a large-scale full-length cDNA resource paper; UniProtKB maps it to
+      nucleotide sequence evidence for LRP5L isoforms 1 and 2, but the cached
+      abstract does not functionally characterize LRP5L.
+    supporting_text: &#34;The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was designed to generate and sequence a publicly accessible cDNA resource containing a complete open reading frame (ORF) for every human and mouse gene.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identifier/title and cached abstract were manually checked. The
+      article supports general cDNA-resource provenance; the LRP5L isoform
+      mapping is asserted by UniProtKB. It provides no direct protein or function
+      evidence.
+- id: PMID:32789677
+  title: The novel mutation P36R in LRP5L contributes to congenital membranous cataract via inhibition of laminin γ1 and c-MAF.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The study identified LRP5L c.107C&gt;G (p.P36R) in a congenital membranous
+      cataract family and reported that it was absent from two comparison groups.
+    supporting_text: |-
+      We identified a novel suspected pathogenic mutation in LRP5L
+      (c.107C &gt; G, p.P36R) in the congenital membranous cataract family. This mutation
+      was absent in 300 normal controls and 300 age-related cataract patients.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+    finding_review:
+      finding_status: DISPUTED
+      superseded_by:
+      - file:human/LRP5L/LRP5L-ncbi-gene.json
+      - file:human/LRP5L/LRP5L-hgnc.json
+      review_notes: &gt;-
+        The variant observation remains a reported primary result, but its
+        protein-coding/pathogenic interpretation is uncertain after NCBI&#39;s 2026
+        pseudogene reclassification and suppression of both former NM records.
+  - statement: &gt;-
+      In HLE B-3 cells and human anterior lens capsules, the authors report that
+      wild-type LRP5L increased laminin gamma-1 and c-MAF expression, whereas
+      P36R inhibited those effects.
+    supporting_text: |-
+      LRP5L upregulated laminin γ1 expression in the cytoplasmic proteins
+      of HLE B-3 cells and human anterior lens capsules, and LRP5L-P36R inhibited the
+      effects of LRP5L. LRP5L upregulated c-MAF expression in the nucleus and
+      cytoplasm of HLE B-3 cells, and LRP5L-P36R inhibited c-MAF expression via
+      inhibition of laminin γ1.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+    finding_review:
+      finding_status: DISPUTED
+      superseded_by:
+      - file:human/LRP5L/LRP5L-ncbi-gene.json
+      - file:human/LRP5L/LRP5L-hgnc.json
+      review_notes: &gt;-
+        This reports perturbation-dependent expression effects, not an intrinsic
+        biochemical activity, receptor function, direct interaction, or native
+        localization. The protein interpretation must be reassessed against the
+        current pseudogene model; only the abstract was available for review.
+  reference_review:
+    relevance: HIGH
+    correctness: DISPUTED
+    review_notes: &gt;-
+      PubMed identifier/title and the complete cached abstract were manually
+      checked. This is the only located primary experimental study directly about
+      human LRP5L, but its causal protein interpretation is now materially
+      contested by current NCBI Gene/RefSeq annotation, and the unavailable full
+      text prevents independent assessment of construct identity, segregation,
+      and assay controls. The reported expression effects do not justify an LRP5/
+      LRP6-like receptor or Wnt-signaling annotation.
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether the human LRP5L locus produces a stable endogenous polypeptide is
+    unknown, and the transcript(s), translation start site, and isoform(s) that
+    could generate such a product have not been reconciled with the current
+    pseudogene model.
+  boundary: &gt;-
+    Transcript-derived cDNA models historically supported the 252-amino-acid
+    A4QPB2 sequence and its C-terminal alternative isoform, and UniProtKB retains
+    a reviewed PE2 entry. In contrast, current NCBI Gene classifies LRP5L as a
+    pseudogene and exposes only non-coding and non-coding-model transcript
+    classes; HGNC independently assigns locus type pseudogene. UniProtKB lists
+    MassIVE, PaxDb, PeptideAtlas, and ProteomicsDB 689/690 cross-references, but
+    remains PE2. Those links establish database indexing, not locus-unique
+    endogenous peptide detection, and no such confirmation is captured in the
+    reviewed local evidence.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+  significance: &gt;-
+    Protein existence is prerequisite to assigning any protein molecular
+    function, localization, or biological process and to interpreting P36R as a
+    protein-altering variant.
+  resolution: &gt;-
+    Reconstruct the locus with phased long-read RNA sequencing, test translation
+    by ribosome profiling, and seek locus-unique endogenous peptides with targeted
+    mass spectrometry in human lens and other expressing tissues; then reconcile
+    the RefSeq and UniProtKB records against those results.
+  provenance:
+  - reference_id: file:human/LRP5L/LRP5L-uniprot.txt
+    supporting_text: &#34;PE   2: Evidence at transcript level;&#34;
+  - reference_id: file:human/LRP5L/LRP5L-ncbi-gene.json
+    supporting_text: &#39;&#34;type&#34;: &#34;PSEUDO&#34;&#39;
+  - reference_id: file:human/LRP5L/LRP5L-hgnc.json
+    supporting_text: &#39;&#34;locus_type&#34;: &#34;pseudogene&#34;&#39;
+  - reference_id: file:human/LRP5L/LRP5L-uniprot.txt
+    supporting_text: |-
+      DR   MassIVE; A4QPB2; -.
+      DR   PaxDb; 9606-ENSP00000482378; -.
+      DR   PeptideAtlas; A4QPB2; -.
+      DR   ProteomicsDB; 689; -. [A4QPB2-1]
+      DR   ProteomicsDB; 690; -. [A4QPB2-2]
+- gap_statement: &gt;-
+    The molecular mechanism connecting LRP5L perturbation or the P36R construct
+    to laminin gamma-1 and c-MAF expression is unknown, including whether the
+    reported effects are direct, require an endogenous translated product, or are
+    specific to a particular transcript or isoform.
+  boundary: &gt;-
+    A single study reported P36R in a congenital membranous cataract family and
+    reported that wild-type and P36R plasmids plus LRP5L siRNA altered laminin
+    gamma-1 and c-MAF expression in HLE B-3 cells and human anterior lens
+    capsules. The cached abstract establishes perturbation-dependent expression
+    effects but not an intrinsic molecular activity, direct interaction, native
+    localization, or endogenous protein production.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving the mechanism is necessary to distinguish a protein-mediated lens
+    phenotype from transcript-level regulation, construct-specific effects, or a
+    linked variant and to determine whether any GO annotation is warranted.
+  resolution: &gt;-
+    Reproduce the phenotype with locus-specific CRISPR perturbations in lens
+    models, rescue with sequence-verified isoform 1, isoform 2, and P36R
+    constructs matched to current genomic models, and test direct versus indirect
+    control of laminin gamma-1 and c-MAF with time-resolved transcript and protein
+    measurements.
+  provenance:
+  - reference_id: PMID:32789677
+    supporting_text: |-
+      LRP5L upregulated laminin γ1 expression in the cytoplasmic proteins
+      of HLE B-3 cells and human anterior lens capsules, and LRP5L-P36R inhibited the
+      effects of LRP5L. LRP5L upregulated c-MAF expression in the nucleus and
+      cytoplasm of HLE B-3 cells, and LRP5L-P36R inhibited c-MAF expression via
+      inhibition of laminin γ1.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+core_functions: []
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does LRP5L produce a stable endogenous protein in the human lens or any other
+    tissue, and which current transcript and isoform encode it if so?
+  experts:
+  - Sun L
+  - Ge H
+  - Liu P
+- question: &gt;-
+    Does P36R still map to a translated LRP5L open reading frame under the current
+    human locus model, and does it segregate independently of other candidate
+    variants in the cataract family?
+  experts:
+  - Sun L
+  - Song F
+  - Liu H
+- question: &gt;-
+    Are the reported laminin gamma-1 and c-MAF expression changes reproduced by
+    endogenous locus-specific perturbation, and are they mediated by an LRP5L
+    protein, an LRP5L RNA, or an indirect construct effect?
+  experts:
+  - Sun L
+  - Wang C
+  - Tang X
+suggested_experiments:
+- hypothesis: &gt;-
+    The LRP5L locus is transcribed but does not produce a stable endogenous
+    252-amino-acid protein, consistent with the current NCBI pseudogene model.
+  description: &gt;-
+    Perform phased long-read RNA sequencing and ribosome profiling across the
+    LRP5L locus in human lens tissue and HLE B-3 cells, followed by targeted
+    parallel-reaction-monitoring mass spectrometry using peptides unique to the
+    predicted isoform 1 and isoform 2 products. Include synthetic heavy-peptide
+    standards, a confirmed low-abundance lens protein as a positive control, and
+    genomic/transcript mapping filters that exclude homologous LRP-family reads.
+  experiment_type: transcriptomics, ribosome profiling, and targeted proteomics
+- hypothesis: &gt;-
+    The reported effects on laminin gamma-1 and c-MAF require a specific LRP5L
+    transcript or translated isoform and are altered by P36R.
+  description: &gt;-
+    Use multiple non-overlapping CRISPRi guides and transcript-targeted antisense
+    oligonucleotides to perturb endogenous LRP5L in HLE B-3 cells and a human
+    lens-organoid model. Rescue with sequence-verified isoform 1, isoform 2, and
+    P36R constructs expressed at near-endogenous levels, then quantify LAMC1 and
+    c-MAF RNA/protein over time. Pair the rescue with translation-dead RNA
+    constructs to distinguish protein-mediated from RNA-mediated effects and
+    include matched empty-vector and unrelated-repeat-protein controls.
+  experiment_type: endogenous perturbation and isoform-rescue assay
+- hypothesis: &gt;-
+    If an endogenous LRP5L polypeptide exists, its native localization and
+    interaction partners differ from those of the full-length LRP5 and LRP6
+    receptors.
+  description: &gt;-
+    Conditional on detecting endogenous translation, introduce a small epitope
+    tag at the endogenous locus without altering the alternative C terminus and
+    analyze localization by orthogonal microscopy and biochemical fractionation.
+    Identify reproducible proximity-labeling or affinity-purification partners
+    for each supported isoform, with untagged cells and LRP5/LRP6 analyzed
+    separately as controls rather than assumed homologues.
+  experiment_type: endogenous tagging, localization, and interaction proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP11 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRP11</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q86VZ4" target="_blank" class="term-link">
+                        Q86VZ4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRP11";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q86VZ4" data-a="DESCRIPTION: LRP11 is a single-pass type-I membrane protein who..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRP11 is a single-pass type-I membrane protein whose canonical 500-amino-acid isoform has an extracellular MANSC domain, PKD domain and one LDL-receptor class-A module followed by a short cytoplasmic tail. A second cDNA isoform replaces part of the PKD region and lacks the canonical LDLRA module, transmembrane helix and tail; its endogenous protein expression is unknown. LDL-responsive LRP11 signaling has been linked to MAPK13-dependent TCF1 phosphorylation and T-cell proliferation in mouse systems and selected human peripheral-blood lymphocyte assays. In human cervical- and prostate-cancer models, LRP11 perturbation alters proliferation, invasion and beta-catenin-dependent PD-L1 expression, but these disease-context phenotypes do not yet define its normal physiological role. Mouse amygdala Lrp11 abundance increases after experimental stress, without establishing causal roles in individual stress responses.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt&#39;s controlled-vocabulary membrane location is consistent with LRP11&#39;s curated type-I single-pass topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane is broad but correct and represents a constitutive property of the protein rather than a contextual phenotype. The electronic annotation is a direct mapping from the UniProt subcellular-location token SL-0162.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0162</span>
+
+                                    &middot; UniProt membrane subcellular-location vocabulary term
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The mapped location agrees with the signal peptide, extracellular domain, transmembrane helix and cytoplasmic tail in the reviewed record.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009408" target="_blank" class="term-link">
+                                    GO:0009408
+                                </a>
+                            </span>
+                            <span class="term-label">response to heat</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0009408" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to heat from mouse Lrp11, where the source row is an IEP from a multi-stressor amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying heat as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009409" target="_blank" class="term-link">
+                                    GO:0009409
+                                </a>
+                            </span>
+                            <span class="term-label">response to cold</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0009409" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to cold from mouse Lrp11, where the source row is an IEP from a multi-stressor amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying cold as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009414" target="_blank" class="term-link">
+                                    GO:0009414
+                                </a>
+                            </span>
+                            <span class="term-label">response to water deprivation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0009414" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to water deprivation from mouse Lrp11, where the source row is an IEP from a multi-stressor amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying water deprivation as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009612" target="_blank" class="term-link">
+                                    GO:0009612
+                                </a>
+                            </span>
+                            <span class="term-label">response to mechanical stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0009612" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to mechanical stimulus from mouse Lrp11, where the source row is an IEP from a multi-stressor amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying mechanical stimulus as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033555" target="_blank" class="term-link">
+                                    GO:0033555
+                                </a>
+                            </span>
+                            <span class="term-label">multicellular organismal response to stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0033555" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers multicellular organismal response to stress from mouse Lrp11, where the source row is an IEP from an amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support this response term, but the human IEA is a second-step orthology transfer from one expression survey confined to mouse amygdala. The accessible abstract reports generic stress models without resolving the individual paradigms, so broad organism-level transfer to human LRP11 is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035902" target="_blank" class="term-link">
+                                    GO:0035902
+                                </a>
+                            </span>
+                            <span class="term-label">response to immobilization stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0035902" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to immobilization stress from mouse Lrp11, where the source row is an IEP from an amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying immobilization as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042594" target="_blank" class="term-link">
+                                    GO:0042594
+                                </a>
+                            </span>
+                            <span class="term-label">response to starvation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0042594" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers response to starvation from mouse Lrp11, where the source row is an IEP from a multi-stressor amygdala expression study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IEP can support a response annotation, but this human IEA is a second-step orthology transfer from a single mouse-amygdala expression study. The accessible abstract describes generic stress models without identifying starvation as an assayed condition, so the term-specific human transfer is too weak and context-bound.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE WEAK OR INFERRED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Current QuickGO traces this term to IEP evidence from PMID:25262641, an amygdala expression-response study.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000019931</span>
+
+                                    &middot; mouse Lrp11 Ensembl protein
+
+
+                                    <span class="badge">CIRCULAR OR REDUNDANT</span>
+
+
+                                    <div class="propagation-comment">This is a second identifier for the same mouse donor, not independent biological evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051219" target="_blank" class="term-link">
+                                    GO:0051219
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoprotein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17620599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17620599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional specialization of beta-arrestin interactions reve...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0051219" data-r="PMID:17620599" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited study is a large beta-arrestin interactome screen, but the cached abstract does not identify LRP11 or establish that its partner was phosphorylated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The relevant protein list and assay-level evidence are confined to supplementary tables that are not represented in the cached publication. Curator deference is appropriate for this experimental annotation: neither acceptance nor rejection of phosphoprotein binding is justified from the available LRP11-specific evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17620599" target="_blank" class="term-link">
+                                        PMID:17620599
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">As
+determined by LC tandem MS, 71 proteins interacted with beta-arrestin 1, 164
+interacted with beta-arrestin 2, and 102 interacted with both beta-arrestins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17620599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17620599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional specialization of beta-arrestin interactions reve...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0005886" data-r="PMID:17620599" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Although the IC source term has no compartment semantics, independent intact-cell blocking-antibody experiments support an accessible cell-surface pool of LRP11.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The imported IC provenance alone is insufficient, but LRP11 blockade altered LDL-induced responses in intact T cells. Together with type-I membrane topology, these data independently support plasma-membrane localization in the tested T-cell context.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">GO:0051219</span>
+
+                                    &middot; phosphoprotein binding
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">This IC source term provides no plasma-membrane semantics, but independent intact-cell antibody perturbations support the location.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">To confirm this finding, we used an LRP11 blocking antibody to block LRP11. The in vitro stimulation assay showed that LRP11 blockade offset LDL-induced proliferation and the frequency of CD8+ T cells (figure 3C,D).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030169" target="_blank" class="term-link">
+                                    GO:0030169
+                                </a>
+                            </span>
+                            <span class="term-label">low-density lipoprotein particle binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38272565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP11 promotes stem-like T cells via MAPK13-mediated TCF1 ph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0030169" data-r="PMID:38272565" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A mouse Lrp11-ectodomain/CD3e chimeric reporter responded to LDL; this supports LDL recognition but is not a direct biochemical observation of LDL binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0030169 is proposed conservatively by exact-ortholog inference from the LDL-responsive ectodomain reporter, while the absence of purified-protein binding data remains explicit. GO:0005041 is not proposed because neither direct binding nor delivery of LDL into the cell by endocytosis was demonstrated.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Verified PTHR46876:SF1 co-membership with human Q86VZ4 supports the orthology boundary; the ligand assay used a mouse Lrp11 extracellular domain reporter, and human PBMC blocking experiments support conservation of the downstream axis.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Using a cell-based chimeric receptor
+screening system, we showed that LRP11 interacted with LDL and activated TCF1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                                    GO:0038023
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38272565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP11 promotes stem-like T cells via MAPK13-mediated TCF1 ph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0038023" data-r="PMID:38272565" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endogenous mouse Lrp11 knockdown impaired LDL-induced proliferation and Tcf7 expression; LRP11 associated with MAPK13, and antibody/inhibitor perturbations placed LRP11 upstream of MAPK13-dependent TCF1 phosphorylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad signaling-receptor term captures perturbation-supported signal transduction without inventing a more specific receptor class or endocytic mechanism. Species transfer remains explicit because the proximal shRNA, co-IP and phosphorylation experiments were mouse-dominant, although human PBMC inhibitor studies support conservation of the axis.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8CB67</span>
+
+                                    &middot; mouse Lrp11
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Verified PTHR46876:SF1 co-membership with human Q86VZ4 supports the orthology boundary; mouse ligand/receptor and pathway experiments define the proximal mechanism, and human PBMC inhibitor studies support a conserved signaling role.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Indeed, knockdown of LRP11 impaired CD8+ T-cell proliferation and Tcf7 expression (figure 3H and online supplemental figure S4B).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The IP data showed that MAPK13 interacted with LRP11 and TCF1 (figure 5A).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found that LDL promoted TCF1 phosphorylation, which was eliminated by LRP11 blocking or MAPK13 inhibition (figure 5I).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042102" target="_blank" class="term-link">
+                                    GO:0042102
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of T cell proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38272565
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP11 promotes stem-like T cells via MAPK13-mediated TCF1 ph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q86VZ4" data-a="GO:0042102" data-r="PMID:38272565" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LDL promoted proliferation of human peripheral-blood lymphocytes, and an LRP11 blocking antibody or MAPK13 inhibitor suppressed the response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct perturbation in human cells supports positive regulation of T-cell proliferation in this LDL-responsive experimental context. The annotation does not generalize the result to all tissues or make the cancer-immunotherapy setting a constitutive organismal function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                        PMID:38272565
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found that LDL can also promote human lymphocyte proliferation, whether it is the proliferation ratio or cell numbers, and this effect can be inhibited by aLRP11 and MAPK13 inhibitors (online supplemental figure S7A–C).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LDL-responsive LRP11 signaling promotes MAPK13-dependent TCF1 phosphorylation and T-cell proliferation. Ligand recognition and the proximal pathway were defined principally with mouse Lrp11 and mouse T cells, while LDL-stimulated human peripheral-blood lymphocyte proliferation was sensitive to LRP11 blockade and MAPK13 inhibition. This supports a conserved signaling-receptor role but not yet LDL-particle endocytosis or a universal function across human tissues. The cervical- and prostate-cancer growth, invasion and PD-L1 phenotypes are context-specific downstream consequences and are not included in this core function.</h3>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="FUNCTION: LDL-responsive LRP11 signaling promotes MAPK13-dep..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                            signaling receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042102" target="_blank" class="term-link">
+                                positive regulation of T cell proliferation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                PMID:38272565
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Indeed, knockdown of LRP11 impaired CD8+ T-cell proliferation and Tcf7 expression (figure 3H and online supplemental figure S4B).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                PMID:38272565
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The IP data showed that MAPK13 interacted with LRP11 and TCF1 (figure 5A).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                PMID:38272565
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that LDL promoted TCF1 phosphorylation, which was eliminated by LRP11 blocking or MAPK13 inhibition (figure 5I).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                                PMID:38272565
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that LDL can also promote human lymphocyte proliferation, whether it is the proliferation ratio or cell numbers, and this effect can be inhibited by aLRP11 and MAPK13 inhibitors (online supplemental figure S7A–C).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP11/LRP11-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reviewed UniProtKB entry for human LRP11 (Q86VZ4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP11 is curated as a single-pass type-I membrane protein.</div>
+
+                        <div class="finding-text">"CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I
+CC       membrane protein {ECO:0000305}."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record describes two splice isoforms; isoform 2 replaces residues 205-237 and lacks the remainder of the canonical sequence.</div>
+
+                        <div class="finding-text">"CC   -!- ALTERNATIVE PRODUCTS:
+CC       Event=Alternative splicing; Named isoforms=2;
+CC       Name=1;
+CC         IsoId=Q86VZ4-1; Sequence=Displayed;
+CC       Name=2;
+CC         IsoId=Q86VZ4-2; Sequence=VSP_017535, VSP_017536;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The extracellular region contains MANSC, PKD and one LDL-receptor class-A domain, but domain membership alone does not establish a lipoprotein ligand.</div>
+
+                        <div class="finding-text">"FT   DOMAIN          99..184
+FT                   /note=&#34;MANSC&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00341&#34;
+FT   DOMAIN          210..305
+FT                   /note=&#34;PKD&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00151&#34;
+FT   DOMAIN          309..345
+FT                   /note=&#34;LDL-receptor class A&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR46876/PTHR46876-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR46876 family member table</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP11 Q86VZ4 belongs to the LRP11-specific PTHR46876:SF1 subfamily.</div>
+
+                        <div class="finding-text">"Q86VZ4,Low-density lipoprotein receptor-related protein 11,protein,9606,Homo sapiens,Homo sapiens (Human),LRP11,500,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrp11 Q8CB67 belongs to the same LRP11-specific PTHR46876:SF1 subfamily.</div>
+
+                        <div class="finding-text">"Q8CB67,Low-density lipoprotein receptor-related protein 11,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp11,483,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15489334" target="_blank" class="term-link">
+                            PMID:15489334
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The status, quality, and expansion of the NIH full-length cDNA project: the Mammalian Gene Collection (MGC).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The MGC generated high-quality full-open-reading-frame human and mouse cDNA clones; UniProt uses LRP11 clones from this resource to define its two isoforms.</div>
+
+                        <div class="finding-text">"The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was
+designed to generate and sequence a publicly accessible cDNA resource containing
+a complete open reading frame (ORF) for every human and mouse gene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17620599" target="_blank" class="term-link">
+                            PMID:17620599
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional specialization of beta-arrestin interactions revealed by proteomic analysis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study was a broad beta-arrestin interactome screen, not an LRP11-focused functional analysis; the cached abstract does not name LRP11.</div>
+
+                        <div class="finding-text">"As
+determined by LC tandem MS, 71 proteins interacted with beta-arrestin 1, 164
+interacted with beta-arrestin 2, and 102 interacted with both beta-arrestins."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Only 16 randomly selected new partners were validated by coimmunoprecipitation, and the cache does not show whether LRP11 was among them.</div>
+
+                        <div class="finding-text">"The binding of 16 randomly selected newly identified beta-arrestin
+partners was validated by coimmunoprecipitation assays in HEK293 cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25262641" target="_blank" class="term-link">
+                            PMID:25262641
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic regulatory network analysis reveals that low density lipoprotein receptor-related protein 11 is involved in stress responses in mice.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In mouse amygdala, Lrp11 abundance was measured after stress and was higher in stressed animals; this is expression-response evidence, not a causal test of each transferred stress process.</div>
+
+                        <div class="finding-text">"Western blotting, qPCR and immunohistochemistry were used to
+investigate the expression variation of Lrp11 in amygdala tissue after exposure
+to stress. We found the quantity of Lrp11 was more obvious in stress models than
+that in normal mice (P&lt;0.05) which suggests Lrp11 might participate in the
+process of stress response."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lrp11 depletion altered four transcript-level network members in human cell lines, but did not directly test heat, cold, deprivation or immobilization.</div>
+
+                        <div class="finding-text">"we transfected HEK 293T cells and SH-SY5Y cells with Lrp11 siRNA
+leading to down-regulation of Lrp11mRNA and were able to confirm a significant
+influence of Lrp11 depletion on the expression of Xpnpep1, Maneal, Pgap1 and
+Uprt."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31507330" target="_blank" class="term-link">
+                            PMID:31507330
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The role of low density lipoprotein receptor-related protein 11 as a tumor promoter in cervical cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human cervical cancer cell-line LRP11 silencing reduced proliferation, migration and invasion, and slowed xenograft growth.</div>
+
+                        <div class="finding-text">"The silencing of LRP11 in SiHa
+and CaSki cell lines inhibited cell proliferation, reduced migration and
+invasion and suppressed cell growth in nude mice, which possibly related to cell
+cycle protein regulation of CDK 2/4, cyclin D1/E1, MMP-2/9, and VEGF."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The paper explicitly confines these phenotypes to HSIL/cervical-cancer context and does not establish LRP11&#39;s normal physiological role.</div>
+
+                        <div class="finding-text">"LRP11 plays important roles in proliferation, migration and
+invasion, with the potential to be a useful prognostic marker and therapeutic
+target for patients with HSIL and cervical cancer."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31865764" target="_blank" class="term-link">
+                            PMID:31865764
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP11 activates β-catenin to induce PD-L1 expression in prostate cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP11 gain- and loss-of-function in two human prostate-cancer cell lines placed LRP11 upstream of beta-catenin-dependent PD-L1 expression.</div>
+
+                        <div class="finding-text">"Further experiments
+in two PRAD cell lines with LRP11 over-expression and knockdown showed that
+LRP11 induced PD-L1 expression through β-catenin signalling."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP11 overexpression suppressed Jurkat-cell activity in coculture, and blocking LRP11 or PD-L1 reversed the effect.</div>
+
+                        <div class="finding-text">"In addition, LRP11
+over-expression in PRAD cell line induced immunosuppression of Jurkat cell in
+in-vitro co-culture system. The effects of LRP11 could be blocked by
+neutralising LRP11 or PD-L1 antibody."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38272565" target="_blank" class="term-link">
+                            PMID:38272565
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP11 promotes stem-like T cells via MAPK13-mediated TCF1 phosphorylation, enhancing anti-PD1 immunotherapy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A chimeric-receptor assay identified LDL as an LRP11-interacting stimulus and linked receptor activation to TCF1 in a tumor-bearing mouse/T-cell system.</div>
+
+                        <div class="finding-text">"Using a cell-based chimeric receptor
+screening system, we showed that LRP11 interacted with LDL and activated TCF1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The proposed proximal pathway is LRP11-dependent MAPK13 activation followed by MAPK13 phosphorylation of TCF1 and expansion of stem-like CD8 T cells.</div>
+
+                        <div class="finding-text">"Mechanistically, LRP11
+activation induces MAPK13 activation. Then, MAPK13 phosphorylates TCF1, leading
+to increase of stem-like T cells."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified human LRP11 bind native LDL directly, and does ligand engagement cause particle internalization, receptor trafficking, signaling, or a combination of these outcomes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="Q: Does purified human LRP11 bind native LDL directly..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which normal human T-cell subset or other tissue uses the LRP11-MAPK13-TCF1 axis, and is that pathway active at physiological LDL concentrations?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="Q: Which normal human T-cell subset or other tissue u..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is LRP11 isoform 2 translated and secreted, and can it bind ligand or modulate the canonical membrane isoform?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="Q: Is LRP11 isoform 2 translated and secreted, and ca..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LRP11 interact directly and phospho-dependently with beta-arrestins, and is a functional pool present at the plasma membrane?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="Q: Does endogenous LRP11 interact directly and phosph..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the rise of mouse amygdala Lrp11 after stress an adaptive effector response, a downstream marker, or a nonspecific consequence of the stress paradigm?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="Q: Is the rise of mouse amygdala Lrp11 after stress a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine ectodomain binding kinetics for LDL, VLDL, oxidized LDL and HDL, then compare fluorescent-particle uptake, degradation and MAPK13 activation in LRP11-knockout cells rescued with wild-type, ligand-binding-defective and cytoplasmic-tail-mutant human LRP11.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human LRP11 binds LDL directly but functions primarily as a signaling receptor rather than an LDL-internalization receptor.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical binding, uptake, and genetic rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="EXPERIMENT: Determine ectodomain binding kinetics for LDL, VLD..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use CRISPR knockout and wild-type rescue in primary human CD8 T-cell subsets, titrate physiological LDL, and measure MAPK13 activation, TCF1 phosphorylation, lineage-state markers and proliferation with orthogonal antibody-free readouts.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Endogenous human LRP11 is required for LDL-dependent MAPK13-TCF1 signaling and proliferation in a defined CD8 T-cell subset.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: primary-cell genetics and phosphosignaling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="EXPERIMENT: Use CRISPR knockout and wild-type rescue in primar..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify isoform-specific RNA and peptides in primary tissues, genome-tag each endogenous isoform, and test secretion, stability, LDL binding and effects on canonical-isoform signaling in matched knockout/rescue cells.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRP11 isoform 2 is a secreted extracellular protein that modifies ligand availability or canonical LRP11 signaling.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved proteomics and cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="EXPERIMENT: Quantify isoform-specific RNA and peptides in prim..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine endogenous reciprocal coimmunoprecipitation or proximity labeling with phosphatase/phosphosite perturbations, cell-surface biotinylation and compartment-resolved imaging before and after candidate ligand stimulation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Beta-arrestin association with LRP11 is direct, phosphorylation-dependent and restricted to a cell-surface receptor pool.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction proteomics and spatial cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="EXPERIMENT: Combine endogenous reciprocal coimmunoprecipitatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare inducible, amygdala-restricted Lrp11 knockout, wild-type rescue and expression-matched controls across individual stress paradigms, measuring both behavioral/physiological responses and the previously reported expression-network targets.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Stress-induced mouse amygdala Lrp11 expression is downstream of stress rather than required for the stress response.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: conditional mouse genetics and stress phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q86VZ4" data-a="EXPERIMENT: Compare inducible, amygdala-restricted Lrp11 knock..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRP11-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q86VZ4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrp11-review-notes">LRP11 review notes</h1>
+<h2 id="identity-topology-and-sequence-evidence">Identity, topology, and sequence evidence</h2>
+<p>Human LRP11 is UniProtKB Q86VZ4, a 500-aa precursor. The reviewed record calls it<br />
+a single-pass type-I membrane protein; it does <strong>not</strong> specify plasma membrane<br />
+[file:human/LRP11/LRP11-uniprot.txt "SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I"].<br />
+The predicted topology is a signal peptide (1-37), extracellular region (38-450),<br />
+one transmembrane helix (451-473), and a short cytoplasmic tail (474-500)<br />
+[file:human/LRP11/LRP11-uniprot.txt "FT   TRANSMEM        451..473"].</p>
+<p>The extracellular region contains MANSC, PKD, and one LDL-receptor class-A module<br />
+[file:human/LRP11/LRP11-uniprot.txt "FT                   /note=\"LDL-receptor class A\""].<br />
+This establishes receptor-like architecture, not a specific ligand or an LDL-uptake<br />
+function. The UniProt similarity statement is only family-level evidence<br />
+[file:human/LRP11/LRP11-uniprot.txt "Belongs to the LDLR family."]. General functions<br />
+of LRP1, LRP5/6, LRP8, VLDLR, or SORL1 must therefore not be transferred to LRP11.<br />
+In particular, older literature often calls SORL1/SORLA “LR11”; that is a different<br />
+gene and must not be confused with HGNC LRP11.</p>
+<h2 id="isoforms">Isoforms</h2>
+<p>The reviewed record lists two splice isoforms<br />
+[file:human/LRP11/LRP11-uniprot.txt "Event=Alternative splicing; Named isoforms=2;"].<br />
+Isoform 1 is the displayed 500-aa sequence. Isoform 2 replaces residues 205-237 and<br />
+lacks residues 238-500, thereby removing the canonical PKD/LDLRA region,<br />
+transmembrane helix, and cytoplasmic tail. The underlying citation is the Mammalian<br />
+Gene Collection resource, whose aim was full-ORF cDNA sequencing rather than<br />
+functional characterization <a href="https://pubmed.ncbi.nlm.nih.gov/15489334" title="designed to generate and sequence a publicly accessible cDNA resource containing">PMID:15489334</a>.<br />
+The existence of cDNA isoforms does not establish their endogenous protein abundance<br />
+or distinct functions.</p>
+<h2 id="existing-human-experimental-annotation-beta-arrestin-screen">Existing human experimental annotation: beta-arrestin screen</h2>
+<p>PMID:17620599 is a global beta-arrestin interactome experiment, not an LRP11-focused<br />
+study. It reports hundreds of mass-spectrometry interactors<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17620599" title="102 interacted with both beta-arrestins.">PMID:17620599</a> and states that only a<br />
+random subset of new partners was validated<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17620599" title="The binding of 16 randomly selected newly identified beta-arrestin">PMID:17620599</a>.<br />
+The cached abstract/main text does not name LRP11; the protein lists and validation<br />
+details reside in supplementary tables that are not present in the project cache.<br />
+Therefore the IMP phosphoprotein-binding annotation and the dependent IC<br />
+plasma-membrane annotation cannot be judged from PMID:17620599 alone. However,<br />
+PMID:38272565 used LRP11 blocking antibody on intact T cells, independently<br />
+supporting an accessible cell-surface pool; the<br />
+plasma-membrane row is therefore accepted. The beta-arrestin-screen hit does not by itself<br />
+show that LRP11 binds a phosphorylated partner, and the study explicitly<br />
+places interactors in multiple compartments<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17620599" title="in the cytoplasm, but also in the nucleus as well as other subcellular">PMID:17620599</a>.</p>
+<h2 id="mouse-stress-study-and-orthology-transfer-boundary">Mouse stress study and orthology-transfer boundary</h2>
+<p>The seven human stress-process IEAs all transfer from mouse Lrp11 (Q8CB67) through<br />
+Ensembl Compara. The actual donor paper is PMID:25262641. It measured Lrp11 mRNA and<br />
+protein in mouse amygdala after stress<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25262641" title="investigate the expression variation of Lrp11 in amygdala tissue after exposure">PMID:25262641</a>.<br />
+Live QuickGO donor inspection on 2026-08-19 showed that each of the seven mouse<br />
+Q8CB67 source rows uses IEP with PMID:25262641. IEP is valid evidence for a response<br />
+annotation; the concern is instead the second-step transfer to human, the single-tissue<br />
+mouse context, and the accessible abstract's failure to identify which individual<br />
+stress paradigm supports each term.<br />
+The authors observed higher abundance in stressed mice<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25262641" title="We found the quantity of Lrp11 was more obvious in stress models than">PMID:25262641</a>.<br />
+That expression-response evidence is informative in mouse amygdala but is too<br />
+underspecified for seven term-level human orthology transfers.</p>
+<p>The paper also depleted Lrp11 in HEK293T and SH-SY5Y cells and observed altered<br />
+expression of Xpnpep1, Maneal, Pgap1, and Uprt<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25262641" title="influence of Lrp11 depletion on the expression of Xpnpep1, Maneal, Pgap1 and">PMID:25262641</a>.<br />
+This supports a candidate regulatory network but still does not establish the seven<br />
+specific stress processes in human LRP11. Accordingly, those transfers are marked<br />
+over-annotated rather than treated as core functions.</p>
+<p>A local PANTHER lookup fetched on 2026-08-19 returned human Q86VZ4 and mouse Q8CB67<br />
+together in PTHR46876:SF1<br />
+[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q86VZ4,Low-density lipoprotein receptor-related protein 11,protein,9606,Homo sapiens,Homo sapiens (Human),LRP11,500,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"]<br />
+[file:interpro/panther/PTHR46876/PTHR46876-entries.csv, "Q8CB67,Low-density lipoprotein receptor-related protein 11,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp11,483,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True"].</p>
+<h2 id="direct-primary-studies-and-biological-scope">Direct primary studies and biological scope</h2>
+<p>Human cervical-cancer experiments show that LRP11 knockdown reduced proliferation,<br />
+migration, and invasion in SiHa and CaSki cells and slowed xenograft growth<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31507330" title="The silencing of LRP11 in SiHa">PMID:31507330</a>. These are direct perturbation<br />
+phenotypes, but they are cancer-context outcomes and do not identify a normal ligand<br />
+or proximal receptor activity.</p>
+<p>In human prostate-cancer cell lines, gain/loss experiments placed LRP11 upstream of<br />
+beta-catenin-dependent PD-L1 expression<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31865764" title="LRP11 induced PD-L1 expression through β-catenin signalling.">PMID:31865764</a>.<br />
+LRP11 overexpression also suppressed Jurkat-cell behavior in coculture, and antibody<br />
+blockade reversed the effect <a href="https://pubmed.ncbi.nlm.nih.gov/31865764" title="The effects of LRP11 could be blocked by">PMID:31865764</a>.<br />
+Again, this is a disease-context regulatory phenotype rather than a settled normal<br />
+core function.</p>
+<p>PMID:38272565 supplies the strongest ligand-linked mechanism: a chimeric-receptor<br />
+screen reported that LRP11 interacted with LDL and activated TCF1<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38272565" title="we showed that LRP11 interacted with LDL and activated TCF1.">PMID:38272565</a>, with<br />
+MAPK13 placed between receptor activation and TCF1 phosphorylation<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38272565" title="Then, MAPK13 phosphorylates TCF1, leading">PMID:38272565</a>. The species boundary is<br />
+essential: the receptor constructs used mouse genes<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38272565" title="The sequence encoding the extracellular portion of the mouse-indicated genes">PMID:38272565</a>,<br />
+the in-vivo tumor experiments were in mice, and only selected assays used human PBMCs<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38272565" title="Human peripheral blood mononuclear cell (PBMC) were collected">PMID:38272565</a>.<br />
+This supports a context-specific LDL-Lrp11-MAPK13-TCF1 axis in T cells but does not<br />
+yet justify transferring a generic LDL-receptor/lipoprotein-endocytosis function to<br />
+human LRP11.</p>
+<h2 id="working-synthesis-boundary">Working synthesis boundary</h2>
+<p>Secure statements at this stage are: LRP11 is a type-I membrane protein with MANSC,<br />
+PKD, and one LDLRA module; two cDNA isoforms are recorded; direct studies connect it<br />
+to tumor-cell and immune-cell signaling contexts; and a mouse-dominant study proposes<br />
+LDL as a ligand. The normal human tissue ligand, trafficking itinerary, biochemical<br />
+binding specificity, isoform expression, and physiological process remain unresolved.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q86VZ4
+gene_symbol: LRP11
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRP11 is a single-pass type-I membrane protein whose canonical 500-amino-acid
+  isoform has an extracellular MANSC domain, PKD domain and one LDL-receptor class-A
+  module followed by a short cytoplasmic tail. A second cDNA isoform replaces part of
+  the PKD region and lacks the canonical LDLRA module, transmembrane helix and tail;
+  its endogenous protein expression is unknown. LDL-responsive LRP11 signaling has
+  been linked to MAPK13-dependent TCF1 phosphorylation and T-cell proliferation in
+  mouse systems and selected human peripheral-blood lymphocyte assays. In human
+  cervical- and prostate-cancer models, LRP11 perturbation alters proliferation,
+  invasion and beta-catenin-dependent PD-L1 expression, but these disease-context
+  phenotypes do not yet define its normal physiological role. Mouse amygdala Lrp11
+  abundance increases after experimental stress, without establishing causal roles
+  in individual stress responses.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q86VZ4-1
+- name: &#39;2&#39;
+  id: Q86VZ4-2
+  sequence_note: VSP_017535, VSP_017536
+existing_annotations:
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      UniProt&#39;s controlled-vocabulary membrane location is consistent with LRP11&#39;s
+      curated type-I single-pass topology.
+    action: ACCEPT
+    reason: &gt;-
+      Membrane is broad but correct and represents a constitutive property of the
+      protein rather than a contextual phenotype. The electronic annotation is a
+      direct mapping from the UniProt subcellular-location token SL-0162.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0162
+        source_label: UniProt membrane subcellular-location vocabulary term
+        source_status: SUPPORTS_TRANSFER
+        comment: The mapped location agrees with the signal peptide, extracellular
+          domain, transmembrane helix and cytoplasmic tail in the reviewed record.
+- term:
+    id: GO:0009408
+    label: response to heat
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to heat from mouse Lrp11, where the source
+      row is an IEP from a multi-stressor amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying heat as an assayed
+      condition, so the term-specific human transfer is too weak and context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0009409
+    label: response to cold
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to cold from mouse Lrp11, where the source
+      row is an IEP from a multi-stressor amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying cold as an assayed
+      condition, so the term-specific human transfer is too weak and context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0009414
+    label: response to water deprivation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to water deprivation from mouse Lrp11,
+      where the source row is an IEP from a multi-stressor amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying water deprivation
+      as an assayed condition, so the term-specific human transfer is too weak and
+      context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0009612
+    label: response to mechanical stimulus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to mechanical stimulus from mouse Lrp11,
+      where the source row is an IEP from a multi-stressor amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying mechanical stimulus
+      as an assayed condition, so the term-specific human transfer is too weak and
+      context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0033555
+    label: multicellular organismal response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers multicellular organismal response to stress from
+      mouse Lrp11, where the source row is an IEP from an amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support this response term, but the human IEA is a second-step orthology
+      transfer from one expression survey confined to mouse amygdala. The accessible
+      abstract reports generic stress models without resolving the individual paradigms,
+      so broad organism-level transfer to human LRP11 is too weak and context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0035902
+    label: response to immobilization stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to immobilization stress from mouse Lrp11,
+      where the source row is an IEP from an amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying immobilization as
+      an assayed condition, so the term-specific human transfer is too weak and
+      context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0042594
+    label: response to starvation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  - ensembl:ENSMUSP00000019931
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers response to starvation from mouse Lrp11, where the
+      source row is an IEP from a multi-stressor amygdala expression study.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IEP can support a response annotation, but this human IEA is a second-step
+      orthology transfer from a single mouse-amygdala expression study. The accessible
+      abstract describes generic stress models without identifying starvation as an
+      assayed condition, so the term-specific human transfer is too weak and
+      context-bound.
+    propagation_review:
+      root_cause: SOURCE_WEAK_OR_INFERRED
+      failure_modes:
+      - SOURCE_EVIDENCE_WEAK
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: Current QuickGO traces this term to IEP evidence from PMID:25262641,
+          an amygdala expression-response study.
+      - source_id: ensembl:ENSMUSP00000019931
+        source_label: mouse Lrp11 Ensembl protein
+        source_status: CIRCULAR_OR_REDUNDANT
+        comment: This is a second identifier for the same mouse donor, not independent
+          biological evidence.
+- term:
+    id: GO:0051219
+    label: phosphoprotein binding
+  evidence_type: IMP
+  original_reference_id: PMID:17620599
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The cited study is a large beta-arrestin interactome screen, but the cached
+      abstract does not identify LRP11 or establish that its partner was phosphorylated.
+    action: UNDECIDED
+    reason: &gt;-
+      The relevant protein list and assay-level evidence are confined to supplementary
+      tables that are not represented in the cached publication. Curator deference is
+      appropriate for this experimental annotation: neither acceptance nor rejection
+      of phosphoprotein binding is justified from the available LRP11-specific evidence.
+    supported_by:
+    - reference_id: PMID:17620599
+      supporting_text: &#34;As \ndetermined by LC tandem MS, 71 proteins interacted with beta-arrestin 1, 164 \ninteracted with beta-arrestin 2, and 102 interacted with both beta-arrestins.&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IC
+  original_reference_id: PMID:17620599
+  qualifier: located_in
+  supporting_entities:
+  - GO:0051219
+  review:
+    summary: &gt;-
+      Although the IC source term has no compartment semantics, independent intact-cell
+      blocking-antibody experiments support an accessible cell-surface pool of LRP11.
+    action: ACCEPT
+    reason: &gt;-
+      The imported IC provenance alone is insufficient, but LRP11 blockade altered
+      LDL-induced responses in intact T cells. Together with type-I membrane topology,
+      these data independently support plasma-membrane localization in the tested
+      T-cell context.
+    additional_reference_ids:
+    - PMID:38272565
+    supported_by:
+    - reference_id: PMID:38272565
+      supporting_text: &#34;To confirm this finding, we used an LRP11 blocking antibody to block LRP11. The in vitro stimulation assay showed that LRP11 blockade offset LDL-induced proliferation and the frequency of CD8+ T cells (figure 3C,D).&#34;
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: GO:0051219
+        source_label: phosphoprotein binding
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: This IC source term provides no plasma-membrane semantics, but
+          independent intact-cell antibody perturbations support the location.
+- term:
+    id: GO:0030169
+    label: low-density lipoprotein particle binding
+  evidence_type: ISS
+  original_reference_id: PMID:38272565
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  review:
+    summary: &gt;-
+      A mouse Lrp11-ectodomain/CD3e chimeric reporter responded to LDL; this supports
+      LDL recognition but is not a direct biochemical observation of LDL binding.
+    action: NEW
+    reason: &gt;-
+      GO:0030169 is proposed conservatively by exact-ortholog inference from the
+      LDL-responsive ectodomain reporter, while the absence of purified-protein binding
+      data remains explicit. GO:0005041 is not proposed because neither direct binding
+      nor delivery of LDL into the cell by endocytosis was demonstrated.
+    additional_reference_ids:
+    - file:interpro/panther/PTHR46876/PTHR46876-entries.csv
+    supported_by:
+    - reference_id: PMID:38272565
+      supporting_text: &#34;Using a cell-based chimeric receptor\nscreening system, we showed that LRP11 interacted with LDL and activated TCF1.&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SUPPORTS_TRANSFER
+        comment: Verified PTHR46876:SF1 co-membership with human Q86VZ4 supports
+          the orthology boundary; the ligand assay used a mouse Lrp11 extracellular
+          domain reporter, and human PBMC blocking experiments support conservation
+          of the downstream axis.
+- term:
+    id: GO:0038023
+    label: signaling receptor activity
+  evidence_type: ISS
+  original_reference_id: PMID:38272565
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q8CB67
+  review:
+    summary: &gt;-
+      Endogenous mouse Lrp11 knockdown impaired LDL-induced proliferation and Tcf7
+      expression; LRP11 associated with MAPK13, and antibody/inhibitor perturbations
+      placed LRP11 upstream of MAPK13-dependent TCF1 phosphorylation.
+    action: NEW
+    reason: &gt;-
+      The broad signaling-receptor term captures perturbation-supported signal
+      transduction without inventing a more specific receptor class or endocytic
+      mechanism. Species transfer remains explicit because the proximal shRNA, co-IP
+      and phosphorylation experiments were mouse-dominant, although human PBMC
+      inhibitor studies support conservation of the axis.
+    additional_reference_ids:
+    - file:interpro/panther/PTHR46876/PTHR46876-entries.csv
+    supported_by:
+    - reference_id: PMID:38272565
+      supporting_text: &#34;Indeed, knockdown of LRP11 impaired CD8+ T-cell proliferation and Tcf7 expression (figure 3H and online supplemental figure S4B).&#34;
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - reference_id: PMID:38272565
+      supporting_text: &#34;The IP data showed that MAPK13 interacted with LRP11 and TCF1 (figure 5A).&#34;
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - reference_id: PMID:38272565
+      supporting_text: &#34;We found that LDL promoted TCF1 phosphorylation, which was eliminated by LRP11 blocking or MAPK13 inhibition (figure 5I).&#34;
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:Q8CB67
+        source_label: mouse Lrp11
+        source_status: SUPPORTS_TRANSFER
+        comment: Verified PTHR46876:SF1 co-membership with human Q86VZ4 supports
+          the orthology boundary; mouse ligand/receptor and pathway experiments define
+          the proximal mechanism, and human PBMC inhibitor studies support a conserved
+          signaling role.
+- term:
+    id: GO:0042102
+    label: positive regulation of T cell proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:38272565
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      LDL promoted proliferation of human peripheral-blood lymphocytes, and an LRP11
+      blocking antibody or MAPK13 inhibitor suppressed the response.
+    action: NEW
+    reason: &gt;-
+      Direct perturbation in human cells supports positive regulation of T-cell
+      proliferation in this LDL-responsive experimental context. The annotation does
+      not generalize the result to all tissues or make the cancer-immunotherapy setting
+      a constitutive organismal function.
+    supported_by:
+    - reference_id: PMID:38272565
+      supporting_text: &gt;-
+        We found that LDL can also promote human lymphocyte proliferation, whether it
+        is the proliferation ratio or cell numbers, and this effect can be inhibited by
+        aLRP11 and MAPK13 inhibitors (online supplemental figure S7A–C).
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the current UniProt subcellular-location mapping source for the
+      membrane IEA. Live QuickGO and the local TSV both carry SL-0162, and the
+      reviewed Q86VZ4 topology independently supports the broad location.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the current Ensembl Compara source for seven stress-process IEAs.
+      Live donor tracing resolves both WITH/FROM identifiers to mouse Lrp11 and
+      the source terms to IEP evidence from PMID:25262641.
+- id: file:human/LRP11/LRP11-uniprot.txt
+  title: Reviewed UniProtKB entry for human LRP11 (Q86VZ4)
+  findings:
+  - statement: &gt;-
+      Human LRP11 is curated as a single-pass type-I membrane protein.
+    supporting_text: &#34;CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I\nCC       membrane protein {ECO:0000305}.&#34;
+    full_text_unavailable: false
+  - statement: &gt;-
+      The reviewed record describes two splice isoforms; isoform 2 replaces residues
+      205-237 and lacks the remainder of the canonical sequence.
+    supporting_text: &#34;CC   -!- ALTERNATIVE PRODUCTS:\nCC       Event=Alternative splicing; Named isoforms=2;\nCC       Name=1;\nCC         IsoId=Q86VZ4-1; Sequence=Displayed;\nCC       Name=2;\nCC         IsoId=Q86VZ4-2; Sequence=VSP_017535, VSP_017536;&#34;
+    full_text_unavailable: false
+  - statement: &gt;-
+      The extracellular region contains MANSC, PKD and one LDL-receptor class-A
+      domain, but domain membership alone does not establish a lipoprotein ligand.
+    supporting_text: &#34;FT   DOMAIN          99..184\nFT                   /note=\&#34;MANSC\&#34;\nFT                   /evidence=\&#34;ECO:0000255|PROSITE-ProRule:PRU00341\&#34;\nFT   DOMAIN          210..305\nFT                   /note=\&#34;PKD\&#34;\nFT                   /evidence=\&#34;ECO:0000255|PROSITE-ProRule:PRU00151\&#34;\nFT   DOMAIN          309..345\nFT                   /note=\&#34;LDL-receptor class A\&#34;\nFT                   /evidence=\&#34;ECO:0000255|PROSITE-ProRule:PRU00124\&#34;&#34;
+    full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary curated sequence/topology source. It supports membrane topology,
+      domains and isoforms, while providing no experimentally established ligand
+      or normal physiological process for human LRP11.
+- id: file:interpro/panther/PTHR46876/PTHR46876-entries.csv
+  title: PANTHER PTHR46876 family member table
+  findings:
+  - statement: Human LRP11 Q86VZ4 belongs to the LRP11-specific PTHR46876:SF1 subfamily.
+    supporting_text: Q86VZ4,Low-density lipoprotein receptor-related protein 11,protein,9606,Homo sapiens,Homo sapiens (Human),LRP11,500,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True
+  - statement: Mouse Lrp11 Q8CB67 belongs to the same LRP11-specific PTHR46876:SF1 subfamily.
+    supporting_text: Q8CB67,Low-density lipoprotein receptor-related protein 11,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp11,483,PTHR46876:SF1,LOW-DENSITY LIPOPROTEIN RECEPTOR-RELATED PROTEIN 11,True
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The current local PANTHER export places human Q86VZ4 and mouse Q8CB67 together
+      in the LRP11-specific SF1 subfamily, independently supporting the orthology
+      boundary used for the two mouse-to-human ISS annotations.
+- id: PMID:15489334
+  title: &#39;The status, quality, and expansion of the NIH full-length cDNA project: the
+    Mammalian Gene Collection (MGC).&#39;
+  findings:
+  - statement: &gt;-
+      The MGC generated high-quality full-open-reading-frame human and mouse cDNA
+      clones; UniProt uses LRP11 clones from this resource to define its two isoforms.
+    supporting_text: &#34;The National Institutes of Health&#39;s Mammalian Gene Collection (MGC) project was \ndesigned to generate and sequence a publicly accessible cDNA resource containing \na complete open reading frame (ORF) for every human and mouse gene.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The paper is a cDNA-resource report rather than an LRP11 functional study.
+      Its relevance is limited to the brain- and skin-derived full-length cDNA
+      sequences cited by the reviewed UniProt record for isoforms 1 and 2.
+- id: PMID:17620599
+  title: Functional specialization of beta-arrestin interactions revealed by proteomic
+    analysis.
+  findings:
+  - statement: &gt;-
+      The study was a broad beta-arrestin interactome screen, not an LRP11-focused
+      functional analysis; the cached abstract does not name LRP11.
+    supporting_text: &#34;As \ndetermined by LC tandem MS, 71 proteins interacted with beta-arrestin 1, 164 \ninteracted with beta-arrestin 2, and 102 interacted with both beta-arrestins.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      Only 16 randomly selected new partners were validated by coimmunoprecipitation,
+      and the cache does not show whether LRP11 was among them.
+    supporting_text: &#34;The binding of 16 randomly selected newly identified beta-arrestin \npartners was validated by coimmunoprecipitation assays in HEK293 cells.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The PMID and paper identity are verified, but the LRP11-specific hit and its
+      phosphorylation/localization interpretation reside in supplementary tables
+      absent from the cache. The experimental GO rows therefore remain undecided.
+- id: PMID:25262641
+  title: Genetic regulatory network analysis reveals that low density lipoprotein receptor-related
+    protein 11 is involved in stress responses in mice.
+  findings:
+  - statement: &gt;-
+      In mouse amygdala, Lrp11 abundance was measured after stress and was higher in
+      stressed animals; this is expression-response evidence, not a causal test of
+      each transferred stress process.
+    supporting_text: &#34;Western blotting, qPCR and immunohistochemistry were used to\ninvestigate the expression variation of Lrp11 in amygdala tissue after exposure\nto stress. We found the quantity of Lrp11 was more obvious in stress models than\nthat in normal mice (P&lt;0.05) which suggests Lrp11 might participate in the\nprocess of stress response.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      Lrp11 depletion altered four transcript-level network members in human cell
+      lines, but did not directly test heat, cold, deprivation or immobilization.
+    supporting_text: &#34;we transfected HEK 293T cells and SH-SY5Y cells with Lrp11 siRNA\nleading to down-regulation of Lrp11mRNA and were able to confirm a significant\ninfluence of Lrp11 depletion on the expression of Xpnpep1, Maneal, Pgap1 and\nUprt.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Verified as the actual mouse donor evidence behind all seven human stress
+      IEAs. The paper supports stress-associated expression and a candidate gene
+      network, but not causal human LRP11 involvement in seven distinct processes.
+- id: PMID:31507330
+  title: The role of low density lipoprotein receptor-related protein 11 as a tumor
+    promoter in cervical cancer.
+  findings:
+  - statement: &gt;-
+      Human cervical cancer cell-line LRP11 silencing reduced proliferation,
+      migration and invasion, and slowed xenograft growth.
+    supporting_text: &#34;The silencing of LRP11 in SiHa\nand CaSki cell lines inhibited cell proliferation, reduced migration and\ninvasion and suppressed cell growth in nude mice, which possibly related to cell\ncycle protein regulation of CDK 2/4, cyclin D1/E1, MMP-2/9, and VEGF.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: false
+  - statement: &gt;-
+      The paper explicitly confines these phenotypes to HSIL/cervical-cancer context
+      and does not establish LRP11&#39;s normal physiological role.
+    supporting_text: &#34;LRP11 plays important roles in proliferation, migration and\ninvasion, with the potential to be a useful prognostic marker and therapeutic\ntarget for patients with HSIL and cervical cancer.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human knockdown and xenograft evidence is available in full text.
+      These are strong disease-context phenotypes but should not be promoted to a
+      constitutive receptor function without a defined ligand or proximal mechanism.
+- id: PMID:31865764
+  title: LRP11 activates β-catenin to induce PD-L1 expression in prostate cancer.
+  findings:
+  - statement: &gt;-
+      LRP11 gain- and loss-of-function in two human prostate-cancer cell lines placed
+      LRP11 upstream of beta-catenin-dependent PD-L1 expression.
+    supporting_text: &#34;Further experiments\nin two PRAD cell lines with LRP11 over-expression and knockdown showed that\nLRP11 induced PD-L1 expression through β-catenin signalling.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      LRP11 overexpression suppressed Jurkat-cell activity in coculture, and blocking
+      LRP11 or PD-L1 reversed the effect.
+    supporting_text: &#34;In addition, LRP11\nover-expression in PRAD cell line induced immunosuppression of Jurkat cell in\nin-vitro co-culture system. The effects of LRP11 could be blocked by\nneutralising LRP11 or PD-L1 antibody.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human perturbation supports a cancer-context LRP11-beta-catenin-PD-L1
+      regulatory axis. Only the abstract is cached, so mechanistic details beyond
+      the stated gain/loss and antibody experiments are not inferred.
+- id: PMID:38272565
+  title: LRP11 promotes stem-like T cells via MAPK13-mediated TCF1 phosphorylation,
+    enhancing anti-PD1 immunotherapy.
+  findings:
+  - statement: &gt;-
+      A chimeric-receptor assay identified LDL as an LRP11-interacting stimulus and
+      linked receptor activation to TCF1 in a tumor-bearing mouse/T-cell system.
+    supporting_text: &#34;Using a cell-based chimeric receptor\nscreening system, we showed that LRP11 interacted with LDL and activated TCF1.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: false
+  - statement: &gt;-
+      The proposed proximal pathway is LRP11-dependent MAPK13 activation followed by
+      MAPK13 phosphorylation of TCF1 and expansion of stem-like CD8 T cells.
+    supporting_text: &#34;Mechanistically, LRP11\nactivation induces MAPK13 activation. Then, MAPK13 phosphorylates TCF1, leading\nto increase of stem-like T cells.&#34;
+    reference_section_type: ABSTRACT
+    full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text verifies mouse tumor/T-cell experiments, a mouse Lrp11 chimeric
+      receptor, and selected human PBMC assays. It is the strongest ligand-linked
+      mechanistic study, but species and immunotherapy context must remain explicit.
+core_functions:
+- description: &gt;-
+    LDL-responsive LRP11 signaling promotes MAPK13-dependent TCF1 phosphorylation
+    and T-cell proliferation. Ligand recognition and the proximal pathway were defined
+    principally with mouse Lrp11 and mouse T cells, while LDL-stimulated human
+    peripheral-blood lymphocyte proliferation was sensitive to LRP11 blockade and
+    MAPK13 inhibition. This supports a conserved signaling-receptor role but not yet
+    LDL-particle endocytosis or a universal function across human tissues. The cervical-
+    and prostate-cancer growth, invasion and PD-L1 phenotypes are context-specific
+    downstream consequences and are not included in this core function.
+  molecular_function:
+    id: GO:0038023
+    label: signaling receptor activity
+  directly_involved_in:
+  - id: GO:0042102
+    label: positive regulation of T cell proliferation
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:38272565
+    supporting_text: &#34;Indeed, knockdown of LRP11 impaired CD8+ T-cell proliferation and Tcf7 expression (figure 3H and online supplemental figure S4B).&#34;
+    reference_section_type: RESULTS
+    full_text_unavailable: false
+  - reference_id: PMID:38272565
+    supporting_text: &#34;The IP data showed that MAPK13 interacted with LRP11 and TCF1 (figure 5A).&#34;
+    reference_section_type: RESULTS
+    full_text_unavailable: false
+  - reference_id: PMID:38272565
+    supporting_text: &#34;We found that LDL promoted TCF1 phosphorylation, which was eliminated by LRP11 blocking or MAPK13 inhibition (figure 5I).&#34;
+    reference_section_type: RESULTS
+    full_text_unavailable: false
+  - reference_id: PMID:38272565
+    supporting_text: &gt;-
+      We found that LDL can also promote human lymphocyte proliferation, whether it
+      is the proliferation ratio or cell numbers, and this effect can be inhibited by
+      aLRP11 and MAPK13 inhibitors (online supplemental figure S7A–C).
+    reference_section_type: RESULTS
+    full_text_unavailable: false
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether human LRP11 binds native LDL directly, with what affinity and particle
+      specificity, and whether it internalizes LDL rather than only signaling in
+      response to it remain unknown.
+    boundary: &gt;-
+      A mouse Lrp11 chimeric receptor responded to LDL, and human lymphocyte responses
+      to LDL were inhibited by an LRP11-blocking antibody; no purified-human binding,
+      uptake, or trafficking assay was reported.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: NARROWING
+    significance: &gt;-
+      This distinction determines whether LRP11 merits LDL-particle binding alone,
+      an endocytic LDL-receptor term, or a signaling-receptor interpretation.
+    resolution: &gt;-
+      Measure binding kinetics of purified human LRP11 ectodomain against LDL, VLDL,
+      oxidized LDL and HDL, then quantify internalization and degradation in
+      LRP11-null cells rescued with wild-type or binding-defective LRP11.
+    provenance:
+    - reference_id: PMID:38272565
+      supporting_text: &#34;Using a cell-based chimeric receptor\nscreening system, we showed that LRP11 interacted with LDL and activated TCF1.&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+  - gap_statement: &gt;-
+      The endogenous protein expression, localization and biological activity of
+      human LRP11 isoform 2 have not been established.
+    boundary: &gt;-
+      Two full-length cDNA isoforms are recorded, but isoform 2 lacks the canonical
+      C-terminal LDLRA module, transmembrane helix and cytoplasmic tail.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      Isoform 2 may be secreted, unstable or noncoding at the protein level, and its
+      inclusion changes interpretation of any ligand or localization experiment.
+    resolution: &gt;-
+      Detect isoform-specific transcripts and peptides in primary human tissues, and
+      test signal-peptide processing, secretion, membrane association and stability
+      of endogenous or genome-tagged isoform 2.
+    provenance:
+    - reference_id: file:human/LRP11/LRP11-uniprot.txt
+      supporting_text: &#34;CC       Event=Alternative splicing; Named isoforms=2;\nCC       Name=1;\nCC         IsoId=Q86VZ4-1; Sequence=Displayed;\nCC       Name=2;\nCC         IsoId=Q86VZ4-2; Sequence=VSP_017535, VSP_017536;&#34;
+      full_text_unavailable: false
+  - gap_statement: &gt;-
+      LRP11&#39;s proposed beta-arrestin interaction, phosphoprotein-binding specificity
+      and the quantitative distribution between plasma and intracellular membranes
+      remain unresolved.
+    boundary: &gt;-
+      The cited beta-arrestin screen is proteome-scale, its LRP11-specific data are in
+      unavailable supplementary tables. Intact-cell antibody perturbations support a
+      plasma-membrane pool, but the reviewed UniProt entry specifies only membrane and
+      does not establish the relative intracellular distribution.
+    gap_kind:
+    - BIOLOGY
+    - CURATION
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      Resolving this would determine whether the undecided phosphoprotein-binding row
+      represents a real phospho-dependent adaptor interaction and how LRP11 partitions
+      among membrane compartments.
+    resolution: &gt;-
+      Re-test endogenous LRP11-beta-arrestin association with reciprocal interaction
+      assays, phosphatase and phosphosite controls, and surface-labeling plus
+      compartment-resolved imaging in cells expressing endogenous LRP11.
+    provenance:
+    - reference_id: PMID:17620599
+      supporting_text: &#34;The binding of 16 randomly selected newly identified beta-arrestin \npartners was validated by coimmunoprecipitation assays in HEK293 cells.&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+  - gap_statement: &gt;-
+      The normal human physiological context of LRP11 signaling remains unknown
+      outside cancer-cell and experimental T-cell systems.
+    boundary: &gt;-
+      Direct human perturbations affect cervical-cancer growth/invasion and
+      prostate-cancer beta-catenin-PD-L1 signaling; stress evidence is mouse
+      amygdala expression, not causal human physiology.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: BP_DARK
+    status: NARROWING
+    significance: &gt;-
+      A normal cell type and physiological output are needed to distinguish a broadly
+      conserved receptor pathway from disease- or stimulation-specific phenotypes.
+    resolution: &gt;-
+      Map endogenous LRP11 protein and isoforms across primary human tissues, then use
+      matched knockout/rescue experiments under physiological ligand concentrations
+      in the highest-expressing normal cell types.
+    provenance:
+    - reference_id: PMID:31507330
+      supporting_text: &#34;The silencing of LRP11 in SiHa\nand CaSki cell lines inhibited cell proliferation, reduced migration and\ninvasion and suppressed cell growth in nude mice, which possibly related to cell\ncycle protein regulation of CDK 2/4, cyclin D1/E1, MMP-2/9, and VEGF.&#34;
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does purified human LRP11 bind native LDL directly, and does ligand engagement
+    cause particle internalization, receptor trafficking, signaling, or a combination
+    of these outcomes?
+- question: &gt;-
+    Which normal human T-cell subset or other tissue uses the LRP11-MAPK13-TCF1 axis,
+    and is that pathway active at physiological LDL concentrations?
+- question: &gt;-
+    Is LRP11 isoform 2 translated and secreted, and can it bind ligand or modulate the
+    canonical membrane isoform?
+- question: &gt;-
+    Does endogenous LRP11 interact directly and phospho-dependently with beta-arrestins,
+    and is a functional pool present at the plasma membrane?
+- question: &gt;-
+    Is the rise of mouse amygdala Lrp11 after stress an adaptive effector response, a
+    downstream marker, or a nonspecific consequence of the stress paradigm?
+suggested_experiments:
+- hypothesis: &gt;-
+    Human LRP11 binds LDL directly but functions primarily as a signaling receptor
+    rather than an LDL-internalization receptor.
+  description: &gt;-
+    Determine ectodomain binding kinetics for LDL, VLDL, oxidized LDL and HDL, then
+    compare fluorescent-particle uptake, degradation and MAPK13 activation in
+    LRP11-knockout cells rescued with wild-type, ligand-binding-defective and
+    cytoplasmic-tail-mutant human LRP11.
+  experiment_type: biochemical binding, uptake, and genetic rescue
+- hypothesis: &gt;-
+    Endogenous human LRP11 is required for LDL-dependent MAPK13-TCF1 signaling and
+    proliferation in a defined CD8 T-cell subset.
+  description: &gt;-
+    Use CRISPR knockout and wild-type rescue in primary human CD8 T-cell subsets,
+    titrate physiological LDL, and measure MAPK13 activation, TCF1 phosphorylation,
+    lineage-state markers and proliferation with orthogonal antibody-free readouts.
+  experiment_type: primary-cell genetics and phosphosignaling
+- hypothesis: &gt;-
+    LRP11 isoform 2 is a secreted extracellular protein that modifies ligand
+    availability or canonical LRP11 signaling.
+  description: &gt;-
+    Quantify isoform-specific RNA and peptides in primary tissues, genome-tag each
+    endogenous isoform, and test secretion, stability, LDL binding and effects on
+    canonical-isoform signaling in matched knockout/rescue cells.
+  experiment_type: isoform-resolved proteomics and cell biology
+- hypothesis: &gt;-
+    Beta-arrestin association with LRP11 is direct, phosphorylation-dependent and
+    restricted to a cell-surface receptor pool.
+  description: &gt;-
+    Combine endogenous reciprocal coimmunoprecipitation or proximity labeling with
+    phosphatase/phosphosite perturbations, cell-surface biotinylation and
+    compartment-resolved imaging before and after candidate ligand stimulation.
+  experiment_type: interaction proteomics and spatial cell biology
+- hypothesis: &gt;-
+    Stress-induced mouse amygdala Lrp11 expression is downstream of stress rather than
+    required for the stress response.
+  description: &gt;-
+    Compare inducible, amygdala-restricted Lrp11 knockout, wild-type rescue and
+    expression-matched controls across individual stress paradigms, measuring both
+    behavioral/physiological responses and the previously reported expression-network
+    targets.
+  experiment_type: conditional mouse genetics and stress phenotyping
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

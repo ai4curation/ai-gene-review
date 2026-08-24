@@ -1,0 +1,4538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP1B - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRP1B</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NZR2" target="_blank" class="term-link">
+                        Q9NZR2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRP1B";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NZR2" data-a="DESCRIPTION: LRP1B is a very large type-I single-pass cell-surf..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRP1B is a very large type-I single-pass cell-surface member of the LDL-receptor family, with an extracellular repeat-rich ligand-binding region and a short cytoplasmic tail containing two endocytic NPxY motifs. Human LRP1B minireceptors bind, internalize, and degrade selected protease and protease-inhibitor ligands and also internalize VLDL; recombinant ectodomains bind fibrinogen and apoE-bearing lipoproteins. LRP1B minireceptors also bind selected APP forms and alter APP processing. Internalization is markedly slower than for LRP1, prolonging cargo residence at the cell surface. In cultured human non-small-cell lung cancer cells, depletion of endogenous LRP1B increases proliferation, whereas expression of full-length mouse Lrp1b or a human LRP1B minireceptor suppresses growth. The responsible cargo and in-vivo mechanism remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core cell-surface location of this single-pass type-I membrane receptor. The ordered IBA sources exactly match current QuickGO and the local GOA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed human Q9NZR2 has a signal peptide, a large extracellular region, one transmembrane helix, and a cytoplasmic tail, while UniProt classifies it as a membrane receptor. Although the IBA donor set spans LDL-receptor-family paralogs, plasma-membrane activity is compatible with this conserved topology and with LRP1B&#39;s ligand-internalization role.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0261260</span>
+
+                                    &middot; Drosophila mgl
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM source; conserved cell-surface receptor topology supports plasma-membrane activity despite the evolutionary distance.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:95794</span>
+
+                                    &middot; mouse Lrp2
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM paralog source; the shared single-pass LDL-receptor-family topology supports this broad location.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN008580766</span>
+
+                                    &middot; PANTHER LDL-receptor-family node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact phylogenetic node; its broad family scope is acceptable for conserved membrane topology but not evidence for LRP1B-specific ligand specificity.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:68407</span>
+
+                                    &middot; rat Lrp2
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM paralog source; it supports the conserved cell-surface receptor location.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P98164</span>
+
+                                    &middot; human LRP2
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact WITH/FROM paralog source; its homologous receptor topology supports the plasma-membrane assignment.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005041" target="_blank" class="term-link">
+                                    GO:0005041
+                                </a>
+                            </span>
+                            <span class="term-label">low-density lipoprotein particle receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0005041" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retained as a direct-ortholog LDL-particle receptor inference, but marked non-core because human target experiments directly establish VLDL rather than LDL uptake.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental donor is the direct mouse Lrp1b ortholog, and no evidence here demonstrates target-specific loss or invalid node placement. The IBA is therefore retained rather than replaced. It remains non-core because GO:0005041 requires LDL-particle binding and uptake, whereas direct human target evidence currently establishes the distinct VLDL activity represented by the separate NEW row.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2151136</span>
+
+                                    &middot; mouse Lrp1b
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact direct-ortholog WITH/FROM source; there is no target-specific divergence evidence that would invalidate the PAINT transfer, although direct human LDL uptake has not been assayed in the cited target literature.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN008580767</span>
+
+                                    &middot; PANTHER phylogenetic node
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Exact inference node retained for provenance. It is not treated as independent experimental evidence or as proof that the broader family is LRP1B-specific.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043235" target="_blank" class="term-link">
+                                    GO:0043235
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0043235" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Undecided because the current term requires membership in a signaling receptor complex, whereas the traceable evidence concerns broad LDL-receptor-family and PX-FERM cargo biology rather than an explicit LRP1B signaling complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Current GO:0043235 is not merely a receptor label: it denotes a protein complex that binds a signaling molecule to initiate a change in cell function. The IBA source set is dominated by LRP2 paralogs, a broad PANTHER node, and the human target itself. PMID:23382219 is accessible but contains no explicit LRP1B passage in the cached body and describes many screened proteins as putative PX-FERM cargos. Curator deference therefore favors UNDECIDED rather than removal.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">UNRESOLVED</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN008580766</span>
+
+                                    &middot; PANTHER LDL-receptor-family node
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Exact node, but its mixed LDL-receptor-family scope does not independently establish an LRP1B-containing signaling receptor complex.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:68407</span>
+
+                                    &middot; rat Lrp2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Exact paralog donor; LRP2 complex evidence does not by itself license complex membership for human LRP1B.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P98164</span>
+
+                                    &middot; human LRP2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Exact paralog donor with its own PMID:23382219 annotation; transfer across LRP2 and LRP1B remains unsafe for this complex-level term.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9NZR2</span>
+
+                                    &middot; human LRP1B
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Exact target self-source expected in the IBA WITH/FROM structure. It is retained as valid provenance but is not an independent experimental donor; the concern instead rests on the mixed LRP2-family sources and current complex-term scope.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retained as a correct but non-core domain-level molecular function of the large extracellular LDL-receptor-family region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed Q9NZR2 contains many LDL-receptor class-A modules and explicitly calcium-binding EGF-like domains. The ordered InterPro mappings are therefore structurally appropriate, but calcium binding is ancillary to the defining receptor and endocytic role.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR001881</span>
+
+                                    &middot; EGF-like calcium-binding domain
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact InterPro source; the corresponding calcium-binding module is present in reviewed Q9NZR2.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">InterPro:IPR018097</span>
+
+                                    &middot; EGF-like calcium-binding conserved site
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact InterPro source; the conserved site mapping supports calcium-ion binding without implying a catalytic calcium-dependent activity.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006898" target="_blank" class="term-link">
+                                    GO:0006898
+                                </a>
+                            </span>
+                            <span class="term-label">receptor-mediated endocytosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0006898" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core biological process predicted by the ARBA model and supported independently by LRP1B receptor architecture and ligand internalization biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LRP1B is a single-pass surface receptor with two predicted cytoplasmic endocytosis motifs, and reviewed UniProt states that bound extracellular ligands are internalized and degraded. The electronic model is therefore consistent with the human protein rather than an autonomous enzyme or signaling activity.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ARBA:ARBA00044584</span>
+
+                                    &middot; ARBA receptor-mediated-endocytosis model
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Exact electronic source. It is not independent experimental evidence, but its prediction agrees with reviewed LRP1B topology and ligand internalization.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11384978" target="_blank" class="term-link">
+                                        PMID:11384978
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ligands
+of LRP including receptor-associated protein, urokinase plasminogen activator,
+tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+each demonstrate binding, internalization, and degradation via mLRP1B4.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retained as a correct but non-core conservative localization mapped from the reviewed UniProt membrane record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q9NZR2 has a signal peptide, extracellular ectodomain, single transmembrane helix, and cytoplasmic tail. GO:0016020 is accurate but generic and is superseded as a core location by the more informative plasma-membrane annotation.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0162</span>
+
+                                    &middot; UniProtKB membrane subcellular-location vocabulary
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">Exact mapping source; the reviewed Q9NZR2 transmembrane topology directly supports membrane localization.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Marked over-annotated: this normalized row records systematic yeast-two-hybrid candidate interactions with APP, CHRNA4, and PPP2R2A but assigns only the uninformative generic binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:32814053 is a proteome-scale interaction screen, and its abstract does not provide LRP1B-specific orthogonal validation or a functional consequence for the three pairs. APP does have separate targeted minireceptor evidence in PMID:15126508, which is represented in the core synthesis; it does not rescue this screen-derived generic binding assertion or license a more specific APP activity term without a precise supported GO fit. CHRNA4 and PPP2R2A remain screen-only.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">candidate interactions and is generated by systematic yeast two-hybrid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043235" target="_blank" class="term-link">
+                                    GO:0043235
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23382219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23382219
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for endosomal trafficking of diverse transm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0043235" data-r="PMID:23382219" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Undecided because the cached full text does not explicitly identify LRP1B, and the study&#39;s broad PX-FERM cargo screen does not clearly establish membership in a signaling receptor complex under the current GO definition.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The curator may have used supplementary peptide-array data not represented in the extracted body, so the experimental annotation is not removed. However, PMID:23382219 frames many newly screened proteins as putative trafficking cargos, whereas GO:0043235 requires a complex that binds a signaling molecule and initiates a change in cell function. Available evidence cannot resolve that mismatch.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23382219" target="_blank" class="term-link">
+                                        PMID:23382219
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Although the possibility remains to be confirmed, these results strongly suggest that PX-FERM proteins are involved in the transport of these proteins within the endosomal system.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006898" target="_blank" class="term-link">
+                                    GO:0006898
+                                </a>
+                            </span>
+                            <span class="term-label">receptor-mediated endocytosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10766186" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10766186
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP-DIT, a putative endocytic receptor gene, is frequently i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0006898" data-r="PMID:10766186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the specific biological process stated for the predicted LRP1B receptor and corroborated by its conserved receptor architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:10766186 is abstract-only and describes LRP1B as putative, but explicitly relates the 4599-residue product to the LRP1 endocytic receptor. TAS appropriately captures that traceable author statement without pretending it is a direct assay; reviewed UniProt independently records ligand internalization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10766186" target="_blank" class="term-link">
+                                        PMID:10766186
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predicted LRP-DIT
+product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+which mediates endocytosis of multiple proteins from the cell surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10766186" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10766186
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP-DIT, a putative endocytic receptor gene, is frequently i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0015031" data-r="PMID:10766186" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Modified because the cited author statement specifically concerns receptor-mediated internalization of extracellular protein ligands, not generic protein transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0015031 is too broad and can imply many unrelated protein-trafficking processes. PMID:10766186 instead points to uptake of proteins from the cell surface by an LRP1- like receptor, which is captured precisely by GO:0006898 receptor-mediated endocytosis and is already independently represented for LRP1B.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006898" target="_blank" class="term-link">
+                                    receptor-mediated endocytosis
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10766186" target="_blank" class="term-link">
+                                        PMID:10766186
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predicted LRP-DIT
+product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+which mediates endocytosis of multiple proteins from the cell surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008285" target="_blank" class="term-link">
+                                    GO:0008285
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cell population proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27626682" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27626682
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of a recombinant full-length LRP1B receptor in hu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0008285" data-r="PMID:27626682" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human annotation for the growth-suppressive effect of endogenous LRP1B in cultured non-small-cell lung cancer cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> siRNA depletion of endogenous human LRP1B increased Calu-1 proliferation, while reciprocal expression experiments with full-length mouse Lrp1b or a human LRP1B minireceptor reduced proliferation in other human NSCLC lines. GO:0008285 captures the experimentally observed direction without asserting an in-vivo tumor- suppressor mechanism or identifying an untested downstream pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27626682" target="_blank" class="term-link">
+                                        PMID:27626682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Conversely, in
+Calu-1 cells, which express higher endogenous levels of the receptor,
+siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030229" target="_blank" class="term-link">
+                                    GO:0030229
+                                </a>
+                            </span>
+                            <span class="term-label">very-low-density lipoprotein particle receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21420681" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21420681
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    LRP1b shows restricted expression in human tissues and binds...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0030229" data-r="PMID:21420681" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human annotation for VLDL binding and internalization by an LRP1B region-IV minireceptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0030229 exactly describes combining with VLDL and delivering it into the cell through endocytosis. PMID:21420681 demonstrates both steps using a human LRP1B minireceptor in cultured cells. The annotation is confined to VLDL and does not imply LDL-particle uptake, systemic plasma clearance, or behavior of every ligand.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21420681" target="_blank" class="term-link">
+                                        PMID:21420681
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Furthermore, binding as well as internalization of very low density lipoproteins
+by cells expressing an LRP1b minireceptor was demonstrated.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038024" target="_blank" class="term-link">
+                                    GO:0038024
+                                </a>
+                            </span>
+                            <span class="term-label">cargo receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11384978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11384978
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The putative tumor suppressor LRP1B, a novel member of the l...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NZR2" data-a="GO:0038024" data-r="PMID:11384978" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed direct human annotation for LRP1B&#39;s multiligand cargo-receptor activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A human LRP1B region-IV minireceptor binds, internalizes, and degrades multiple extracellular protein cargos, while independent cytoplasmic-tail experiments show NPxY-dependent recognition by endocytic adaptors. Together these results fit the current cargo-receptor definition without assigning an autonomous signaling or catalytic activity. The minireceptor boundary and unresolved endogenous full- length cargo repertoire remain explicit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11384978" target="_blank" class="term-link">
+                                        PMID:11384978
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ligands
+of LRP including receptor-associated protein, urokinase plasminogen activator,
+tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+each demonstrate binding, internalization, and degradation via mLRP1B4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17658514" target="_blank" class="term-link">
+                                        PMID:17658514
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">From these
+data, we propose that both halves of the LRP1B cytoplasmic tail contribute to a
+unique global conformation, which results in less efficient recognition by
+endocytic adaptors and a slow endocytosis rate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>At the plasma membrane, LRP1B binds VLDL and mediates receptor-dependent internalization. Human minireceptor experiments separately show binding, internalization, and degradation of RAP, uPA, tPA, and PAI-1, while recombinant ectodomains bind fibrinogen and apoE-bearing lipoproteins. A targeted minireceptor study also demonstrates APP association and altered processing, and cytoplasmic- tail experiments show that either NPxY motif can support uptake. LRP1B internalizes cargo much more slowly than LRP1, which can prolong surface retention. Most direct trafficking assays used region-IV minireceptors, so they do not establish the full endogenous ligand repertoire or a major systemic plasma-lipoprotein-clearance role.</h3>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="FUNCTION: At the plasma membrane, LRP1B binds VLDL and media..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038024" target="_blank" class="term-link">
+                            cargo receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006898" target="_blank" class="term-link">
+                                receptor-mediated endocytosis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11384978" target="_blank" class="term-link">
+                                PMID:11384978
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Ligands
+of LRP including receptor-associated protein, urokinase plasminogen activator,
+tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+each demonstrate binding, internalization, and degradation via mLRP1B4.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17658514" target="_blank" class="term-link">
+                                PMID:17658514
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Only mutation of both NPXY motifs together abolished LRP1B
+endocytosis, suggesting that LRP1B can use either of these motifs for
+internalization.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21420681" target="_blank" class="term-link">
+                                PMID:21420681
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Furthermore, binding as well as internalization of very low density lipoproteins
+by cells expressing an LRP1b minireceptor was demonstrated.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15126508" target="_blank" class="term-link">
+                                PMID:15126508
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">A
+functional consequence of mLRP1B4 expression was a significant accumulation of
+APP at the cell surface, which is likely related to the slow endocytosis rate of
+LRP1B. More importantly, mLRP1B4-expressing cells that accumulated cell surface
+APP produced less Abeta and secreted more soluble APP.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10766186" target="_blank" class="term-link">
+                            PMID:10766186
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP-DIT, a putative endocytic receptor gene, is frequently inactivated in non-small cell lung cancer cell lines.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The original human LRP1B/LRP-DIT study predicted a 4,599-residue product with extensive homology to the multiligand endocytic receptor LRP1.</div>
+
+                        <div class="finding-text">"The predicted LRP-DIT
+product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+which mediates endocytosis of multiple proteins from the cell surface."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Homozygous deletions and abnormal LRP-DIT transcripts were frequent in the tested human NSCLC cell-line panel.</div>
+
+                        <div class="finding-text">"Homozygous deletions in LRP-DIT were detected in 17% (4 of 23) of non-small cell
+lung cancer (NSCLC) cell lines. The expression of only abnormal transcripts
+missing portions of the LRP-DIT sequence was demonstrated in an additional 30%
+(11 of 36) of NSCLC lines."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23382219" target="_blank" class="term-link">
+                            PMID:23382219
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for endosomal trafficking of diverse transmembrane cargos by PX-FERM proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study defines general SNX17 recognition of NPxY/NxxY cargo motifs and reports a broad putative-cargo screen, but the cached main text does not identify an LRP1B-specific functional assay.</div>
+
+                        <div class="finding-text">"We further show that the PX-FERM proteins share a promiscuous ability to bind a wide array of putative cargo molecules, including receptor tyrosine kinases, and propose a model for their coordinated molecular interactions with membrane, cargo, and regulatory proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">This is a systematic candidate-interaction screen rather than targeted mechanistic characterization of LRP1B.</div>
+
+                        <div class="finding-text">"candidate interactions and is generated by systematic yeast two-hybrid"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11384978" target="_blank" class="term-link">
+                            PMID:11384978
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The putative tumor suppressor LRP1B, a novel member of the low density lipoprotein (LDL) receptor family, exhibits both overlapping and distinct properties with the LDL receptor-related protein.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A human LRP1B domain-IV minireceptor bound, internalized, and degraded RAP, uPA, tPA, and PAI-1.</div>
+
+                        <div class="finding-text">"Ligands
+of LRP including receptor-associated protein, urokinase plasminogen activator,
+tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+each demonstrate binding, internalization, and degradation via mLRP1B4."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP1B ligand endocytosis was markedly slower than LRP1 endocytosis.</div>
+
+                        <div class="finding-text">"Interestingly, the kinetics of ligand endocytosis is distinctly different from
+that of LRP, with LRP1B exhibiting a markedly diminished internalization rate."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP1B transcript expression was detected in brain, thyroid, and salivary gland in this study.</div>
+
+                        <div class="finding-text">"In addition, tissue expression analysis reveals that the LRP1B gene is expressed
+in brain, thyroid, and salivary gland."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15126508" target="_blank" class="term-link">
+                            PMID:15126508
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The low density lipoprotein receptor-related protein 1B retains beta-amyloid precursor protein at the cell surface and reduces amyloid-beta peptide production.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A human LRP1B region-IV minireceptor formed an immunoprecipitable complex with APP.</div>
+
+                        <div class="finding-text">"Using an LRP1B minireceptor (mLRP1B4) generated
+to study the trafficking of LRP1B, we found that mLRP1B4 and APP form an
+immunoprecipitable complex."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Soluble APP containing a Kunitz protease-inhibitor domain, but not the tested APP form lacking that domain, was bound and degraded by mLRP1B4.</div>
+
+                        <div class="finding-text">"Furthermore mLRP1B4 bound and facilitated the
+degradation of a soluble isoform of APP containing a Kunitz proteinase inhibitor
+domain but not soluble APP lacking a Kunitz proteinase inhibitor domain."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">mLRP1B4 increased cell-surface APP, reduced A-beta production, and increased soluble APP secretion in the experimental cell system.</div>
+
+                        <div class="finding-text">"A
+functional consequence of mLRP1B4 expression was a significant accumulation of
+APP at the cell surface, which is likely related to the slow endocytosis rate of
+LRP1B. More importantly, mLRP1B4-expressing cells that accumulated cell surface
+APP produced less Abeta and secreted more soluble APP."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15082773" target="_blank" class="term-link">
+                            PMID:15082773
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Normal development and fertility of knockout mice lacking the tumor suppressor gene LRP1b suggest functional compensation by LRP1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mice lacking membrane-inserted Lrp1b developed and reproduced normally, with Lrp1 or other receptors proposed as compensators.</div>
+
+                        <div class="finding-text">"In contrast to LRP1, LRP1b-deficient mice develop
+normally, most likely due to its restricted expression pattern and functional
+compensation by LRP1 or other receptors."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrp1b was expressed predominantly in brain, with a differentially spliced form reported in adrenal gland and testis.</div>
+
+                        <div class="finding-text">"LRP1b is expressed predominantly in the
+brain, and a differentially spliced form is present in the adrenal gland and in
+the testis."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrp1b remained a single 600-kDa polypeptide rather than undergoing LRP1-like furin processing; yeast two-hybrid assays identified PSD95 and AIP as intracellular-tail partners.</div>
+
+                        <div class="finding-text">"Despite the presence of a potential furin cleavage site and in
+contrast to LRP1, immunoblotting for LRP1b reveals the presence of a single
+600-kDa polypeptide species. Using a yeast two-hybrid approach, we have
+identified two intracellular proteins, the postsynaptic density protein 95 and
+the aryl hydrocarbon receptor-interacting protein, that bind to the
+intracellular domain of LRP1b."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17658514" target="_blank" class="term-link">
+                            PMID:17658514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Slow endocytosis of the LDL receptor-related protein 1B: implications for a novel cytoplasmic tail conformation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In the minireceptor comparison, LRP1B internalized approximately 15-fold more slowly than LRP1.</div>
+
+                        <div class="finding-text">"Although the positions of these endocytic motifs
+are similar in both receptors, LRP1B is internalized at a 15-fold slower rate
+than LRP1."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Either cytoplasmic NPXY motif could support LRP1B internalization; only the double mutation abolished it.</div>
+
+                        <div class="finding-text">"Only mutation of both NPXY motifs together abolished LRP1B
+endocytosis, suggesting that LRP1B can use either of these motifs for
+internalization."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Both halves of the LRP1B cytoplasmic tail contribute to a conformation that is inefficiently recognized by endocytic adaptors.</div>
+
+                        <div class="finding-text">"From these
+data, we propose that both halves of the LRP1B cytoplasmic tail contribute to a
+unique global conformation, which results in less efficient recognition by
+endocytic adaptors and a slow endocytosis rate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21420681" target="_blank" class="term-link">
+                            PMID:21420681
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRP1b shows restricted expression in human tissues and binds to several extracellular ligands, including fibrinogen and apoE-carrying lipoproteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP1B transcript was consistently detected in brain, thyroid, and skeletal muscle, with lower and inconsistent testis detection in the tested tissue panels.</div>
+
+                        <div class="finding-text">"Using two independent RT-PCR assays, LRP1b mRNA was
+detected in human brain, thyroid gland, skeletal muscle, and to a lesser amount
+in testis but absent in other tissues, including heart, kidney, liver, lung, and
+placenta."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct binding of recombinant LRP1B ectodomains to fibrinogen was verified by co-immunoprecipitation.</div>
+
+                        <div class="finding-text">"Direct binding of LRP1b ectodomains to
+fibrinogen was verified by co-immunoprecipitation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ApoE-carrying lipoproteins bound recombinant LRP1B ectodomains.</div>
+
+                        <div class="finding-text">"ApoE-carrying lipoproteins
+were shown to bind to LRP1b ectodomains in a lipoprotein binding assay."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A human LRP1B region-IV minireceptor supported both VLDL binding and internalization in cultured cells.</div>
+
+                        <div class="finding-text">"Furthermore, binding as well as internalization of very low density lipoproteins
+by cells expressing an LRP1b minireceptor was demonstrated."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27626682" target="_blank" class="term-link">
+                            PMID:27626682
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of a recombinant full-length LRP1B receptor in human non-small cell lung cancer cells confirms the postulated growth-suppressing function of this large LDL receptor family member.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length mouse Lrp1b expression reduced proliferation in human NSCLC cell lines with little endogenous LRP1B.</div>
+
+                        <div class="finding-text">"Overexpression of Lrp1b in non-small cell lung cancer cells with low
+or absent endogenous LRP1B expression significantly reduced cellular
+proliferation compared to empty vector-transfected control cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Knockdown of endogenous human LRP1B increased proliferation of Calu-1 NSCLC cells.</div>
+
+                        <div class="finding-text">"Conversely, in
+Calu-1 cells, which express higher endogenous levels of the receptor,
+siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In the same human NSCLC-cell assays, LRP1 overexpression did not reproduce the antiproliferative effect of mouse full-length Lrp1b or the human LRP1B minireceptor.</div>
+
+                        <div class="finding-text">"However, in contrast to full-length mLrp1b or the hLRP1B minireceptor, LRP1 overexpression did not significantly affect cellular proliferation of A549 (Supplementary Figure S1) and A427 cells (data not shown), respectively."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP1B/LRP1B-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB/Swiss-Prot record for human LRP1B (Q9NZR2)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which endogenous ligands and cytoplasmic adaptors control full-length human LRP1B internalization in each expressing tissue?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Endocytic trafficking experts, LDL-receptor-family biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="Q: Which endogenous ligands and cytoplasmic adaptors ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LRP1B have a physiologically important lipoprotein-uptake role in brain, thyroid, or skeletal muscle despite its restricted expression?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Lipoprotein metabolism experts, Tissue physiologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="Q: Does LRP1B have a physiologically important lipopr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which cargo-retention or signaling change mediates LRP1B-dependent suppression of NSCLC-cell proliferation?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Cancer cell biologists, Surface-proteome experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="Q: Which cargo-retention or signaling change mediates..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is endogenous human LRP1B proteolytically processed or incorporated into a stable signaling complex in any native cell type?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Receptor biochemists, Structural biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="Q: Is endogenous human LRP1B proteolytically processe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are any human LRP1B splice transcripts translated into stable receptors with distinct ligand or trafficking properties?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Long-read transcriptomics experts, Proteogenomics experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="Q: Are any human LRP1B splice transcripts translated ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LRP1B in a naturally expressing human cell model, introduce single- and double-NPxY mutations, and quantify adaptor occupancy, surface half- life, and ligand uptake alongside matched LRP1 controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Full-length human LRP1B uses both NPxY motifs to recruit endocytic adaptors but internalizes selected cargo more slowly than LRP1.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous receptor trafficking and motif mutagenesis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="EXPERIMENT: Endogenously tag LRP1B in a naturally expressing h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare LRP1B-dependent uptake of defined lipoprotein particles in human brain, thyroid, and skeletal-muscle organoid models using knockout/rescue and quantitative lipid tracing.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Tissue-restricted LRP1B mediates selective apoE-lipoprotein uptake rather than bulk systemic lipoprotein clearance.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: tissue-resolved ligand uptake</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="EXPERIMENT: Compare LRP1B-dependent uptake of defined lipoprot..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform surface proteomics and uptake profiling after endogenous LRP1B knockout and rescue, nominate altered cargos, and test whether cargo-specific perturbation reproduces or reverses the proliferation phenotype.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRP1B suppresses NSCLC proliferation by retaining a specific growth-regulatory cargo at the plasma membrane.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: causal surface-proteome perturbation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="EXPERIMENT: Perform surface proteomics and uptake profiling af..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Analyze endogenous receptor maturation by pulse-chase labeling, N-terminomics, native mass spectrometry, and crosslinking in multiple human cell types, with LRP1 as a processing and complex-assembly comparator.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human full-length LRP1B remains an uncleaved single-chain receptor and does not form an obligate signaling complex.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: receptor processing and native-complex analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="EXPERIMENT: Analyze endogenous receptor maturation by pulse-ch..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine tissue long-read sequencing, targeted junction proteomics, and isoform- specific rescue assays measuring plasma-membrane delivery and ligand uptake.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Predicted human LRP1B splice transcripts do not produce stable, functionally distinct receptor isoforms.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved transcript and protein analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NZR2" data-a="EXPERIMENT: Combine tissue long-read sequencing, targeted junc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous full-length human LRP1B ligand repertoire, adaptor usage, and tissue-specific internalization kinetics are not established.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Most mechanistic assays used a region-IV minireceptor, while the intact receptor is 4,599 residues and may impose different ligand accessibility, processing, and trafficking constraints.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LRP1B in naturally expressing human cells, quantify uptake of candidate ligands, map cytoplasmic-tail adaptor occupancy, and compare results with matched full-length and minireceptor rescue constructs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"cell lines that stably express it as a domain IV minireceptor (mLRP1B4)."</em> — PMID:11384978</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The normal physiological roles of LRP1B in its restricted human tissue-expression domains, including the importance of lipoprotein uptake, remain unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Recombinant ectodomains and minireceptors bind apoE-bearing lipoproteins and VLDL, but restricted expression argues against simply assigning the systemic clearance role of LRP1 to LRP1B.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Measure endogenous LRP1B-dependent cargo uptake and extracellular proteome changes in human brain, thyroid, and skeletal-muscle models, then test tissue-selective loss-of-function in vivo.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Using two independent RT-PCR assays, LRP1b mRNA was
+detected in human brain, thyroid gland, skeletal muscle, and to a lesser amount
+in testis but absent in other tissues, including heart, kidney, liver, lung, and
+placenta."</em> — PMID:21420681</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular connection between LRP1B cargo trafficking and suppression of cancer-cell proliferation is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct perturbation supports a growth-suppressive effect in cultured NSCLC cells, but no cargo, adaptor, or downstream pathway has been shown to cause that effect, and in-vivo human tumor suppression has not been tested experimentally.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Combine endogenous LRP1B knockout and rescue with surface proteomics, cargo uptake, phosphoproteomics, and proliferation assays, then validate the causal cargo or pathway in patient-derived tumor models.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Conversely, in
+Calu-1 cells, which express higher endogenous levels of the receptor,
+siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation."</em> — PMID:27626682</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Full-length human LRP1B processing, higher-order structure, and possible stable receptor-complex membership are unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> No experimental full-length structure or LRP1B-containing receptor complex is available, and mouse evidence that Lrp1b remains a single polypeptide cannot define human processing or complex stoichiometry.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Characterize endogenous human LRP1B maturation and oligomeric state by pulse-chase proteomics, native complex analysis, and cryo-electron tomography or fragment- guided structural methods in a native membrane context.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Despite the presence of a potential furin cleavage site and in
+contrast to LRP1, immunoblotting for LRP1b reveals the presence of a single
+600-kDa polypeptide species."</em> — PMID:15082773</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether human LRP1B produces functional alternative protein isoforms is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Mouse splice-form evidence and a predicted human exon-skipping transcript have not yielded a reviewed human alternative product or an experimentally validated human protein isoform.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Use long-read RNA sequencing and junction-specific proteomics across LRP1B- expressing human tissues, followed by isoform-resolved ligand-uptake assays for any reproducibly detected protein products.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRP1B-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NZR2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrp1b-literature-notes">LRP1B literature notes</h1>
+<h2 id="identity-and-topology">Identity and topology</h2>
+<p>The reviewed human target is UniProtKB Q9NZR2, a 4,599-residue precursor with an<br />
+N-terminal signal peptide, a very large extracellular LDLR-family repeat region,<br />
+one transmembrane helix, and a short cytoplasmic tail<br />
+[file:human/LRP1B/LRP1B-uniprot.txt]. This supports a single-pass type-I cell-<br />
+surface receptor architecture. The discovery paper predicted the same scale and<br />
+LRP1 homology [PMID:10766186 LRP-DIT, a putative endocytic receptor gene, "product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1"].<br />
+Architecture alone does not license all LRP1 functions for LRP1B.</p>
+<h2 id="direct-receptor-and-trafficking-evidence">Direct receptor and trafficking evidence</h2>
+<p>The strongest direct core evidence uses a human LRP1B region-IV minireceptor.<br />
+RAP/LRPAP1, uPA/PLAU, tPA/PLAT, and PAI-1/SERPINE1 each showed binding,<br />
+internalization, and degradation [PMID:11384978 The putative tumor suppressor<br />
+LRP1B, "each demonstrate binding, internalization, and degradation via mLRP1B4"].<br />
+These experiments support a multiligand endocytic-receptor role, but they do not<br />
+show that every LRP1 ligand is an LRP1B ligand or establish the behavior of<br />
+endogenous full-length receptor in a native tissue.</p>
+<p>LRP1B trafficking is not simply LRP1 trafficking transferred by homology.<br />
+Minireceptor experiments found LRP1B "is internalized at a 15-fold slower rate<br />
+than LRP1" [PMID:17658514 Slow endocytosis of the LDL receptor-related protein<br />
+1B]. Either NPXY motif could support internalization, while the complete tail<br />
+contributed to inefficient adaptor recognition. This slow-endocytosis regime is<br />
+a direct paralog-specific distinction.</p>
+<p>PMID:21420681 provides direct support for lipoprotein-particle receptor activity:<br />
+"ApoE-carrying lipoproteins" bound LRP1B ectodomains, and cells expressing the<br />
+region-IV minireceptor bound and internalized VLDL [PMID:21420681 LRP1b shows<br />
+restricted expression in human tissues, "binding as well as internalization of very low density lipoproteins"].<br />
+This evidence is stronger than the mixed LRP1/LRP1B phylogenetic inference, but<br />
+the uptake assay used a minireceptor in CHO cells. The authors explicitly argued<br />
+against a major systemic plasma-clearance role because LRP1B expression is low<br />
+and tissue-restricted. The same study verified fibrinogen binding to recombinant<br />
+ectodomains [PMID:21420681, "fibrinogen was verified by co-immunoprecipitation."].</p>
+<h2 id="app-and-screen-evidence">APP and screen evidence</h2>
+<p>A targeted minireceptor study showed an immunoprecipitable LRP1B-APP complex and<br />
+altered APP trafficking. The result was functionally coherent with slow LRP1B<br />
+endocytosis: mLRP1B4 increased surface APP, reduced A-beta production, and<br />
+increased soluble APP secretion [PMID:15126508 The low density lipoprotein<br />
+receptor-related protein 1B retains beta-amyloid precursor protein, "APP produced less Abeta and secreted more soluble APP"].<br />
+The tested soluble APP form containing a Kunitz protease-inhibitor domain was<br />
+bound and degraded, whereas the tested form lacking that domain was not. This is<br />
+APP-isoform selectivity, not evidence for an LRP1B-specific isoform. The cultured<br />
+minireceptor result does not establish that LRP1B prevents Alzheimer disease in<br />
+humans.</p>
+<p>PMID:32814053 is a systematic yeast-two-hybrid/interactome screen whose abstract<br />
+describes approximately 30,000 "candidate interactions" [PMID:32814053<br />
+Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins].<br />
+The associated APP, CHRNA4, and PPP2R2A records should remain screen-level<br />
+candidate interactions unless targeted experiments establish consequences. APP<br />
+has independent targeted support from PMID:15126508; the other screen partners<br />
+do not. PMID:23382219 establishes general PX-FERM recognition of NPxY/NxxY cargo<br />
+motifs and broad putative-cargo screening, but LRP1B is absent from the cached<br />
+main text. It therefore does not independently establish a stable LRP1B<br />
+signaling-receptor complex.</p>
+<h2 id="species-paralog-and-isoform-boundaries">Species, paralog, and isoform boundaries</h2>
+<p>Mouse Lrp1b loss lacking a membrane-inserted receptor produced viable, fertile<br />
+animals, with the authors invoking restricted expression and "functional<br />
+compensation by LRP1 or other receptors" [PMID:15082773 Normal development and<br />
+fertility of knockout mice lacking LRP1b]. This result cannot be used to erase<br />
+the direct human-cell functions, but it makes universal developmental or<br />
+nonredundant-organismal claims unsafe. Mouse Lrp1b was a single 600-kDa species<br />
+rather than undergoing LRP1-like furin processing, another paralog boundary.</p>
+<p>The mouse study reported a differentially spliced form in adrenal gland and<br />
+testis [PMID:15082773, "a differentially spliced form is present in the adrenal gland and in"].<br />
+The reviewed human Q9NZR2 record has no curated alternative-products section,<br />
+and PMID:21420681 did not detect the predicted exon-90-skipped human transcript<br />
+in the tissue panels tested. Mouse splice-form evidence must not be projected as<br />
+an established human Q9NZR2 isoform.</p>
+<p>PANTHER PTHR22722:SF5 includes both LRP1 and LRP1B rather than resolving an exact<br />
+LRP1B-only subfamily. Family or IBA transfer must therefore be checked against<br />
+direct LRP1B evidence. In particular, LRP1B's much slower internalization,<br />
+different processing, restricted expression, and distinct growth effects show<br />
+why broad paralog transfer is unsafe.</p>
+<h2 id="disease-and-model-boundaries">Disease and model boundaries</h2>
+<p>The discovery study found homozygous deletions and abnormal LRP1B transcripts in<br />
+human NSCLC cell lines [PMID:10766186, "Homozygous deletions in LRP-DIT were detected in 17%"].<br />
+This is strong evidence of recurrent somatic inactivation in that panel, not by<br />
+itself proof of a normal molecular function or a hereditary human disorder.</p>
+<p>Functional follow-up supports a cell-autonomous growth-suppressive effect, but<br />
+the model is mixed-species and construct-dependent. Full-length mouse Lrp1b and<br />
+a human LRP1B minireceptor reduced proliferation in human NSCLC cells, while<br />
+siRNA against endogenous human LRP1B increased Calu-1 proliferation<br />
+[PMID:27626682 Expression of a recombinant full-length LRP1B receptor, "siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation"].<br />
+LRP1 overexpression did not reproduce the effect, supporting paralog specificity.<br />
+These are cultured cancer-cell results, not an in-vivo human tumor-suppression<br />
+experiment, and they do not make every large cancer sequencing association a<br />
+functional LRP1B result. Biomarker, mutation-burden, prognosis, and therapy-<br />
+response screens should remain disease associations unless backed by targeted<br />
+mechanistic evidence.</p>
+<h2 id="bounded-functional-conclusion">Bounded functional conclusion</h2>
+<p>Direct evidence supports LRP1B as a slowly internalizing, multiligand,<br />
+single-pass endocytic receptor. Human minireceptors bind, internalize, and<br />
+degrade selected protease/inhibitor ligands, internalize VLDL, and bind selected<br />
+APP forms with consequences for APP processing; recombinant ectodomains bind<br />
+apoE-bearing lipoproteins and fibrinogen. The best-supported paralog-specific<br />
+consequence is prolonged surface retention of cargo relative to LRP1. Normal<br />
+endogenous roles in individual human tissues, the physiological importance of<br />
+systemic lipid clearance, stable signaling-complex membership, and the in-vivo<br />
+mechanism of tumor suppression remain less certain.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NZR2
+gene_symbol: LRP1B
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRP1B is a very large type-I single-pass cell-surface member of the LDL-receptor
+  family, with an extracellular repeat-rich ligand-binding region and a short
+  cytoplasmic tail containing two endocytic NPxY motifs. Human LRP1B minireceptors
+  bind, internalize, and degrade selected protease and protease-inhibitor ligands and
+  also internalize VLDL; recombinant ectodomains bind fibrinogen and apoE-bearing
+  lipoproteins. LRP1B minireceptors also bind selected APP forms and alter APP
+  processing. Internalization is markedly slower than for LRP1, prolonging cargo
+  residence at the cell surface. In cultured human non-small-cell lung cancer cells,
+  depletion of endogenous LRP1B increases proliferation, whereas expression of
+  full-length mouse Lrp1b or a human LRP1B minireceptor suppresses growth. The
+  responsible cargo and in-vivo mechanism remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0261260
+  - MGI:MGI:95794
+  - PANTHER:PTN008580766
+  - RGD:68407
+  - UniProtKB:P98164
+  review:
+    summary: &gt;-
+      Accepted as the core cell-surface location of this single-pass type-I membrane
+      receptor. The ordered IBA sources exactly match current QuickGO and the local GOA.
+    action: ACCEPT
+    reason: &gt;-
+      Reviewed human Q9NZR2 has a signal peptide, a large extracellular region, one
+      transmembrane helix, and a cytoplasmic tail, while UniProt classifies it as a
+      membrane receptor. Although the IBA donor set spans LDL-receptor-family paralogs,
+      plasma-membrane activity is compatible with this conserved topology and with
+      LRP1B&#39;s ligand-internalization role.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: FB:FBgn0261260
+        source_label: Drosophila mgl
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact WITH/FROM source; conserved cell-surface receptor topology supports
+          plasma-membrane activity despite the evolutionary distance.
+      - source_id: MGI:MGI:95794
+        source_label: mouse Lrp2
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact WITH/FROM paralog source; the shared single-pass LDL-receptor-family
+          topology supports this broad location.
+      - source_id: PANTHER:PTN008580766
+        source_label: PANTHER LDL-receptor-family node
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact phylogenetic node; its broad family scope is acceptable for conserved
+          membrane topology but not evidence for LRP1B-specific ligand specificity.
+      - source_id: RGD:68407
+        source_label: rat Lrp2
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact WITH/FROM paralog source; it supports the conserved cell-surface
+          receptor location.
+      - source_id: UniProtKB:P98164
+        source_label: human LRP2
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact WITH/FROM paralog source; its homologous receptor topology supports
+          the plasma-membrane assignment.
+- term:
+    id: GO:0005041
+    label: low-density lipoprotein particle receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - MGI:MGI:2151136
+  - PANTHER:PTN008580767
+  review:
+    summary: &gt;-
+      Retained as a direct-ortholog LDL-particle receptor inference, but marked
+      non-core because human target experiments directly establish VLDL rather than
+      LDL uptake.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimental donor is the direct mouse Lrp1b ortholog, and no evidence here
+      demonstrates target-specific loss or invalid node placement. The IBA is therefore
+      retained rather than replaced. It remains non-core because GO:0005041 requires
+      LDL-particle binding and uptake, whereas direct human target evidence currently
+      establishes the distinct VLDL activity represented by the separate NEW row.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: MGI:MGI:2151136
+        source_label: mouse Lrp1b
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact direct-ortholog WITH/FROM source; there is no target-specific divergence
+          evidence that would invalidate the PAINT transfer, although direct human LDL
+          uptake has not been assayed in the cited target literature.
+      - source_id: PANTHER:PTN008580767
+        source_label: PANTHER phylogenetic node
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          Exact inference node retained for provenance. It is not treated as independent
+          experimental evidence or as proof that the broader family is LRP1B-specific.
+- term:
+    id: GO:0043235
+    label: signaling receptor complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - PANTHER:PTN008580766
+  - RGD:68407
+  - UniProtKB:P98164
+  - UniProtKB:Q9NZR2
+  review:
+    summary: &gt;-
+      Undecided because the current term requires membership in a signaling receptor
+      complex, whereas the traceable evidence concerns broad LDL-receptor-family and
+      PX-FERM cargo biology rather than an explicit LRP1B signaling complex.
+    action: UNDECIDED
+    reason: &gt;-
+      Current GO:0043235 is not merely a receptor label: it denotes a protein complex
+      that binds a signaling molecule to initiate a change in cell function. The IBA
+      source set is dominated by LRP2 paralogs, a broad PANTHER node, and the human
+      target itself. PMID:23382219 is accessible but contains no explicit LRP1B passage
+      in the cached body and describes many screened proteins as putative PX-FERM
+      cargos. Curator deference therefore favors UNDECIDED rather than removal.
+    propagation_review:
+      root_cause: UNRESOLVED
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: PANTHER:PTN008580766
+        source_label: PANTHER LDL-receptor-family node
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          Exact node, but its mixed LDL-receptor-family scope does not independently
+          establish an LRP1B-containing signaling receptor complex.
+      - source_id: RGD:68407
+        source_label: rat Lrp2
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Exact paralog donor; LRP2 complex evidence does not by itself license complex
+          membership for human LRP1B.
+      - source_id: UniProtKB:P98164
+        source_label: human LRP2
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Exact paralog donor with its own PMID:23382219 annotation; transfer across
+          LRP2 and LRP1B remains unsafe for this complex-level term.
+      - source_id: UniProtKB:Q9NZR2
+        source_label: human LRP1B
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          Exact target self-source expected in the IBA WITH/FROM structure. It is retained
+          as valid provenance but is not an independent experimental donor; the concern
+          instead rests on the mixed LRP2-family sources and current complex-term scope.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001881
+  - InterPro:IPR018097
+  review:
+    summary: &gt;-
+      Retained as a correct but non-core domain-level molecular function of the large
+      extracellular LDL-receptor-family region.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reviewed Q9NZR2 contains many LDL-receptor class-A modules and explicitly
+      calcium-binding EGF-like domains. The ordered InterPro mappings are therefore
+      structurally appropriate, but calcium binding is ancillary to the defining
+      receptor and endocytic role.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: InterPro:IPR001881
+        source_label: EGF-like calcium-binding domain
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact InterPro source; the corresponding calcium-binding module is present in
+          reviewed Q9NZR2.
+      - source_id: InterPro:IPR018097
+        source_label: EGF-like calcium-binding conserved site
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact InterPro source; the conserved site mapping supports calcium-ion binding
+          without implying a catalytic calcium-dependent activity.
+- term:
+    id: GO:0006898
+    label: receptor-mediated endocytosis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00044584
+  review:
+    summary: &gt;-
+      Accepted as the core biological process predicted by the ARBA model and supported
+      independently by LRP1B receptor architecture and ligand internalization biology.
+    action: ACCEPT
+    reason: &gt;-
+      LRP1B is a single-pass surface receptor with two predicted cytoplasmic endocytosis
+      motifs, and reviewed UniProt states that bound extracellular ligands are
+      internalized and degraded. The electronic model is therefore consistent with the
+      human protein rather than an autonomous enzyme or signaling activity.
+    additional_reference_ids:
+    - PMID:11384978
+    - PMID:17658514
+    supported_by:
+    - reference_id: PMID:11384978
+      supporting_text: |-
+        Ligands
+        of LRP including receptor-associated protein, urokinase plasminogen activator,
+        tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+        each demonstrate binding, internalization, and degradation via mLRP1B4.
+      reference_section_type: ABSTRACT
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: ARBA:ARBA00044584
+        source_label: ARBA receptor-mediated-endocytosis model
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: &gt;-
+          Exact electronic source. It is not independent experimental evidence, but its
+          prediction agrees with reviewed LRP1B topology and ligand internalization.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      Retained as a correct but non-core conservative localization mapped from the
+      reviewed UniProt membrane record.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Q9NZR2 has a signal peptide, extracellular ectodomain, single transmembrane helix,
+      and cytoplasmic tail. GO:0016020 is accurate but generic and is superseded as a core
+      location by the more informative plasma-membrane annotation.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0162
+        source_label: UniProtKB membrane subcellular-location vocabulary
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          Exact mapping source; the reviewed Q9NZR2 transmembrane topology directly
+          supports membrane localization.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P05067
+  - UniProtKB:P43681
+  - UniProtKB:P63151
+  review:
+    summary: &gt;-
+      Marked over-annotated: this normalized row records systematic yeast-two-hybrid
+      candidate interactions with APP, CHRNA4, and PPP2R2A but assigns only the
+      uninformative generic binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PMID:32814053 is a proteome-scale interaction screen, and its abstract does not
+      provide LRP1B-specific orthogonal validation or a functional consequence for the
+      three pairs. APP does have separate targeted minireceptor evidence in
+      PMID:15126508, which is represented in the core synthesis; it does not rescue this
+      screen-derived generic binding assertion or license a more specific APP activity
+      term without a precise supported GO fit. CHRNA4 and PPP2R2A remain screen-only.
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: candidate interactions and is generated by systematic yeast two-hybrid
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0043235
+    label: signaling receptor complex
+  evidence_type: IDA
+  original_reference_id: PMID:23382219
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Undecided because the cached full text does not explicitly identify LRP1B, and the
+      study&#39;s broad PX-FERM cargo screen does not clearly establish membership in a
+      signaling receptor complex under the current GO definition.
+    action: UNDECIDED
+    reason: &gt;-
+      The curator may have used supplementary peptide-array data not represented in the
+      extracted body, so the experimental annotation is not removed. However,
+      PMID:23382219 frames many newly screened proteins as putative trafficking cargos,
+      whereas GO:0043235 requires a complex that binds a signaling molecule and initiates
+      a change in cell function. Available evidence cannot resolve that mismatch.
+    supported_by:
+    - reference_id: PMID:23382219
+      supporting_text: Although the possibility remains to be confirmed, these results strongly suggest that PX-FERM proteins are involved in the transport of these proteins within the endosomal system.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0006898
+    label: receptor-mediated endocytosis
+  evidence_type: TAS
+  original_reference_id: PMID:10766186
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Accepted as the specific biological process stated for the predicted LRP1B receptor
+      and corroborated by its conserved receptor architecture.
+    action: ACCEPT
+    reason: &gt;-
+      PMID:10766186 is abstract-only and describes LRP1B as putative, but explicitly
+      relates the 4599-residue product to the LRP1 endocytic receptor. TAS appropriately
+      captures that traceable author statement without pretending it is a direct assay;
+      reviewed UniProt independently records ligand internalization.
+    supported_by:
+    - reference_id: PMID:10766186
+      supporting_text: |-
+        The predicted LRP-DIT
+        product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+        which mediates endocytosis of multiple proteins from the cell surface.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0015031
+    label: protein transport
+  evidence_type: TAS
+  original_reference_id: PMID:10766186
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Modified because the cited author statement specifically concerns receptor-mediated
+      internalization of extracellular protein ligands, not generic protein transport.
+    action: MODIFY
+    reason: &gt;-
+      GO:0015031 is too broad and can imply many unrelated protein-trafficking processes.
+      PMID:10766186 instead points to uptake of proteins from the cell surface by an LRP1-
+      like receptor, which is captured precisely by GO:0006898 receptor-mediated
+      endocytosis and is already independently represented for LRP1B.
+    proposed_replacement_terms:
+    - id: GO:0006898
+      label: receptor-mediated endocytosis
+    supported_by:
+    - reference_id: PMID:10766186
+      supporting_text: |-
+        The predicted LRP-DIT
+        product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+        which mediates endocytosis of multiple proteins from the cell surface.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008285
+    label: negative regulation of cell population proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:27626682
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed direct human annotation for the growth-suppressive effect of endogenous
+      LRP1B in cultured non-small-cell lung cancer cells.
+    action: NEW
+    reason: &gt;-
+      siRNA depletion of endogenous human LRP1B increased Calu-1 proliferation, while
+      reciprocal expression experiments with full-length mouse Lrp1b or a human LRP1B
+      minireceptor reduced proliferation in other human NSCLC lines. GO:0008285 captures
+      the experimentally observed direction without asserting an in-vivo tumor-
+      suppressor mechanism or identifying an untested downstream pathway.
+    supported_by:
+    - reference_id: PMID:27626682
+      supporting_text: |-
+        Conversely, in
+        Calu-1 cells, which express higher endogenous levels of the receptor,
+        siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0030229
+    label: very-low-density lipoprotein particle receptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:21420681
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed direct human annotation for VLDL binding and internalization by an LRP1B
+      region-IV minireceptor.
+    action: NEW
+    reason: &gt;-
+      GO:0030229 exactly describes combining with VLDL and delivering it into the cell
+      through endocytosis. PMID:21420681 demonstrates both steps using a human LRP1B
+      minireceptor in cultured cells. The annotation is confined to VLDL and does not
+      imply LDL-particle uptake, systemic plasma clearance, or behavior of every ligand.
+    supported_by:
+    - reference_id: PMID:21420681
+      supporting_text: |-
+        Furthermore, binding as well as internalization of very low density lipoproteins
+        by cells expressing an LRP1b minireceptor was demonstrated.
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0038024
+    label: cargo receptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:11384978
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed direct human annotation for LRP1B&#39;s multiligand cargo-receptor activity.
+    action: NEW
+    reason: &gt;-
+      A human LRP1B region-IV minireceptor binds, internalizes, and degrades multiple
+      extracellular protein cargos, while independent cytoplasmic-tail experiments show
+      NPxY-dependent recognition by endocytic adaptors. Together these results fit the
+      current cargo-receptor definition without assigning an autonomous signaling or
+      catalytic activity. The minireceptor boundary and unresolved endogenous full-
+      length cargo repertoire remain explicit.
+    additional_reference_ids:
+    - PMID:17658514
+    supported_by:
+    - reference_id: PMID:11384978
+      supporting_text: |-
+        Ligands
+        of LRP including receptor-associated protein, urokinase plasminogen activator,
+        tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+        each demonstrate binding, internalization, and degradation via mLRP1B4.
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:17658514
+      supporting_text: |-
+        From these
+        data, we propose that both halves of the LRP1B cytoplasmic tail contribute to a
+        unique global conformation, which results in less efficient recognition by
+        endocytic adaptors and a slow endocytosis rate.
+      reference_section_type: ABSTRACT
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current GO reference for InterPro2GO annotation. It establishes the method
+      provenance for calcium-ion binding inferred from LDLR-family EGF-like
+      calcium-binding domains, not direct biochemical measurement of intact
+      human LRP1B.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current GO reference for PANTHER phylogenetic inference. It documents the
+      method, but LRP1 and LRP1B are functionally non-equivalent paralogs and the
+      relevant PANTHER subfamily mixes them; each biological transfer therefore
+      requires independent LRP1B evidence.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current method reference for mapping the reviewed UniProt single-pass
+      membrane topology. It supports annotation provenance rather than a
+      biological experiment.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current ARBA electronic-annotation reference. Direct LRP1B minireceptor
+      experiments independently support ligand endocytosis, but this method
+      reference does not establish substrate scope or physiological context.
+- id: PMID:10766186
+  title: LRP-DIT, a putative endocytic receptor gene, is frequently inactivated in
+    non-small cell lung cancer cell lines.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The original human LRP1B/LRP-DIT study predicted a 4,599-residue product
+      with extensive homology to the multiligand endocytic receptor LRP1.
+    supporting_text: |-
+      The predicted LRP-DIT
+      product of 4599 amino acids has extensive homology to a gigantic receptor, LRP1,
+      which mediates endocytosis of multiple proteins from the cell surface.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Homozygous deletions and abnormal LRP-DIT transcripts were frequent in the
+      tested human NSCLC cell-line panel.
+    supporting_text: |-
+      Homozygous deletions in LRP-DIT were detected in 17% (4 of 23) of non-small cell
+      lung cancer (NSCLC) cell lines. The expression of only abnormal transcripts
+      missing portions of the LRP-DIT sequence was demonstrated in an additional 30%
+      (11 of 36) of NSCLC lines.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational human gene-discovery and cancer-cell-line evidence. The paper
+      predicted an endocytic-receptor function from LRP1 homology; it did not
+      directly assay ligand uptake, and the deletion/transcript observations are
+      somatic cell-line associations rather than proof of a normal physiological
+      role or a hereditary LRP1B disorder. The local cache is abstract-only.
+- id: PMID:23382219
+  title: Structural basis for endosomal trafficking of diverse transmembrane cargos
+    by PX-FERM proteins.
+  findings:
+  - statement: &gt;-
+      The study defines general SNX17 recognition of NPxY/NxxY cargo motifs and
+      reports a broad putative-cargo screen, but the cached main text does not
+      identify an LRP1B-specific functional assay.
+    supporting_text: &gt;-
+      We further show that the PX-FERM proteins share a promiscuous ability to
+      bind a wide array of putative cargo molecules, including receptor tyrosine
+      kinases, and propose a model for their coordinated molecular interactions
+      with membrane, cargo, and regulatory proteins.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The identifier and title are correct, and the paper provides structural
+      context for NPxY-motif cargo recognition. However, LRP1B is not explicitly
+      named in the cached main text; any LRP1B result may reside in supplemental
+      screening data. This record alone does not verify that LRP1B is a stable
+      signaling-receptor complex component.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      This is a systematic candidate-interaction screen rather than targeted
+      mechanistic characterization of LRP1B.
+    supporting_text: &gt;-
+      candidate interactions and is generated by systematic yeast two-hybrid
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The cache verifies the screen design but does not expose the specific
+      LRP1B-APP, LRP1B-CHRNA4, or LRP1B-PPP2R2A assay records. These remain
+      candidate binary interactions without demonstrated LRP1B-dependent
+      trafficking or signaling consequences. The targeted APP minireceptor study
+      PMID:15126508 is stronger evidence for that particular partner. The local
+      cache is abstract-only.
+- id: PMID:11384978
+  title: The putative tumor suppressor LRP1B, a novel member of the low density lipoprotein
+    (LDL) receptor family, exhibits both overlapping and distinct properties with the
+    LDL receptor-related protein.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      A human LRP1B domain-IV minireceptor bound, internalized, and degraded RAP,
+      uPA, tPA, and PAI-1.
+    supporting_text: |-
+      Ligands
+      of LRP including receptor-associated protein, urokinase plasminogen activator,
+      tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+      each demonstrate binding, internalization, and degradation via mLRP1B4.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LRP1B ligand endocytosis was markedly slower than LRP1 endocytosis.
+    supporting_text: |-
+      Interestingly, the kinetics of ligand endocytosis is distinctly different from
+      that of LRP, with LRP1B exhibiting a markedly diminished internalization rate.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Human LRP1B transcript expression was detected in brain, thyroid, and
+      salivary gland in this study.
+    supporting_text: |-
+      In addition, tissue expression analysis reveals that the LRP1B gene is expressed
+      in brain, thyroid, and salivary gland.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct ligand-binding, uptake, and degradation evidence for a human LRP1B
+      region-IV minireceptor. It strongly supports multiligand endocytic-receptor
+      activity and a slower trafficking regime than LRP1, but it does not test
+      endogenous full-length receptor or LDL particles. The local cache is
+      abstract-only.
+- id: PMID:15126508
+  title: The low density lipoprotein receptor-related protein 1B retains beta-amyloid
+    precursor protein at the cell surface and reduces amyloid-beta peptide production.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      A human LRP1B region-IV minireceptor formed an immunoprecipitable complex
+      with APP.
+    supporting_text: |-
+      Using an LRP1B minireceptor (mLRP1B4) generated
+      to study the trafficking of LRP1B, we found that mLRP1B4 and APP form an
+      immunoprecipitable complex.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Soluble APP containing a Kunitz protease-inhibitor domain, but not the
+      tested APP form lacking that domain, was bound and degraded by mLRP1B4.
+    supporting_text: |-
+      Furthermore mLRP1B4 bound and facilitated the
+      degradation of a soluble isoform of APP containing a Kunitz proteinase inhibitor
+      domain but not soluble APP lacking a Kunitz proteinase inhibitor domain.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      mLRP1B4 increased cell-surface APP, reduced A-beta production, and increased
+      soluble APP secretion in the experimental cell system.
+    supporting_text: |-
+      A
+      functional consequence of mLRP1B4 expression was a significant accumulation of
+      APP at the cell surface, which is likely related to the slow endocytosis rate of
+      LRP1B. More importantly, mLRP1B4-expressing cells that accumulated cell surface
+      APP produced less Abeta and secreted more soluble APP.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Targeted functional evidence for APP binding and altered APP trafficking and
+      processing. It uses a human LRP1B minireceptor in cultured cells, not
+      endogenous full-length LRP1B or an in-vivo Alzheimer-disease model. The
+      isoform selectivity described is for soluble APP, not an LRP1B isoform. The
+      local cache is abstract-only.
+- id: PMID:15082773
+  title: Normal development and fertility of knockout mice lacking the tumor suppressor
+    gene LRP1b suggest functional compensation by LRP1.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Mice lacking membrane-inserted Lrp1b developed and reproduced normally,
+      with Lrp1 or other receptors proposed as compensators.
+    supporting_text: |-
+      In contrast to LRP1, LRP1b-deficient mice develop
+      normally, most likely due to its restricted expression pattern and functional
+      compensation by LRP1 or other receptors.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Mouse Lrp1b was expressed predominantly in brain, with a differentially
+      spliced form reported in adrenal gland and testis.
+    supporting_text: |-
+      LRP1b is expressed predominantly in the
+      brain, and a differentially spliced form is present in the adrenal gland and in
+      the testis.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Mouse Lrp1b remained a single 600-kDa polypeptide rather than undergoing
+      LRP1-like furin processing; yeast two-hybrid assays identified PSD95 and
+      AIP as intracellular-tail partners.
+    supporting_text: |-
+      Despite the presence of a potential furin cleavage site and in
+      contrast to LRP1, immunoblotting for LRP1b reveals the presence of a single
+      600-kDa polypeptide species. Using a yeast two-hybrid approach, we have
+      identified two intracellular proteins, the postsynaptic density protein 95 and
+      the aryl hydrocarbon receptor-interacting protein, that bind to the
+      intracellular domain of LRP1b.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct mouse knockout, processing, expression, splice-form, and interaction
+      evidence. Normal development does not refute human cell-autonomous or
+      tissue-specific functions because the authors explicitly invoke paralog
+      compensation. The mouse splice form and yeast-two-hybrid partners must not
+      be projected as established endogenous human isoform biology. The local
+      cache is abstract-only.
+- id: PMID:17658514
+  title: &#39;Slow endocytosis of the LDL receptor-related protein 1B: implications for
+    a novel cytoplasmic tail conformation.&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      In the minireceptor comparison, LRP1B internalized approximately 15-fold
+      more slowly than LRP1.
+    supporting_text: |-
+      Although the positions of these endocytic motifs
+      are similar in both receptors, LRP1B is internalized at a 15-fold slower rate
+      than LRP1.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Either cytoplasmic NPXY motif could support LRP1B internalization; only the
+      double mutation abolished it.
+    supporting_text: |-
+      Only mutation of both NPXY motifs together abolished LRP1B
+      endocytosis, suggesting that LRP1B can use either of these motifs for
+      internalization.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Both halves of the LRP1B cytoplasmic tail contribute to a conformation that
+      is inefficiently recognized by endocytic adaptors.
+    supporting_text: |-
+      From these
+      data, we propose that both halves of the LRP1B cytoplasmic tail contribute to a
+      unique global conformation, which results in less efficient recognition by
+      endocytic adaptors and a slow endocytosis rate.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct mechanistic minireceptor analysis of the LRP1B cytoplasmic tail and
+      its divergence from LRP1 trafficking. The cache is abstract-only, so model
+      and assay details are not extended beyond the abstract.
+- id: PMID:21420681
+  title: LRP1b shows restricted expression in human tissues and binds to several extracellular
+    ligands, including fibrinogen and apoE-carrying lipoproteins.
+  findings:
+  - statement: &gt;-
+      Human LRP1B transcript was consistently detected in brain, thyroid, and
+      skeletal muscle, with lower and inconsistent testis detection in the tested
+      tissue panels.
+    supporting_text: |-
+      Using two independent RT-PCR assays, LRP1b mRNA was
+      detected in human brain, thyroid gland, skeletal muscle, and to a lesser amount
+      in testis but absent in other tissues, including heart, kidney, liver, lung, and
+      placenta.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Direct binding of recombinant LRP1B ectodomains to fibrinogen was verified
+      by co-immunoprecipitation.
+    supporting_text: |-
+      Direct binding of LRP1b ectodomains to
+      fibrinogen was verified by co-immunoprecipitation.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      ApoE-carrying lipoproteins bound recombinant LRP1B ectodomains.
+    supporting_text: |-
+      ApoE-carrying lipoproteins
+      were shown to bind to LRP1b ectodomains in a lipoprotein binding assay.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      A human LRP1B region-IV minireceptor supported both VLDL binding and
+      internalization in cultured cells.
+    supporting_text: |-
+      Furthermore, binding as well as internalization of very low density lipoproteins
+      by cells expressing an LRP1b minireceptor was demonstrated.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human-tissue expression and recombinant human LRP1B ligand evidence.
+      This is the strongest primary support for lipoprotein-particle receptor
+      activity, although uptake used a region-IV minireceptor in CHO cells and
+      does not establish a major systemic role in plasma lipoprotein clearance.
+      The full text also failed to detect the predicted human exon-90-skipped
+      form in the tissues tested, while allowing low-level or other-tissue
+      expression.
+- id: PMID:27626682
+  title: Expression of a recombinant full-length LRP1B receptor in human non-small cell
+    lung cancer cells confirms the postulated growth-suppressing function of this large
+    LDL receptor family member.
+  findings:
+  - statement: &gt;-
+      Full-length mouse Lrp1b expression reduced proliferation in human NSCLC
+      cell lines with little endogenous LRP1B.
+    supporting_text: |-
+      Overexpression of Lrp1b in non-small cell lung cancer cells with low
+      or absent endogenous LRP1B expression significantly reduced cellular
+      proliferation compared to empty vector-transfected control cells.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Knockdown of endogenous human LRP1B increased proliferation of Calu-1 NSCLC
+      cells.
+    supporting_text: |-
+      Conversely, in
+      Calu-1 cells, which express higher endogenous levels of the receptor,
+      siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      In the same human NSCLC-cell assays, LRP1 overexpression did not reproduce
+      the antiproliferative effect of mouse full-length Lrp1b or the human LRP1B
+      minireceptor.
+    supporting_text: &gt;-
+      However, in contrast to full-length mLrp1b or the hLRP1B minireceptor,
+      LRP1 overexpression did not significantly affect cellular proliferation of
+      A549 (Supplementary Figure S1) and A427 cells (data not shown), respectively.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Functional cancer-cell evidence supporting growth suppression, with an
+      informative LRP1 paralog control. Species and construct boundaries are
+      essential: overexpression used full-length mouse Lrp1b or a human region-IV
+      minireceptor in human NSCLC lines, whereas the reciprocal knockdown targeted
+      endogenous human LRP1B. This does not establish an in-vivo human tumor-
+      suppressor mechanism or a germline disease.
+- id: file:human/LRP1B/LRP1B-uniprot.txt
+  title: UniProtKB/Swiss-Prot record for human LRP1B (Q9NZR2)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed record for the 4,599-residue human precursor, signal peptide,
+      single-pass type-I topology, LDLR-family repeat architecture, and curated
+      ligand/subcellular statements. It contains no curated alternative-products
+      section; mouse splice-form evidence therefore cannot be assumed to define a
+      reviewed human protein isoform.
+core_functions:
+- description: &gt;-
+    At the plasma membrane, LRP1B binds VLDL and mediates receptor-dependent
+    internalization. Human minireceptor experiments separately show binding,
+    internalization, and degradation of RAP, uPA, tPA, and PAI-1, while recombinant
+    ectodomains bind fibrinogen and apoE-bearing lipoproteins. A targeted minireceptor
+    study also demonstrates APP association and altered processing, and cytoplasmic-
+    tail experiments show that either NPxY motif can support uptake. LRP1B internalizes
+    cargo much more slowly than LRP1, which can prolong surface retention. Most direct
+    trafficking assays used region-IV minireceptors, so they do not establish the full
+    endogenous ligand repertoire or a major systemic plasma-lipoprotein-clearance role.
+  molecular_function:
+    id: GO:0038024
+    label: cargo receptor activity
+  directly_involved_in:
+  - id: GO:0006898
+    label: receptor-mediated endocytosis
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:11384978
+    supporting_text: |-
+      Ligands
+      of LRP including receptor-associated protein, urokinase plasminogen activator,
+      tissue-type plasminogen activator, and plasminogen activator inhibitor type-1
+      each demonstrate binding, internalization, and degradation via mLRP1B4.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:17658514
+    supporting_text: |-
+      Only mutation of both NPXY motifs together abolished LRP1B
+      endocytosis, suggesting that LRP1B can use either of these motifs for
+      internalization.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:21420681
+    supporting_text: |-
+      Furthermore, binding as well as internalization of very low density lipoproteins
+      by cells expressing an LRP1b minireceptor was demonstrated.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:15126508
+    supporting_text: |-
+      A
+      functional consequence of mLRP1B4 expression was a significant accumulation of
+      APP at the cell surface, which is likely related to the slow endocytosis rate of
+      LRP1B. More importantly, mLRP1B4-expressing cells that accumulated cell surface
+      APP produced less Abeta and secreted more soluble APP.
+    reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: &gt;-
+    The endogenous full-length human LRP1B ligand repertoire, adaptor usage, and
+    tissue-specific internalization kinetics are not established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Most mechanistic assays used a region-IV minireceptor, while the intact receptor is
+    4,599 residues and may impose different ligand accessibility, processing, and
+    trafficking constraints.
+  resolution: &gt;-
+    Endogenously tag LRP1B in naturally expressing human cells, quantify uptake of
+    candidate ligands, map cytoplasmic-tail adaptor occupancy, and compare results with
+    matched full-length and minireceptor rescue constructs.
+  provenance:
+  - reference_id: PMID:11384978
+    supporting_text: cell lines that stably express it as a domain IV minireceptor (mLRP1B4).
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The normal physiological roles of LRP1B in its restricted human tissue-expression
+    domains, including the importance of lipoprotein uptake, remain unresolved.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Recombinant ectodomains and minireceptors bind apoE-bearing lipoproteins and VLDL,
+    but restricted expression argues against simply assigning the systemic clearance
+    role of LRP1 to LRP1B.
+  resolution: &gt;-
+    Measure endogenous LRP1B-dependent cargo uptake and extracellular proteome changes
+    in human brain, thyroid, and skeletal-muscle models, then test tissue-selective
+    loss-of-function in vivo.
+  provenance:
+  - reference_id: PMID:21420681
+    supporting_text: |-
+      Using two independent RT-PCR assays, LRP1b mRNA was
+      detected in human brain, thyroid gland, skeletal muscle, and to a lesser amount
+      in testis but absent in other tissues, including heart, kidney, liver, lung, and
+      placenta.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The molecular connection between LRP1B cargo trafficking and suppression of
+    cancer-cell proliferation is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Direct perturbation supports a growth-suppressive effect in cultured NSCLC cells,
+    but no cargo, adaptor, or downstream pathway has been shown to cause that effect,
+    and in-vivo human tumor suppression has not been tested experimentally.
+  resolution: &gt;-
+    Combine endogenous LRP1B knockout and rescue with surface proteomics, cargo uptake,
+    phosphoproteomics, and proliferation assays, then validate the causal cargo or
+    pathway in patient-derived tumor models.
+  provenance:
+  - reference_id: PMID:27626682
+    supporting_text: |-
+      Conversely, in
+      Calu-1 cells, which express higher endogenous levels of the receptor,
+      siRNA-mediated LRP1B knockdown significantly enhanced cellular proliferation.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    Full-length human LRP1B processing, higher-order structure, and possible stable
+    receptor-complex membership are unresolved.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    No experimental full-length structure or LRP1B-containing receptor complex is
+    available, and mouse evidence that Lrp1b remains a single polypeptide cannot define
+    human processing or complex stoichiometry.
+  resolution: &gt;-
+    Characterize endogenous human LRP1B maturation and oligomeric state by pulse-chase
+    proteomics, native complex analysis, and cryo-electron tomography or fragment-
+    guided structural methods in a native membrane context.
+  provenance:
+  - reference_id: PMID:15082773
+    supporting_text: |-
+      Despite the presence of a potential furin cleavage site and in
+      contrast to LRP1, immunoblotting for LRP1b reveals the presence of a single
+      600-kDa polypeptide species.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    Whether human LRP1B produces functional alternative protein isoforms is unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Mouse splice-form evidence and a predicted human exon-skipping transcript have not
+    yielded a reviewed human alternative product or an experimentally validated human
+    protein isoform.
+  resolution: &gt;-
+    Use long-read RNA sequencing and junction-specific proteomics across LRP1B-
+    expressing human tissues, followed by isoform-resolved ligand-uptake assays for any
+    reproducibly detected protein products.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which endogenous ligands and cytoplasmic adaptors control full-length human LRP1B
+    internalization in each expressing tissue?
+  experts:
+  - Endocytic trafficking experts
+  - LDL-receptor-family biologists
+- question: &gt;-
+    Does LRP1B have a physiologically important lipoprotein-uptake role in brain,
+    thyroid, or skeletal muscle despite its restricted expression?
+  experts:
+  - Lipoprotein metabolism experts
+  - Tissue physiologists
+- question: &gt;-
+    Which cargo-retention or signaling change mediates LRP1B-dependent suppression of
+    NSCLC-cell proliferation?
+  experts:
+  - Cancer cell biologists
+  - Surface-proteome experts
+- question: &gt;-
+    Is endogenous human LRP1B proteolytically processed or incorporated into a stable
+    signaling complex in any native cell type?
+  experts:
+  - Receptor biochemists
+  - Structural biologists
+- question: &gt;-
+    Are any human LRP1B splice transcripts translated into stable receptors with
+    distinct ligand or trafficking properties?
+  experts:
+  - Long-read transcriptomics experts
+  - Proteogenomics experts
+suggested_experiments:
+- hypothesis: &gt;-
+    Full-length human LRP1B uses both NPxY motifs to recruit endocytic adaptors but
+    internalizes selected cargo more slowly than LRP1.
+  description: &gt;-
+    Endogenously tag LRP1B in a naturally expressing human cell model, introduce
+    single- and double-NPxY mutations, and quantify adaptor occupancy, surface half-
+    life, and ligand uptake alongside matched LRP1 controls.
+  experiment_type: endogenous receptor trafficking and motif mutagenesis
+- hypothesis: &gt;-
+    Tissue-restricted LRP1B mediates selective apoE-lipoprotein uptake rather than
+    bulk systemic lipoprotein clearance.
+  description: &gt;-
+    Compare LRP1B-dependent uptake of defined lipoprotein particles in human brain,
+    thyroid, and skeletal-muscle organoid models using knockout/rescue and quantitative
+    lipid tracing.
+  experiment_type: tissue-resolved ligand uptake
+- hypothesis: &gt;-
+    LRP1B suppresses NSCLC proliferation by retaining a specific growth-regulatory
+    cargo at the plasma membrane.
+  description: &gt;-
+    Perform surface proteomics and uptake profiling after endogenous LRP1B knockout and
+    rescue, nominate altered cargos, and test whether cargo-specific perturbation
+    reproduces or reverses the proliferation phenotype.
+  experiment_type: causal surface-proteome perturbation
+- hypothesis: &gt;-
+    Human full-length LRP1B remains an uncleaved single-chain receptor and does not form
+    an obligate signaling complex.
+  description: &gt;-
+    Analyze endogenous receptor maturation by pulse-chase labeling, N-terminomics,
+    native mass spectrometry, and crosslinking in multiple human cell types, with LRP1
+    as a processing and complex-assembly comparator.
+  experiment_type: receptor processing and native-complex analysis
+- hypothesis: &gt;-
+    Predicted human LRP1B splice transcripts do not produce stable, functionally
+    distinct receptor isoforms.
+  description: &gt;-
+    Combine tissue long-read sequencing, targeted junction proteomics, and isoform-
+    specific rescue assays measuring plasma-membrane delivery and ligand uptake.
+  experiment_type: isoform-resolved transcript and protein analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

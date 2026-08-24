@@ -119,7 +119,7 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,960 | 1,040 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,767 | 859 | 9.7 |
+| Retained/replacement/proposed-new AIGR annotations | 2,766 | 858 | 9.7 |
 | All GO-valued AIGR core-function slots | 1,224 | 349 | 3.9 |
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
