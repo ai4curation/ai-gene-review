@@ -136,3 +136,63 @@ bidirectional) so the demonstrated activity can be stated at its real specificit
 Newly cached: PMID:11807558, PMID:18668045, PMID:19129492, PMID:19494107, PMID:19701946,
 PMID:23720757, PMID:38617304 (bioRxiv preprint), PMID:39025454 (JBC version), PMID:41427416
 (bioRxiv preprint), PMID:42417535 (Protein Sci 2026).
+
+## OpenScientist run (2026-08-24)
+
+Commissioned an independent structural run to test whether the RFT1-CDG residues
+discriminate the two models:
+`genes/human/RFT1/RFT1-hypotheses/scramblase-vs-binding-cavity/openscientist.md`
+(1290 s, 3 iterations; artifacts include a residue-classification CSV and an evidence
+matrix). Framed deliberately with Model A and Model B stated symmetrically — the
+auto-derived hypotheses from `just gene-hypothesis-list` were **not** used, because they
+embed this review's own rationale verbatim and would have made the run a confirmation
+exercise.
+
+### Result: the premise was wrong, and that is the useful part
+
+Computed on AF-Q96AA3-F1 v6 (mean pLDDT 90.4), Shrake-Rupley SASA plus pore-axis geometry:
+
+| residue | rSASA | radial from axis | side-chain orientation | conservation (9 orthologs) | call |
+|---|---|---|---|---|---|
+| R67  | 0.13 | 9.1 Å  | opens inward (−0.21)  | Arg invariant 9/9   | central-cavity-lining (high) |
+| K152 | 0.26 | 12.6 Å | inward/neutral (−0.09)| basic K/R 7/9       | inner vestibule (moderate) |
+| E298 | 0.46 | 13.8 Å | opens outward (+0.44) | acidic E/D 9/9      | neither cavity nor portal |
+
+Reference clouds: axis-facing TM residues median exposure-radial-out −0.07, lipid/portal-facing
++0.75. "No disease residue lines the lateral dolichol portal."
+
+The run's own conclusion is that this **cannot** discriminate the models: "model, so
+cavity-localised disease mutations do not discriminate them" — headgroup binding is
+required for transport under Model A just as much as it is required for chaperoning under
+Model B. That is a correction to the premise I gave it, and it kills my original framing of
+suggested experiment 3 (allele *position* is uninformative; only a measured dissociation
+between binding and transport is). Recorded rather than dropped.
+
+Two genuinely new observations worth keeping:
+
+- The MOP/MATE inverted-topology two-lobed fold is present in the human model (internal C2
+  repeat, 40 Cα at 3.07 Å RMSD), but "the apo human model's innermost lining is net-acidic"
+  (net −2). The cationic cavity in the current mechanistic model is a property of
+  *substrate-docked yeast* models. So the electrostatics of the resting state are unverified —
+  now a suggested cryo-EM experiment.
+- E298 is a conserved, exposed, outward-facing acidic residue. Its role is unexplained by
+  either model.
+
+### One claim from the run that is wrong — do not import
+
+It flags human **Q9NWF4** and mouse **Q9D8F3** as "divergent ~450-aa RFT1 paralogs" at risk of
+transitive annotation. Checked against UniProt: Q9NWF4 is **SLC52A1** (S52A1_HUMAN, 448 aa,
+riboflavin transporter) and Q9D8F3 is **Slc52a2** (S52A2_MOUSE, 450 aa). Both list `RFT1` as a
+legacy **gene-symbol synonym** (SLC52A1 synonyms: GPR172B, PAR2, RFT1). They are not paralogs
+of Q96AA3 at all — the 26% identity is noise.
+
+The hazard the run pointed at is nonetheless real, just misdiagnosed: **`RFT1` is an ambiguous
+symbol.** Any literature search, ortholog set or text-mined annotation for "RFT1" can silently
+pick up riboflavin-transporter papers. Always anchor on Q96AA3 / the 541-aa
+Man(5)GlcNAc(2)-PP-dolichol translocation protein, never on the bare symbol.
+
+### Where it leaves the review
+
+Convergent with the curation already made: keep the MF at GO:0140303 anchored to the
+PMID:38886340 IDA, flag the debate, and do not assert the translocase mechanism as settled.
+Nothing in the run required a change of action on any annotation.
