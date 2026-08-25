@@ -219,9 +219,13 @@ separate them. Splitting the output on that criterion:
 - The apo human axis lining is net-acidic (net −2). The cationic cavity of the published
   mechanism is a property of substrate-docked yeast models, so the resting-state electrostatics
   of the wild-type protein are unverified.
-- Position 298 is a conserved exposed acidic residue. Conservation of a solvent-exposed position
-  is the interesting part — exposed residues are usually less constrained, so this looks like a
-  functional interface rather than a folding requirement. Unexplained by either model.
+- ~~Position 298 is a conserved exposed acidic residue...~~ **Retracted — see the second run and
+  `RFT1-bioinformatics/RESULTS.md`.** E298 is not outward-facing. It points toward the pore axis at
+  7.0 Å, stable under all 24 perturbed axes tested locally, and the family-constraint run ranks it
+  among the most constrained cavity positions (KL 3.31). The first run's rSASA of 0.46 was
+  misleading because a residue lining an empty modelled cavity is "solvent-exposed" in a monomer
+  SASA calculation; the discriminating quantity is orientation relative to the axis, and on that
+  the first run's call does not reproduce.
 
 **Disease-only, no bearing on evolved function:** the pathogenicity of R67C/K152E/E298K, and
 the whole cavity-vs-portal-discriminates-the-models premise (which failed anyway).
@@ -236,3 +240,73 @@ constrained across a deep MSA, and do they line the central cavity, the lateral 
 neither? That asks what evolution actually conserved and where it sits in the transport
 machinery, with no disease input at all. The run itself flags the missing deep MSA as a
 limitation (it used pairwise Needleman-Wunsch against 9 orthologs).
+
+## Second OpenScientist run — family constraint, WT-first (2026-08-25)
+
+`genes/human/RFT1/RFT1-hypotheses/family-constraint-cavity-vs-portal/openscientist.md`
+(1560 s, 3 iterations). Disease variants excluded as both input and selection criterion.
+Unlike the first run this one did real statistics rather than reasoning over a handful of
+residues.
+
+**Pipeline** (verified where checkable): Pfam PF04506 full alignment via InterPro, 3,826 sequences
+/ 512 match columns, taxonomically broad and eukaryote-only — I confirmed against the InterPro API
+that PF04506 is "Rft protein", ~4.5k proteins, spread across fungi, metazoa, plants, stramenopiles,
+ciliates and apusozoans with no prokaryotic members. Henikoff position-based weights → per-column
+Kullback-Leibler relative entropy; profile Needleman-Wunsch onto Q96AA3 (497 residues mapped);
+geometric classification against AF-Q96AA3-F1 with stated criteria.
+
+**Core result** (KL bits, TM background 1.673 over n=312):
+
+| class | n | mean KL | vs background | effect |
+|---|---|---|---|---|
+| central cavity | 32 | 2.354 | p = 6.2e-5 | −0.43 (more constrained) |
+| lateral portal | 22 | 1.333 | p = 0.24 (NS) | +0.15 (slightly below) |
+| outer lipid-facing | 78 | 0.918 | p = 1.9e-13 | +0.54 (far below) |
+| buried packing | 180 | 1.920 | p = 1.2e-3 | −0.18 (modestly above) |
+
+Cavity vs portal p = 2.9e-5, effect −0.68. Controls: second metric (Shannon) same ranking;
+20,000-draw permutation null p = 1e-4; ±15–25° axis tilts preserve it; cavity class is 0% Gly,
+0% Pro, 28% charged, 47% polar, so it is not a helix-breaker artifact. Axis-independent
+corroboration: constraint vs radial distance ρ = −0.675 (p = 8e-43), vs lipid exposure ρ = −0.591,
+vs pLDDT ρ = −0.086 (NS, so not a model-confidence artifact). The 15 most constrained TM residues
+form one compact pocket (mean pairwise 19.2 Å vs 30.1 Å null, p < 1e-4).
+
+Candidate substrate-coordinating positions: R290, N435, Y378, E64, E298, Q186, N283, E156, T257,
+S286, E258, F415, E260, S412, K152.
+
+### The caveat the run does not draw itself
+
+Low constraint at portal-lining positions is **weak evidence** that the portal is non-functional,
+because lipid-facing TM residues are the fastest-evolving class in essentially every membrane
+protein — the run itself uses exactly this fact as a sanity check that its membrane frame is
+correct ("Outer lipid-facing surface is the fastest-evolving class... Expected TM-protein pattern
+→ frame is roughly correct"). A greasy transit path is degenerate: hydrophobicity is conserved,
+identity is not. So the cavity result is strong, and the portal result mostly reflects the null
+expectation for any lipid-contacting surface. Compounding this, the "portal" class is operationally
+the lipid-facing rim of the cavity in a single apparently occluded model, and the run's own
+ray-tracing detector found no open lateral gate in it.
+
+Also unlike the first run: no data artifacts (HTML/PDF only, no CSVs), so the numbers exist only in
+the report prose; and again no citations file.
+
+### E298 — the two runs contradict each other, and the second one is right
+
+Run 1 called E298 exposed and outward-facing ("neither cavity nor portal"); run 2 ranks it a
+top-constrained cavity residue. Settled locally in `RFT1-bioinformatics/` — E298 points inward at
+7.0 Å from the axis, 24/24 perturbed axes agreeing, against a TM-slab median of +0.31 Å (i.e. most
+side chains point outward). Run 2 is corroborated; run 1's E298 call is retracted above.
+
+Incidentally, R67 — run 1's star residue — is inward-facing but *peripheral* (17.2 Å, against 7.0 Å
+for E298 and 2.7 Å for N283), which is consistent with its absence from run 2's top-constrained
+cavity list despite being an invariant arginine. Inward-facing and cavity-lining are not the same
+thing.
+
+### What this does and does not settle
+
+Does: the substrate-binding cavity is a genuinely evolved, selected feature of the RFT1 fold, not
+an artifact of one docked model — which is the wild-type-function claim worth having, and it
+reinforces GO:0140303.
+
+Does not: separate the transporter from the chaperone model. Substrate capture is required under
+both, and per the caveat above the portal comparison lacks the power to argue the transit path is
+unused. The discriminator remains a variant that separates binding from transport.
