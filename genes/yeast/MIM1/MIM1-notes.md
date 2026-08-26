@@ -200,3 +200,49 @@ narrow.
 | GO:0022832 voltage-gated channel activity (IDA) | PMID:28916712 | MODIFY → GO:0022843 (substrate-correct); flag that protein conduction, not ion conduction, is the physiological role |
 | GO:0055085 transmembrane transport (IEA) | GO_REF:0000108 from GO:0022832 | REMOVE — uninformative logical by-product; misrepresents an insertase as a solute transporter |
 | **GO:0032977 membrane insertase activity** | not annotated | **PROPOSE** (contributes_to) |
+
+---
+
+## 10. Addendum — reviewer adjudication (annotation-reviewer pass)
+
+The provisional table in §9 was independently re-checked against the cached full texts.
+Two amendments, plus two corrections of detail.
+
+**Amendment 1 — `GO:0022832` is MARK_AS_OVER_ANNOTATED, not MODIFY → `GO:0022843`.**
+The substrate-correctness argument in §6.2 is right as far as it goes, but MODIFY to the
+cation-specific child moves the annotation in the wrong direction overall. GO:0022843
+*asserts* that MIM1's molecular function is to conduct monoatomic cations; GO:0022832 leaves
+the substrate open. Since §6.3 concludes that the physiological permeant is polypeptide, the
+vaguer parent is the less false of the two. There is also a mechanical consequence:
+GO:0022832 already generates the spurious `GO:0055085` BP by inter-ontology inference
+(GO_REF:0000108), and GO:0022843 would generate a *more specific* and more definitely wrong
+cation-transport process in its place. KEEP_AS_NON_CORE was also considered and rejected —
+it implies a genuine secondary activity, whereas the measured pore is the same conduit that
+performs the insertase function, observed with an electrode.
+
+**Amendment 2 — `GO:0032977` is entered as a `NEW` annotation, not only as a proposal.**
+`contributes_to` is retained as the qualifier, per §7. In addition, a genuinely new ontology
+term is proposed: **protein-conducting channel activity** (parent `GO:0015267 channel
+activity`). No such term exists — checked against OLS — and its absence is exactly why the
+electrophysiology of Tom40, Sam50, Mdm10 and Mim1 keeps being curated with ion-channel terms.
+
+**Correction A — quotation error in §4.** The sentence quoted as
+`"MIM interacts with TOM to accept precursor proteins from\nthe receptor Tom70."` is not a
+verbatim substring of `publications/PMID_32348752.md`: the cached text has a non-breaking
+space, `to\xa0accept`. Use
+`"Free MIM complexes insert single-spanning proteins that are\nimported in a Tom70-independent manner."`
+instead, which verifies.
+
+**Correction B — topology is not fully settled.** [PMID:15326197], using a C-terminally
+tagged allele, states "These results indicate that Tom13 and Tom38 are an integral membrane
+protein and a peripheral membrane protein, respectively, of the mitochondrial outer membrane
+and expose at least their COOH termini to the cytosol" — i.e. **C-terminus cytosolic**, the
+opposite of the later consensus recorded in §2. The outer-membrane assignment is unaffected
+(both papers agree), but the discrepancy is real and is now recorded as a suggested question.
+Note also that the "residues 39–62" TM span in the header is UniProt `FT TRANSMEM 39..62`
+with `ECO:0000255` — a sequence-analysis prediction, not experimental.
+
+**Final actions (14 GOA-derived entries + 1 NEW).** ACCEPT ×11 (GO:0140595 IBA; GO:0045040
+IBA; GO:0005741 IEA; GO:0005741 IDA ×3; GO:0045040 IMP; GO:0045040 IDA; GO:0140595 IPI;
+GO:0070096 IMP ×2) · MARK_AS_OVER_ANNOTATED ×2 (GO:0005515 IPI; GO:0022832 IDA) ·
+REMOVE ×1 (GO:0055085 IEA) · NEW ×1 (GO:0032977, contributes_to).
