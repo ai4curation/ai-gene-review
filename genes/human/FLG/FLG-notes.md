@@ -251,10 +251,37 @@ Three focused MF hypotheses were dispatched (see `FLG-hypotheses/`):
 
 1. `function-hypothesis-go-0005509` — does the N-terminal S100 domain really bind Ca2+,
    and is EF-hand 1 a degenerate pseudo-EF-hand?
+   **Verdict: SUPPORTED.** Convergent structural, biochemical, sequence and evolutionary
+   evidence; EF-hand 2 (62–73) is a textbook canonical loop with the hallmark bidentate
+   Glu73, EF-hand 1 is the S100-type pseudo-EF-hand. Recommends retain + upgrade IEA→IDA
+   on PMID:25760235, with a scope note that this is the N-terminal domain's property, not
+   the repeat's. Surfaced [PMID:32893105], which shows the A+B domains bind annexin II and
+   keratin IFs calcium-dependently — now cited in the review.
 2. `mf-keratin-binding-vs-structural` — is the mature repeat unit's MF keratin-filament
    binding rather than `structural molecule activity`?
+   **Verdict: SUPPORTED, with a qualifier.** Independent sequence biophysics found every
+   repeat region intrinsically disordered (Uversky charge–hydropathy, Chou–Fasman below
+   average for *both* helix and sheet, TOP-IDP disorder fraction 0.92–0.98), strongly
+   hydrophilic, and cationic only at acidic skin pH. Recommends GO:0019215/GO:1990254 as
+   the primary MF and reframing GO:0030280 as a distinct, secondary, cornified-envelope
+   role — which is exactly how this review wires it. Surfaced [PMID:6195345], the direct
+   in vitro demonstration of keratin bundling, now cited.
 3. `function-hypothesis-go-0046914` — is the InterPro2GO transition-metal-binding call
    warranted for this protein?
+   **Verdict: over-annotated / refuted as a direct function.** A HETATM audit of 4PCW
+   finds 8 calcium atoms and zero transition-metal atoms; residues 1–91 contain only two
+   histidines (His60, His65) and no cysteines, lacking the His3Asp/His4–6 or Cys-cluster
+   chemistry that characterised metal-binding S100 proteins use, and those histidines sit
+   8–15 Å from any calcium site. A comparative audit shows all six human SFTPs (FLG, FLG2,
+   HRNR, RPTN, TCHH, CRNN) carry GO:0046914 as IEA:InterPro with no member-specific
+   evidence, while genuinely Zn-binding S100s (S100A7/A8/A9/B) carry the specific child
+   GO:0008270 with experimental evidence. Caveat recorded in the review: no direct
+   Zn/Cu binding assay has been done on this domain, so the case is structural, sequence
+   and comparative rather than a direct negative experiment.
+
+All three runs were launched blind to this notes file and agreed with the independent
+reading above; where they diverged from my initial framing it was to sharpen it (the
+GO:0030280 "secondary structural role" split), not to overturn it.
 
 Operational note for the skill: `--as-function-hypothesis` **silently discards
 `--context`** (`build_function_hypothesis_record` in
