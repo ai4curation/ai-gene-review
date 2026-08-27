@@ -26,8 +26,12 @@ epidermal stratum granulosum. UniProt P20930 (4061 aa) is annotated with:
 
 - two N-terminal EF-hand domains (residues 6–43 and 49–84) inside an S100-like "A domain";
 - Ca(2+) `BINDING` sites at residues 62, 64, 66, 68 and 73 — i.e. **only in EF-hand 2**;
-- 23 tandem `Filaggrin` repeats (residues 258–3872), the whole region 255–3971 flagged
-  `Disordered` by MobiDB-lite;
+- 23 tandem `Filaggrin` `REPEAT` features (residues 258–3872), the whole region 255–3971
+  flagged `Disordered` by MobiDB-lite. **These are not the filaggrin monomers.** Each is a
+  49–56 aa Pfam PF03516 match (`DR Pfam; PF03516; Filaggrin; 23.`), and they occur in
+  pairs whose starts are spaced exactly 324 aa apart — i.e. two signature matches per
+  ~324-residue filaggrin unit, so 23 matches correspond to the ~11–12 units the literature
+  describes, not to 23 monomers;
 - family assignment "Belongs to the S100-fused protein family" (PANTHER PTHR22571:SF51).
 
 The domain architecture matters for MF curation: **the EF-hands and the filaggrin repeats
