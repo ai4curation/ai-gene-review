@@ -316,3 +316,90 @@ resolve to "correct, because yeast MIM1 is correct". The one real gain available
 upgrading `GO:0005741` from IEA to experimental on the strength of the *N. crassa* outer
 membrane proteomics in [PMID:15608614], which identified NCU01101.1 in that fraction. Judged
 not worth a review file on its own.
+
+---
+
+## 12. Addendum 3 — full texts of the two 2008 J Mol Biol papers
+
+Publisher PDFs for [PMID:18177669] and [PMID:18187149] were supplied and extracted into
+`publications/` (`full_text_extraction_method: pdf`). Both had been abstract-only. This
+resolves one open caveat and adds several findings that the abstracts do not carry.
+
+**Organism caveat closed.** §11 flagged that neither abstract names its organism, so the
+yeast attribution rested on UniProt's `ECO:0000269` links. Both full texts state it
+outright: [PMID:18177669 "The S. cerevisiae WT strain YPH499 was used."] and
+[PMID:18187149 "The Δtom20 strain BY4743 was purchased from the Saccharomyces Genome
+Deletion Consortium."] (also W303). The indirect attribution is no longer needed.
+
+**`mim1Δ` is viable.** Both papers build and use null strains — PMID:18177669 replaced the
+ORF with a HIS3 cassette. MIM1 has been carried as "essential" since the deletion-project
+database and the promoter-shutoff screen [PMID:15242642], and [PMID:18187149] addresses this
+directly: "Mim1 was first described as an essential gene required for mitochondrial import
+by Mnaimneh et al. ... on the grounds that down regulation of MIM1 expression with a TetR
+promoter caused a loss of growth on nonfermentable carbon sources". The null is sick, not
+dead. Nothing in the review asserted essentiality, but it is worth having on record.
+
+### PMID:18177669 — what the abstract omits
+
+- **GXXXG motifs are mapped:** two consecutive GXXXG/A motifs at residues 57–61 and 63–67.
+  The single G61L change is tolerated; the triple mutant (G61L + G63I + A67I, "Mim1-LII")
+  "was not able to complement the function of native Mim1 under all conditions tested",
+  forms no dimer, and yields no detectable Mim1 complex on BN-PAGE — while phenocopying
+  `mim1Δ` for reduced Tom20 and the low-mass Tom40 species.
+- **Oligomerisation is necessary, not merely correlated:** "Collectively, these results
+  demonstrate that the ability of Mim1 to form oligomers is essential for the function of
+  the protein in the biogenesis of the TOM complex."
+- **Stoichiometry:** cross-linking plus dual-tag (7His / 3HA) co-isolation show the
+  "Mim1-containing complex harbours at least two copies of Mim1."
+- **Cross-species complementation** — directly relevant to the *N. crassa* question in §11.
+  [PMID:18177669 "Mim1 from N. crassa could rescue the growth phenotype of Δmim1 cells only
+  partially and upon its overexpression"], with expression verified by Western blot so the
+  weak rescue is not a level artefact. By contrast, "cells harbouring S. pombe Mim1 did not
+  present any growth phenotype under all tested conditions" — full complementation. The
+  authors say plainly they cannot explain the difference. **This is the only direct
+  functional evidence on the *N. crassa* protein, and it argues mildly against treating the
+  IBA propagation to that orthologue as functional equivalence.** It reinforces rather than
+  reverses the §11 decision not to curate NEUCR MIM1: the one experiment that exists says
+  the orthologue behaves differently, which is a reason not to copy the yeast review across.
+- **TMS boundary discrepancy:** the paper places the TMS at residues 34–79 (deletions were
+  1–34 and 76–113); UniProt annotates `TRANSMEM 39..62` with `ECO:0000255` (prediction).
+  Not consequential for any GO term, but the UniProt span is narrower than the functional
+  segment this paper defines.
+
+### PMID:18187149 — the more valuable of the two, on re-reading
+
+- **Mim1 acts catalytically.** Using a cysteine-free Mim1(3S) allele that is fully
+  functional, the authors show "Mim1 is not one of the prominent cross-linked partners of
+  Tom20" — the cross-link fingerprint of docked Tom20 is unchanged. So Mim1 drives the
+  assembly reaction and is released: "or else Mim1 catalyzes Tom20 assembly with known
+  subunits of the TOM complex". **This is the cleanest experimental warrant for an
+  insertase molecular function rather than a structural-subunit role**, and it is now cited
+  on the proposed `GO:0032977` entry and in `core_functions`. It is also the experimental
+  substance behind Waizenegger's 2005 speculation that Mim1 "seems to act catalytically".
+- **Independent, earlier evidence that the Tom40 requirement is indirect.** §11 recorded
+  this correction from Becker 2010 via [PMID:21825073]. This 2008 paper got there first by a
+  different route: loss of Mim1 reduces the amount of Tom40 imported "but does not diminish
+  the overall rate of Tom40 assembly", because "This is consistent with the known role of
+  Tom20 as a receptor for Tom40 import:" — less functional Tom20 means less Tom40 arrives,
+  though what arrives assembles normally through the 250K and 100K intermediates.
+  **Two different indirect mechanisms are proposed** (via Tom20 as receptor here; via the
+  small Tom proteins in Becker 2010), and both are indirect. Note this specific observation
+  is **in tension with [PMID:15608614]**, which reported intermediate II reduced on Mim1
+  depletion. The disagreement is about how much of the Tom40 defect is import versus
+  assembly, not about whether Mim1 is required for TOM biogenesis, so no GO action changes.
+- **Third value for the complex size:** ~300 kDa by BN-PAGE, against 400–450 kDa by gel
+  filtration [PMID:15608614] and ~180 kDa by glycerol gradient. The paper also notes the
+  Mim1 complex needs 0.3% digitonin to solubilise where TOM needs 0.1–0.2%, which is a
+  plausible methodological source of the spread. The existing suggested question has been
+  updated with all three values and this hint.
+- **Specificity control:** "porin is assembled into the outer membrane of mitochondria
+  without need of Mim1", confirming TOM and SAM are functional in these mitochondria.
+
+### Cache provenance
+
+The two cached records now carry `full_text_available: true` /
+`full_text_extraction_method: pdf`, written in the same format the ETL produces. Text is the
+publisher PDF's, not authored here; PDF extraction leaves minor artefacts (one residual
+"homooligomer" where a hyphenated line break was rejoined, and some GXXXG occurrences render
+as "G XXXG" in the source layout). Quotes used as `supporting_text` avoid those spans. All
+114 `supporting_text` values in the review verify as verbatim substrings.
