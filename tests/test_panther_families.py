@@ -106,7 +106,7 @@ def test_member_index_round_trip(tmp_path):
     index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
     path = write_member_index(index, tmp_path / "members.tsv")
     assert load_member_index(path) == index
-    assert load_member_index_gaps(path) == (set(), set())
+    assert load_member_index_gaps(path) == (set(), set(), set())
 
 
 def test_member_index_round_trips_unresolved_accessions(tmp_path):
@@ -607,7 +607,11 @@ def test_an_accession_uniprot_never_returned_is_not_recorded_as_absent(
     assert result.exit_code == 0, result.output
     gaps = load_member_index_gaps(panther / "panther-members.tsv")
     assert gaps.absent == {"REAL"}, "a returned record with no xref is genuinely absent"
-    assert gaps.unchecked == {"TYPO"}, "an accession UniProt never returned is unknown"
+    # Not `unchecked`: the lookup DID run, so labelling these as skipped by
+    # --no-uniprot-fallback would put a false provenance claim in the artifact
+    # and advise a refresh that can never resolve a typo.
+    assert gaps.unknown == {"TYPO"}, "asked-and-not-returned is its own state"
+    assert gaps.unchecked == set()
 
 
 def test_a_record_without_a_panther_xref_is_still_seen():
@@ -654,3 +658,55 @@ def test_validate_family_members_does_not_exempt_a_memberless_descriptor():
     errors, warnings = validate_family_members([use], {}, permanently_absent={"X"})
 
     assert not any("PANTHER has no family for" in w for w in warnings)
+    # And it falls through to the error, rather than passing silently: a
+    # descriptor naming no members is the one case with nothing to check.
+    assert len(errors) == 1
+    assert "none of the representative members" in errors[0]
+
+
+def test_an_unknown_accession_is_not_labelled_as_a_skipped_lookup(tmp_path):
+    """The artifact must not claim a flag was passed that never was.
+
+    Filing "UniProt was asked and returned nothing" under `# unchecked:` wrote a
+    header saying the lookup was NOT run due to --no-uniprot-fallback -- a false
+    statement about how the file was produced, and the mirror image of the
+    failure this module's own header comment warns against.
+    """
+    path = write_member_index(
+        {"P1": "PTHR1"}, tmp_path / "m.tsv", None, None, {"TYPO"}
+    )
+    text = path.read_text()
+
+    assert "no-uniprot-fallback" not in text
+    assert "returned no record for" in text
+    gaps = load_member_index_gaps(path)
+    assert (gaps.absent, gaps.unchecked, gaps.unknown) == (set(), set(), {"TYPO"})
+
+
+def test_the_error_for_an_unknown_accession_does_not_advise_a_refresh():
+    """A refresh can never resolve a typo, so advising one is a loop.
+
+    A curator who writes Q88ND9 for Q88ND1 otherwise gets a permanent error
+    telling them to rerun a command that has already run and will change
+    nothing.
+    """
+    from ai_gene_review.validation.module_validator import iter_family_member_uses
+
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR13337", "label": "f"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:Q88ND9", "label": "typo"}}
+            ],
+        }
+    }
+    uses = list(iter_family_member_uses(doc))
+
+    errors, _ = validate_family_members(
+        uses, {}, unknown_to_uniprot={"Q88ND9"}
+    )
+
+    assert len(errors) == 1
+    assert "refresh-panther-members" not in errors[0]
+    assert "verify the accession exists" in errors[0]
+    assert "Q88ND9" in errors[0]

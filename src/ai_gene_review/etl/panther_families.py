@@ -322,16 +322,31 @@ MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
 # exists", which is a false claim in the tool's output rather than in the file.
 UNRESOLVED_MARKER = "# unresolved:"
 UNCHECKED_MARKER = "# unchecked:"
+UNKNOWN_MARKER = "# unknown-to-uniprot:"
 
 
 class MemberIndexGaps(NamedTuple):
-    """Accessions a member index holds no family for, split by why."""
+    """Accessions a member index holds no family for, split by why.
+
+    Three states, not two, because they take three different remedies and
+    collapsing any pair sends a curator somewhere useless.
+    """
 
     absent: Set[str]
     """Both sources consulted; PANTHER has no family. Permanent."""
 
     unchecked: Set[str]
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
+
+    unknown: Set[str]
+    """UniProt WAS consulted and returned no record at all.
+
+    Almost always a typo, an obsolete id, or a secondary/demerged accession --
+    not a protein PANTHER declines to classify. Rerunning the refresh can never
+    resolve it, so filing these under ``unchecked`` both wrote a false claim
+    about how the artifact was produced and pointed the fix at a flag the
+    curator never passed. The remedy is to verify the accession.
+    """
 
 
 class UniProtPantherLookup(NamedTuple):
@@ -357,6 +372,7 @@ def render_member_index(
     index: Dict[str, str],
     absent: Optional[Set[str]] = None,
     unchecked: Optional[Set[str]] = None,
+    unknown: Optional[Set[str]] = None,
 ) -> Iterator[str]:
     """Render a member index as a sorted two-column TSV.
 
@@ -389,7 +405,7 @@ def render_member_index(
     Skipped lookups are recorded as unchecked, and the two can coexist -- which
     is the case a single flag could not represent:
 
-    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, {"P8"}):
+    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, {"P8"}, {"P7"}):
     ...     print(line)
     uniprot_accession	panther_family_sf
     P1	PTHR1
@@ -401,6 +417,10 @@ def render_member_index(
     # 1 accession(s) whose UniProt lookup was NOT run
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
     # unchecked: P8
+    <BLANKLINE>
+    # 1 accession(s) UniProt was asked about and returned no record for.
+    # Likely a typo, an obsolete id, or a secondary/demerged accession:
+    # unknown-to-uniprot: P7
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     for accession in sorted(index):
@@ -420,6 +440,15 @@ def render_member_index(
         yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
         for accession in sorted(unchecked):
             yield f"{UNCHECKED_MARKER} {accession}"
+    if unknown:
+        yield ""
+        yield (
+            f"# {len(unknown)} accession(s) UniProt was asked about and "
+            "returned no record for."
+        )
+        yield "# Likely a typo, an obsolete id, or a secondary/demerged accession:"
+        for accession in sorted(unknown):
+            yield f"{UNKNOWN_MARKER} {accession}"
 
 
 def load_member_index_gaps(path: Path) -> MemberIndexGaps:
@@ -445,15 +474,20 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     """
     path = Path(path)
     if not path.exists():
-        return MemberIndexGaps(set(), set())
+        return MemberIndexGaps(set(), set(), set())
     absent: Set[str] = set()
     unchecked: Set[str] = set()
+    unknown: Set[str] = set()
     for line in path.read_text().splitlines():
-        if line.startswith(UNRESOLVED_MARKER):
+        # UNKNOWN first: its marker is not a prefix of the others, but ordering
+        # by specificity keeps this robust if a marker is ever renamed.
+        if line.startswith(UNKNOWN_MARKER):
+            unknown.add(line[len(UNKNOWN_MARKER) :].strip())
+        elif line.startswith(UNRESOLVED_MARKER):
             absent.add(line[len(UNRESOLVED_MARKER) :].strip())
         elif line.startswith(UNCHECKED_MARKER):
             unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
-    return MemberIndexGaps(absent, unchecked)
+    return MemberIndexGaps(absent, unchecked, unknown)
 
 
 def write_member_index(
@@ -461,6 +495,7 @@ def write_member_index(
     out_path: Path,
     absent: Optional[Set[str]] = None,
     unchecked: Optional[Set[str]] = None,
+    unknown: Optional[Set[str]] = None,
 ) -> Path:
     """Write the accession -> family index, returning the path written.
 
@@ -472,7 +507,7 @@ def write_member_index(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        "\n".join(render_member_index(index, absent, unchecked)) + "\n"
+        "\n".join(render_member_index(index, absent, unchecked, unknown)) + "\n"
     )
     return out_path
 

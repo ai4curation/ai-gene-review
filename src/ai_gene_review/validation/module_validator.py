@@ -1110,6 +1110,7 @@ def validate_family_members(
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
     permanently_absent: Optional[Set[str]] = None,
+    unknown_to_uniprot: Optional[Set[str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1171,11 +1172,24 @@ def validate_family_members(
             # sweep reported zero grounding failures. An index that does not
             # cover what we cite is a defect in the index, so it fails the build
             # until `just refresh-panther-members` resolves the accession.
+            # Point at the remedy that can actually work. An accession UniProt
+            # was asked about and did not return is a typo, an obsolete id, or a
+            # secondary/demerged accession -- rerunning the refresh will never
+            # resolve it, so advising one sends the curator in a loop.
+            unknown = (unknown_to_uniprot or set()) & missing
+            if unknown:
+                remedy = (
+                    f"UniProt returned no record for {_format_limited(unknown)}; "
+                    "verify the accession exists and is current (it may be a "
+                    "typo, obsolete, or a secondary/demerged id)"
+                )
+            else:
+                remedy = "run `just refresh-panther-members`"
             errors.append(
                 f"{use.path}: none of the representative members "
                 f"({_format_limited(missing)}) are in "
                 "interpro/panther/panther-members.tsv, so family membership "
-                "could not be checked; run `just refresh-panther-members`"
+                f"could not be checked; {remedy}"
             )
             continue
 
@@ -1721,6 +1735,7 @@ def validate_module_file(
         paint_index = load_paint_index(panther_dir)
 
     members_path = project_root / "interpro" / "panther" / "panther-members.tsv"
+    _member_gaps = load_member_index_gaps(members_path)
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
@@ -1728,7 +1743,8 @@ def validate_module_file(
         subfamily_counts=load_subfamily_counts(
             project_root / "interpro" / "panther" / "panther.obo"
         ),
-        permanently_absent=load_member_index_gaps(members_path).absent,
+        permanently_absent=_member_gaps.absent,
+        unknown_to_uniprot=_member_gaps.unknown,
     )
 
     terms = list(iter_terms(doc))

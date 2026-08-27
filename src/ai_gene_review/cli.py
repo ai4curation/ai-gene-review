@@ -4016,7 +4016,8 @@ def refresh_panther_members(
     Builds a UniProt-accession -> PANTHER-family index. It carries every
     accession the organism classifications cover, not only the cited ones, and
     merges into whatever is already committed so no previously resolved row is
-    ever dropped. On top of that it resolves every accession cited in modules/: all ``representative_members`` whether or not
+    ever dropped. On top of that it resolves every accession cited in
+    modules/: all ``representative_members`` whether or not
     their descriptor carries a family id (an ungrounded descriptor is precisely
     the one whose members need resolving), plus accessions appearing only in
     prose. Accessions that resolve nowhere are recorded in the file. This is what
@@ -4114,10 +4115,14 @@ def refresh_panther_members(
     # fails the build on accessions no refresh can resolve. Deciding it for the
     # whole set meant a single newly-cited accession defeated the guard for
     # every previously-absent one.
+    unknown: set[str] = set()
     if no_uniprot_fallback:
-        previously_absent = load_member_index_gaps(members_path).absent
-        absent = unresolved & previously_absent
-        unchecked = unresolved - previously_absent
+        prior = load_member_index_gaps(members_path)
+        absent = unresolved & prior.absent
+        # A prior run's "UniProt returned no record" verdict is also a real
+        # answer, and rerunning without the fallback does not revisit it.
+        unknown = unresolved & prior.unknown
+        unchecked = unresolved - prior.absent - prior.unknown
     else:
         # Only accessions UniProt actually returned a record for can be called
         # absent: that is "a real protein PANTHER does not classify". One UniProt
@@ -4126,8 +4131,13 @@ def refresh_panther_members(
         # exist has no PANTHER family, and downgrade its descriptor's grounding
         # check from error to warning. Those stay unchecked, so they error.
         absent = unresolved & seen_by_uniprot
-        unchecked = unresolved - seen_by_uniprot
-    out_path = write_member_index(index, members_path, absent, unchecked)
+        # Asked and got nothing back. That is a third state, not "we never
+        # asked": the artifact would otherwise claim these were skipped by
+        # --no-uniprot-fallback, a flag the caller never passed, and point the
+        # curator at a refresh that can never resolve a typo.
+        unknown = unresolved - seen_by_uniprot
+        unchecked = set()
+    out_path = write_member_index(index, members_path, absent, unchecked, unknown)
     typer.echo(
         f"✓ Wrote {out_path}: {len(index)} accessions indexed "
         f"({from_files} from {len(paths)} organism classification(s), "
