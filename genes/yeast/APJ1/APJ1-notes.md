@@ -29,9 +29,10 @@ activity after heat aggregation. Thus the inherited `protein refolding` IBA is
 removed as a family-level specialization error; the direct target outcome is
 nuclear ubiquitin-proteasome quality control (new GO:0071630 IMP annotation).
 
-The existing `protein unfolding` IMP is retained as non-core because it comes
-from this disaggregation/clearance context, but Apj1 should not be described as
-an autonomous unfoldase.
+The existing `protein unfolding` IMP is accepted as core because the same study
+reconstitutes Hsp104-independent aggregate solubilization by Apj1 with Ssa Hsp70
+and Sse1/Hsp110 in vivo and in vitro. The term captures the demonstrated
+disaggregation step; Apj1 should not be described as an autonomous unfoldase.
 
 ## Heat-shock response attenuation
 
@@ -39,8 +40,10 @@ PMID:41025326 (2025, full text) shows that Apj1 arrives at Hsf1-regulated loci
 after Hsf1 activation and promotes Hsf1 displacement from heat-shock elements.
 In `apj1Δ`, Hsf1 occupancy and target expression remain elevated during the
 attenuation phase. This directly supports the broad `cellular response to heat`
-IBA and motivates a direction-qualified new `regulation of cellular response to
-heat` annotation (GO:1900034, `acts_upstream_of_negative_effect`).
+IBA and motivates a new `negative regulation of cellular response to heat`
+annotation (GO:1900035, `involved_in`; child relationship confirmed through the
+[QuickGO ontology service](https://www.ebi.ac.uk/QuickGO/term/GO:1900035) on
+2026-08-27).
 
 ## Prion-curing specialization
 
@@ -78,6 +81,7 @@ was to retain the IBA as non-core. Because the cached full text directly shows
 that APJ1 deletion accelerates reporter reactivation while Apj1 promotes
 proteasomal turnover, the final curator decision is the stronger REMOVE: this is
 target-specific evidence that the refolding output placed at the PAINT node was
-not retained as APJ1's specialization. The report is cited as VERIFIED for its
-evidence synthesis, but its ancillary literature leads are not used without
+not retained as APJ1's specialization. The report remains marked UNVERIFIED as
+an LLM-generated evidence synthesis; its conclusions were checked against the
+primary paper, and its ancillary literature leads are not used without
 independent verification.
