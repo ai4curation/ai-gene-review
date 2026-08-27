@@ -246,3 +246,73 @@ with `ECO:0000255` — a sequence-analysis prediction, not experimental.
 IBA; GO:0005741 IEA; GO:0005741 IDA ×3; GO:0045040 IMP; GO:0045040 IDA; GO:0140595 IPI;
 GO:0070096 IMP ×2) · MARK_AS_OVER_ANNOTATED ×2 (GO:0005515 IPI; GO:0022832 IDA) ·
 REMOVE ×1 (GO:0055085 IEA) · NEW ×1 (GO:0032977, contributes_to).
+
+---
+
+## 11. Addendum 2 — five UniProt-cited references folded in
+
+`fetch-gene` seeds `references:` from the GOA only, so five papers that UniProt cites with
+`ECO:0000269` on Q08176 were absent from the first pass. None is in the GOA, so none
+supports an existing annotation, but two change what the review can say. All are now cached
+and cited.
+
+**PMID:18177669** (Popov-Čeleketić, Waizenegger & Rapaport 2008) — *the most valuable of
+the five.* Two contributions:
+
+1. **Settles the topology.** It states the arrangement directly — "The protein is composed
+   of an N-terminal cytosolic domain, a\ncentral putative transmembrane segment (TMS) and a
+   C-terminal domain facing the\nintermembrane space." This is the primary source that
+   [PMID:28916712] was merely restating. Combined with [PMID:15608614]'s note that "a
+   C-terminally tagged Mim1 had compromised function", it explains why the C-tagged
+   construct in [PMID:15326197] reported a cytosolic C-terminus. **Correction B in §10 is
+   therefore resolved, not open** — the suggested question has been removed and the
+   resolution recorded in the PMID:15326197 `reference_review`.
+2. **Supplies the oligomerisation mechanism.** "We show that Mim1 forms homo-oligomeric
+   structures via\nits TMS, which contains two helix-dimerization GXXXG motifs. Mim1 with
+   mutated\nGXXXG motifs did not form oligomeric structures and was inactive", and "Thus,
+   the TMS of Mim1 is the minimal functional\ndomain of the protein." This is the
+   explanation for the odd conservation pattern Waizenegger flagged in 2005 (conservation
+   concentrated in the TM segment, unusual for a membrane protein) and it is now cited in
+   `core_functions`.
+
+**PMID:21825073** (Becker 2011) — full text available. Strengthens the proposed
+`GO:0032977` from inference to direct observation: "The critical component for the
+subsequent import into the outer membrane is Mim1, and the precursor proteins directly
+interact with Mim1." GO:0032977 is defined as *binding* TM-domain-containing proteins *and*
+mediating their integration; before this, only the integration half was evidenced and the
+binding half was inferred from depletion phenotypes.
+
+It also carries a **mechanistic correction to §5**: "a recent study showed that Mim1 does
+not directly promote the biogenesis of Tom40 but functions via the import of small Tom
+proteins that are needed for Tom40 assembly (Becker et al., 2010)". So the β-barrel row in
+the §4 client table is indirect in a stronger sense than "late step" conveys — Mim1 never
+handles Tom40 itself. This does not change the `GO:0070096` action (involvement in TOM
+assembly is not in doubt) but is now recorded in that annotation's `reason`.
+
+**PMID:21825074** (Papić 2011) — companion paper, independent group, same conclusion for
+Ugo1. Its value is that the multispan substrate class rests on two laboratories, not one.
+
+**PMID:18187149** (Hulett 2008) — third-laboratory corroboration of the Tom20 dependency,
+via the Tom20 TM segment. Uses the Tom13 synonym.
+
+**PMID:15242642** (Mnaimneh 2004) — the promoter-shutoff screen that gave MIM1 its name.
+Historical provenance only; a genome-scale phenotypic inference, marked `relevance: LOW`.
+
+**Organism caveat.** The abstracts of PMID:18177669 and PMID:18187149 do not name the
+organism, and the cached records are abstract-only. The yeast attribution rests on UniProt's
+`ECO:0000269` links to Q08176 and on [PMID:28916712] citing Popov-Čeleketić for yeast Mim1
+topology — not on anything the abstracts state. This is recorded in both
+`reference_review.review_notes` rather than being silently assumed. By contrast
+PMID:21825073 ("in the model organism Saccharomyces cerevisiae") and PMID:21825074 ("using
+yeast mitochondria") state it outright.
+
+**Not done: the *N. crassa* orthologue.** Q8X0G8 (MIM1_NEUCR, NCU01101) carries three
+annotations, none experimental: `GO:0140595` and `GO:0045040` are IBAs propagating from
+`PTN002000670` with **`SGD:S000005386`** — yeast MIM1 — in the WITH/FROM, and `GO:0005741`
+is an InterPro IEA. UniProt's FUNCTION line is `ECO:0000250` (by similarity). PubMed returns
+one hit for Mim1 + Neurospora, and it is a Rapaport-lab study the field cites for *yeast*
+Mim1. A review would therefore have no independent evidence to weigh; every judgement would
+resolve to "correct, because yeast MIM1 is correct". The one real gain available is
+upgrading `GO:0005741` from IEA to experimental on the strength of the *N. crassa* outer
+membrane proteomics in [PMID:15608614], which identified NCU01101.1 in that fraction. Judged
+not worth a review file on its own.
