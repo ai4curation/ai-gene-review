@@ -30,9 +30,12 @@ The YAML `description` field was revised to keep it as a standalone biological s
   mitochondrial phenotype is not encoded by that replacement. [PMID:8754838 "These results are
   consistent with SSA proteins and Ydj1p acting together in the translocation
   process."]
-- The plasma-membrane IBA is removed as a compartment-mismatched family
-  propagation. UniProt and the SSA3-focused literature consistently identify
-  Ssa3 as cytosolic; no target-specific plasma-membrane evidence was found. A
+- The plasma-membrane IBA is removed as a stale PAINT transfer. The pinned 2025
+  GOA row points to PTN002500132, but the current local PTHR19375 PAINT snapshot
+  carries nucleus and cytosol at that node and no longer carries GO:0005886.
+  This is a current-node comparison, not an inference from donor count. UniProt
+  and the SSA3-focused literature consistently identify Ssa3 as cytosolic; no
+  target-specific plasma-membrane evidence was found. A
   targeted OpenScientist hypothesis run independently preferred `REMOVE` because
   it found no SSA3-specific experimental support. Its live QuickGO claims that
   the P09435 IBA had been retired and that Ssa4 lacked the same IBA conflict with
@@ -46,3 +49,11 @@ The YAML `description` field was revised to keep it as a standalone biological s
   had access to more evidence than the cached abstract.
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA3, aligning
   the project decision with the review's ATP-dependent Hsp70 mechanism.
+
+## 2026-08-27 row-completeness follow-up
+
+- The review was promoted from `DRAFT` to `COMPLETE` after restoring one review
+  record for every one of the 55 pinned GOA rows. Repeated IPI and IGI rows are retained
+  separately by reference and `WITH/FROM` partner rather than collapsed.
+- Generic nucleotide binding is now `MODIFY` to the existing specific ATP-binding
+  term GO:0005524, matching the treatment of the same parent term in SSA4.
