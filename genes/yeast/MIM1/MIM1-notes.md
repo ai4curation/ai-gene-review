@@ -403,3 +403,105 @@ publisher PDF's, not authored here; PDF extraction leaves minor artefacts (one r
 "homooligomer" where a hyphenated line break was rejoined, and some GXXXG occurrences render
 as "G XXXG" in the source layout). Quotes used as `supporting_text` avoid those spans. All
 114 `supporting_text` values in the review verify as verbatim substrings.
+
+---
+
+## 13. Addendum 4 — systematic literature sweep and final pass
+
+Searched PubMed on `Mim1 AND mitochondri*` (32 hits), `Mim2 AND mitochondri*`, `Tom13 AND
+mitochondri*`, `"MIM complex" AND (outer membrane)` and `YOL026C` (0 hits — the systematic
+name is not indexed). Eight further papers were cached and cited, taking the reference list
+from 14 to 22.
+
+**Name collisions to be aware of.** Several PubMed hits for "MIM1" are not this gene:
+**MIM1 the Mcl-1 BH3-mimetic small molecule** (PMID:40892149, PMID:31410885, PMID:30796196,
+PMID:30134184) and the chicken c-Myb target gene **mim-1** (PMID:37752090). Anyone re-running
+a naive `MIM1` search will hit these; none is relevant.
+
+### The significant find — a second function (PMID:41748941, Nat Cell Biol 2026)
+
+"Here we report that the MIM complex performs a second major function in\nlipid-droplet
+homeostasis." The lipid metabolism enzyme **Ayr1** captures MIM and nucleates
+**mitochondria–lipid droplet contact sites**; MIM and Ayr1 together set cellular lipid
+droplet number. The mechanism is the elegant part: "Ayr1 binds to MIM via its single
+hydrophobic segment in a\nsubstrate-mimicry mechanism but remains bound and is not released
+into the outer\nmembrane." So this is a *captured insertase*, not a second catalytic
+activity — and the two jobs are done by distinct populations, "MIM-Ayr1 for recruiting lipid
+droplets and MIM-preprotein for protein insertion".
+
+A pleasing loop closes here: **Ayr1 was the other new channel** identified alongside Mim1 in
+the same 2017 bilayer screen [PMID:28916712]. The two proteins were already known to co-occur
+in the outer-membrane fraction.
+
+Curation consequences:
+- New annotation proposed: `GO:0034389 lipid droplet organization` (IMP, involved_in),
+  flagged provisional — one 2026 study, no replication, abstract-only in cache.
+- **Ontology gap.** GO has `GO:0160259` (ER–lipid droplet contact site) and `GO:0170007`
+  (ER–lipid droplet tether activity), and `GO:0044233` for ER–mitochondrion, but **nothing
+  for mitochondrion–lipid droplet**. Two terms proposed, and the gap is recorded as a
+  `knowledge_gaps` entry (ONTOLOGY / CC_DARK) on a second `core_functions` block.
+
+### A genuine disagreement in the literature (PMID:19345216)
+
+Lueder & Lithgow 2009, "The three domains of Mim1 have discrete functions", **contradicts**
+PMID:18177669 on the soluble domains: it assigns the N-terminal domain a role regulating the
+SAM-mediated early reaction of Tom40 assembly, where Popov-Čeleketić found ΔN and ΔC
+variants phenotypically normal and concluded the TMS is the minimal functional domain. The
+assays differ (in vitro multi-step assembly kinetics vs in vivo complementation), so a
+quantitative contribution invisible to a growth assay would reconcile them. Marked
+`correctness: DISPUTED` **for the domain-function claim only** — its topology report is not
+disputed and in fact makes the cytosolic-N/IMS-C assignment two-laboratory. No GO action
+turns on the disputed point. Recorded as a suggested question and experiment.
+
+### Tom40 indirectness — primary source, and a second route
+
+- **PMID:20026336** (Thornton/Becker 2010) is the actual "Becker et al., 2010" that
+  [PMID:21825073] cites and that the review had been relying on second-hand. Mim1 inserts the
+  small α-helical subunit **Tom6**, which SAM-Tom5/Tom40 then acts on. It also explains the
+  Tom22 exception from [PMID:17974559]: Tom22 is handled by the parallel SAM-Mdm10 module.
+- So there are now **two proposed indirect routes** to the Tom40 phenotype — via Tom20 as
+  import receptor [PMID:18187149] and via the small Toms [PMID:20026336] — plus the unresolved
+  disagreement about whether assembly rate is actually reduced. The suggested question has
+  been rewritten to ask which contributes and in what proportion, rather than the now-answered
+  "is it direct or indirect".
+
+### Substrate scope is narrower than "the" insertase implies
+
+- [PMID:31945731 "we\nfound that the MIM complex is required for the membrane insertion of
+  some\nsingle-span proteins"] — others are MIM-independent. Also independently establishes
+  tail-anchored proteins as MIM substrates.
+- [PMID:35262629 "We\nfurther demonstrate that Mim1 and Porin support optimal membrane
+  integration of\nOm14 but none of them are absolutely required."] — even a multi-span client
+  is not absolutely MIM-dependent.
+- Against this, [PMID:41748941] credits MIM with >90% of integral outer-membrane precursors.
+  Both are now in the `description`: main translocase, but substrate-specific rather than
+  obligatory.
+
+### Orthology put on an experimental footing (PMID:29923829)
+
+The convergent-evolution story previously rested on the `GO:7770059` term definition. Vitali
+et al. 2018 demonstrate it: Mim1/Mim2 is "fungi-specific", and trypanosome **pATOM36** is a
+functional analogue "even though these proteins show neither sequence nor topological
+similarity", shown by **reciprocal** complementation. This explains why PTHR28241 is fungal
+and why phylogenetic propagation of MIM function should stop at the fungal clade. The
+`description` now says *restricted to* fungi rather than *highly conserved among* fungi.
+[PMID:40782022] (the `GO:7770059` xref) adds MTCH1/MTCH2 as the mammalian solution.
+
+### Also added
+
+- **PMID:23959800** — Djp1 and Tom70 are needed for the biogenesis of *Mim1 itself*. Recorded
+  mainly as a **confusability warning**: the Mim1–Tom70 relationship appears in this review in
+  the opposite direction (Tom70 handing precursors *to* MIM), and the two are easy to conflate.
+
+### Final-pass checks
+
+- 146 `supporting_text` values verified verbatim against the cache (one wrap error caught and
+  fixed during the sweep).
+- No reference declared-but-uncited or cited-but-undeclared; every reference has both
+  `findings` and `reference_review`; all `full_text_unavailable` flags agree with the cache.
+- Two suggested questions that the new evidence had answered were rewritten rather than left
+  standing (the Tom40 direct/indirect question, and the non-homologous-counterpart question).
+- Final tallies: 16 annotations (ACCEPT ×11, MARK_AS_OVER_ANNOTATED ×2, REMOVE ×1, NEW ×2),
+  22 references (HIGH 13 / MEDIUM 5 / LOW 4; VERIFIED 21 / DISPUTED 1), 2 core functions,
+  3 proposed new terms, 2 knowledge gaps, 10 questions, 10 experiments.
+- Schema, term-branch, GOA-consistency and compliance checks all pass; `status: COMPLETE`.
