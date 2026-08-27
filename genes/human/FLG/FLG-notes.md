@@ -108,7 +108,13 @@ Supporting detail from the same paper:
 - Repeat number sets the critical concentration — i.e. the tandem array is the functional
   unit: [PMID:32165560 "Over a wide range of expression levels, disease-associated
   mutations with ≤4 repeats exhibited a large increase (~130 to >1500 μM) in critical
-  concentration required for phase separation"].
+  concentration required for phase separation (Fig. 2B and fig. S7, B to F). By contrast,
+  wild-type filaggrin (n = 12) phase separated at ~2 μM."]. The wild-type baseline matters:
+  the effect is a ~65- to 750-fold rise, not a rise from ~130 μM.
+- The repeat array is also required for granule formation at all, on a separate assay:
+  [PMID:32165560 "a single FLG repeat displayed only diffuse cytoplasmic localization
+  (fig. S6A). By contrast, keratinocytes transfected with genes encoding variants of ≥4
+  repeats efficiently formed KG-like structures."]
 - The S100 domain contributes by dimerising: [PMID:32165560 "The S100 domain is known to
   dimerize (29), and when fused to filaggrin variants, it reduced the critical
   concentration for phase separation"], and [PMID:32165560 "Moreover, because the S100
