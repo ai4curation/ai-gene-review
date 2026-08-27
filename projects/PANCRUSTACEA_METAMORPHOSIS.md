@@ -1,7 +1,7 @@
 ---
 title: "Pancrustacea Metamorphosis Gene Families"
 maturity: IN_PROGRESS
-tags: [LITERATURE, ARTHROPOD, DEVELOPMENT, CANDIDATE_GENES]
+tags: [BIOLOGY_DOMAIN]
 species: [DROME]
 genes: [kni, hairy, klg, trn, caps, kek1, krz, insc]
 ---
