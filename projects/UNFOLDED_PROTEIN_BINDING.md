@@ -509,7 +509,7 @@ established:
 | IRE1 | *T. reesei* | G0RBE3 | 21 | OVER_ANNOTATED | UPR sensor, not chaperone |
 | slrP | *S. typhimurium* | Q8ZQQ2 | 16 | REMOVE | T3SS effector E3 ligase (misannotation) |
 | ACL4 | *S. cerevisiae* | Q03771 | 18 | MODIFY | Ribosome assembly |
-| APJ1 | *S. cerevisiae* | P53940 | 26 | MODIFY | J-domain co-chaperone |
+| APJ1 | *S. cerevisiae* | P53940 | 26 | MODIFY → GO:0044183 | Nuclear J-domain co-chaperone; routes aggregated clients to proteasomal turnover |
 | ATP10 | *S. cerevisiae* | P18496 | 14 | OVER_ANNOTATED | Atp6p assembly factor |
 | ATP11 | *S. cerevisiae* | P32453 | 16 | NON_CORE | Atp12p assembly factor |
 | BTT1 | *S. cerevisiae* | P40314 | 15 | MODIFY | Ribosome assembly |
