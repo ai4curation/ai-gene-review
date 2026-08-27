@@ -25,18 +25,23 @@
   experimentally observed, reversible starvation response. [PMID:11279056 "the
   hsp70 Ssa4p concentrates in nuclei upon starvation. Nuclear concentration of
   Ssa4p in starving cells is reversible"]
-- The plasma-membrane IBA is removed as a compartment-mismatched family
-  propagation. The pinned GOA withFrom set has no *S. cerevisiae* source entity,
-  while UniProt and the SSA4-focused literature consistently identify Ssa4 as
-  cytosolic. A targeted OpenScientist run challenged the prior
+- The plasma-membrane IBA is removed as a stale PAINT transfer. The pinned 2025
+  GOA row points to PTN002500132, but the current local PTHR19375 PAINT snapshot
+  carries nucleus and cytosol at that node and no longer carries GO:0005886.
+  This is a current-node comparison, not an inference from donor count or the
+  composition of WITH/FROM. A targeted OpenScientist run challenged the prior
   KEEP_AS_NON_CORE decision and independently preferred REMOVE because it found
   no SSA4-specific plasma-membrane evidence; the yeast plasma-membrane
   proteomics annotations it identified concern Ssa1/Ssa2/Ssb1, not Ssa4. Its
-  live QuickGO claim that the P22202 IBA is absent conflicts with the pinned
-  SSA4 GOA snapshot, which still contains GO:0005886 IBA from GO_Central dated
-  2025-09-03. That claim is marked DISPUTED and is not used in the decision.
+  live QuickGO absence is consistent with current PAINT, but the report wrongly
+  implies that the pinned SSA4 snapshot lacks the 2025 IBA and speculates about
+  donor origins. Those claims remain marked DISPUTED and are not used.
   [file:yeast/SSA4/SSA4-hypotheses/existing-go-0005886-keep-as-non-core/openscientist.md
   "The only yeast PM evidence for this family ... covers the paralogs
   Ssa1/Ssa2/Ssb1 ... and excludes Ssa4"]
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA4, aligning
-  the project decision with the review's ATP-dependent Hsp70 mechanism.
+  the project decision with the review's ATP-dependent Hsp70 mechanism. All nine
+  generic protein-binding IPI rows are now represented separately and modified
+  to Hsp70 or heat-shock-protein binding according to the GOA partner; the three
+  protein-folding and three unfolded-client IGI rows are likewise retained as
+  distinct SSA1/SSA2/SSA3-linked records. No module currently names SSA4.
