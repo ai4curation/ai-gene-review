@@ -505,3 +505,91 @@ and why phylogenetic propagation of MIM function should stop at the fungal clade
   22 references (HIGH 13 / MEDIUM 5 / LOW 4; VERIFIED 21 / DISPUTED 1), 2 core functions,
   3 proposed new terms, 2 knowledge gaps, 10 questions, 10 experiments.
 - Schema, term-branch, GOA-consistency and compliance checks all pass; `status: COMPLETE`.
+
+---
+
+## 14. Addendum 5 — disputes and knowledge gaps as first-class objects
+
+The repo already models both, following the `monarch-initiative/dismech` pattern documented in
+`projects/FUNCTION_KNOWLEDGE_GAPS.md`. Earlier addenda recorded these as prose in
+`review_notes`; they are now promoted to structured objects.
+
+### Disputes: `FindingReview` (finding-level, not reference-level)
+
+`FindingReview` carries `finding_status` (`CURRENT` / `CORROBORATED` / `DISPUTED` /
+`OVERTURNED` / `UNVERIFIED`), `superseded_by`, and `review_notes`. It is explicitly
+finer-grained than `reference_review`, whose docstring notes that "a paper may contain some
+findings that stand and others that are overturned" — exactly the MIM1 situation. Five
+findings are now adjudicated:
+
+| Reference | Finding | Status | Superseded by |
+|---|---|---|---|
+| PMID:15326197 | C-terminus faces the cytosol | **OVERTURNED** | 18177669, 19345216, 28916712 |
+| PMID:15608614 | Mim1-requiring step lies downstream of TOB/SAM insertion of Tom40 | **DISPUTED** | 20026336, 18187149 |
+| PMID:17974559 | SAM(core) association explains a late Tom40 assembly role | **DISPUTED** | 20026336 |
+| PMID:19345216 | N-terminal domain regulates the SAM early reaction | **DISPUTED** | 18177669 |
+| PMID:19345216 | cytosolic-N / IMS-C topology | **CORROBORATED** | — |
+
+Two points of method worth recording:
+
+- **The 19345216 pair is the reason finding-level matters.** One paper, two findings, opposite
+  verdicts: its topology result is corroborated and is now one of the two pillars of the
+  accepted topology, while its domain-function claim is contested by PMID:18177669. A
+  reference-level `DISPUTED` alone would have tainted the good finding; a reference-level
+  `VERIFIED` alone would have hidden the contested one. Both levels are now set, so a summary
+  view still flags the paper while the detail says which claim.
+- **OVERTURNED vs DISPUTED was applied deliberately.** Only the 15326197 topology claim is
+  `OVERTURNED` — three later studies contradict it *and* PMID:15608614 supplies the mechanism
+  of the error (the C-terminal tag "had compromised function"). The Tom40 claims are
+  `DISPUTED`, not overturned: the two superseding papers propose *different* indirect routes,
+  and PMID:18187149's assembly-rate result is itself in tension with PMID:15608614. Where the
+  supersession is not clean, the schema's own guidance is to curate with caution rather than
+  declare a winner.
+
+### Knowledge gaps: `KnowledgeGap`
+
+Five gaps now recorded — three at gene level (`GeneReview.knowledge_gaps`) and two on the
+lipid-droplet core function:
+
+1. **Mechanism of helix integration** (BIOLOGY / MF_DARK / NARROWING). The path a substrate
+   helix takes is undetermined. Provenance is the field's own admissions: [PMID:15608614 "How
+   Mim1, as a monotopic integral membrane protein, is doing this is presently unclear."] and
+   [PMID:28916712 "Mim1 promotes the biogenesis of several α-helical precursor proteins of the
+   mitochondrial outer membrane by an unknown mechanism"]. **This is the gap that makes the
+   central curation call hard** — whether `GO:0022832` is over-annotation or an
+   under-specified description of the real conduit turns on it.
+2. **What determines MIM dependence** (BIOLOGY / BP_DARK / OPEN). No sequence or biophysical
+   rule predicts which α-helically anchored clients need MIM; dependence is demonstrably
+   partial ([PMID:31945731], [PMID:35262629]).
+3. **Fungal-clade uniformity** (BIOLOGY+CURATION / RESIDUAL_SUBGAP / OPEN). Why *N. crassa*
+   Mim1 only partially complements while *S. pombe* Mim1 complements fully is unexplained —
+   [PMID:18177669 "We cannot explain the difference between the S. pombe and N. crassa
+   proteins."]. Bears directly on the safety of the IBA propagation from
+   `PANTHER:PTN002000670` to Q8X0G8, and closes the loop on the §11/§12 decision not to curate
+   the *Neurospora* orthologue.
+4. **No ontology term for the mitochondrion–lipid droplet contact site** (ONTOLOGY / CC_DARK),
+   paired with the two `proposed_new_terms`.
+5. **Which partner supplies the lipid droplet-facing determinant** (BIOLOGY / MF_DARK).
+
+All gap provenance quotes are verbatim-checked by the reference validator, the same discipline
+as positive claims.
+
+### OpenScientist jobs launched
+
+Two hypotheses from this review are computationally testable, and both were scoped to a
+single decisive question per the `openscientist-hypothesis` skill (broad "characterize this
+gene" prompts hit the 7200s ceiling). Run with `max_iterations=3`, `timeout=7200`,
+`--timeout-seconds 8100`:
+
+- **`mim1-tms-gxxxg-oligomeric-pore`** — does the GXXXG-mediated TMS oligomer enclose a
+  continuous aqueous lumen, or only a helix bundle with a lipid-exposed groove? This is the
+  computational proxy for gap 1 and bears directly on the `GO:0022832` decision and on the
+  proposed "protein-conducting channel activity" term. A negative (no enclosed lumen) would
+  *strengthen* the `MARK_AS_OVER_ANNOTATED` call and weaken the proposed channel term.
+- **`mim1-patom36-mtch-fold-convergence`** — do Mim1, pATOM36 and MTCH1/MTCH2 share a fold, or
+  is the convergence purely functional? Foldseek-scoped. A negative is informative and was
+  requested explicitly in the prompt.
+
+Per the skill, no local `*-bioinformatics/RESULTS.md` was fed to either job (there is none for
+this gene yet); verdicts must be compared against held-out evidence after the run, and a
+refuted *proposal* is deleted rather than set to `REMOVE`.
