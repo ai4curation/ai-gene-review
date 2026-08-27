@@ -1,0 +1,3528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRIG3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRIG3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6UXM1" target="_blank" class="term-link">
+                        Q6UXM1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRIG3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6UXM1" data-a="DESCRIPTION: LRIG3 is a type-I single-pass membrane protein wit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRIG3 is a type-I single-pass membrane protein with an extracellular region containing 15 leucine-rich repeats and three immunoglobulin-like domains, followed by a long cytoplasmic tail. At the plasma membrane it associates with the LRIG/ERBB regulatory system: LRIG3 opposes LRIG1-mediated negative regulation and stabilizes ERBB receptors, although ERBB association does not explain every LRIG3-dependent developmental role. Mouse Lrig3 restricts Ntn1 expression to pattern the lateral semicircular canal, and Xenopus Lrig3 contextually modulates WNT and FGF signaling during neural-crest formation. In glioblastoma models, full-length and soluble LRIG3 suppress growth, invasion and angiogenesis through MET-PI3K-AKT-associated effects; glioma-derived soluble LRIG3 also binds NETO2 on tumor-associated macrophages and limits M2-like polarization. These tumor and nonhuman developmental contexts do not establish a single universal LRIG3 pathway. Two curated isoforms differ at the N terminus, but their functions have not been compared directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference places LRIG3 activity at the plasma membrane, consistent with its signal peptide and single-pass type-I membrane topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane is a defining location for full-length LRIG3 and is independently consistent with the UniProt membrane record and membrane-context ErbB/LRIG1 experiments. The broad PANTHER source set does not supply LRIG3-specific receptor activity, but it does support the conserved membrane topology.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0034476</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:107935</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1333744</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1915522</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2177651</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2389177</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2389180</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2442479</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:3608416</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001224703</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:1560707</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:1585921</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:727797</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O15455</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P07359</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q14392</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86UE6</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86UN2</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86UN3</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q8TF66</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q96FE5</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q96JA1</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q99467</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00020649</span>
+
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                                    GO:0038023
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0038023" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad PANTHER IBA assigns autonomous signaling receptor activity from a mixed LRR membrane-protein family node.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Signaling receptor activity requires receiving a signal and transmitting it to initiate a cellular response. LRIG3 is supported instead as a membrane-associated regulator that binds and modulates ErbB receptors. The IBA source set contains bona fide receptors such as TLR3, RTN4RL1, RTN4RL2, and CD180, so their receptor role must not be transferred across this family boundary to LRIG3. LRIG1 and LRIG2 functions likewise do not establish LRIG3 as an autonomous receptor.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0034476</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002809265</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:727797</span>
+
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O15455</span>
+
+                                    &middot; TLR3
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86UN2</span>
+
+                                    &middot; RTN4RL1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86UN3</span>
+
+                                    &middot; RTN4RL2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q99467</span>
+
+                                    &middot; CD180
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007605" target="_blank" class="term-link">
+                                    GO:0007605
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of sound</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0007605" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This auditory-process IBA is propagated from mouse Lrig1 and Lrig2 sources, not from the mouse Lrig3 ortholog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MGI:107935 is mouse Lrig1 and MGI:2443718 is mouse Lrig2, as verified in the current MGI records; the ordered leaf-source set contains no mouse Lrig3 ortholog. The PANTHER ancestral node is therefore supported here only by Lrig1/ Lrig2 auditory annotations above the paralog split. LRIG3 instead has direct mouse evidence for lateral semicircular-canal morphogenesis, which does not by itself establish sensory perception of sound. The target assertion is therefore an over-propagated paralog transfer rather than evidence for human LRIG3 auditory function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:107935</span>
+
+                                    &middot; mouse Lrig1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2443718</span>
+
+                                    &middot; mouse Lrig2
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN009094493</span>
+
+                                    &middot; LRIG auditory-function ancestral node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping places LRIG3 at the plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma-membrane localization is appropriate for the full-length signal-peptide- containing, single-pass type-I protein and for its membrane-context interactions with ErbB receptors and LRIG1. This duplicate of the IBA location is independently coherent and may be retained.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0039</span>
+
+                                    &middot; UniProt cell membrane location
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    GO:0030659
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0030659" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping assigns LRIG3 to cytoplasmic vesicle membranes, reflecting an intracellular membrane pool.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt reports cytoplasmic-vesicle localization when LRIG3 is coexpressed with ERBB4. This is coherent for a trafficking single-pass membrane protein but is a contextual location, inferred by similarity, rather than LRIG3&#39;s defining plasma-membrane site.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0089</span>
+
+                                    &middot; UniProt cytoplasmic vesicle membrane location
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23723069" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23723069
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Leucine-rich repeat and immunoglobulin domain-containing pro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0005515" data-r="PMID:23723069" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Targeted co-immunoprecipitation shows LRIG3 in a stable complex with LRIG1, while functional experiments show that LRIG3 opposes LRIG1 and stabilizes ErbB receptors.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding loses the experimentally demonstrated function. The paper supports LRIG3 as a signaling-receptor regulator: it associates with LRIG1 through the ectodomains, restricts LRIG1 negative action, and increases ErbB receptor stability. GO:0030545 captures receptor modulation without claiming that LRIG3 is itself a receptor or that it enzymatically activates receptors. This activity is distinct from the negative receptor regulation characteristic of LRIG1 and from LRIG2&#39;s context-dependent behavior.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030545" target="_blank" class="term-link">
+                                    signaling receptor regulator activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23723069" target="_blank" class="term-link">
+                                        PMID:23723069
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Lrig3 opposes Lrig1 negative regulatory</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proteome-scale affinity-purification mass spectrometry recovered an LRIG3-LRIG1 association in a cell-line-specific human interaction network.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The high-throughput AP-MS observation corroborates physical association with LRIG1 but does not by itself define a molecular activity or physiological consequence. Generic protein binding is therefore retained only as an over-annotation; the targeted PMID:23723069 experiments, not this screen, justify the more informative signaling receptor regulator activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mass spectrometry, we have created two proteome-scale</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22664934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22664934
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of tear protein levels in breast cancer patients ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0005576" data-r="PMID:22664934" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomics detected LRIG3 in human lacrimal-gland secretion (tear fluid), supporting this explicitly tissue-fluid-qualified extracellular location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimental HDA annotation and its part-of lacrimal-secretion extension are retained with curator deference. Detection in tear fluid does not establish that full-length LRIG3 is constitutively soluble or classically secreted; it could reflect an extracellular fragment, vesicle, or cellular material from this single-pass membrane protein. The location is therefore contextual and non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048752" target="_blank" class="term-link">
+                                    GO:0048752
+                                </a>
+                            </span>
+                            <span class="term-label">semicircular canal morphogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19004851" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19004851
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cross-repressive interactions between Lrig3 and netrin 1 sha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UXM1" data-a="GO:0048752" data-r="PMID:19004851" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mouse Lrig3 is required for lateral semicircular-canal morphogenesis through cross-repressive patterning with Ntn1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q6P1C6 is the reviewed mouse Lrig3 ortholog, and genetic loss plus Ntn1-dosage rescue directly establish the process in mouse. ISO captures the conserved LRIG3 developmental role while retaining the species boundary and without converting it into a human hearing-perception annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19004851" target="_blank" class="term-link">
+                                        PMID:19004851
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Lrig3 is necessary</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>At the plasma membrane, LRIG3 acts as a signaling-receptor regulator in the LRIG/ERBB system. It associates with LRIG1 through extracellular regions, opposes LRIG1 negative regulatory activity, and stabilizes ERBB receptors. This is a receptor-modulating activity rather than autonomous receptor or enzymatic activity, and the endogenous stoichiometry and receptor spectrum remain unresolved.</h3>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="FUNCTION: At the plasma membrane, LRIG3 acts as a signaling-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030545" target="_blank" class="term-link">
+                            signaling receptor regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23723069" target="_blank" class="term-link">
+                                PMID:23723069
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Lrig3 opposes Lrig1 negative regulatory</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In mouse inner-ear development, Lrig3 and Ntn1 form cross-repressive expression domains that determine where the lateral canal pouch fuses. Lrig3 loss expands Ntn1, disrupts canal morphogenesis and causes circling behavior, while reducing Ntn1 dosage rescues the defect. ERBB association is experimentally separable from this process, and direct human developmental evidence is lacking.</h3>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="FUNCTION: In mouse inner-ear development, Lrig3 and Ntn1 for..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048752" target="_blank" class="term-link">
+                                semicircular canal morphogenesis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19004851" target="_blank" class="term-link">
+                                PMID:19004851
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Lrig3 is necessary</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20126551" target="_blank" class="term-link">
+                                PMID:20126551
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">unlikely to contribute to Lrig3-dependent processes of inner ear morphogenesis.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22664934" target="_blank" class="term-link">
+                            PMID:22664934
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comparison of tear protein levels in breast cancer patients and healthy controls using a de novo proteomic approach.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human tear-fluid proteomics provides the source context for the extension-qualified extracellular detection, but not the molecular form detected.</div>
+
+                        <div class="finding-text">"tear fluid from breast carcinoma patients"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23723069" target="_blank" class="term-link">
+                            PMID:23723069
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leucine-rich repeat and immunoglobulin domain-containing protein-1 (Lrig1) negative regulatory action toward ErbB receptor tyrosine kinases is opposed by leucine-rich repeat and immunoglobulin domain-containing protein 3 (Lrig3).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRIG3 opposes LRIG1-mediated negative regulation and stabilizes ERBB receptors.</div>
+
+                        <div class="finding-text">"Lrig3 opposes Lrig1 negative regulatory"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The LRIG3-LRIG1 pair derives from a cell-line-specific AP-MS interactome.</div>
+
+                        <div class="finding-text">"mass spectrometry, we have created two proteome-scale"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18287203" target="_blank" class="term-link">
+                            PMID:18287203
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lrig3 regulates neural crest formation in Xenopus by modulating Fgf and Wnt signaling pathways.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Xenopus Lrig3 is required for neural-crest formation and contextually modulates WNT and FGF signaling.</div>
+
+                        <div class="finding-text">"Lrig3 functions in NC formation in Xenopus"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19004851" target="_blank" class="term-link">
+                            PMID:19004851
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cross-repressive interactions between Lrig3 and netrin 1 shape the architecture of the inner ear.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrig3 restricts Ntn1 expression to shape the lateral semicircular canal, with genetic rescue by reducing Ntn1 dosage.</div>
+
+                        <div class="finding-text">"Lrig3 is necessary"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19200647" target="_blank" class="term-link">
+                            PMID:19200647
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inhibition of LRIG3 gene expression via RNA interference modulates the proliferation, cell cycle, cell apoptosis, adhesion and invasion of glioblastoma cell (GL15).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRIG3 knockdown in human GL15 glioma cells increases invasion, adhesion, and growth while reducing apoptosis.</div>
+
+                        <div class="finding-text">"LRIG3 by shRNA resulted in significantly increase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20126551" target="_blank" class="term-link">
+                            PMID:20126551
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Vertebrate Lrig3-ErbB interactions occur in vitro but are unlikely to play a role in Lrig3-dependent inner ear morphogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lrig3 can interact with ERBB receptors in vitro, but ERBB inhibition does not reproduce the inner-ear Netrin or morphogenesis phenotype.</div>
+
+                        <div class="finding-text">"Lrig3, like Lrig1, is able"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31245283" target="_blank" class="term-link">
+                            PMID:31245283
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Prognostic and Therapeutic Potential of LRIG3 and Soluble LRIG3 in Glioblastoma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length and soluble LRIG3 inhibit glioblastoma-cell growth and invasion in MET-PI3K-AKT-associated models, and soluble LRIG3 is detected in patient fluids.</div>
+
+                        <div class="finding-text">"existence of soluble ectodomain of LRIG3"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33718179" target="_blank" class="term-link">
+                            PMID:33718179
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LRIG3 Suppresses Angiogenesis by Regulating the PI3K/AKT/VEGFA Signaling Pathway in Glioma.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRIG3 suppresses glioma-induced angiogenesis through reduced PI3K-AKT activation and VEGFA expression.</div>
+
+                        <div class="finding-text">"LRIG3 significantly suppressed glioma-induced angiogenesis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36639372" target="_blank" class="term-link">
+                            PMID:36639372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glioma-derived LRIG3 interacts with NETO2 in tumor-associated macrophages to modulate microenvironment and suppress tumor growth.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Glioma-derived soluble LRIG3 binds the NETO2 CUB1 domain in tumor-associated macrophages and restricts M2-like polarization in the tested models.</div>
+
+                        <div class="finding-text">"sLRIG3 interacts with the CUB1 domain of NETO2"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which endogenous ERBB or other receptor complexes contain LRIG3 in normal human tissues, and how does LRIG3 oppose LRIG1 within those complexes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="Q: Which endogenous ERBB or other receptor complexes ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the Lrig3-Ntn1 boundary mechanism conserved in human otic development, and what signal connects membrane LRIG3 to NTN1 transcription?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="Q: Is the Lrig3-Ntn1 boundary mechanism conserved in ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which protease generates soluble LRIG3 in vivo, and is NETO2 a physiological target outside the glioma microenvironment?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="Q: Which protease generates soluble LRIG3 in vivo, an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the two curated LRIG3 isoforms differ in membrane delivery, receptor regulation, developmental rescue, or ectodomain release?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="Q: Do the two curated LRIG3 isoforms differ in membra..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LRIG3 in normal human epithelial and neural models; combine quantitative interactomics with receptor phosphorylation, surface turnover, and LRIG1 epistasis after acute LRIG3 depletion and rescue.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="EXPERIMENT: Endogenously tag LRIG3 in normal human epithelial ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate LRIG3-null human otic organoids and perform spatial transcriptomics, NTN1 imaging, basement-membrane analysis, and isoform-specific rescue during canal-like epithelial morphogenesis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="EXPERIMENT: Generate LRIG3-null human otic organoids and perfo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map soluble-LRIG3 termini by N-terminomics in patient-derived glioma and normal neural cultures, perturb candidate proteases including ADAM17, and test NETO2-dependent macrophage responses with cleavage-resistant rescue constructs.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="EXPERIMENT: Map soluble-LRIG3 termini by N-terminomics in pati..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare the two curated LRIG3 isoforms using matched genomic knock-in constructs and measure maturation, plasma-membrane residence, vesicle localization, LRIG1/ERBB association, and ectodomain release.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q6UXM1" data-a="EXPERIMENT: Compare the two curated LRIG3 isoforms using match..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous human receptor partners, binding interfaces, and direction of LRIG3-mediated receptor regulation remain incompletely defined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Human-cell evidence supports LRIG1 cross-talk and ERBB stabilization, but does not establish a universal receptor set, obligate complex, or catalytic mechanism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this mechanism is necessary to distinguish normal receptor regulation from tumor-cell-specific signaling behavior.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Quantify endogenous LRIG3 complexes and receptor abundance, activation, trafficking, and degradation after LRIG3 perturbation and domain-resolved rescue.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Lrig3 opposes Lrig1 negative regulatory"</em> — PMID:23723069</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The extent to which the mouse Lrig3-Ntn1 inner-ear mechanism is conserved in human otic development is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Mouse genetics strongly establishes lateral-canal morphogenesis, but no direct human developmental assay or LRIG3 disease mechanism is available.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Human conservation would connect the strongest normal developmental phenotype to LRIG3 biology without over-transferring auditory phenotypes of LRIG1/2.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test LRIG3 loss and rescue in human otic organoids with spatial NTN1, basement-membrane remodeling, and epithelial-fusion readouts.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Lrig3 is necessary"</em> — PMID:19004851</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological source, protease, and normal target tissues of soluble LRIG3 are unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Soluble LRIG3 and NETO2-dependent macrophage effects are demonstrated in glioma systems; ADAM17 abundance correlates with release but direct cleavage is not established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishing release and target-cell specificity is essential before treating the glioma-derived ectodomain as a normal intercellular signal.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Map endogenous LRIG3 cleavage sites and protease dependence, then compare soluble LRIG3 abundance and NETO2-dependent responses across normal and tumor tissues.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The expression or activity of ADAM17 in glioma cells"</em> — PMID:36639372</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The localization and functions of the two curated LRIG3 isoforms have not been compared.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Isoform 2 replaces the canonical N-terminal 79 residues, but sequence difference alone does not establish altered topology, stability, trafficking, or function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform-specific processing could alter the extracellular architecture underlying receptor association or shedding.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Express isoforms at matched endogenous levels and compare maturation, surface delivery, LRIG1/ERBB association, cleavage, and functional rescue.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRIG3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6UXM1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrig3-evidence-notes">LRIG3 evidence notes</h1>
+<h2 id="identity-and-architecture">Identity and architecture</h2>
+<p>LRIG3 is a type-I single-pass membrane member of the LRIG family. Its extracellular<br />
+LRR/Ig architecture supports receptor association but does not make LRIG3 an autonomous<br />
+signaling receptor. The two reviewed UniProt isoforms differ in sequence, but no source<br />
+GO annotation is isoform-qualified and the reviewed literature does not establish an<br />
+isoform-specific function.</p>
+<h2 id="receptor-regulation">Receptor regulation</h2>
+<p>The strongest human evidence shows that "Lrig3 opposes Lrig1 negative regulatory"<br />
+activity and stabilizes ERBB receptors <a href="https://pubmed.ncbi.nlm.nih.gov/23723069">PMID:23723069</a>. Vertebrate experiments also<br />
+show that "Lrig3, like Lrig1, is able" to associate with ERBB receptors in vitro, while<br />
+ERBB inhibition did not reproduce the Lrig3-dependent inner-ear phenotype<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20126551">PMID:20126551</a>. Thus receptor-regulator activity is supported, but LRIG1's degradation<br />
+mechanism must not be transferred wholesale to LRIG3.</p>
+<h2 id="developmental-evidence">Developmental evidence</h2>
+<p>Mouse genetics establishes that "Lrig3 is necessary" for lateral semicircular-canal<br />
+development through cross-repression with Ntn1 <a href="https://pubmed.ncbi.nlm.nih.gov/19004851">PMID:19004851</a>. Xenopus work concludes<br />
+that "Lrig3 functions in NC formation in Xenopus" through context-dependent WNT/FGF<br />
+modulation <a href="https://pubmed.ncbi.nlm.nih.gov/18287203">PMID:18287203</a>. These are important developmental contexts, not direct<br />
+evidence for human hearing perception or a single shared receptor mechanism.</p>
+<h2 id="glioma-and-soluble-lrig3">Glioma and soluble LRIG3</h2>
+<p>Human glioma-cell studies report that "LRIG3 by shRNA resulted in significantly increase"<br />
+of invasion/adhesion and growth <a href="https://pubmed.ncbi.nlm.nih.gov/19200647">PMID:19200647</a>. Later work confirms the "existence of<br />
+soluble ectodomain of LRIG3" in culture supernatant and patient fluids and links both<br />
+full-length and soluble protein to MET-PI3K-AKT-associated tumor suppression<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31245283">PMID:31245283</a>. LRIG3 also "significantly suppressed glioma-induced angiogenesis"<br />
+through PI3K-AKT/VEGFA-associated effects <a href="https://pubmed.ncbi.nlm.nih.gov/33718179">PMID:33718179</a>. In the tumor microenvironment,<br />
+"sLRIG3 interacts with the CUB1 domain of NETO2" in macrophages and limits M2-like<br />
+polarization in the tested models <a href="https://pubmed.ncbi.nlm.nih.gov/36639372">PMID:36639372</a>. These results define strong<br />
+context-specific cancer biology but do not establish the normal physiological role,<br />
+the endogenous shedding protease, or a universal soluble-LRIG3 pathway.</p>
+<h2 id="evidence-boundaries">Evidence boundaries</h2>
+<ul>
+<li>Tear-fluid proteomics supports only detection in "tear fluid from breast carcinoma patients"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22664934">PMID:22664934</a>; it does not distinguish intact protein, shed ectodomain,<br />
+  vesicle-associated material, or cellular debris.</li>
+<li>The BioPlex observation comes from "mass spectrometry, we have created two proteome-scale"<br />
+  networks <a href="https://pubmed.ncbi.nlm.nih.gov/33961781">PMID:33961781</a> and is corroborative screen evidence, not proof of an<br />
+  obligate LRIG1-LRIG3 complex.</li>
+<li>LRIG1 and LRIG2 receptor mechanisms, mouse auditory phenotypes, Xenopus neural-crest<br />
+  biology, and glioma-derived soluble-LRIG3 effects remain separately bounded.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6UXM1
+gene_symbol: LRIG3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRIG3 is a type-I single-pass membrane protein with an extracellular region containing
+  15 leucine-rich repeats and three immunoglobulin-like domains, followed by a long
+  cytoplasmic tail. At the plasma membrane it associates with the LRIG/ERBB regulatory
+  system: LRIG3 opposes LRIG1-mediated negative regulation and stabilizes ERBB receptors,
+  although ERBB association does not explain every LRIG3-dependent developmental role.
+  Mouse Lrig3 restricts Ntn1 expression to pattern the lateral semicircular canal, and
+  Xenopus Lrig3 contextually modulates WNT and FGF signaling during neural-crest formation.
+  In glioblastoma models, full-length and soluble LRIG3 suppress growth, invasion and
+  angiogenesis through MET-PI3K-AKT-associated effects; glioma-derived soluble LRIG3
+  also binds NETO2 on tumor-associated macrophages and limits M2-like polarization.
+  These tumor and nonhuman developmental contexts do not establish a single universal
+  LRIG3 pathway. Two curated isoforms differ at the N terminus, but their functions have
+  not been compared directly.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6UXM1-1
+- name: &#39;2&#39;
+  id: Q6UXM1-2
+  sequence_note: VSP_015097
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0034476
+  - MGI:MGI:107935
+  - MGI:MGI:1333744
+  - MGI:MGI:1915522
+  - MGI:MGI:2177651
+  - MGI:MGI:2389177
+  - MGI:MGI:2389180
+  - MGI:MGI:2442479
+  - MGI:MGI:3608416
+  - PANTHER:PTN001224703
+  - RGD:1560707
+  - RGD:1585921
+  - RGD:727797
+  - UniProtKB:O15455
+  - UniProtKB:P07359
+  - UniProtKB:Q14392
+  - UniProtKB:Q86UE6
+  - UniProtKB:Q86UN2
+  - UniProtKB:Q86UN3
+  - UniProtKB:Q8TF66
+  - UniProtKB:Q96FE5
+  - UniProtKB:Q96JA1
+  - UniProtKB:Q99467
+  - WB:WBGene00020649
+  review:
+    summary: &gt;-
+      Phylogenetic inference places LRIG3 activity at the plasma membrane, consistent
+      with its signal peptide and single-pass type-I membrane topology.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane is a defining location for full-length LRIG3 and is independently
+      consistent with the UniProt membrane record and membrane-context ErbB/LRIG1
+      experiments. The broad PANTHER source set does not supply LRIG3-specific receptor
+      activity, but it does support the conserved membrane topology.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: FB:FBgn0034476
+      - source_id: MGI:MGI:107935
+      - source_id: MGI:MGI:1333744
+      - source_id: MGI:MGI:1915522
+      - source_id: MGI:MGI:2177651
+      - source_id: MGI:MGI:2389177
+      - source_id: MGI:MGI:2389180
+      - source_id: MGI:MGI:2442479
+      - source_id: MGI:MGI:3608416
+      - source_id: PANTHER:PTN001224703
+      - source_id: RGD:1560707
+      - source_id: RGD:1585921
+      - source_id: RGD:727797
+      - source_id: UniProtKB:O15455
+      - source_id: UniProtKB:P07359
+      - source_id: UniProtKB:Q14392
+      - source_id: UniProtKB:Q86UE6
+      - source_id: UniProtKB:Q86UN2
+      - source_id: UniProtKB:Q86UN3
+      - source_id: UniProtKB:Q8TF66
+      - source_id: UniProtKB:Q96FE5
+      - source_id: UniProtKB:Q96JA1
+      - source_id: UniProtKB:Q99467
+      - source_id: WB:WBGene00020649
+- term:
+    id: GO:0038023
+    label: signaling receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0034476
+  - PANTHER:PTN002809265
+  - RGD:727797
+  - UniProtKB:O15455
+  - UniProtKB:Q86UN2
+  - UniProtKB:Q86UN3
+  - UniProtKB:Q99467
+  review:
+    summary: &gt;-
+      A broad PANTHER IBA assigns autonomous signaling receptor activity from a mixed
+      LRR membrane-protein family node.
+    action: REMOVE
+    reason: &gt;-
+      Signaling receptor activity requires receiving a signal and transmitting it to
+      initiate a cellular response. LRIG3 is supported instead as a membrane-associated
+      regulator that binds and modulates ErbB receptors. The IBA source set contains
+      bona fide receptors such as TLR3, RTN4RL1, RTN4RL2, and CD180, so their receptor
+      role must not be transferred across this family boundary to LRIG3. LRIG1 and
+      LRIG2 functions likewise do not establish LRIG3 as an autonomous receptor.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: FB:FBgn0034476
+      - source_id: PANTHER:PTN002809265
+      - source_id: RGD:727797
+      - source_id: UniProtKB:O15455
+        source_label: TLR3
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+      - source_id: UniProtKB:Q86UN2
+        source_label: RTN4RL1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+      - source_id: UniProtKB:Q86UN3
+        source_label: RTN4RL2
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+      - source_id: UniProtKB:Q99467
+        source_label: CD180
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0007605
+    label: sensory perception of sound
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - MGI:MGI:107935
+  - MGI:MGI:2443718
+  - PANTHER:PTN009094493
+  review:
+    summary: &gt;-
+      This auditory-process IBA is propagated from mouse Lrig1 and Lrig2 sources, not
+      from the mouse Lrig3 ortholog.
+    action: REMOVE
+    reason: &gt;-
+      MGI:107935 is mouse Lrig1 and MGI:2443718 is mouse Lrig2, as verified in the
+      current MGI records; the ordered leaf-source set contains no mouse Lrig3
+      ortholog. The PANTHER ancestral node is therefore supported here only by Lrig1/
+      Lrig2 auditory annotations above the paralog split. LRIG3 instead has direct
+      mouse evidence for lateral semicircular-canal morphogenesis, which does not by
+      itself establish sensory perception of sound. The target assertion is therefore
+      an over-propagated paralog transfer rather than evidence for human LRIG3 auditory
+      function.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      source_entities:
+      - source_id: MGI:MGI:107935
+        source_label: mouse Lrig1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+      - source_id: MGI:MGI:2443718
+        source_label: mouse Lrig2
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+      - source_id: PANTHER:PTN009094493
+        source_label: LRIG auditory-function ancestral node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0039
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping places LRIG3 at the plasma membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma-membrane localization is appropriate for the full-length signal-peptide-
+      containing, single-pass type-I protein and for its membrane-context interactions
+      with ErbB receptors and LRIG1. This duplicate of the IBA location is independently
+      coherent and may be retained.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0039
+        source_label: UniProt cell membrane location
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0030659
+    label: cytoplasmic vesicle membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0089
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping assigns LRIG3 to cytoplasmic vesicle
+      membranes, reflecting an intracellular membrane pool.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt reports cytoplasmic-vesicle localization when LRIG3 is coexpressed with
+      ERBB4. This is coherent for a trafficking single-pass membrane protein but is a
+      contextual location, inferred by similarity, rather than LRIG3&#39;s defining
+      plasma-membrane site.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0089
+        source_label: UniProt cytoplasmic vesicle membrane location
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23723069
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q96JA1
+  review:
+    summary: &gt;-
+      Targeted co-immunoprecipitation shows LRIG3 in a stable complex with LRIG1, while
+      functional experiments show that LRIG3 opposes LRIG1 and stabilizes ErbB
+      receptors.
+    action: MODIFY
+    reason: &gt;-
+      Generic protein binding loses the experimentally demonstrated function. The
+      paper supports LRIG3 as a signaling-receptor regulator: it associates with LRIG1
+      through the ectodomains, restricts LRIG1 negative action, and increases ErbB
+      receptor stability. GO:0030545 captures receptor modulation without claiming
+      that LRIG3 is itself a receptor or that it enzymatically activates receptors.
+      This activity is distinct from the negative receptor regulation characteristic
+      of LRIG1 and from LRIG2&#39;s context-dependent behavior.
+    proposed_replacement_terms:
+    - id: GO:0030545
+      label: signaling receptor regulator activity
+    supported_by:
+    - reference_id: PMID:23723069
+      supporting_text: Lrig3 opposes Lrig1 negative regulatory
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q96JA1
+  review:
+    summary: &gt;-
+      Proteome-scale affinity-purification mass spectrometry recovered an LRIG3-LRIG1
+      association in a cell-line-specific human interaction network.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The high-throughput AP-MS observation corroborates physical association with
+      LRIG1 but does not by itself define a molecular activity or physiological
+      consequence. Generic protein binding is therefore retained only as an
+      over-annotation; the targeted PMID:23723069 experiments, not this screen, justify
+      the more informative signaling receptor regulator activity.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: mass spectrometry, we have created two proteome-scale
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: HDA
+  original_reference_id: PMID:22664934
+  qualifier: located_in
+  extensions:
+  - predicate: BFO:0000050
+    term:
+      id: UBERON:0001827
+      label: secretion of lacrimal gland
+  review:
+    summary: &gt;-
+      High-throughput proteomics detected LRIG3 in human lacrimal-gland secretion
+      (tear fluid), supporting this explicitly tissue-fluid-qualified extracellular
+      location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimental HDA annotation and its part-of lacrimal-secretion extension are
+      retained with curator deference. Detection in tear fluid does not establish that
+      full-length LRIG3 is constitutively soluble or classically secreted; it could
+      reflect an extracellular fragment, vesicle, or cellular material from this
+      single-pass membrane protein. The location is therefore contextual and non-core.
+- term:
+    id: GO:0048752
+    label: semicircular canal morphogenesis
+  evidence_type: ISO
+  original_reference_id: PMID:19004851
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:Q6P1C6
+  review:
+    summary: Mouse Lrig3 is required for lateral semicircular-canal morphogenesis through
+      cross-repressive patterning with Ntn1.
+    action: NEW
+    reason: Q6P1C6 is the reviewed mouse Lrig3 ortholog, and genetic loss plus Ntn1-dosage
+      rescue directly establish the process in mouse. ISO captures the conserved LRIG3
+      developmental role while retaining the species boundary and without converting
+      it into a human hearing-perception annotation.
+    supported_by:
+    - reference_id: PMID:19004851
+      supporting_text: Lrig3 is necessary
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: The method reference explains IBA provenance; the broad source nodes
+      were assessed separately because receptors and LRIG paralogs are not equivalent.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports mapped membrane locations, not autonomous receptor activity.
+- id: PMID:22664934
+  title: Comparison of tear protein levels in breast cancer patients and healthy controls
+    using a de novo proteomic approach.
+  findings:
+  - statement: Human tear-fluid proteomics provides the source context for the
+      extension-qualified extracellular detection, but not the molecular form detected.
+    supporting_text: tear fluid from breast carcinoma patients
+    reference_section_type: INTRODUCTION
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Pooled human tear-fluid proteomics; it does not establish constitutive
+      secretion of intact LRIG3.
+- id: PMID:23723069
+  title: Leucine-rich repeat and immunoglobulin domain-containing protein-1 (Lrig1)
+    negative regulatory action toward ErbB receptor tyrosine kinases is opposed by
+    leucine-rich repeat and immunoglobulin domain-containing protein 3 (Lrig3).
+  findings:
+  - statement: LRIG3 opposes LRIG1-mediated negative regulation and stabilizes ERBB
+      receptors.
+    supporting_text: Lrig3 opposes Lrig1 negative regulatory
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct human-cell study of LRIG1-LRIG3 cross-talk and ERBB stability;
+      detailed assays remain under curator deference because the cache is abstract-only.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: The LRIG3-LRIG1 pair derives from a cell-line-specific AP-MS interactome.
+    supporting_text: mass spectrometry, we have created two proteome-scale
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Credible screen evidence, but not a standalone mechanism or stable
+      endogenous complex.
+- id: PMID:18287203
+  title: Lrig3 regulates neural crest formation in Xenopus by modulating Fgf and Wnt
+    signaling pathways.
+  findings:
+  - statement: Xenopus Lrig3 is required for neural-crest formation and contextually
+      modulates WNT and FGF signaling.
+    supporting_text: Lrig3 functions in NC formation in Xenopus
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Primary Xenopus evidence; useful developmental context but not a
+      direct human annotation or proof of a single receptor mechanism.
+- id: PMID:19004851
+  title: Cross-repressive interactions between Lrig3 and netrin 1 shape the architecture
+    of the inner ear.
+  findings:
+  - statement: Mouse Lrig3 restricts Ntn1 expression to shape the lateral semicircular
+      canal, with genetic rescue by reducing Ntn1 dosage.
+    supporting_text: Lrig3 is necessary
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Decisive mouse developmental genetics; species and tissue boundaries
+      are retained.
+- id: PMID:19200647
+  title: Inhibition of LRIG3 gene expression via RNA interference modulates the proliferation,
+    cell cycle, cell apoptosis, adhesion and invasion of glioblastoma cell (GL15).
+  findings:
+  - statement: LRIG3 knockdown in human GL15 glioma cells increases invasion, adhesion,
+      and growth while reducing apoptosis.
+    supporting_text: LRIG3 by shRNA resulted in significantly increase
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Direct human glioma-cell perturbation, but not normal physiology or
+      a specific molecular target.
+- id: PMID:20126551
+  title: Vertebrate Lrig3-ErbB interactions occur in vitro but are unlikely to play
+    a role in Lrig3-dependent inner ear morphogenesis.
+  findings:
+  - statement: Lrig3 can interact with ERBB receptors in vitro, but ERBB inhibition
+      does not reproduce the inner-ear Netrin or morphogenesis phenotype.
+    supporting_text: Lrig3, like Lrig1, is able
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Supports ERBB association while experimentally separating it from
+      the inner-ear developmental mechanism.
+- id: PMID:31245283
+  title: The Prognostic and Therapeutic Potential of LRIG3 and Soluble LRIG3 in Glioblastoma.
+  findings:
+  - statement: Full-length and soluble LRIG3 inhibit glioblastoma-cell growth and invasion
+      in MET-PI3K-AKT-associated models, and soluble LRIG3 is detected in patient fluids.
+    supporting_text: existence of soluble ectodomain of LRIG3
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct glioma-cell, xenograft, and patient-fluid evidence; tumor and
+      therapeutic contexts are not generalized into normal physiology.
+- id: PMID:33718179
+  title: LRIG3 Suppresses Angiogenesis by Regulating the PI3K/AKT/VEGFA Signaling Pathway
+    in Glioma.
+  findings:
+  - statement: LRIG3 suppresses glioma-induced angiogenesis through reduced PI3K-AKT
+      activation and VEGFA expression.
+    supporting_text: LRIG3 significantly suppressed glioma-induced angiogenesis
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Direct glioma-model evidence bounded to tumor and xenograft systems.
+- id: PMID:36639372
+  title: Glioma-derived LRIG3 interacts with NETO2 in tumor-associated macrophages to
+    modulate microenvironment and suppress tumor growth.
+  findings:
+  - statement: Glioma-derived soluble LRIG3 binds the NETO2 CUB1 domain in tumor-associated
+      macrophages and restricts M2-like polarization in the tested models.
+    supporting_text: sLRIG3 interacts with the CUB1 domain of NETO2
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Targeted interaction and functional NETO2 perturbation support a
+      tumor-microenvironment mechanism, not a universal physiological pathway.
+core_functions:
+- description: &gt;-
+    At the plasma membrane, LRIG3 acts as a signaling-receptor regulator in the
+    LRIG/ERBB system. It associates with LRIG1 through extracellular regions, opposes
+    LRIG1 negative regulatory activity, and stabilizes ERBB receptors. This is a
+    receptor-modulating activity rather than autonomous receptor or enzymatic activity,
+    and the endogenous stoichiometry and receptor spectrum remain unresolved.
+  molecular_function:
+    id: GO:0030545
+    label: signaling receptor regulator activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:23723069
+    supporting_text: Lrig3 opposes Lrig1 negative regulatory
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- description: &gt;-
+    In mouse inner-ear development, Lrig3 and Ntn1 form cross-repressive expression
+    domains that determine where the lateral canal pouch fuses. Lrig3 loss expands
+    Ntn1, disrupts canal morphogenesis and causes circling behavior, while reducing
+    Ntn1 dosage rescues the defect. ERBB association is experimentally separable from
+    this process, and direct human developmental evidence is lacking.
+  directly_involved_in:
+  - id: GO:0048752
+    label: semicircular canal morphogenesis
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:19004851
+    supporting_text: Lrig3 is necessary
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:20126551
+    supporting_text: unlikely to contribute to Lrig3-dependent processes of inner ear morphogenesis.
+    reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: The endogenous human receptor partners, binding interfaces, and
+    direction of LRIG3-mediated receptor regulation remain incompletely defined.
+  boundary: Human-cell evidence supports LRIG1 cross-talk and ERBB stabilization, but
+    does not establish a universal receptor set, obligate complex, or catalytic mechanism.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: Resolving this mechanism is necessary to distinguish normal receptor
+    regulation from tumor-cell-specific signaling behavior.
+  resolution: Quantify endogenous LRIG3 complexes and receptor abundance, activation,
+    trafficking, and degradation after LRIG3 perturbation and domain-resolved rescue.
+  provenance:
+  - reference_id: PMID:23723069
+    supporting_text: Lrig3 opposes Lrig1 negative regulatory
+- gap_statement: The extent to which the mouse Lrig3-Ntn1 inner-ear mechanism is conserved
+    in human otic development is unknown.
+  boundary: Mouse genetics strongly establishes lateral-canal morphogenesis, but no
+    direct human developmental assay or LRIG3 disease mechanism is available.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: Human conservation would connect the strongest normal developmental
+    phenotype to LRIG3 biology without over-transferring auditory phenotypes of LRIG1/2.
+  resolution: Test LRIG3 loss and rescue in human otic organoids with spatial NTN1,
+    basement-membrane remodeling, and epithelial-fusion readouts.
+  provenance:
+  - reference_id: PMID:19004851
+    supporting_text: Lrig3 is necessary
+- gap_statement: The physiological source, protease, and normal target tissues of soluble
+    LRIG3 are unresolved.
+  boundary: Soluble LRIG3 and NETO2-dependent macrophage effects are demonstrated in
+    glioma systems; ADAM17 abundance correlates with release but direct cleavage is not established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: Establishing release and target-cell specificity is essential before
+    treating the glioma-derived ectodomain as a normal intercellular signal.
+  resolution: Map endogenous LRIG3 cleavage sites and protease dependence, then compare
+    soluble LRIG3 abundance and NETO2-dependent responses across normal and tumor tissues.
+  provenance:
+  - reference_id: PMID:36639372
+    supporting_text: The expression or activity of ADAM17 in glioma cells
+- gap_statement: The localization and functions of the two curated LRIG3 isoforms have
+    not been compared.
+  boundary: Isoform 2 replaces the canonical N-terminal 79 residues, but sequence
+    difference alone does not establish altered topology, stability, trafficking, or function.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: Isoform-specific processing could alter the extracellular architecture
+    underlying receptor association or shedding.
+  resolution: Express isoforms at matched endogenous levels and compare maturation,
+    surface delivery, LRIG1/ERBB association, cleavage, and functional rescue.
+proposed_new_terms: []
+suggested_questions:
+- question: Which endogenous ERBB or other receptor complexes contain LRIG3 in normal
+    human tissues, and how does LRIG3 oppose LRIG1 within those complexes?
+- question: Is the Lrig3-Ntn1 boundary mechanism conserved in human otic development,
+    and what signal connects membrane LRIG3 to NTN1 transcription?
+- question: Which protease generates soluble LRIG3 in vivo, and is NETO2 a physiological
+    target outside the glioma microenvironment?
+- question: Do the two curated LRIG3 isoforms differ in membrane delivery, receptor
+    regulation, developmental rescue, or ectodomain release?
+suggested_experiments:
+- description: Endogenously tag LRIG3 in normal human epithelial and neural models;
+    combine quantitative interactomics with receptor phosphorylation, surface turnover,
+    and LRIG1 epistasis after acute LRIG3 depletion and rescue.
+- description: Generate LRIG3-null human otic organoids and perform spatial transcriptomics,
+    NTN1 imaging, basement-membrane analysis, and isoform-specific rescue during canal-like
+    epithelial morphogenesis.
+- description: Map soluble-LRIG3 termini by N-terminomics in patient-derived glioma and
+    normal neural cultures, perturb candidate proteases including ADAM17, and test NETO2-dependent
+    macrophage responses with cleavage-resistant rescue constructs.
+- description: Compare the two curated LRIG3 isoforms using matched genomic knock-in
+    constructs and measure maturation, plasma-membrane residence, vesicle localization,
+    LRIG1/ERBB association, and ectodomain release.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

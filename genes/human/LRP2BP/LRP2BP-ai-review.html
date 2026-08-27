@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP2BP - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRP2BP</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9P2M1" target="_blank" class="term-link">
+                        Q9P2M1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRP2BP";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9P2M1" data-a="DESCRIPTION: LRP2BP is a 347-residue cytoplasmic repeat protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRP2BP is a 347-residue cytoplasmic repeat protein containing one TPR and six Sel1-like repeats. It associates with a proline-rich region near the N terminus of the cytoplasmic tail of the multiligand receptor LRP2/megalin and has been proposed to recruit regulatory proteins to that tail. LRP2BP shows vesicular staining near the plasma membrane and throughout the cytoplasm. Its association with LRP2 did not block receptor endocytosis in the reported assay, and the downstream consequences for LRP2 trafficking or transcription remain unresolved. Two closely related splice isoforms are curated; isoform 2 carries a two-residue insertion after residue 35, but no isoform-specific function has been established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P2M1" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProtKB subcellular-location vocabulary mapping places LRP2BP in the cytoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with LRP2BP acting as an intracellular receptor-tail adaptor and with the reviewed UniProtKB localization record. The broad compartment is appropriate and represents a core location.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0086</span>
+
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P2M1" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A BioPlex 2.0 affinity-purification mass-spectrometry screen reports an LRP2BP association with GSTT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The curated IPI preserves a candidate co-association from a systematic proteome-scale screen, but generic protein binding does not describe a mechanistic molecular function of LRP2BP. The association should remain available as interaction provenance rather than be treated as a core GO function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">With more than 56,000 candidate interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P2M1" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The HuRI systematic binary-interactome screen reports LRP2BP interactions with eighteen human protein partners.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These curator-assigned IPI records are retained as evidence for the reported binary pairs, including the specifically tested Q6NZ36-4 proteoform. They do not establish a shared mechanism for LRP2BP, so collapsing the screen into generic protein binding is functionally uninformative and should not be treated as core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P2M1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A BioPlex 3.0 affinity-purification mass-spectrometry screen reports an LRP2BP association with GSTT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Recurrence of the LRP2BP-GSTT1 association in BioPlex 2.0 and 3.0 lends confidence to the reported co-association, but neither generic protein binding nor this screen result defines a mechanistic molecular function of LRP2BP. Preserve the interaction provenance as non-core screen evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mass spectrometry, we have created two proteome-scale, cell-line-specific</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12508107
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional interaction of megalin with the megalinbinding pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P2M1" data-a="GO:0005515" data-r="PMID:12508107" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yeast two-hybrid experiments identify LRP2BP/MegBP as a TPR-containing scaffold that binds the cytoplasmic tail of LRP2/megalin and additional protein partners.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct binding to LRP2 is well supported, but generic protein binding is uninformative. The accessible evidence identifies LRP2BP as a scaffold and suggests that it recruits other proteins to the receptor tail, which is better represented by protein-macromolecule adaptor activity; the proposed downstream transcriptional model remains tentative.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    protein-macromolecule adaptor activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                                        PMID:12508107
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">scaffold protein with tetratrico peptide repeats, the megalin-binding protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                                        PMID:12508107
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified proteins that bound to MegBP and thus might be recruited to the
+megalin tail. MegBP-interacting partners included several transcriptional</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LRP2BP acts as a repeat-containing protein-macromolecule adaptor associated with the cytoplasmic tail of LRP2/megalin. A targeted interaction study mapped the LRP2-side binding site to a proline-rich N-terminal region of the receptor tail and recovered additional candidate LRP2BP partners that could be recruited to the receptor. This supports a cytoplasmic scaffold/adaptor role, while the accessible evidence does not establish a stable ternary complex, a specific downstream transcriptional pathway, or a requirement for LRP2 endocytosis.</h3>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="FUNCTION: LRP2BP acts as a repeat-containing protein-macromo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                                PMID:12508107
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Using yeast two-hybrid screens, we identified a novel
+scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+(MegBP) that associates with the receptor. The binding site of MegBP was mapped
+to an N-terminal region on the receptor tail harboring a proline-rich peptide
+element.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                                PMID:12508107
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">MegBP-interacting partners included several transcriptional
+regulators such as the SKI-interacting protein (SKIP), a co-activator of the
+vitamin D receptor. These finding suggest a model whereby megalin directly
+participates in transcriptional regulation through controlled sequestration or
+release of transcription factors via MegBP.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                                PMID:12508107
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">MegBP binding did not block the endocytic activity of the receptor;
+however, overexpression resulted in cellular lethality.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" target="_blank" class="term-link">
+                            PMID:12508107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional interaction of megalin with the megalinbinding protein (MegBP), a novel tetratrico peptide repeat-containing adaptor molecule.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A targeted yeast two-hybrid study identified the TPR-containing MegBP as an LRP2/megalin-associated scaffold and mapped binding to a proline-rich region near the N terminus of the receptor tail.</div>
+
+                        <div class="finding-text">"Using yeast two-hybrid screens, we identified a novel
+scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+(MegBP) that associates with the receptor. The binding site of MegBP was mapped
+to an N-terminal region on the receptor tail harboring a proline-rich peptide
+element."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MegBP association did not inhibit megalin endocytosis in the reported assay, whereas MegBP overexpression caused cellular lethality.</div>
+
+                        <div class="finding-text">"MegBP binding did not block the endocytic activity of the receptor;
+however, overexpression resulted in cellular lethality."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Additional screens recovered transcriptional regulators as candidate MegBP partners, motivating—but not establishing—a model connecting the megalin tail to transcriptional regulation.</div>
+
+                        <div class="finding-text">"MegBP-interacting partners included several transcriptional
+regulators such as the SKI-interacting protein (SKIP), a co-activator of the
+vitamin D receptor. These finding suggest a model whereby megalin directly
+participates in transcriptional regulation through controlled sequestration or
+release of transcription factors via MegBP."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 2.0 reports candidate protein co-associations from affinity-purification mass spectrometry rather than necessarily direct binary interactions.</div>
+
+                        <div class="finding-text">"With more than 56,000 candidate interactions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI interactions arose from repeated proteome-scale yeast two-hybrid screening with pairwise retesting and sequence confirmation.</div>
+
+                        <div class="finding-text">"To map the reference interactome, we performed nine screens of Space III, followed by pairwise verification by quadruplicate retesting and sequence confirmation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 3.0 and a second HCT116 network were designed as cell-line-specific AP-MS interaction maps, so individual associations remain context-dependent candidates.</div>
+
+                        <div class="finding-text">"The first, BioPlex 3.0, results from affinity purification"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP2BP/LRP2BP-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB/Swiss-Prot record for human LRP2BP (Q9P2M1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed human record treats LRP2BP as a candidate adapter for LRP2 and records a direct LRP2 interaction from PMID:12508107.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: May act as an adapter that regulates LRP2 function.
+CC   -!- SUBUNIT: Interacts with LRP2. {ECO:0000269|PubMed:12508107}."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP2BP is recorded in the cytoplasm with vesicular staining near the plasma membrane and throughout the cytoplasm.</div>
+
+                        <div class="finding-text">"CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:12508107}.
+CC       Note=Detected in a vesicular staining pattern close to the plasma
+CC       membrane and throughout the cytoplasm."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record contains two named splice isoforms; isoform 2 differs by the small VSP_030664 insertion at residue 35.</div>
+
+                        <div class="finding-text">"CC   -!- ALTERNATIVE PRODUCTS:
+CC       Event=Alternative splicing; Named isoforms=2;
+CC       Name=1;
+CC         IsoId=Q9P2M1-1; Sequence=Displayed;
+CC       Name=2;
+CC         IsoId=Q9P2M1-2; Sequence=VSP_030664;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The 347-residue canonical protein contains one annotated TPR followed by six annotated Sel1-like repeats.</div>
+
+                        <div class="finding-text">"FT   REPEAT          59..92
+FT                   /note=&#34;TPR&#34;
+FT   REPEAT          93..125
+FT                   /note=&#34;Sel1-like 1&#34;
+FT   REPEAT          133..168
+FT                   /note=&#34;Sel1-like 2&#34;
+FT   REPEAT          173..206
+FT                   /note=&#34;Sel1-like 3&#34;
+FT   REPEAT          207..242
+FT                   /note=&#34;Sel1-like 4&#34;
+FT   REPEAT          243..277
+FT                   /note=&#34;Sel1-like 5&#34;
+FT   REPEAT          297..332
+FT                   /note=&#34;Sel1-like 6&#34;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR44554/PTHR44554-entries.csv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR44554 LRP2-binding protein family entries</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched PANTHER member table places human LRP2BP in the LRP2-binding protein subfamily PTHR44554:SF1.</div>
+
+                        <div class="finding-text">"Q9P2M1,LRP2-binding protein,protein,9606,Homo sapiens,Homo sapiens (Human),LRP2BP,347,PTHR44554:SF1,LRP2-BINDING PROTEIN,True"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrp2bp is assigned to the same PTHR44554:SF1 subfamily, supporting an exact vertebrate orthology boundary rather than paralog transfer.</div>
+
+                        <div class="finding-text">"Q9D4C6,LRP2-binding protein,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp2bp,346,PTHR44554:SF1,LRP2-BINDING PROTEIN,True"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which surface of human LRP2BP binds the proline-rich LRP2 tail, and does the interaction require a particular TPR or Sel1-like repeat?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="Q: Which surface of human LRP2BP binds the proline-ri..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which candidate LRP2BP partners form an endogenous complex with LRP2BP and LRP2, and can any partner bind simultaneously with the receptor tail?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="Q: Which candidate LRP2BP partners form an endogenous..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LRP2BP regulate cargo-specific LRP2 trafficking, receptor recycling, proteolysis, or transcriptional signaling in LRP2-expressing epithelia?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="Q: Does endogenous LRP2BP regulate cargo-specific LRP..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the two-residue insertion in LRP2BP isoform 2 alter repeat packing, localization, partner choice, or LRP2 association?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="Q: Does the two-residue insertion in LRP2BP isoform 2..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute binding with purified human LRP2BP repeat fragments and the LRP2 cytoplasmic tail, then combine quantitative affinity measurements, systematic repeat mutagenesis, and structural analysis of the minimal complex.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: A defined subset of LRP2BP TPR/Sel1-like repeats recognizes the proline-rich N-terminal region of the LRP2 cytoplasmic tail.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: quantitative interaction mapping and structural analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="EXPERIMENT: Reconstitute binding with purified human LRP2BP re..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag LRP2BP and LRP2 in a human proximal-tubule or choroid-plexus epithelial model and use proximity labeling, reciprocal co-immunoprecipitation, and size-resolved native complex analysis before and after cargo uptake.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRP2BP assembles a regulated receptor-tail complex whose composition changes during the LRP2 endocytic cycle.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: endogenous receptor-complex proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="EXPERIMENT: Endogenously tag LRP2BP and LRP2 in a human proxim..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate LRP2BP-null epithelial cells and rescue them with wild-type or LRP2-binding-defective LRP2BP, then quantify LRP2 surface abundance, cargo uptake, endosomal recycling, ectodomain shedding, and receptor-tail-dependent transcription.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRP2BP controls a subset of LRP2 trafficking or signaling outputs without being required for bulk receptor endocytosis.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: separation-of-function receptor trafficking analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="EXPERIMENT: Generate LRP2BP-null epithelial cells and rescue t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express each LRP2BP isoform from the endogenous locus in otherwise isogenic cells and compare localization, LRP2-tail affinity, partner proteomes, and receptor functional outputs.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The small isoform-2 insertion produces a measurable but context-dependent change in LRP2BP interaction specificity rather than a wholly distinct biological role.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved endogenous complementation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P2M1" data-a="EXPERIMENT: Express each LRP2BP isoform from the endogenous lo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous molecular consequence of the LRP2BP-LRP2 association is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Targeted evidence establishes association with the LRP2 tail, but the reported interaction did not block receptor endocytosis, and the proposed transcriptional mechanism was not directly demonstrated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a demonstrated output, no specific LRP2 trafficking or transcriptional biological-process term can be assigned to LRP2BP.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Disrupt endogenous LRP2BP or its LRP2-binding interface in a physiological human epithelial model and measure cargo-specific receptor trafficking together with receptor-tail-dependent transcriptional outputs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"MegBP binding did not block the endocytic activity of the receptor;
+however, overexpression resulted in cellular lethality."</em> — PMID:12508107</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The LRP2BP-side interaction interface and endogenous complex composition are unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The study mapped a proline-rich binding region on LRP2 and recovered candidate LRP2BP partners, but no LRP2BP interface, stoichiometry, simultaneous ternary binding, or experimental structure has been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Defining the interface and complex is required to distinguish a physical receptor-tail scaffold from a broader constitutive adaptor mechanism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Map the minimal human LRP2BP-LRP2 interface structurally and determine endogenous complex composition and stoichiometry with orthogonal interaction assays.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Using yeast two-hybrid screens, we identified a novel
+scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+(MegBP) that associates with the receptor. The binding site of MegBP was mapped
+to an N-terminal region on the receptor tail harboring a proline-rich peptide
+element."</em> — PMID:12508107</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The identity and dynamics of the LRP2BP-positive cytoplasmic vesicles are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The reviewed human record reports vesicular staining near the plasma membrane and throughout the cytoplasm, but no endosomal subtype, cargo state, or direct colocalization with LRP2 is resolved in the accessible evidence.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Compartment-resolved localization is needed before assigning a specific vesicle or endosomal cellular-component term.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LRP2BP and compare its dynamics with LRP2 and established endosomal markers during synchronized cargo uptake and receptor recycling.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological significance of LRP2BP isoform 2 is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt curates a two-residue insertion after residue 35, but the targeted paper and interaction screens do not resolve which isoform was tested or establish an isoform-specific phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Isoform-resolved evidence is required before transferring canonical localization or adaptor function to a specific proteoform.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Compare the two endogenous human isoforms in isogenic cells using quantitative localization, interaction, and LRP2 functional assays.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRP2BP-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P2M1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrp2bp-literature-and-evidence-notes">LRP2BP literature and evidence notes</h1>
+<h2 id="evidence-hierarchy">Evidence hierarchy</h2>
+<p>The literature base is sparse. PMID:12508107 is the only seeded targeted study of MegBP/LRP2BP. It identifies MegBP as a TPR-containing scaffold associated with megalin/LRP2 and maps the receptor-side binding site to a proline-rich N-terminal region of the LRP2 cytoplasmic tail <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="scaffold protein with tetratrico peptide repeats, the megalin-binding protein">PMID:12508107</a> <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="The binding site of MegBP was mapped">PMID:12508107</a>. The cache is abstract-only and does not state the tested MegBP species or splice isoform. The reviewed human UniProt record maps this evidence to Q9P2M1, but that database assignment should not be mistaken for study-level proteoform resolution [file:human/LRP2BP/LRP2BP-uniprot.txt "CC   -!- SUBUNIT: Interacts with LRP2. {ECO:0000269|PubMed:12508107}."].</p>
+<p>The interaction did not block receptor endocytosis in the reported experiment <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="MegBP binding did not block the endocytic activity of the receptor;">PMID:12508107</a> and MegBP overexpression caused cellular lethality <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="however, overexpression resulted in cellular lethality.">PMID:12508107</a>. The proposed connection between megalin and transcriptional regulation is explicitly a model based on additional interaction-screen partners, including SKIP, rather than a demonstrated transcriptional activity of LRP2BP <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="These finding suggest a model whereby megalin directly">PMID:12508107</a> <a href="https://pubmed.ncbi.nlm.nih.gov/12508107" title="release of transcription factors via MegBP.">PMID:12508107</a>.</p>
+<h2 id="screen-only-interactions">Screen-only interactions</h2>
+<p>PMID:28514442 is BioPlex 2.0 AP-MS; GOA/IntAct assigns an LRP2BP-GSTT1 co-association to it, but the pair is not named in the cached article body. The paper itself calls the network edges candidate interactions <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" title="With more than 56,000 candidate interactions">PMID:28514442</a>. PMID:33961781 reports BioPlex 3.0 and a second cell-line-specific network; GOA/IntAct again assigns LRP2BP-GSTT1, providing screen-system recurrence but not targeted mechanistic validation <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" title="The first, BioPlex 3.0, results from affinity purification">PMID:33961781</a>.</p>
+<p>PMID:32296183 is the HuRI proteome-scale binary yeast-two-hybrid map. GOA/IntAct attributes 18 LRP2BP partners to this source, but none is named with LRP2BP in the cached article body. The screen used repeated search-space screens and pairwise verification <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" title="To map the reference interactome, we performed nine screens of Space III, followed by pairwise verification by quadruplicate retesting and sequence confirmation.">PMID:32296183</a>. These pairs are human binary-interaction leads; without targeted follow-up they do not establish stable complexes, shared pathways, localization, or adapter function.</p>
+<h2 id="human-protein-isoforms-architecture-and-structure">Human protein, isoforms, architecture, and structure</h2>
+<p>Reviewed Q9P2M1 is a 347-residue cytoplasmic protein. UniProt records vesicular staining near the plasma membrane and throughout the cytoplasm [file:human/LRP2BP/LRP2BP-uniprot.txt "CC       Note=Detected in a vesicular staining pattern close to the plasma"]. Its architecture is repeat-rich: one annotated TPR at residues 59–92 and six Sel1-like repeats extending through residues 297–332 [file:human/LRP2BP/LRP2BP-uniprot.txt "FT   REPEAT          59..92"] [file:human/LRP2BP/LRP2BP-uniprot.txt "FT                   /note=\"Sel1-like 6\""]. These repeats are compatible with a protein-interaction scaffold, but the paper maps the binding site on LRP2, not an interface on LRP2BP.</p>
+<p>UniProt names two splice isoforms [file:human/LRP2BP/LRP2BP-uniprot.txt "CC       Event=Alternative splicing; Named isoforms=2;"]. Isoform 2 carries the small VSP_030664 change at residue 35, recorded as T to TKS [file:human/LRP2BP/LRP2BP-uniprot.txt "FT                   /note=\"T -&gt; TKS (in isoform 2)\""]. No cited functional experiment is isoform-resolved, so the LRP2 interaction, localization, and screen results must not be assigned specifically to isoform 1 or 2.</p>
+<p>The reviewed record has AlphaFoldDB and SMR cross-references but no PDB cross-reference [file:human/LRP2BP/LRP2BP-uniprot.txt "DR   AlphaFoldDB; Q9P2M1; -."]. Thus there is a predicted structural model, but no curated experimental structure and no experimentally resolved LRP2BP-LRP2 interface.</p>
+<h2 id="orthology-and-paralog-boundaries">Orthology and paralog boundaries</h2>
+<p>The fetched PANTHER table places human Q9P2M1 with mouse Q9D4C6, rat Q569C2, macaque Q4R3N2, zebrafish A5PLI4, and Xenopus Q6IND7 in exact subfamily PTHR44554:SF1 [file:interpro/panther/PTHR44554/PTHR44554-entries.csv "Q9P2M1,LRP2-binding protein,protein,9606,Homo sapiens,Homo sapiens (Human),LRP2BP,347,PTHR44554:SF1,LRP2-BINDING PROTEIN,True"]. This supports a conserved vertebrate ortholog group and similar protein lengths, not automatic transfer of LRP2 binding or the proposed transcriptional model. No distinct human paralog is present in the fetched representative table; this does not prove that paralogs are absent from every broader database classification.</p>
+<h2 id="curation-boundaries">Curation boundaries</h2>
+<ul>
+<li>Direct targeted evidence supports physical association with LRP2 and mapping of the binding site on the LRP2 tail.</li>
+<li>The adapter/regulatory role is plausible but remains qualified as “may act” in the reviewed record [file:human/LRP2BP/LRP2BP-uniprot.txt "CC   -!- FUNCTION: May act as an adapter that regulates LRP2 function."].</li>
+<li>Screen partners should remain screen-level associations unless independently validated and functionally connected to LRP2BP.</li>
+<li>No evidence here licenses catalytic activity, autonomous receptor activity, a stable transcriptional complex, isoform-specific function, or an experimentally solved structure.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9P2M1
+gene_symbol: LRP2BP
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRP2BP is a 347-residue cytoplasmic repeat protein containing one TPR and six
+  Sel1-like repeats. It associates with a proline-rich region near the N terminus
+  of the cytoplasmic tail of the multiligand receptor LRP2/megalin and has been
+  proposed to recruit regulatory proteins to that tail. LRP2BP shows vesicular
+  staining near the plasma membrane and throughout the cytoplasm. Its association
+  with LRP2 did not block receptor endocytosis in the reported assay, and the
+  downstream consequences for LRP2 trafficking or transcription remain unresolved.
+  Two closely related splice isoforms are curated; isoform 2 carries a two-residue
+  insertion after residue 35, but no isoform-specific function has been established.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9P2M1-1
+- name: &#39;2&#39;
+  id: Q9P2M1-2
+  sequence_note: VSP_030664
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0086
+  review:
+    summary: &gt;-
+      UniProtKB subcellular-location vocabulary mapping places LRP2BP in the
+      cytoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasmic localization is consistent with LRP2BP acting as an
+      intracellular receptor-tail adaptor and with the reviewed UniProtKB
+      localization record. The broad compartment is appropriate and represents
+      a core location.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB-SubCell:SL-0086
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P30711
+  review:
+    summary: &gt;-
+      A BioPlex 2.0 affinity-purification mass-spectrometry screen reports an
+      LRP2BP association with GSTT1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The curated IPI preserves a candidate co-association from a systematic
+      proteome-scale screen, but generic protein binding does not describe a
+      mechanistic molecular function of LRP2BP. The association should remain
+      available as interaction provenance rather than be treated as a core GO
+      function.
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: With more than 56,000 candidate interactions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P09211
+  - UniProtKB:P31273
+  - UniProtKB:P38936
+  - UniProtKB:P55040
+  - UniProtKB:Q14088
+  - UniProtKB:Q6NZ36-4
+  - UniProtKB:Q7Z4N8
+  - UniProtKB:Q86UW9
+  - UniProtKB:Q86YD7
+  - UniProtKB:Q8IVW4
+  - UniProtKB:Q8N4L8
+  - UniProtKB:Q8NHY3
+  - UniProtKB:Q92917
+  - UniProtKB:Q92922
+  - UniProtKB:Q96BZ8
+  - UniProtKB:Q96SQ5
+  - UniProtKB:Q9BV19
+  - UniProtKB:Q9BWG6
+  review:
+    summary: &gt;-
+      The HuRI systematic binary-interactome screen reports LRP2BP interactions
+      with eighteen human protein partners.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      These curator-assigned IPI records are retained as evidence for the
+      reported binary pairs, including the specifically tested Q6NZ36-4
+      proteoform. They do not establish a shared mechanism for LRP2BP, so
+      collapsing the screen into generic protein binding is functionally
+      uninformative and should not be treated as core function.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:P30711
+  review:
+    summary: &gt;-
+      A BioPlex 3.0 affinity-purification mass-spectrometry screen reports an
+      LRP2BP association with GSTT1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Recurrence of the LRP2BP-GSTT1 association in BioPlex 2.0 and 3.0 lends
+      confidence to the reported co-association, but neither generic protein
+      binding nor this screen result defines a mechanistic molecular function
+      of LRP2BP. Preserve the interaction provenance as non-core screen evidence.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: mass spectrometry, we have created two proteome-scale, cell-line-specific
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12508107
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q7Z5C0
+  review:
+    summary: &gt;-
+      Yeast two-hybrid experiments identify LRP2BP/MegBP as a TPR-containing
+      scaffold that binds the cytoplasmic tail of LRP2/megalin and additional
+      protein partners.
+    action: MODIFY
+    reason: &gt;-
+      Direct binding to LRP2 is well supported, but generic protein binding is
+      uninformative. The accessible evidence identifies LRP2BP as a scaffold and
+      suggests that it recruits other proteins to the receptor tail, which is
+      better represented by protein-macromolecule adaptor activity; the proposed
+      downstream transcriptional model remains tentative.
+    proposed_replacement_terms:
+    - id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    supported_by:
+    - reference_id: PMID:12508107
+      supporting_text: scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+    - reference_id: PMID:12508107
+      supporting_text: |-
+        identified proteins that bound to MegBP and thus might be recruited to the
+        megalin tail. MegBP-interacting partners included several transcriptional
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Current GO reference for electronic mapping of the reviewed UniProt
+      subcellular-location vocabulary. It explains the cytoplasm annotation provenance but is not
+      primary biological evidence.
+- id: PMID:12508107
+  title: Functional interaction of megalin with the megalinbinding protein (MegBP),
+    a novel tetratrico peptide repeat-containing adaptor molecule.
+  findings:
+  - statement: A targeted yeast two-hybrid study identified the TPR-containing MegBP as an LRP2/megalin-associated scaffold and mapped binding to a proline-rich region near the N terminus of the receptor tail.
+    supporting_text: |-
+      Using yeast two-hybrid screens, we identified a novel
+      scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+      (MegBP) that associates with the receptor. The binding site of MegBP was mapped
+      to an N-terminal region on the receptor tail harboring a proline-rich peptide
+      element.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: MegBP association did not inhibit megalin endocytosis in the reported assay, whereas MegBP overexpression caused cellular lethality.
+    supporting_text: |-
+      MegBP binding did not block the endocytic activity of the receptor;
+      however, overexpression resulted in cellular lethality.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Additional screens recovered transcriptional regulators as candidate MegBP partners, motivating—but not establishing—a model connecting the megalin tail to transcriptional regulation.
+    supporting_text: |-
+      MegBP-interacting partners included several transcriptional
+      regulators such as the SKI-interacting protein (SKIP), a co-activator of the
+      vitamin D receptor. These finding suggest a model whereby megalin directly
+      participates in transcriptional regulation through controlled sequestration or
+      release of transcription factors via MegBP.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and abstract were verified. This is the sole targeted mechanistic
+      source among the seeded papers and supports MegBP-LRP2 association plus
+      receptor-tail binding-site mapping. The cache is abstract-only and does not state the
+      tested MegBP species or splice isoform; human Q9P2M1 assignment comes from the
+      reviewed UniProt record. The transcriptional-regulation mechanism remains an
+      author-proposed model.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings:
+  - statement: BioPlex 2.0 reports candidate protein co-associations from affinity-purification mass spectrometry rather than necessarily direct binary interactions.
+    supporting_text: With more than 56,000 candidate interactions
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and full text were verified. GOA/IntAct attributes an
+      LRP2BP-GSTT1 co-association to this proteome-scale AP-MS resource, but LRP2BP and the
+      pair are not named in the cached article body. It is screen evidence without
+      targeted functional follow-up.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: HuRI interactions arose from repeated proteome-scale yeast two-hybrid screening with pairwise retesting and sequence confirmation.
+    supporting_text: To map the reference interactome, we performed nine screens of Space III, followed by pairwise verification by quadruplicate retesting and sequence confirmation.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and full text were verified. GOA/IntAct links LRP2BP to 18
+      partners from this HuRI binary-interaction screen. None is named with LRP2BP in
+      the cached article body, and no result establishes an adaptor mechanism, stable
+      complex, or physiological role. These are human screen-level
+      physical-interaction leads.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: BioPlex 3.0 and a second HCT116 network were designed as cell-line-specific AP-MS interaction maps, so individual associations remain context-dependent candidates.
+    supporting_text: The first, BioPlex 3.0, results from affinity purification
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and full text were verified. GOA/IntAct again reports the
+      LRP2BP-GSTT1 co-association, but the pair is absent from the cached article body.
+      Recurrence across BioPlex releases supports reproducibility in the screen system,
+      not an LRP2BP-specific mechanism or a constitutive interaction across tissues.
+- id: file:human/LRP2BP/LRP2BP-uniprot.txt
+  title: UniProtKB/Swiss-Prot record for human LRP2BP (Q9P2M1)
+  findings:
+  - statement: The reviewed human record treats LRP2BP as a candidate adapter for LRP2 and records a direct LRP2 interaction from PMID:12508107.
+    supporting_text: |-
+      CC   -!- FUNCTION: May act as an adapter that regulates LRP2 function.
+      CC   -!- SUBUNIT: Interacts with LRP2. {ECO:0000269|PubMed:12508107}.
+    reference_section_type: DATABASE_ENTRY
+  - statement: Human LRP2BP is recorded in the cytoplasm with vesicular staining near the plasma membrane and throughout the cytoplasm.
+    supporting_text: |-
+      CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:12508107}.
+      CC       Note=Detected in a vesicular staining pattern close to the plasma
+      CC       membrane and throughout the cytoplasm.
+    reference_section_type: DATABASE_ENTRY
+  - statement: The reviewed record contains two named splice isoforms; isoform 2 differs by the small VSP_030664 insertion at residue 35.
+    supporting_text: |-
+      CC   -!- ALTERNATIVE PRODUCTS:
+      CC       Event=Alternative splicing; Named isoforms=2;
+      CC       Name=1;
+      CC         IsoId=Q9P2M1-1; Sequence=Displayed;
+      CC       Name=2;
+      CC         IsoId=Q9P2M1-2; Sequence=VSP_030664;
+    reference_section_type: DATABASE_ENTRY
+  - statement: The 347-residue canonical protein contains one annotated TPR followed by six annotated Sel1-like repeats.
+    supporting_text: |-
+      FT   REPEAT          59..92
+      FT                   /note=&#34;TPR&#34;
+      FT   REPEAT          93..125
+      FT                   /note=&#34;Sel1-like 1&#34;
+      FT   REPEAT          133..168
+      FT                   /note=&#34;Sel1-like 2&#34;
+      FT   REPEAT          173..206
+      FT                   /note=&#34;Sel1-like 3&#34;
+      FT   REPEAT          207..242
+      FT                   /note=&#34;Sel1-like 4&#34;
+      FT   REPEAT          243..277
+      FT                   /note=&#34;Sel1-like 5&#34;
+      FT   REPEAT          297..332
+      FT                   /note=&#34;Sel1-like 6&#34;
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed source for human identity, 347-residue canonical sequence, two named
+      splice isoforms, repeat architecture, cytoplasmic localization, and the curated
+      LRP2 interaction. It contains AlphaFoldDB/SMR predictions but no PDB
+      cross-reference; therefore no experimental LRP2BP structure or mapped MegBP-side
+      interaction interface is established.
+- id: file:interpro/panther/PTHR44554/PTHR44554-entries.csv
+  title: PANTHER PTHR44554 LRP2-binding protein family entries
+  findings:
+  - statement: The fetched PANTHER member table places human LRP2BP in the LRP2-binding protein subfamily PTHR44554:SF1.
+    supporting_text: Q9P2M1,LRP2-binding protein,protein,9606,Homo sapiens,Homo sapiens (Human),LRP2BP,347,PTHR44554:SF1,LRP2-BINDING PROTEIN,True
+    reference_section_type: DATABASE_ENTRY
+  - statement: Mouse Lrp2bp is assigned to the same PTHR44554:SF1 subfamily, supporting an exact vertebrate orthology boundary rather than paralog transfer.
+    supporting_text: Q9D4C6,LRP2-binding protein,protein,10090,Mus musculus,Mus musculus (Mouse),Lrp2bp,346,PTHR44554:SF1,LRP2-BINDING PROTEIN,True
+    reference_section_type: DATABASE_ENTRY
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Generated member table directly confirms the sampled vertebrate ortholog set
+      and human placement in exact subfamily SF1. Family membership supports conserved
+      architecture/orthology only; it does not independently demonstrate LRP2 binding,
+      adaptor activity, subcellular localization, or isoform-specific function.
+core_functions:
+- description: &gt;-
+    LRP2BP acts as a repeat-containing protein-macromolecule adaptor associated
+    with the cytoplasmic tail of LRP2/megalin. A targeted interaction study mapped
+    the LRP2-side binding site to a proline-rich N-terminal region of the receptor
+    tail and recovered additional candidate LRP2BP partners that could be recruited
+    to the receptor. This supports a cytoplasmic scaffold/adaptor role, while the
+    accessible evidence does not establish a stable ternary complex, a specific
+    downstream transcriptional pathway, or a requirement for LRP2 endocytosis.
+  molecular_function:
+    id: GO:0030674
+    label: protein-macromolecule adaptor activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:12508107
+    supporting_text: |-
+      Using yeast two-hybrid screens, we identified a novel
+      scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+      (MegBP) that associates with the receptor. The binding site of MegBP was mapped
+      to an N-terminal region on the receptor tail harboring a proline-rich peptide
+      element.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:12508107
+    supporting_text: |-
+      MegBP-interacting partners included several transcriptional
+      regulators such as the SKI-interacting protein (SKIP), a co-activator of the
+      vitamin D receptor. These finding suggest a model whereby megalin directly
+      participates in transcriptional regulation through controlled sequestration or
+      release of transcription factors via MegBP.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:12508107
+    supporting_text: |-
+      MegBP binding did not block the endocytic activity of the receptor;
+      however, overexpression resulted in cellular lethality.
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which surface of human LRP2BP binds the proline-rich LRP2 tail, and does the
+    interaction require a particular TPR or Sel1-like repeat?
+- question: &gt;-
+    Which candidate LRP2BP partners form an endogenous complex with LRP2BP and LRP2,
+    and can any partner bind simultaneously with the receptor tail?
+- question: &gt;-
+    Does endogenous LRP2BP regulate cargo-specific LRP2 trafficking, receptor
+    recycling, proteolysis, or transcriptional signaling in LRP2-expressing epithelia?
+- question: &gt;-
+    Does the two-residue insertion in LRP2BP isoform 2 alter repeat packing,
+    localization, partner choice, or LRP2 association?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute binding with purified human LRP2BP repeat fragments and the LRP2
+    cytoplasmic tail, then combine quantitative affinity measurements, systematic
+    repeat mutagenesis, and structural analysis of the minimal complex.
+  hypothesis: &gt;-
+    A defined subset of LRP2BP TPR/Sel1-like repeats recognizes the proline-rich
+    N-terminal region of the LRP2 cytoplasmic tail.
+  experiment_type: quantitative interaction mapping and structural analysis
+- description: &gt;-
+    Endogenously tag LRP2BP and LRP2 in a human proximal-tubule or choroid-plexus
+    epithelial model and use proximity labeling, reciprocal co-immunoprecipitation,
+    and size-resolved native complex analysis before and after cargo uptake.
+  hypothesis: &gt;-
+    LRP2BP assembles a regulated receptor-tail complex whose composition changes
+    during the LRP2 endocytic cycle.
+  experiment_type: endogenous receptor-complex proteomics
+- description: &gt;-
+    Generate LRP2BP-null epithelial cells and rescue them with wild-type or
+    LRP2-binding-defective LRP2BP, then quantify LRP2 surface abundance, cargo uptake,
+    endosomal recycling, ectodomain shedding, and receptor-tail-dependent transcription.
+  hypothesis: &gt;-
+    LRP2BP controls a subset of LRP2 trafficking or signaling outputs without being
+    required for bulk receptor endocytosis.
+  experiment_type: separation-of-function receptor trafficking analysis
+- description: &gt;-
+    Express each LRP2BP isoform from the endogenous locus in otherwise isogenic cells
+    and compare localization, LRP2-tail affinity, partner proteomes, and receptor
+    functional outputs.
+  hypothesis: &gt;-
+    The small isoform-2 insertion produces a measurable but context-dependent change
+    in LRP2BP interaction specificity rather than a wholly distinct biological role.
+  experiment_type: isoform-resolved endogenous complementation
+knowledge_gaps:
+- gap_statement: &gt;-
+    The endogenous molecular consequence of the LRP2BP-LRP2 association is unknown.
+  boundary: &gt;-
+    Targeted evidence establishes association with the LRP2 tail, but the reported
+    interaction did not block receptor endocytosis, and the proposed transcriptional
+    mechanism was not directly demonstrated.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a demonstrated output, no specific LRP2 trafficking or transcriptional
+    biological-process term can be assigned to LRP2BP.
+  resolution: &gt;-
+    Disrupt endogenous LRP2BP or its LRP2-binding interface in a physiological human
+    epithelial model and measure cargo-specific receptor trafficking together with
+    receptor-tail-dependent transcriptional outputs.
+  provenance:
+  - reference_id: PMID:12508107
+    supporting_text: |-
+      MegBP binding did not block the endocytic activity of the receptor;
+      however, overexpression resulted in cellular lethality.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The LRP2BP-side interaction interface and endogenous complex composition are
+    unresolved.
+  boundary: &gt;-
+    The study mapped a proline-rich binding region on LRP2 and recovered candidate
+    LRP2BP partners, but no LRP2BP interface, stoichiometry, simultaneous ternary
+    binding, or experimental structure has been established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Defining the interface and complex is required to distinguish a physical
+    receptor-tail scaffold from a broader constitutive adaptor mechanism.
+  resolution: &gt;-
+    Map the minimal human LRP2BP-LRP2 interface structurally and determine endogenous
+    complex composition and stoichiometry with orthogonal interaction assays.
+  provenance:
+  - reference_id: PMID:12508107
+    supporting_text: |-
+      Using yeast two-hybrid screens, we identified a novel
+      scaffold protein with tetratrico peptide repeats, the megalin-binding protein
+      (MegBP) that associates with the receptor. The binding site of MegBP was mapped
+      to an N-terminal region on the receptor tail harboring a proline-rich peptide
+      element.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The identity and dynamics of the LRP2BP-positive cytoplasmic vesicles are unknown.
+  boundary: &gt;-
+    The reviewed human record reports vesicular staining near the plasma membrane
+    and throughout the cytoplasm, but no endosomal subtype, cargo state, or direct
+    colocalization with LRP2 is resolved in the accessible evidence.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Compartment-resolved localization is needed before assigning a specific vesicle
+    or endosomal cellular-component term.
+  resolution: &gt;-
+    Endogenously tag LRP2BP and compare its dynamics with LRP2 and established
+    endosomal markers during synchronized cargo uptake and receptor recycling.
+- gap_statement: &gt;-
+    The biological significance of LRP2BP isoform 2 is unknown.
+  boundary: &gt;-
+    UniProt curates a two-residue insertion after residue 35, but the targeted paper
+    and interaction screens do not resolve which isoform was tested or establish an
+    isoform-specific phenotype.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Isoform-resolved evidence is required before transferring canonical localization
+    or adaptor function to a specific proteoform.
+  resolution: &gt;-
+    Compare the two endogenous human isoforms in isogenic cells using quantitative
+    localization, interaction, and LRP2 functional assays.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

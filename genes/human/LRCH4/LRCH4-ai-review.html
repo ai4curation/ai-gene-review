@@ -1,0 +1,4245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRCH4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRCH4</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75427" target="_blank" class="term-link">
+                        O75427
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRCH4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75427" data-a="DESCRIPTION: LRCH4 is a 683-amino-acid membrane protein with ni..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRCH4 is a 683-amino-acid membrane protein with nine N-terminal leucine-rich repeats, a C-terminal calponin-homology domain, and a predicted transmembrane helix near its C terminus. Depletion of endogenous LRCH4 in human HEK293 cells engineered to express TLR2 or TLR4/MD-2/CD14 attenuates ligand-induced IL-8 production while sparing the response to TNF-alpha. Mouse macrophage and in vivo studies further connect Lrch4 to signaling by several Toll-like receptors, LPS docking in membrane rafts, raft abundance, and CD14 surface display. Tagged human LRCH4 associates with DOCK6, DOCK7, and DOCK8 in HEK293T cells; in canine MDCK cells, expressed LRCH4 redistributes DOCK8 toward an endoplasmic-reticulum pattern. Human platelets contain LRCH4 RNA and protein, and LRCH4 knockdown alters YAP and TGF-beta/Smad outputs in a colorectal-cancer cell line. The molecular link between LRCH4, Toll-like-receptor signaling, membrane organization, and C-Dock proteins remains unresolved in native human immune cells.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016605" target="_blank" class="term-link">
+                                    GO:0016605
+                                </a>
+                            </span>
+                            <span class="term-label">PML body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0016605" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference assigns LRCH4 activity in a PML body, but the supporting gene-product provenance traces back to an LRCH4 IDA annotation whose cited paper localizes SAP25 rather than LRCH4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IBA has no independent evidence for LRCH4 localization. PMID:16449650 characterizes human SAP25 (UniProtKB:Q8TEE9), not LRCH4/O75427, and the target protein correctly appears among the descendant evidence used for the family-node inference. The annotation is removed because that seeding IDA is miscited, not because the target occurs in its own WITH/FROM.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002699689</span>
+
+                                    &middot; LRCH4-family PANTHER node
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">The family-node inference supplies no independent experimental localization.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:O75427</span>
+
+                                    &middot; human LRCH4 recipient
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">The expected self-source identifies the target IDA used to seed the family node, but that IDA cites the SAP25 paper and is therefore a bad source.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16449650" target="_blank" class="term-link">
+                                        PMID:16449650
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A fraction of SAP25 is located in promyelocytic leukemia protein (PML) nuclear bodies, and PML induces a striking nuclear accumulation of SAP25.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated methods transfer plasma-membrane localization from the mouse Lrch4 ortholog and a UniProt subcellular-location mapping.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LRCH4 is a conserved membrane protein with a predicted C-terminal transmembrane segment, and the single identifiable mouse ortholog supports plasma-membrane localization. The exact topology and distribution of endogenous human LRCH4 remain untested in the current evidence set.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000031734</span>
+
+                                    &middot; mouse Lrch4 protein
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0039</span>
+
+                                    &middot; cell membrane controlled vocabulary
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A proteome-scale binary-interaction screen reported an LRCH4-MDFI contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The screen-level interaction preserves useful partner provenance but does not establish a specific LRCH4 molecular activity or physiological role; generic protein binding is therefore uninformative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19060904" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19060904
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An empirical framework for binary interactome mapping.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:19060904" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> An empirical binary-interactome study also reported an LRCH4-MDFI contact.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This repeated high-throughput edge is compatible with physical association, but it does not define a mechanistic activity for LRCH4 and cannot make the generic protein-binding term informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24255178" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24255178
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction network of the mammalian Hippo pathway r...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:24255178" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A mammalian Hippo-pathway interaction survey recovered LRCH4 with DOCK7 and SUGT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The two screen-derived contacts do not establish that LRCH4 is a Hippo pathway component, a DOCK regulator, or a stable complex subunit. No LRCH1, LRCH2, or LRCH3 mechanism should be transferred to LRCH4, and generic protein binding remains uninformative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A proteome-scale binary map reported LRCH4 contacts with KRTAP10-7, KRTAP10-8, KRT40, and NOTCH2NLA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These heterogeneous high-throughput partners do not converge on a demonstrated LRCH4 activity or cellular mechanism. Retaining the exact partner provenance is useful, but GO:0005515 adds no functional specificity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32203420" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32203420
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systems analysis of RhoGEF and RhoGAP regulatory proteins re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:32203420" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A family-wide Rho-regulator study validated LRCH4 association with DOCK8 isoform 3, DOCK6, and DOCK7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Targeted anti-tag immunoprecipitation and domain mapping make the clustered C-Dock associations informative, but the experiments do not demonstrate that LRCH4 regulates a Rho GTPase, acts as an adaptor, or shares the distinct mechanisms established for other LRCH paralogs. Generic protein binding is therefore not an adequate molecular-function annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A reference binary-interactome map reported LRCH4 contacts with ELOVL7, CYB5R3, RNASEK, RETREG3, KASH5, and HSD17B11.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The diverse screen-level edges do not establish a coherent biochemical function, endogenous complex, or shared compartment for LRCH4. They should not be generalized into an uninformative protein-binding activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001765" target="_blank" class="term-link">
+                                    GO:0001765
+                                </a>
+                            </span>
+                            <span class="term-label">membrane raft assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0001765" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers membrane-raft assembly from the mouse Lrch4 ortholog to human LRCH4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mouse Lrch4 loss perturbs raft abundance and LPS docking, and LRCH4 is the identifiable human ortholog with the same domain architecture. The biology therefore supports retaining the transferred process, but its physiological importance has not been tested in human cells and it is not part of the narrower TLR-signaling core. The mechanical transfer source remains miscited, while PMID:30523158 independently supports the mouse raft phenotype.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">Live QuickGO returns Q921G6, GO:0001765, IDA, PMID:16449650; PMID:30523158 independently supports the mouse raft biology, but the propagated source row itself is miscited.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000031734</span>
+
+                                    &middot; mouse Lrch4 protein
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">This is the orthology carrier rather than independent experimental evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We provide evidence that this is through regulation of lipid rafts as Lrch4 silencing reduces cell surface gangliosides, a metric of raft abundance, as well as expression and surface display of CD14, a raft-resident LPS co-receptor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034123" target="_blank" class="term-link">
+                                    GO:0034123
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of toll-like receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0034123" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfers positive regulation of Toll-like-receptor signaling from mouse Lrch4 to human LRCH4; direct human-cell depletion evidence independently supports the transferred process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Endogenous human LRCH4 depletion in HEK293 cells engineered with TLR2 or TLR4/MD-2/CD14 reduced ligand-induced IL-8 without reducing the TNF-alpha response. Together with the broader mouse macrophage and in vivo evidence, this supports a positive contribution to Toll-like-receptor signaling while leaving its native human cell-type and ligand breadth unresolved.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">Live QuickGO returns Q921G6, GO:0034123, IDA, PMID:16449650; PMID:30523158 independently supports the mouse TLR biology, but the propagated source row itself is miscited.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ensembl:ENSMUSP00000031734</span>
+
+                                    &middot; mouse Lrch4 protein
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">This source records one-to-one orthology but does not repair the miscited mouse source annotation.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HEK293 cells stably expressing either TLR4/MD-2/CD14 or TLR2 were transfected with Lrch4 siRNA or Scr siRNA and then exposed to LPS or Pam3CSK4, respectively.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands in HEK293 cells, providing further support that the shRNA results in macrophages are unlikely to reflect off-target effects.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0005886" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator-reviewed sequence similarity transfers plasma-membrane localization from mouse Lrch4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source is the direct mouse ortholog, and human LRCH4 retains the C-terminal transmembrane segment expected for membrane anchoring. Transfer of the broad plasma-membrane location is reasonable despite the absence of an endogenous human localization assay.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001765" target="_blank" class="term-link">
+                                    GO:0001765
+                                </a>
+                            </span>
+                            <span class="term-label">membrane raft assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0001765" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator judgment transfers the mouse Lrch4 membrane-raft phenotype to human LRCH4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The orthologous mouse protein is required for normal raft abundance and LPS docking, and no paralog-specific divergence is evident. That makes the transferred process biologically credible but still secondary to the directly supported TLR-signaling core in human cells. The live mouse GOA source is miscited, while PMID:30523158 independently establishes the mouse phenotype.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">Live QuickGO returns Q921G6, GO:0001765, IDA, PMID:16449650; PMID:30523158 independently supports the mouse raft biology, but the propagated source row itself is miscited.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We provide evidence that this is through regulation of lipid rafts as Lrch4 silencing reduces cell surface gangliosides, a metric of raft abundance, as well as expression and surface display of CD14, a raft-resident LPS co-receptor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034123" target="_blank" class="term-link">
+                                    GO:0034123
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of toll-like receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0034123" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator judgment transfers the TLR-accessory role of mouse Lrch4 to human LRCH4, consistent with direct depletion experiments in engineered human cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Endogenous human LRCH4 depletion in TLR2- or TLR4/MD-2/CD14-expressing HEK293 cells attenuated ligand-induced IL-8, while leaving TNF-alpha-induced IL-8 intact. The human result and broader mouse evidence support this process annotation, with native human immune-cell scope remaining an open question.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">SOURCE BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">SOURCE MISCITATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q921G6</span>
+
+                                    &middot; mouse Lrch4
+
+
+                                    <span class="badge">SOURCE BAD</span>
+
+
+                                    <div class="propagation-comment">Live QuickGO returns Q921G6, GO:0034123, IDA, PMID:16449650; PMID:30523158 independently supports the mouse TLR biology, but the propagated source row itself is miscited.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HEK293 cells stably expressing either TLR4/MD-2/CD14 or TLR2 were transfected with Lrch4 siRNA or Scr siRNA and then exposed to LPS or Pam3CSK4, respectively.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                        PMID:30523158
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Confirming some selectivity for Lrch4 function, Lrch4 silencing did not affect induction of IL-8 by HEK293 cells in response to stimulation with TNFα ( Fig. 2 H ).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016605" target="_blank" class="term-link">
+                                    GO:0016605
+                                </a>
+                            </span>
+                            <span class="term-label">PML body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16449650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16449650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of SAP25, a novel compon...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0016605" data-r="PMID:16449650" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited study localizes SAP25, not LRCH4, to PML nuclear bodies.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Full-text inspection identifies SAP25/Q8TEE9 as the assayed product and contains no LRCH4, O75427, LRN, or LRRN4 experiment. Because the actual PML-body result belongs to another gene product, this is a verified source miscitation rather than a reason to infer nuclear localization for LRCH4.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16449650" target="_blank" class="term-link">
+                                        PMID:16449650
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A fraction of SAP25 is located in promyelocytic leukemia protein (PML) nuclear bodies, and PML induces a striking nuclear accumulation of SAP25.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9799793" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9799793
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale sequencing of two regions in human chromosome 7q...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O75427" data-a="GO:0007399" data-r="PMID:9799793" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The chromosome-sequencing paper describes weak sequence similarity to a neuronal leucine-rich protein but does not test nervous-system development.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A descriptive neuronal-protein resemblance or historical name is not evidence that LRCH4 participates in nervous-system development. The cited genomic annotation study provides no developmental phenotype, pathway, or functional assay supporting GO:0007399.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9799793" target="_blank" class="term-link">
+                                        PMID:9799793
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Two genes showed weak similarity to an insulin-like receptor and a neuronal protein with a leucine-rich amino-terminal domain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LRCH4 makes a positive contribution to Toll-like-receptor signaling at the plasma membrane. This location is transferred from the one-to-one mouse ortholog and is consistent with the conserved C-terminal transmembrane helix; endogenous human localization remains unresolved. Endogenous LRCH4 depletion in human HEK293 cells engineered with TLR2 or TLR4/MD-2/CD14 attenuated ligand-induced IL-8 while sparing the TNF-alpha response. Concordant mouse macrophage and in vivo experiments support a broader role across several surface and endosomal TLRs. The molecular activity is unresolved: mouse data connect Lrch4 to LPS docking, membrane-raft abundance, and CD14 display, but direct ligand binding and the relevance of C-Dock interactions to TLR signaling have not been established.</h3>
+                <span class="vote-buttons" data-g="O75427" data-a="FUNCTION: LRCH4 makes a positive contribution to Toll-like-r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034123" target="_blank" class="term-link">
+                                positive regulation of toll-like receptor signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                PMID:30523158
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands in HEK293 cells, providing further support that the shRNA results in macrophages are unlikely to reflect off-target effects.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                                PMID:30523158
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Confirming some selectivity for Lrch4 function, Lrch4 silencing did not affect induction of IL-8 by HEK293 cells in response to stimulation with TNFα ( Fig. 2 H ).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16449650" target="_blank" class="term-link">
+                            PMID:16449650
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of SAP25, a novel component of the mSin3 corepressor complex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PML-body localization reported by this paper is for SAP25, not LRCH4.</div>
+
+                        <div class="finding-text">"A fraction of SAP25 is located in promyelocytic leukemia protein (PML) nuclear bodies, and PML induces a striking nuclear accumulation of SAP25."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19060904" target="_blank" class="term-link">
+                            PMID:19060904
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An empirical framework for binary interactome mapping.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24255178" target="_blank" class="term-link">
+                            PMID:24255178
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein interaction network of the mammalian Hippo pathway reveals mechanisms of kinase-phosphatase interactions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32203420" target="_blank" class="term-link">
+                            PMID:32203420
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systems analysis of RhoGEF and RhoGAP regulatory proteins reveals spatially organized RAC1 signalling from integrin adhesions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study systematically characterized RhoGEF/RhoGAP interaction networks and subcellular localization as spatial organizers of Rho signaling.</div>
+
+                        <div class="finding-text">"Through a family-wide characterization of substrate specificities, interactomes and localization, we reveal at the systems level how RhoGEFs and RhoGAPs contextualize and spatiotemporally control Rho signalling."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9799793" target="_blank" class="term-link">
+                            PMID:9799793
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale sequencing of two regions in human chromosome 7q22: analysis of 650 kb of genomic sequence around the EPO and CUTL1 loci reveals 17 genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The chromosome 7q22 sequencing study identified the LRCH4 locus as a novel gene with weak sequence similarity to a neuronal leucine-rich-repeat protein.</div>
+
+                        <div class="finding-text">"Two genes showed weak similarity to an insulin-like receptor and a neuronal protein with a leucine-rich amino-terminal domain."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30523158" target="_blank" class="term-link">
+                            PMID:30523158
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Leucine-rich repeats and calponin homology containing 4 (Lrch4) regulates the innate immune response.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GFP-tagged murine Lrch4 expressed in engineered HEK293 cells showed substantial plasma-membrane overlap, especially at low-to-medium expression.</div>
+
+                        <div class="finding-text">"Microscopy of GFP-Lrch4 in HEK293 cells reveals staining that includes a cytoplasmic-type pattern, but formal analysis indicates a high degree of overlap with the plasma membrane stain CellMask TM (Life Technologies) ( 22 ), in particular in cells with low-medium forced expression, consistent with substantial localization to the plasma membrane ( Fig. 1 E )."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrch4 depletion attenuated cytokine induction by LPS and several other TLR ligands and reduced the innate response in vivo.</div>
+
+                        <div class="finding-text">"Silencing Lrch4 attenuates cytokine induction by LPS and multiple other TLR ligands and dampens the in vivo innate immune response."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrch4 promotes delivery of LPS into lipid-raft membrane microdomains.</div>
+
+                        <div class="finding-text">"Lrch4 promotes proper docking of LPS in lipid raft membrane microdomains."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Lrch4 depletion reduced cell-surface gangliosides and expression/surface display of the raft-resident LPS co-receptor CD14.</div>
+
+                        <div class="finding-text">"We provide evidence that this is through regulation of lipid rafts as Lrch4 silencing reduces cell surface gangliosides, a metric of raft abundance, as well as expression and surface display of CD14, a raft-resident LPS co-receptor."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Depletion of endogenous human LRCH4 attenuated TLR2- and TLR4-dependent IL-8 induction in engineered HEK293 cells without reducing the response to TNF-alpha.</div>
+
+                        <div class="finding-text">"As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands in HEK293 cells, providing further support that the shRNA results in macrophages are unlikely to reflect off-target effects."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30385858" target="_blank" class="term-link">
+                            PMID:30385858
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Impact of Escherichia coli K12 and O18:K1 on human platelets: Differential effects on platelet activation, RNAs and proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human platelet LRCH4 RNA decreased after exposure to E. coli K12, with the change detected independently by two RNA-sequencing pipelines.</div>
+
+                        <div class="finding-text">"For the RNAs of HMBS (logFC = +5.73), ATP2C1 (logFC = -3.13) and LRCH4 (logFC = -4.07) changes were detectable by thromboSeq and Tuxedo pipelines."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRCH4 RNA and protein were detected in human platelets, while E. coli exposure did not visibly change LRCH4 protein abundance or molecular weight.</div>
+
+                        <div class="finding-text">"By Western blot analysis we could demonstrate the presence of HMBS, ATP2C1 and LRCH4 proteins in platelets before and after E. coli K12 exposure"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38383956" target="_blank" class="term-link">
+                            PMID:38383956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Knockdown of LRCH4 Remodels Tumor Microenvironment Through Inhibiting YAP and TGF-β/Smad Signaling Pathway in Colorectal Cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRCH4 knockdown inhibited proliferation, migration and invasion of human HT29 colorectal-cancer cells.</div>
+
+                        <div class="finding-text">"Here, we reported that the knockdown of LRCH4 inhibited the proliferation, migration and invasion in HT29 cells."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRCH4 knockdown reduced YAP activity, reversed EMT-associated features and inhibited TGF-beta/Smad signaling in HT29 cells.</div>
+
+                        <div class="finding-text">"The activity of Yes-Associated Protein (YAP), a transcription factor in the Hppo-YAP signaling pathway, was significantly inhibited by LRCH4-siRNA. LRCH4 knockdown also reversed the EMT and regulated the expression of extracellular matrix (ECM) protein, Fibronectin and Collagen IV in HT29 cells. In addition, the TGF-β/Smad signaling pathway, as the downstream pathway of Yap, was also inhibited by LRCH4 knockdown."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous LRCH4 support TLR2, TLR4, or additional TLR pathways in primary human innate-immune cells, and is its effect restricted to selected signaling outputs?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="Q: Does endogenous LRCH4 support TLR2, TLR4, or addit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LRCH4 contact LPS, CD14, MD-2, or a TLR directly, or does it act indirectly by changing membrane-lipid composition or receptor trafficking?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="Q: Does LRCH4 contact LPS, CD14, MD-2, or a TLR direc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where is endogenous human LRCH4 located, what is its membrane topology, and does TLR stimulation alter its distribution?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="Q: Where is endogenous human LRCH4 located, what is i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do DOCK6, DOCK7, or DOCK8 mediate an LRCH4-dependent Rho-GTPase response, and is that module required for the TLR phenotype?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="Q: Do DOCK6, DOCK7, or DOCK8 mediate an LRCH4-depende..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are any human LRCH4 transcript products physiologically expressed as functionally distinct membrane-bound or soluble forms?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="Q: Are any human LRCH4 transcript products physiologi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Create independent LRCH4 knockouts in primary-cell-derived macrophages or validated human monocyte models, rescue with CRISPR-resistant LRCH4, and measure receptor-proximal phosphorylation, NF-kappa-B and IRF activation, and cytokine output after matched TLR2, TLR4, and control cytokine stimulation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRCH4 selectively amplifies receptor-proximal TLR2 and TLR4 signaling in primary human innate-immune cells.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Genetic perturbation, rescue, and signaling time course</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="EXPERIMENT: Create independent LRCH4 knockouts in primary-cell..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify CD14 and TLR4 surface delivery, receptor nanoclustering, detergent-independent membrane-domain partitioning, and lipid composition after LRCH4 loss and rescue; in parallel, test purified LRCH4 extracellular regions for saturable LPS binding with stringent lipid and co-receptor controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LRCH4 affects LPS responsiveness by controlling CD14/TLR4 membrane organization rather than by functioning as a direct LPS receptor.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Surface trafficking, super-resolution imaging, lipidomics, and binding assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="EXPERIMENT: Quantify CD14 and TLR4 surface delivery, receptor ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Introduce small endogenous tags on both sides of the predicted transmembrane segment, then combine selective permeabilization, extracellular labeling, protease protection, glycosylation-site mapping, and pulse-chase imaging in human immune cells.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The C-terminal hydrophobic segment anchors LRCH4 with a reproducible topology and controls stimulus-dependent movement between the endoplasmic reticulum and cell surface.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Endogenous tagging and membrane-topology analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="EXPERIMENT: Introduce small endogenous tags on both sides of t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Define interaction-deficient LRCH4 mutants by domain mapping, confirm endogenous binding, and compare wild-type and separation-of-function rescue using DOCK6/7/8 perturbations, RAC1/CDC42/RHOA biosensors, and TLR-induced cytokine readouts.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: A specific LRCH4-C-Dock interaction is required for spatial Rho-GTPase activation and contributes to LRCH4-dependent TLR signaling.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Interaction mapping, epistasis, and live-cell biosensors</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="EXPERIMENT: Define interaction-deficient LRCH4 mutants by doma..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform long-read transcript sequencing, isoform-resolved proteomics, and C-terminal peptide mapping across resting and TLR-stimulated primary human immune-cell types before testing any reproducibly detected products in topology and rescue assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human immune cells express a regulated LRCH4 transcript or protein form with a distinct membrane association state.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Long-read transcriptomics and isoform-resolved proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75427" data-a="EXPERIMENT: Perform long-read transcript sequencing, isoform-r..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular activity by which LRCH4 augments Toll-like-receptor signaling is unknown: it has not been established whether LRCH4 binds LPS directly, changes membrane-lipid organization, controls CD14 trafficking, or acts through another receptor-proximal component.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Endogenous LRCH4 depletion selectively reduced TLR2- and TLR4-dependent IL-8 induction in engineered human HEK293 cells, while mouse experiments linked Lrch4 depletion to reduced raft abundance, CD14 surface display, and LPS docking. The LPS pulldown did not distinguish a direct from an indirect association.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a defined molecular activity, the TLR role cannot be represented as a mechanistic molecular-function assertion or separated cleanly from secondary changes in membrane organization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute LPS, CD14, MD-2, TLR4, and LRCH4 interactions with purified or compositionally defined membrane systems, combined with crosslinking and quantitative lipid analysis, to distinguish direct ligand binding from effects on receptor trafficking or membrane-raft organization.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether LRCH4 is required for Toll-like-receptor responses in native primary human immune cells and whether the ligand range observed in mouse systems is conserved in humans.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Direct human evidence is limited to TLR2- or TLR4-engineered HEK293 cells, whereas the broad ligand panel, macrophage mechanism, and in vivo innate-response phenotype were established chiefly in mouse cells and mice.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishing physiological human-cell relevance is necessary to define the native cell types and ligand breadth of the conserved TLR-regulatory role and to decide whether raft assembly is a primary LRCH4 process or a mouse-context phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Generate LRCH4 loss-of-function and rescue series in primary human monocytes, macrophages, and dendritic cells, then compare proximal signaling and cytokine responses across a controlled panel of TLR ligands.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous subcellular distribution, membrane orientation, and trafficking itinerary of human LRCH4 are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Human LRCH4 contains a predicted C-terminal transmembrane helix, transferred mouse annotations place it at the plasma membrane, and overexpressed human LRCH4 has been imaged at the endoplasmic reticulum. None of these observations establishes the topology or steady-state distribution of endogenous human LRCH4.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Sidedness and compartment determine whether the leucine-rich repeats could contact extracellular ligands, luminal cargo, or cytosolic signaling partners and therefore constrain the possible TLR mechanism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenously tag LRCH4 in human immune cells and combine surface biotinylation, protease protection, glycosylation mapping, pulse-chase trafficking, and quantitative microscopy before and after TLR stimulation.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological significance of LRCH4 binding to DOCK6, DOCK7, and DOCK8 is unknown, including which Rho GTPase output is affected and whether the interaction contributes to Toll-like-receptor or membrane-raft phenotypes.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Tagged human LRCH4 reproducibly bound the C-Dock proteins in transfected-cell assays and recruited DOCK8 to an endoplasmic-reticulum pattern, but no endogenous stable complex, downstream GTPase, or genetic connection to the TLR phenotype has been shown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this connection would determine whether the C-Dock interactions are a function-defining signaling module or context-dependent binding without a shared physiological output.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Map the LRCH4-C-Dock interface, test endogenous interaction in immune cells, and use separation-of-function LRCH4 mutants with DOCK6/7/8 perturbation and spatial Rho-GTPase biosensors during TLR stimulation.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRCH4-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O75427" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrch4-literature-notes">LRCH4 literature notes</h1>
+<h2 id="evidence-boundary">Evidence boundary</h2>
+<p>LRCH4 is much less directly characterized in humans than the current annotation set can<br />
+make it appear. The decisive functional paper is a mixed-species study dominated by mouse<br />
+macrophage and mouse in vivo experiments, with a smaller direct human-cell experiment. Its<br />
+abstract explicitly says that LRCH4 is "widely expressed across murine tissues" and that<br />
+"Silencing Lrch4 attenuates cytokine induction by LPS and multiple other TLR ligands and<br />
+dampens the in vivo innate immune response." [PMID:30523158, "It is widely expressed across<br />
+murine tissues and has two expression variants that are both regulated by lipopolysaccharide<br />
+(LPS)."; "Silencing Lrch4 attenuates cytokine induction by LPS and multiple other TLR<br />
+ligands and dampens the in vivo innate immune response."]</p>
+<p>The full text does contain a direct human experiment, but it used engineered HEK293 cells<br />
+stably expressing TLR4/MD-2/CD14 or TLR2 rather than a native human immune-cell system.<br />
+Endogenous human LRCH4 siRNA reduced ligand-induced IL-8 in both systems and did not reduce<br />
+the TNF-alpha-induced response. [PMID:30523158, "HEK293 cells stably expressing either<br />
+TLR4/MD-2/CD14 or TLR2 were transfected with Lrch4 siRNA or Scr siRNA and then exposed to<br />
+LPS or Pam3CSK4, respectively."; "As shown in Fig. 2G, Lrch4 siRNA attenuated IL-8<br />
+induction by both ligands in HEK293 cells"; "Lrch4 silencing did not affect induction of<br />
+IL-8 by HEK293 cells in response to stimulation with TNFα"]</p>
+<p>This species/context split supports retaining the TLR/raft biology as plausible and<br />
+experimentally grounded, while labeling the detailed membrane-raft mechanism as chiefly<br />
+mouse evidence rather than established native-human macrophage biology.</p>
+<h2 id="membrane-lps-and-lipid-raft-evidence">Membrane, LPS and lipid-raft evidence</h2>
+<p>The 2019 study describes LRCH4 as a membrane protein with nine LRRs in a predicted<br />
+ectodomain and reports that LRCH4 promotes LPS docking in lipid rafts. [PMID:30523158,<br />
+"Lrch4 is a membrane protein with nine LRRs in its predicted ectodomain."; "Lrch4 promotes<br />
+proper docking of LPS in lipid raft membrane microdomains."] LRCH4 depletion reduced<br />
+surface ganglioside signal and CD14 abundance/display. [PMID:30523158, "Lrch4 silencing<br />
+reduces cell surface gangliosides, a metric of raft abundance, as well as expression and<br />
+surface display of CD14, a raft-resident LPS co-receptor."]</p>
+<p>The underlying mouse work supports a role in raft abundance/organization and LPS delivery,<br />
+not proof that LRCH4 is itself an LPS receptor. Biotin-LPS co-precipitation was explicitly<br />
+interpreted as direct <em>or indirect</em>. [PMID:30523158, "Lrch4 was detected in the biotin-LPS<br />
+pulldown (but not in cells treated with nonbiotinylated LPS, as expected), suggesting that<br />
+it interacts either directly or indirectly with LPS."]</p>
+<p>The longest mouse product was predicted to contain a C-terminal transmembrane segment;<br />
+the shorter predicted mouse variant lacked it, but the authors cautioned that physiological<br />
+expression of the predicted variants had not been verified. [PMID:30523158, "Lrch4 variant<br />
+1 (680 AAs) is as described above, whereas variant 2 (649 AAs) is truncated C-terminal to<br />
+the CH and omits the TMD, consistent with a soluble protein."; "Physiological expression<br />
+of the predicted variants has not been verified to our knowledge."] Human O75427 is a<br />
+683-aa reviewed protein with a predicted C-terminal transmembrane segment, but exact<br />
+sidedness and endogenous organelle distribution should not be inferred from sequence alone.</p>
+<h2 id="dock-family-interactions-and-localization">DOCK-family interactions and localization</h2>
+<p>The 2020 systematic Rho-regulator study supplies the strongest direct interaction evidence.<br />
+The publisher PDF figure legend states that LRCH4 bound the C-Dock subfamily members DOCK6,<br />
+DOCK7 and DOCK8 but not DOCK9, and that the DOCK7 DHR2 fragment was sufficient in the<br />
+anti-tag immunoprecipitation assay. [PMID:32203420, "LRCH4 binds all C-Dock RhoGEFs, but<br />
+not DOCK9. The DOCK-DHR2 domain is sufficient for binding."] The same study observed<br />
+LRCH4 at the endoplasmic reticulum and recruitment of DOCK8 there; deleting the putative<br />
+LRCH4 transmembrane region moved the proteins toward the cell periphery. [PMID:32203420,<br />
+"showing the recruitment of DOCK8 to the endoplasmic reticulum by LRCH1 and LRCH4, or to<br />
+the cell periphery by LRCH4-ΔTMR"]</p>
+<p>These experiments establish reproducible binding and localization effects in transfected<br />
+HEK293T/MDCK cells. They do <strong>not</strong> establish an endogenous stable LRCH4-DOCK complex, a<br />
+specific Rho GTPase regulated by LRCH4, or a direct link between the DOCK interaction and<br />
+LRCH4's TLR/raft phenotype. The GOA rows from PMID:24255178 also list DOCK7 and SUGT1,<br />
+whereas older/global screens list MDFI, several keratin-associated proteins and a set of<br />
+membrane/ER proteins. Those screen-level pairs are useful hypotheses, not core functions.</p>
+<h2 id="direct-human-expression-and-disease-context-evidence">Direct human expression and disease-context evidence</h2>
+<p>Human platelet RNA and protein were detected directly. E. coli K12 exposure reduced LRCH4<br />
+RNA in two analysis pipelines, but did not produce a visible LRCH4 protein abundance or<br />
+molecular-weight change under the tested conditions. [PMID:30385858, "For the RNAs of HMBS<br />
+(logFC = +5.73), ATP2C1 (logFC = -3.13) and LRCH4 (logFC = -4.07) changes were detectable<br />
+by thromboSeq and Tuxedo pipelines."; "By Western blot analysis we could demonstrate the<br />
+presence of HMBS, ATP2C1 and LRCH4 proteins in platelets before and after E. coli K12<br />
+exposure"; "We detected no visible concentration difference or molecular weight change of<br />
+ATP2C1 and LRCH4 in platelets after E. coli K12 exposure."] This supports regulated human<br />
+expression during bacterial exposure, not a causal platelet function.</p>
+<p>In HT29 colorectal-cancer cells, LRCH4 siRNA reduced proliferation, migration and invasion<br />
+and reduced YAP and TGF-beta/Smad outputs. [PMID:38383956, "Here, we reported that the<br />
+knockdown of LRCH4 inhibited the proliferation, migration and invasion in HT29 cells.";<br />
+"The activity of Yes-Associated Protein (YAP), a transcription factor in the Hppo-YAP<br />
+signaling pathway, was significantly inhibited by LRCH4-siRNA."; "the TGF-β/Smad signaling<br />
+pathway, as the downstream pathway of Yap, was also inhibited by LRCH4 knockdown."] This is<br />
+a single cancer-cell context with no direct biochemical LRCH4 target, so it should remain<br />
+non-core.</p>
+<h2 id="seeded-reference-audit-and-negative-boundaries">Seeded-reference audit and negative boundaries</h2>
+<ul>
+<li>PMID:16449650 is a SAP25/mSin3 paper whose abstract and full PMC text localize SAP25,<br />
+  not LRCH4: [PMID:16449650, "A fraction of SAP25 is located in promyelocytic leukemia<br />
+  protein (PML) nuclear bodies, and PML induces a striking nuclear accumulation of SAP25."]<br />
+  Searches of the full article for LRCH4, O75427, LRN and LRRN aliases found no LRCH4<br />
+  evidence, so the PML-body citation is a source miscitation rather than an LRCH4 nuclear<br />
+  function.</li>
+<li>A live QuickGO check on 2026-08-18 returned the mouse source rows<br />
+<code>Q921G6 / GO:0001765 / IDA / PMID:16449650</code> and<br />
+<code>Q921G6 / GO:0034123 / IDA / PMID:16449650</code>. Thus the source miscitation is present on<br />
+  the current mouse raft-assembly and TLR-signaling rows as well as on the human PML-body<br />
+  chain. PMID:30523158 independently supports the mouse raft and TLR biology, but does<br />
+  not repair those mechanical source records.</li>
+<li>PMID:9799793 discovered the chromosome 7q22 locus but only reported sequence similarity:<br />
+  [PMID:9799793, "Two genes showed weak similarity to an insulin-like receptor and a<br />
+  neuronal protein with a leucine-rich amino-terminal domain."] It does not experimentally<br />
+  support nervous-system development.</li>
+<li>PMID:16189514, PMID:19060904, PMID:24255178, PMID:25416956 and PMID:32296183 are broad<br />
+  interaction maps. Their GOA/IntAct pairs should not be converted into stable-complex or<br />
+  pathway claims without follow-up.</li>
+<li>A single calponin-homology domain is not evidence of actin binding. No direct LRCH4-actin<br />
+  assay was found.</li>
+<li>LRCH1's DOCK8-CDC42/T-cell mechanism and LRCH3's DOCK7-MYO6-septin mechanism must not be<br />
+  transferred to LRCH4. The LRCH4-specific experiments support C-Dock binding/localization<br />
+  but do not identify the downstream GTPase or a septin/myosin complex.</li>
+</ul>
+<h2 id="literature-search-note">Literature-search note</h2>
+<p>PubMed/Europe PMC searches through 2026-08-18 identified the 2019 LRCH4 innate-immunity<br />
+paper, the 2018 human-platelet study, the 2020 Rho-regulator interaction study and a 2024<br />
+HT29 colorectal-cancer knockdown paper as the primary mechanistic literature most relevant<br />
+to this review. A June 2026 colorectal-cancer manuscript was present as a preprint and was<br />
+not used as established evidence. No convincing human disease-causing LRCH4 allele,<br />
+isoform-specific physiological function, direct actin-binding experiment, or native stable<br />
+LRCH4 complex was identified.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75427
+gene_symbol: LRCH4
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRCH4 is a 683-amino-acid membrane protein with nine N-terminal leucine-rich
+  repeats, a C-terminal calponin-homology domain, and a predicted transmembrane
+  helix near its C terminus. Depletion of endogenous LRCH4 in human HEK293 cells
+  engineered to express TLR2 or TLR4/MD-2/CD14 attenuates ligand-induced IL-8
+  production while sparing the response to TNF-alpha. Mouse macrophage and in
+  vivo studies further connect Lrch4 to signaling by several Toll-like receptors,
+  LPS docking in membrane rafts, raft abundance, and CD14 surface display. Tagged
+  human LRCH4 associates with DOCK6, DOCK7, and DOCK8 in HEK293T cells; in canine
+  MDCK cells, expressed LRCH4 redistributes DOCK8 toward an endoplasmic-reticulum
+  pattern. Human platelets contain LRCH4 RNA and protein, and LRCH4 knockdown
+  alters YAP and TGF-beta/Smad outputs in a colorectal-cancer cell line. The
+  molecular link between LRCH4, Toll-like-receptor signaling, membrane
+  organization, and C-Dock proteins remains unresolved in native human immune
+  cells.
+existing_annotations:
+- term:
+    id: GO:0016605
+    label: PML body
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference assigns LRCH4 activity in a PML body, but the
+      supporting gene-product provenance traces back to an LRCH4 IDA annotation
+      whose cited paper localizes SAP25 rather than LRCH4.
+    action: REMOVE
+    reason: &gt;-
+      This IBA has no independent evidence for LRCH4 localization. PMID:16449650
+      characterizes human SAP25 (UniProtKB:Q8TEE9), not LRCH4/O75427, and the
+      target protein correctly appears among the descendant evidence used for the
+      family-node inference. The annotation is removed because that seeding IDA is
+      miscited, not because the target occurs in its own WITH/FROM.
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: PANTHER:PTN002699689
+        source_label: LRCH4-family PANTHER node
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: The family-node inference supplies no independent experimental localization.
+      - source_id: UniProtKB:O75427
+        source_label: human LRCH4 recipient
+        source_status: SOURCE_BAD
+        comment: The expected self-source identifies the target IDA used to seed the family node, but that IDA cites the SAP25 paper and is therefore a bad source.
+    supported_by:
+    - reference_id: PMID:16449650
+      supporting_text: &gt;-
+        A fraction of SAP25 is located in promyelocytic leukemia protein (PML)
+        nuclear bodies, and PML induces a striking nuclear accumulation of SAP25.
+  supporting_entities:
+  - PANTHER:PTN002699689
+  - UniProtKB:O75427
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Combined automated methods transfer plasma-membrane localization from the
+      mouse Lrch4 ortholog and a UniProt subcellular-location mapping.
+    action: ACCEPT
+    reason: &gt;-
+      LRCH4 is a conserved membrane protein with a predicted C-terminal
+      transmembrane segment, and the single identifiable mouse ortholog supports
+      plasma-membrane localization. The exact topology and distribution of
+      endogenous human LRCH4 remain untested in the current evidence set.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SUPPORTS_TRANSFER
+      - source_id: ensembl:ENSMUSP00000031734
+        source_label: mouse Lrch4 protein
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB-SubCell:SL-0039
+        source_label: cell membrane controlled vocabulary
+        source_status: SUPPORTS_TRANSFER
+  supporting_entities:
+  - UniProtKB:Q921G6
+  - ensembl:ENSMUSP00000031734
+  - UniProtKB-SubCell:SL-0039
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: A proteome-scale binary-interaction screen reported an LRCH4-MDFI contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The screen-level interaction preserves useful partner provenance but does
+      not establish a specific LRCH4 molecular activity or physiological role;
+      generic protein binding is therefore uninformative.
+  supporting_entities:
+  - UniProtKB:Q99750
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19060904
+  qualifier: enables
+  review:
+    summary: An empirical binary-interactome study also reported an LRCH4-MDFI contact.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This repeated high-throughput edge is compatible with physical association,
+      but it does not define a mechanistic activity for LRCH4 and cannot make the
+      generic protein-binding term informative.
+  supporting_entities:
+  - UniProtKB:Q99750
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24255178
+  qualifier: enables
+  review:
+    summary: A mammalian Hippo-pathway interaction survey recovered LRCH4 with DOCK7 and SUGT1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The two screen-derived contacts do not establish that LRCH4 is a Hippo
+      pathway component, a DOCK regulator, or a stable complex subunit. No
+      LRCH1, LRCH2, or LRCH3 mechanism should be transferred to LRCH4, and
+      generic protein binding remains uninformative.
+  supporting_entities:
+  - UniProtKB:Q96N67
+  - UniProtKB:Q9Y2Z0
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A proteome-scale binary map reported LRCH4 contacts with KRTAP10-7,
+      KRTAP10-8, KRT40, and NOTCH2NLA.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      These heterogeneous high-throughput partners do not converge on a
+      demonstrated LRCH4 activity or cellular mechanism. Retaining the exact
+      partner provenance is useful, but GO:0005515 adds no functional specificity.
+  supporting_entities:
+  - UniProtKB:P60409
+  - UniProtKB:P60410
+  - UniProtKB:Q6A162
+  - UniProtKB:Q7Z3S9
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32203420
+  qualifier: enables
+  review:
+    summary: A family-wide Rho-regulator study validated LRCH4 association with DOCK8 isoform 3, DOCK6, and DOCK7.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Targeted anti-tag immunoprecipitation and domain mapping make the clustered
+      C-Dock associations informative, but the experiments do not demonstrate that
+      LRCH4 regulates a Rho GTPase, acts as an adaptor, or shares the distinct
+      mechanisms established for other LRCH paralogs. Generic protein binding is
+      therefore not an adequate molecular-function annotation.
+  supporting_entities:
+  - UniProtKB:Q8NF50-3
+  - UniProtKB:Q96HP0
+  - UniProtKB:Q96N67
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A reference binary-interactome map reported LRCH4 contacts with ELOVL7,
+      CYB5R3, RNASEK, RETREG3, KASH5, and HSD17B11.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The diverse screen-level edges do not establish a coherent biochemical
+      function, endogenous complex, or shared compartment for LRCH4. They should
+      not be generalized into an uninformative protein-binding activity.
+  supporting_entities:
+  - UniProtKB:A1L3X0
+  - UniProtKB:P00387
+  - UniProtKB:Q6P5S7
+  - UniProtKB:Q86VR2
+  - UniProtKB:Q8N6L0
+  - UniProtKB:Q8NBQ5
+- term:
+    id: GO:0001765
+    label: membrane raft assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers membrane-raft assembly from the mouse Lrch4
+      ortholog to human LRCH4.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mouse Lrch4 loss perturbs raft abundance and LPS docking, and LRCH4 is the
+      identifiable human ortholog with the same domain architecture. The biology
+      therefore supports retaining the transferred process, but its physiological
+      importance has not been tested in human cells and it is not part of the
+      narrower TLR-signaling core. The mechanical transfer source remains miscited,
+      while PMID:30523158 independently supports the mouse raft phenotype.
+    additional_reference_ids:
+    - PMID:30523158
+    supported_by:
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        We provide evidence that this is through regulation of lipid rafts as Lrch4
+        silencing reduces cell surface gangliosides, a metric of raft abundance, as well
+        as expression and surface display of CD14, a raft-resident LPS co-receptor.
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SOURCE_BAD
+        comment: Live QuickGO returns Q921G6, GO:0001765, IDA, PMID:16449650; PMID:30523158 independently supports the mouse raft biology, but the propagated source row itself is miscited.
+      - source_id: ensembl:ENSMUSP00000031734
+        source_label: mouse Lrch4 protein
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: This is the orthology carrier rather than independent experimental evidence.
+  supporting_entities:
+  - UniProtKB:Q921G6
+  - ensembl:ENSMUSP00000031734
+- term:
+    id: GO:0034123
+    label: positive regulation of toll-like receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl Compara transfers positive regulation of Toll-like-receptor
+      signaling from mouse Lrch4 to human LRCH4; direct human-cell depletion
+      evidence independently supports the transferred process.
+    action: ACCEPT
+    reason: &gt;-
+      Endogenous human LRCH4 depletion in HEK293 cells engineered with TLR2 or
+      TLR4/MD-2/CD14 reduced ligand-induced IL-8 without reducing the TNF-alpha
+      response. Together with the broader mouse macrophage and in vivo evidence,
+      this supports a positive contribution to Toll-like-receptor signaling while
+      leaving its native human cell-type and ligand breadth unresolved.
+    additional_reference_ids:
+    - PMID:30523158
+    supported_by:
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        HEK293 cells stably expressing either TLR4/MD-2/CD14 or TLR2 were transfected
+        with Lrch4 siRNA or Scr siRNA and then exposed to LPS or Pam3CSK4, respectively.
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands
+        in HEK293 cells, providing further support that the shRNA results in macrophages
+        are unlikely to reflect off-target effects.
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SOURCE_BAD
+        comment: Live QuickGO returns Q921G6, GO:0034123, IDA, PMID:16449650; PMID:30523158 independently supports the mouse TLR biology, but the propagated source row itself is miscited.
+      - source_id: ensembl:ENSMUSP00000031734
+        source_label: mouse Lrch4 protein
+        source_status: SOURCE_WEAK_OR_INFERRED
+        comment: This source records one-to-one orthology but does not repair the miscited mouse source annotation.
+  supporting_entities:
+  - UniProtKB:Q921G6
+  - ensembl:ENSMUSP00000031734
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: Curator-reviewed sequence similarity transfers plasma-membrane localization from mouse Lrch4.
+    action: ACCEPT
+    reason: &gt;-
+      The source is the direct mouse ortholog, and human LRCH4 retains the
+      C-terminal transmembrane segment expected for membrane anchoring. Transfer
+      of the broad plasma-membrane location is reasonable despite the absence of
+      an endogenous human localization assay.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SUPPORTS_TRANSFER
+  supporting_entities:
+  - UniProtKB:Q921G6
+- term:
+    id: GO:0001765
+    label: membrane raft assembly
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Curator judgment transfers the mouse Lrch4 membrane-raft phenotype to human LRCH4.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The orthologous mouse protein is required for normal raft abundance and LPS
+      docking, and no paralog-specific divergence is evident. That makes the
+      transferred process biologically credible but still secondary to the directly
+      supported TLR-signaling core in human cells. The live mouse GOA source is
+      miscited, while PMID:30523158 independently establishes the mouse phenotype.
+    additional_reference_ids:
+    - PMID:30523158
+    supported_by:
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        We provide evidence that this is through regulation of lipid rafts as Lrch4
+        silencing reduces cell surface gangliosides, a metric of raft abundance, as well
+        as expression and surface display of CD14, a raft-resident LPS co-receptor.
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SOURCE_BAD
+        comment: Live QuickGO returns Q921G6, GO:0001765, IDA, PMID:16449650; PMID:30523158 independently supports the mouse raft biology, but the propagated source row itself is miscited.
+  supporting_entities:
+  - UniProtKB:Q921G6
+- term:
+    id: GO:0034123
+    label: positive regulation of toll-like receptor signaling pathway
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator judgment transfers the TLR-accessory role of mouse Lrch4 to human
+      LRCH4, consistent with direct depletion experiments in engineered human cells.
+    action: ACCEPT
+    reason: &gt;-
+      Endogenous human LRCH4 depletion in TLR2- or TLR4/MD-2/CD14-expressing
+      HEK293 cells attenuated ligand-induced IL-8, while leaving TNF-alpha-induced
+      IL-8 intact. The human result and broader mouse evidence support this process
+      annotation, with native human immune-cell scope remaining an open question.
+    additional_reference_ids:
+    - PMID:30523158
+    supported_by:
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        HEK293 cells stably expressing either TLR4/MD-2/CD14 or TLR2 were transfected
+        with Lrch4 siRNA or Scr siRNA and then exposed to LPS or Pam3CSK4, respectively.
+    - reference_id: PMID:30523158
+      supporting_text: &gt;-
+        Confirming some selectivity for Lrch4 function, Lrch4 silencing did not affect
+        induction of IL-8 by HEK293 cells in response to stimulation with TNFα ( Fig. 2 H ).
+    propagation_review:
+      root_cause: SOURCE_BAD
+      failure_modes:
+      - SOURCE_MISCITATION
+      source_entities:
+      - source_id: UniProtKB:Q921G6
+        source_label: mouse Lrch4
+        source_status: SOURCE_BAD
+        comment: Live QuickGO returns Q921G6, GO:0034123, IDA, PMID:16449650; PMID:30523158 independently supports the mouse TLR biology, but the propagated source row itself is miscited.
+  supporting_entities:
+  - UniProtKB:Q921G6
+- term:
+    id: GO:0016605
+    label: PML body
+  evidence_type: IDA
+  original_reference_id: PMID:16449650
+  qualifier: located_in
+  review:
+    summary: The cited study localizes SAP25, not LRCH4, to PML nuclear bodies.
+    action: REMOVE
+    reason: &gt;-
+      Full-text inspection identifies SAP25/Q8TEE9 as the assayed product and
+      contains no LRCH4, O75427, LRN, or LRRN4 experiment. Because the actual
+      PML-body result belongs to another gene product, this is a verified source
+      miscitation rather than a reason to infer nuclear localization for LRCH4.
+    supported_by:
+    - reference_id: PMID:16449650
+      supporting_text: &gt;-
+        A fraction of SAP25 is located in promyelocytic leukemia protein (PML)
+        nuclear bodies, and PML induces a striking nuclear accumulation of SAP25.
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: TAS
+  original_reference_id: PMID:9799793
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The chromosome-sequencing paper describes weak sequence similarity to a
+      neuronal leucine-rich protein but does not test nervous-system development.
+    action: REMOVE
+    reason: &gt;-
+      A descriptive neuronal-protein resemblance or historical name is not
+      evidence that LRCH4 participates in nervous-system development. The cited
+      genomic annotation study provides no developmental phenotype, pathway, or
+      functional assay supporting GO:0007399.
+    supported_by:
+    - reference_id: PMID:9799793
+      supporting_text: &gt;-
+        Two genes showed weak similarity to an insulin-like receptor and a
+        neuronal protein with a leucine-rich amino-terminal domain.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the documented provenance for the UniProt curator transfer from mouse
+      Q921G6. It does not itself supply experimental evidence for human LRCH4.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the documented PANTHER/IBA provenance for the PML-body annotation; it is
+      method provenance rather than gene-specific experimental evidence.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the documented Ensembl orthology-transfer provenance for membrane-raft
+      assembly and positive regulation of TLR signaling. The underlying source biology
+      is mouse LRCH4, not a direct human experiment.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the documented automated provenance for plasma-membrane localization and
+      ultimately traces to mouse orthology and subcellular-location mappings.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  full_text_unavailable: true
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified. GOA/IntAct records an IPI interaction
+      between LRCH4 and MDFI (Q99750) from this large binary-interactome screen; the
+      cached abstract does not identify individual pairs or establish a functional
+      consequence.
+- id: PMID:16449650
+  title: Identification and characterization of SAP25, a novel component of the mSin3
+    corepressor complex.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The PML-body localization reported by this paper is for SAP25, not LRCH4.
+    supporting_text: &gt;-
+      A fraction of SAP25 is located in promyelocytic leukemia protein (PML) nuclear
+      bodies, and PML induces a striking nuclear accumulation of SAP25.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: NONE
+    correctness: MISCITED
+    review_notes: &gt;-
+      The PMID/title and full PMC article were checked externally; the project cache
+      remains abstract-only, which is why full_text_unavailable is retained. This paper
+      characterizes SAP25/Q8TEE9; searches of the full article for LRCH4, O75427, LRN and
+      LRRN aliases found no LRCH4 evidence. The PML-body result belongs to SAP25, so this
+      source does not support an LRCH4 nuclear localization or function.
+- id: PMID:19060904
+  title: An empirical framework for binary interactome mapping.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified. GOA/IntAct records an LRCH4-MDFI
+      interaction from this binary-interactome resource, corroborating the same
+      screen-level pair as PMID:16189514 but not a physiological mechanism.
+- id: PMID:24255178
+  title: Protein interaction network of the mammalian Hippo pathway reveals mechanisms
+    of kinase-phosphatase interactions.
+  full_text_unavailable: true
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified. GOA/IntAct maps LRCH4 interactions with
+      DOCK7 (Q96N67) and SUGT1 (Q9Y2Z0) to this broad affinity-proteomics study; neither
+      pair demonstrates a stable LRCH4 complex or an LRCH4-specific Hippo mechanism.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified. GOA/IntAct attributes screen-level
+      LRCH4 interactions with KRTAP10-7, KRTAP10-8, KRT40 and NOTCH2NLA to this
+      proteome-scale map; these isolated pairs have no demonstrated LRCH4 functional
+      consequence and are not treated as a stable complex.
+- id: PMID:32203420
+  title: Systems analysis of RhoGEF and RhoGAP regulatory proteins reveals spatially
+    organized RAC1 signalling from integrin adhesions.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The study systematically characterized RhoGEF/RhoGAP interaction networks and
+      subcellular localization as spatial organizers of Rho signaling.
+    supporting_text: &gt;-
+      Through a family-wide characterization of substrate specificities, interactomes
+      and localization, we reveal at the systems level how RhoGEFs and RhoGAPs
+      contextualize and spatiotemporally control Rho signalling.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified, and the publisher PDF was inspected
+      externally; the project cache remains abstract-only, which is why
+      full_text_unavailable is retained. Anti-tag immunoprecipitation showed that LRCH4
+      binds DOCK6, DOCK7 and DOCK8 but not DOCK9, with the DOCK7 DHR2 fragment sufficient
+      for binding. Imaging showed LRCH4 at the endoplasmic reticulum and recruitment of
+      DOCK8 there; deleting the predicted LRCH4 transmembrane region moved LRCH4/DOCK8
+      toward the cell periphery. These are direct heterologous-cell
+      interaction/localization results, not evidence for a stable endogenous complex or
+      for a defined LRCH4-dependent Rho-GTPase output.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and identifier are verified. GOA/IntAct records screen-level LRCH4
+      pairs with ELOVL7, CYB5R3, RNASEK, RETREG3, KASH5 and HSD17B11; the binary map
+      does not by itself establish physiological localization, a stable complex, or a
+      shared LRCH4 mechanism.
+- id: PMID:9799793
+  title: &#39;Large-scale sequencing of two regions in human chromosome 7q22: analysis
+    of 650 kb of genomic sequence around the EPO and CUTL1 loci reveals 17 genes.&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The chromosome 7q22 sequencing study identified the LRCH4 locus as a novel gene
+      with weak sequence similarity to a neuronal leucine-rich-repeat protein.
+    supporting_text: &gt;-
+      Two genes showed weak similarity to an insulin-like receptor and a neuronal
+      protein with a leucine-rich amino-terminal domain.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: MISCITED
+    review_notes: &gt;-
+      PubMed title and identifier are verified and the paper is relevant to discovery
+      of the locus. However, it reports only weak sequence similarity to a neuronal
+      protein and contains no developmental assay; it does not support the TAS claim
+      that human LRCH4 is involved in nervous-system development.
+- id: PMID:30523158
+  title: Leucine-rich repeats and calponin homology containing 4 (Lrch4) regulates the
+    innate immune response.
+  findings:
+  - statement: &gt;-
+      GFP-tagged murine Lrch4 expressed in engineered HEK293 cells showed substantial
+      plasma-membrane overlap, especially at low-to-medium expression.
+    supporting_text: &gt;-
+      Microscopy of GFP-Lrch4 in HEK293 cells reveals staining that includes a cytoplasmic-type
+      pattern, but formal analysis indicates a high degree of overlap with the plasma membrane
+      stain CellMask TM (Life Technologies) ( 22 ), in particular in cells with low-medium
+      forced expression, consistent with substantial localization to the plasma membrane ( Fig. 1 E ).
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Mouse Lrch4 depletion attenuated cytokine induction by LPS and several other
+      TLR ligands and reduced the innate response in vivo.
+    supporting_text: &gt;-
+      Silencing Lrch4 attenuates cytokine induction by LPS and multiple other TLR
+      ligands and dampens the in vivo innate immune response.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Mouse Lrch4 promotes delivery of LPS into lipid-raft membrane microdomains.
+    supporting_text: &gt;-
+      Lrch4 promotes proper docking of LPS in lipid raft membrane microdomains.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Mouse Lrch4 depletion reduced cell-surface gangliosides and expression/surface
+      display of the raft-resident LPS co-receptor CD14.
+    supporting_text: &gt;-
+      We provide evidence that this is through regulation of lipid rafts as Lrch4
+      silencing reduces cell surface gangliosides, a metric of raft abundance, as well
+      as expression and surface display of CD14, a raft-resident LPS co-receptor.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Depletion of endogenous human LRCH4 attenuated TLR2- and TLR4-dependent IL-8
+      induction in engineered HEK293 cells without reducing the response to TNF-alpha.
+    supporting_text: &gt;-
+      As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands in
+      HEK293 cells, providing further support that the shRNA results in macrophages are
+      unlikely to reflect off-target effects.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      This is the decisive functional paper. Most mechanistic and in vivo experiments
+      used mouse LRCH4 in RAW264.7 or primary macrophages/mice. The full text also reports
+      direct siRNA depletion of endogenous human LRCH4 in HEK293 cells engineered with
+      TLR4-MD2-CD14 or TLR2, which selectively reduced ligand-induced IL-8 but not the
+      TNF-alpha response. Full text is available in the project cache, and the species
+      and assay contexts are separated in the findings above.
+- id: PMID:30385858
+  title: &#39;Impact of Escherichia coli K12 and O18:K1 on human platelets: Differential
+    effects on platelet activation, RNAs and proteins.&#39;
+  findings:
+  - statement: &gt;-
+      Human platelet LRCH4 RNA decreased after exposure to E. coli K12, with the change
+      detected independently by two RNA-sequencing pipelines.
+    supporting_text: &gt;-
+      For the RNAs of HMBS (logFC = +5.73), ATP2C1 (logFC = -3.13) and LRCH4
+      (logFC = -4.07) changes were detectable by thromboSeq and Tuxedo pipelines.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      LRCH4 RNA and protein were detected in human platelets, while E. coli exposure did
+      not visibly change LRCH4 protein abundance or molecular weight.
+    supporting_text: &gt;-
+      By Western blot analysis we could demonstrate the presence of HMBS, ATP2C1 and
+      LRCH4 proteins in platelets before and after E. coli K12 exposure
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human platelet expression/response evidence with full text in the cache.
+      It supports regulated LRCH4 abundance during bacterial exposure, but does not test
+      whether LRCH4 causes platelet TLR signaling or establish its core mechanism.
+- id: PMID:38383956
+  title: Knockdown of LRCH4 Remodels Tumor Microenvironment Through Inhibiting YAP and
+    TGF-β/Smad Signaling Pathway in Colorectal Cancer.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      LRCH4 knockdown inhibited proliferation, migration and invasion of human HT29
+      colorectal-cancer cells.
+    supporting_text: &gt;-
+      Here, we reported that the knockdown of LRCH4 inhibited the proliferation,
+      migration and invasion in HT29 cells.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      LRCH4 knockdown reduced YAP activity, reversed EMT-associated features and
+      inhibited TGF-beta/Smad signaling in HT29 cells.
+    supporting_text: &gt;-
+      The activity of Yes-Associated Protein (YAP), a transcription factor in the
+      Hppo-YAP signaling pathway, was significantly inhibited by LRCH4-siRNA. LRCH4
+      knockdown also reversed the EMT and regulated the expression of extracellular
+      matrix (ECM) protein, Fibronectin and Collagen IV in HT29 cells. In addition, the
+      TGF-β/Smad signaling pathway, as the downstream pathway of Yap, was also inhibited
+      by LRCH4 knockdown.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct human cancer-cell perturbation evidence. It establishes context-specific
+      effects in one colorectal-cancer cell line, but the abstract does not identify a
+      direct biochemical target of LRCH4, so these phenotypes should remain non-core and
+      should not be generalized to normal tissues.
+core_functions:
+- description: &gt;-
+    LRCH4 makes a positive contribution to Toll-like-receptor signaling at the
+    plasma membrane. This location is transferred from the one-to-one mouse ortholog
+    and is consistent with the conserved C-terminal transmembrane helix; endogenous
+    human localization remains unresolved. Endogenous LRCH4 depletion in human HEK293
+    cells engineered with TLR2 or TLR4/MD-2/CD14 attenuated ligand-induced IL-8 while
+    sparing the TNF-alpha response. Concordant mouse macrophage and in vivo experiments
+    support a broader role across several surface and endosomal TLRs. The molecular
+    activity is unresolved: mouse data connect Lrch4 to LPS docking, membrane-raft
+    abundance, and CD14 display, but direct ligand binding and the relevance of C-Dock
+    interactions to TLR signaling have not been established.
+  directly_involved_in:
+  - id: GO:0034123
+    label: positive regulation of toll-like receptor signaling pathway
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:30523158
+    supporting_text: &gt;-
+      As shown in Fig. 2 G , Lrch4 siRNA attenuated IL-8 induction by both ligands
+      in HEK293 cells, providing further support that the shRNA results in macrophages
+      are unlikely to reflect off-target effects.
+  - reference_id: PMID:30523158
+    supporting_text: &gt;-
+      Confirming some selectivity for Lrch4 function, Lrch4 silencing did not affect
+      induction of IL-8 by HEK293 cells in response to stimulation with TNFα ( Fig. 2 H ).
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular activity by which LRCH4 augments Toll-like-receptor signaling is
+    unknown: it has not been established whether LRCH4 binds LPS directly, changes
+    membrane-lipid organization, controls CD14 trafficking, or acts through another
+    receptor-proximal component.
+  boundary: &gt;-
+    Endogenous LRCH4 depletion selectively reduced TLR2- and TLR4-dependent IL-8
+    induction in engineered human HEK293 cells, while mouse experiments linked Lrch4
+    depletion to reduced raft abundance, CD14 surface display, and LPS docking. The
+    LPS pulldown did not distinguish a direct from an indirect association.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a defined molecular activity, the TLR role cannot be represented as a
+    mechanistic molecular-function assertion or separated cleanly from secondary
+    changes in membrane organization.
+  resolution: &gt;-
+    Reconstitute LPS, CD14, MD-2, TLR4, and LRCH4 interactions with purified or
+    compositionally defined membrane systems, combined with crosslinking and
+    quantitative lipid analysis, to distinguish direct ligand binding from effects on
+    receptor trafficking or membrane-raft organization.
+- gap_statement: &gt;-
+    It is unknown whether LRCH4 is required for Toll-like-receptor responses in native
+    primary human immune cells and whether the ligand range observed in mouse systems
+    is conserved in humans.
+  boundary: &gt;-
+    Direct human evidence is limited to TLR2- or TLR4-engineered HEK293 cells, whereas
+    the broad ligand panel, macrophage mechanism, and in vivo innate-response phenotype
+    were established chiefly in mouse cells and mice.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Establishing physiological human-cell relevance is necessary to define the native
+    cell types and ligand breadth of the conserved TLR-regulatory role and to decide
+    whether raft assembly is a primary LRCH4 process or a mouse-context phenotype.
+  resolution: &gt;-
+    Generate LRCH4 loss-of-function and rescue series in primary human monocytes,
+    macrophages, and dendritic cells, then compare proximal signaling and cytokine
+    responses across a controlled panel of TLR ligands.
+- gap_statement: &gt;-
+    The endogenous subcellular distribution, membrane orientation, and trafficking
+    itinerary of human LRCH4 are unknown.
+  boundary: &gt;-
+    Human LRCH4 contains a predicted C-terminal transmembrane helix, transferred mouse
+    annotations place it at the plasma membrane, and overexpressed human LRCH4 has been
+    imaged at the endoplasmic reticulum. None of these observations establishes the
+    topology or steady-state distribution of endogenous human LRCH4.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Sidedness and compartment determine whether the leucine-rich repeats could contact
+    extracellular ligands, luminal cargo, or cytosolic signaling partners and therefore
+    constrain the possible TLR mechanism.
+  resolution: &gt;-
+    Endogenously tag LRCH4 in human immune cells and combine surface biotinylation,
+    protease protection, glycosylation mapping, pulse-chase trafficking, and quantitative
+    microscopy before and after TLR stimulation.
+- gap_statement: &gt;-
+    The physiological significance of LRCH4 binding to DOCK6, DOCK7, and DOCK8 is
+    unknown, including which Rho GTPase output is affected and whether the interaction
+    contributes to Toll-like-receptor or membrane-raft phenotypes.
+  boundary: &gt;-
+    Tagged human LRCH4 reproducibly bound the C-Dock proteins in transfected-cell assays
+    and recruited DOCK8 to an endoplasmic-reticulum pattern, but no endogenous stable
+    complex, downstream GTPase, or genetic connection to the TLR phenotype has been shown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Resolving this connection would determine whether the C-Dock interactions are a
+    function-defining signaling module or context-dependent binding without a shared
+    physiological output.
+  resolution: &gt;-
+    Map the LRCH4-C-Dock interface, test endogenous interaction in immune cells, and use
+    separation-of-function LRCH4 mutants with DOCK6/7/8 perturbation and spatial Rho-GTPase
+    biosensors during TLR stimulation.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does endogenous LRCH4 support TLR2, TLR4, or additional TLR pathways in primary
+    human innate-immune cells, and is its effect restricted to selected signaling outputs?
+- question: &gt;-
+    Does LRCH4 contact LPS, CD14, MD-2, or a TLR directly, or does it act indirectly by
+    changing membrane-lipid composition or receptor trafficking?
+- question: &gt;-
+    Where is endogenous human LRCH4 located, what is its membrane topology, and does TLR
+    stimulation alter its distribution?
+- question: &gt;-
+    Do DOCK6, DOCK7, or DOCK8 mediate an LRCH4-dependent Rho-GTPase response, and is that
+    module required for the TLR phenotype?
+- question: &gt;-
+    Are any human LRCH4 transcript products physiologically expressed as functionally
+    distinct membrane-bound or soluble forms?
+suggested_experiments:
+- hypothesis: &gt;-
+    LRCH4 selectively amplifies receptor-proximal TLR2 and TLR4 signaling in primary
+    human innate-immune cells.
+  description: &gt;-
+    Create independent LRCH4 knockouts in primary-cell-derived macrophages or validated
+    human monocyte models, rescue with CRISPR-resistant LRCH4, and measure receptor-proximal
+    phosphorylation, NF-kappa-B and IRF activation, and cytokine output after matched TLR2,
+    TLR4, and control cytokine stimulation.
+  experiment_type: Genetic perturbation, rescue, and signaling time course
+- hypothesis: &gt;-
+    LRCH4 affects LPS responsiveness by controlling CD14/TLR4 membrane organization rather
+    than by functioning as a direct LPS receptor.
+  description: &gt;-
+    Quantify CD14 and TLR4 surface delivery, receptor nanoclustering, detergent-independent
+    membrane-domain partitioning, and lipid composition after LRCH4 loss and rescue; in
+    parallel, test purified LRCH4 extracellular regions for saturable LPS binding with
+    stringent lipid and co-receptor controls.
+  experiment_type: Surface trafficking, super-resolution imaging, lipidomics, and binding assays
+- hypothesis: &gt;-
+    The C-terminal hydrophobic segment anchors LRCH4 with a reproducible topology and
+    controls stimulus-dependent movement between the endoplasmic reticulum and cell surface.
+  description: &gt;-
+    Introduce small endogenous tags on both sides of the predicted transmembrane segment,
+    then combine selective permeabilization, extracellular labeling, protease protection,
+    glycosylation-site mapping, and pulse-chase imaging in human immune cells.
+  experiment_type: Endogenous tagging and membrane-topology analysis
+- hypothesis: &gt;-
+    A specific LRCH4-C-Dock interaction is required for spatial Rho-GTPase activation and
+    contributes to LRCH4-dependent TLR signaling.
+  description: &gt;-
+    Define interaction-deficient LRCH4 mutants by domain mapping, confirm endogenous
+    binding, and compare wild-type and separation-of-function rescue using DOCK6/7/8
+    perturbations, RAC1/CDC42/RHOA biosensors, and TLR-induced cytokine readouts.
+  experiment_type: Interaction mapping, epistasis, and live-cell biosensors
+- hypothesis: &gt;-
+    Human immune cells express a regulated LRCH4 transcript or protein form with a distinct
+    membrane association state.
+  description: &gt;-
+    Perform long-read transcript sequencing, isoform-resolved proteomics, and C-terminal
+    peptide mapping across resting and TLR-stimulated primary human immune-cell types before
+    testing any reproducibly detected products in topology and rescue assays.
+  experiment_type: Long-read transcriptomics and isoform-resolved proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
