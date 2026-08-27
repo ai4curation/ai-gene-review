@@ -45,3 +45,29 @@
   to Hsp70 or heat-shock-protein binding according to the GOA partner; the three
   protein-folding and three unfolded-client IGI rows are likewise retained as
   distinct SSA1/SSA2/SSA3-linked records. No module currently names SSA4.
+
+## 2026-08-27 reviewer follow-up
+
+- The imported SGD/Alliance description was not accepted wholesale: its
+  SRP-dependent cotranslational clause conflicts with the primary SSA/Ydj1
+  translocation evidence and the review's GO:0031204 replacement. The description
+  rubric now explicitly scores and explains that mechanistic error.
+- A newly cached primary study directly supports a second conditional nuclear
+  localization context. Under cadmium stress, ScSsa4 translocates to the nucleus,
+  associates with Pom34, and regulates VHS1 expression in a pathway that reduces
+  cadmium accumulation. [PMID:39456809 "ScSSA4 binds to POre Membrane 34 (POM34),
+  a key component of nuclear pore complex (NPC), and translocates from the cytoplasm
+  to the nucleus, where it regulates the expression of its downstream gene, Viable
+  in a Hal3 Sit4 background 1 (VHS1), resulting in reduced Cd accumulation in yeast
+  cells."] Both nucleus rows remain KEEP_AS_NON_CORE because starvation and cadmium
+  trigger context-specific relocalization rather than defining Ssa4's default
+  cytosolic site.
+- The redundant synthetic NEW GO:0140662 row was removed. GO:0140662 remains the
+  replacement for each broader chaperone/client-binding row and the molecular
+  function in `core_functions`; the review therefore contains exactly one record per
+  one of the 33 pinned GOA rows. Generic nucleotide binding is now MODIFY to the
+  existing specific ATP-binding term GO:0005524.
+- The four remaining interactome references now carry manual caveats. Their GOA
+  partner identities are retained, but genome-scale co-complex, prediction, paralog-
+  heteromer, and affinity-enrichment datasets are not described as targeted proof of
+  direct binary contact when the specific edge is absent from the narrative text.
