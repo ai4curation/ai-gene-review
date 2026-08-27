@@ -28,7 +28,11 @@
   wall location was further confirmed by indirect immunofluorescence with
   intact cells and biotinylation of extracellular Hsp70."] [PMID:10745074
   "Ssa1/2p was prominently localized to the vacuolar membrane"]
-- Plasma-membrane IBA/HDA annotations are retained conservatively as non-core.
+- The plasma-membrane IBA and HDA rows are now separated by evidence source.
+  The pinned IBA cites PTN002500132, but the current local PTHR19375 PAINT
+  snapshot has nucleus and cytosol at that node and no GO:0005886; the IBA is
+  therefore removed as `SOURCE_STALE_OR_MISSING`, based on node content rather
+  than donor count. The HDA is retained conservatively as non-core.
   The cached PMID:16622836 record is abstract-only and confirms a stripped
   plasma-membrane proteomics workflow but does not itself name Ssa1, so the
   citation is marked UNVERIFIED rather than used to claim a primary functional
@@ -41,7 +45,18 @@
   evidence code. [file:yeast/SSA1/SSA1-hypotheses/existing-go-0005886-keep-as-non-core/openscientist.md
   "treating plasma membrane as non-core is the correct handling of the evidence
   weight"]
+- The inherited review collapsed 242 pinned GOA rows to 70 review records,
+  chiefly by representing eight high-throughput IPI datasets once each. The
+  2026-08-27 audit expands every repeated dataset row with its exact WITH/FROM
+  identifier and removes a redundant `NEW` pseudo-row from
+  `existing_annotations`; the review now reconciles exactly 242/242.
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA1 and
   describes its constitutive cytosolic Hsp70 role. SSA1 is also part of the
   BIOREASON_COMPARISON benchmark, but that project consumes the review through
   generated benchmark outputs rather than a manually maintained per-gene claim.
+- Every PMID supporting an experimental, high-throughput, or NAS row now has a
+  manual `reference_review`. Dataset papers and abstract-only records are marked
+  `UNVERIFIED` whenever the SSA1-specific edge or assay is not visible; direct
+  Ssa1 experiments are marked `VERIFIED` only when the cached text exposes the
+  relevant evidence. With the exact 242-row reconciliation and all actions
+  resolved, the review is promoted to `COMPLETE`.
