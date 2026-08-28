@@ -91,6 +91,11 @@ from ai_gene_review.etl.panther_families import (
     load_member_index,
     load_subfamily_counts,
 )
+from ai_gene_review.validation.supporting_text import (
+    LITERATURE_PREFIXES,
+    build_supporting_text_validator,
+    is_unfetchable,
+)
 
 # A resolver answers: given a CURIE, return (status, primary_label, aliases).
 # status is "ok" when the id resolved, "not_found" when the ontology was
@@ -1764,12 +1769,6 @@ def validate_module_file(
     )
 
 
-# Literature source_id prefixes whose supporting_text quotes are checked
-# verbatim against a cached publication. Everything else (GO, file:, PANTHER,
-# Reactome, UniProtKB, ...) is provenance grounding, not a fetchable quote.
-_LITERATURE_PREFIXES = {"PMID", "DOI"}
-
-
 def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
     """Yield ``(source_id, supporting_text)`` for every EvidenceItem-like dict.
 
@@ -1792,7 +1791,7 @@ def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
             and supporting_text.strip()
         ):
             prefix = source_id.split(":", 1)[0].upper()
-            if prefix in _LITERATURE_PREFIXES:
+            if prefix in LITERATURE_PREFIXES:
                 yield (source_id, supporting_text)
         for value in obj.values():
             yield from iter_evidence_snippets(value)
@@ -1823,7 +1822,7 @@ def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
             isinstance(ref_id, str)
             and isinstance(title, str)
             and title.strip()
-            and ref_id.split(":", 1)[0].upper() in _LITERATURE_PREFIXES
+            and ref_id.split(":", 1)[0].upper() in LITERATURE_PREFIXES
         ):
             yield (ref_id, title)
         for value in obj.values():
@@ -1831,34 +1830,6 @@ def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
     elif isinstance(obj, list):
         for item in obj:
             yield from iter_reference_titles(item)
-
-
-def _build_supporting_text_validator(publications_dir: Optional[Path]):
-    """Build linkml-reference-validator's SupportingTextValidator over the cache.
-
-    Returns ``(validator, publications_dir)`` or ``(None, publications_dir)`` when
-    the optional dependency is not installed, so callers degrade gracefully.
-    """
-    if publications_dir is None:
-        publications_dir = Path(__file__).resolve().parents[3] / "publications"
-    try:
-        from linkml_reference_validator.models import ReferenceValidationConfig
-        from linkml_reference_validator.validation.supporting_text_validator import (
-            SupportingTextValidator,
-        )
-    except ImportError:
-        return None, publications_dir
-    config = ReferenceValidationConfig(
-        cache_dir=publications_dir,
-        fetch_full_text=False,
-    )
-    return SupportingTextValidator(config), publications_dir
-
-
-def _is_unfetchable(message: str) -> bool:
-    """True when a validation failure is a fetch/availability problem, not a mismatch."""
-    lowered = message.lower()
-    return "could not fetch" in lowered or "no records found" in lowered
 
 
 def validate_supporting_text(
@@ -1885,7 +1856,7 @@ def validate_supporting_text(
     if not snippets:
         return [], []
 
-    validator, _ = _build_supporting_text_validator(publications_dir)
+    validator, _ = build_supporting_text_validator(publications_dir)
     if validator is None:
         return [], []
 
@@ -1903,7 +1874,7 @@ def validate_supporting_text(
         if result.is_valid:
             continue
         message = str(getattr(result, "message", "") or "")
-        if _is_unfetchable(message):
+        if is_unfetchable(message):
             warnings.append(f"Supporting text unverified ({source_id}): {message}")
         else:
             errors.append(f"Supporting text mismatch ({source_id}): {message}")
@@ -1933,7 +1904,7 @@ def validate_reference_titles(
     if not refs:
         return [], []
 
-    validator, _ = _build_supporting_text_validator(publications_dir)
+    validator, _ = build_supporting_text_validator(publications_dir)
     if validator is None:
         return [], []
 
@@ -1951,7 +1922,7 @@ def validate_reference_titles(
         if result.is_valid:
             continue
         message = str(getattr(result, "message", "") or "")
-        if _is_unfetchable(message):
+        if is_unfetchable(message):
             warnings.append(f"Reference title unverified ({ref_id}): {message}")
         else:
             errors.append(f"Reference title mismatch ({ref_id}): {message}")

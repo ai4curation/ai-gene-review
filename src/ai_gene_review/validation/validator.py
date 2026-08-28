@@ -30,6 +30,12 @@ from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
+from ai_gene_review.validation.supporting_text import (
+    LITERATURE_PREFIXES,
+    build_supporting_text_validator,
+    cached_full_text_available,
+    is_unfetchable,
+)
 
 
 PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
@@ -76,6 +82,7 @@ def get_schema_path() -> Path:
 def validate_reference_finding_supporting_text(
     data: Dict[str, Any],
     report: ValidationReport,
+    publications_dir: Optional[Path] = None,
 ) -> None:
     """Validate quotes stored directly on top-level reference findings.
 
@@ -84,28 +91,36 @@ def validate_reference_finding_supporting_text(
     does not see it as a normal `supported_by` evidence item. Check these
     quotes explicitly with the same deterministic substring validator.
     """
-    try:
-        from linkml_reference_validator.models import ReferenceValidationConfig
-        from linkml_reference_validator.validation.supporting_text_validator import (
-            SupportingTextValidator,
+    if publications_dir is None:
+        publications_dir = get_project_root() / "publications"
+    validator, resolved_publications_dir = build_supporting_text_validator(
+        publications_dir
+    )
+    if validator is None:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            "Finding supporting text validation dependency is unavailable",
+            path="references",
+            validation_category="ReferenceValidator",
+            check_type="reference_finding_supporting_text",
         )
-    except ImportError:
         return
 
-    validator = SupportingTextValidator(
-        ReferenceValidationConfig(
-            cache_dir=get_project_root() / "publications",
-            fetch_full_text=False,
-        )
-    )
     for i, reference in enumerate(data.get("references", [])):
         if not isinstance(reference, dict):
             continue
         reference_id = reference.get("id")
         if not isinstance(reference_id, str):
             continue
-        if reference_id.split(":", 1)[0].upper() not in {"PMID", "DOI"}:
+        if reference_id.split(":", 1)[0].upper() not in LITERATURE_PREFIXES:
             continue
+        reference_declares_unavailable = (
+            reference.get("full_text_unavailable") is True
+        )
+        cache_has_full_text = cached_full_text_available(
+            reference_id,
+            resolved_publications_dir,
+        )
         for j, finding in enumerate(reference.get("findings", [])):
             if not isinstance(finding, dict):
                 continue
@@ -130,17 +145,35 @@ def validate_reference_finding_supporting_text(
             if result.is_valid:
                 continue
             message = str(getattr(result, "message", "") or "")
-            if "could not fetch" in message.lower() or "no records found" in message.lower():
+            declared_unavailable = (
+                reference_declares_unavailable
+                or finding.get("full_text_unavailable") is True
+            )
+            if is_unfetchable(message):
                 severity = ValidationSeverity.WARNING
                 prefix = "Finding supporting text could not be verified"
+                suggestion = "Verify the quote when the publication text is available"
+            elif declared_unavailable or cache_has_full_text is False:
+                severity = ValidationSeverity.WARNING
+                prefix = (
+                    "Finding supporting text is absent from the available "
+                    "abstract-only cache"
+                )
+                suggestion = (
+                    "Verify the quote against full text; retain full_text_unavailable "
+                    "until a full-text cache is available"
+                )
             else:
                 severity = ValidationSeverity.ERROR
                 prefix = "Finding supporting text is not a verbatim publication substring"
+                suggestion = (
+                    "Replace the quote with an exact substring from the cached publication"
+                )
             report.add_issue(
                 severity,
                 f"{prefix} for {reference_id}: {message}",
                 path=path,
-                suggestion="Replace the quote with an exact substring from the cached publication",
+                suggestion=suggestion,
                 validation_category="ReferenceValidator",
                 check_type="reference_finding_supporting_text",
             )
@@ -1029,7 +1062,7 @@ def validate_multiple_files(
         schema_path: Unused (kept for backward compatibility)
         check_best_practices: Whether to check for best practices
         check_goa: Whether to validate against GOA files
-        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         show_progress: Whether to show a progress bar for multiple files
 
     Returns:
