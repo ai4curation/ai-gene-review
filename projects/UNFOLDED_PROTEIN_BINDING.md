@@ -354,7 +354,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 
 | # | Category | Genes | Decision pattern |
 |---|----------|-------|------------------|
-| 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | MODIFY → GO:0044183; holdase NTR pending; SSZ1 retains GO:0044183 under the pragmatic co-chaperone convention |
+| 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | ATP-dependent foldases: MODIFY → GO:0140662; holdase NTR pending; SSZ1 retains GO:0044183 under the pragmatic co-chaperone convention |
 | 2 | **HSP90 system** | AHSA1, PTGES3, AIP (human); HSP82, HSC82, CPR6, CPR7, CDC37 (yeast); CDC37 (C. albicans); Hsp83 (fly) | MODIFY or OVER_ANNOTATED |
 | 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1, APJ1 (yeast); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 (interim); holdase-type → holdase NTR |
 | 4 | **sHSPs/holdases** | CRYAA, CRYAB, HSPB6 (human); CLU, SCG5 (human); CRYAA (bovine); cryaa/cryaba/cryabb (zebrafish); HSP26 (yeast); Hsp22/23/26/27 (fly); HSP17.7 (Arabidopsis); HSPH1 (hamster) | MODIFY → holdase NTR; retain GO:0051082 until NTR created |
@@ -558,8 +558,8 @@ established:
 | SHR3 | *S. cerevisiae* | Q02774 | 18 | MODIFY | Amino acid permease chaperone |
 | SHY1 | *S. cerevisiae* | P53266 | 14 | OVER_ANNOTATED | Cox assembly factor |
 | SQT1 | *S. cerevisiae* | P35184 | 9 | MODIFY | Ribosome assembly |
-| SSA1 | *S. cerevisiae* | P10591 | 71 | MODIFY → GO:0044183 | HSP70 |
-| SSA2 | *S. cerevisiae* | P10592 | 278 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; ATP-driven folding/refolding |
+| SSA1 | *S. cerevisiae* | P10591 | 70 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; 70 review records collapse 242 pinned GOA rows |
+| SSA2 | *S. cerevisiae* | P10592 | 57 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; 57 review records collapse 278 pinned GOA rows |
 | SSA3 | *S. cerevisiae* | P09435 | 55 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSA4 | *S. cerevisiae* | P22202 | 33 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
@@ -576,10 +576,6 @@ established:
 | VPS45 | *S. cerevisiae* | P38932 | 35 | OVER_ANNOTATED | SNARE regulator |
 | YAR1 | *S. cerevisiae* | P46683 | 19 | MODIFY | Rps3 chaperone |
 | YDJ1 | *S. cerevisiae* | P25491 | 49 | MODIFY → GO:0044183 | J-domain co-chaperone |
-
-Annotation counts are pinned GOA-row counts. SSA2 currently represents its 278
-GOA rows with 57 collapsed review records; SSA1, SSA3, and SSA4 reconcile their
-review records one-to-one with 242, 55, and 33 GOA rows, respectively.
 
 </details>
 
