@@ -128,3 +128,44 @@
 - Provider-output caveats: its GO table says 39 current annotations although the
   fetched/collapsed review has 36, and it recommends obsolete GO:0051082. Those
   claims were not adopted. The curated replacement remains GO:0140662.
+
+## Completion audit (2026-08-28)
+
+- Row-by-row reconciliation found 39 fetched GOA rows representing 36 distinct
+  review assertions. The three extra rows are duplicate assertion keys that
+  differ only in `WITH/FROM`: three PMID:16429126 protein-binding rows collapse
+  to one review entry, and two PMID:1394434 cytoplasmic-translation IPI rows
+  collapse to one. No GO term/evidence/reference/qualifier assertion is absent.
+- All seven IBA rows were re-read against their GOA `WITH/FROM` fields and PAINT
+  nodes. The cytoplasm, ATPase, generic chaperone, nucleus, heat-shock-protein
+  binding, and cytosol transfers are biologically defensible; broad or secondary
+  assertions are distinguished from the core ATP-dependent cotranslational
+  chaperone function. The broad protein-refolding IBA was narrowed to directly
+  demonstrated de novo cotranslational folding rather than being accepted as a
+  generic refolding program.
+- The plasma-membrane HDA was initially changed from `REMOVE` to `UNDECIDED`
+  because PMID:16622836 is abstract-only in the cache and describes a stripped
+  plasma-membrane fraction, while direct evidence places Ssb1 in the cytosol.
+- Translation, frameshifting, termination, and fidelity phenotypes were retained
+  as genuine but non-core. This brings row actions into agreement with the core
+  function synthesis, which identifies ATP-dependent nascent-chain folding as
+  primary and the translation phenotypes as downstream/contextual.
+
+## PR review follow-up (2026-08-28)
+
+- The missing ribosome-associated annotations are now explicit `action: NEW`
+  rows: GO:0043022 `ribosome binding` and GO:0022626 `cytosolic ribosome`.
+  PMID:9670014 directly characterizes Ssb-ribosome interaction, and PMID:1394434
+  identifies Ssb1/2 as cytosolic Hsp70s associated with translating ribosomes.
+  Because both are existing GO terms rather than ontology gaps, they belong in
+  `existing_annotations`, not `proposed_new_terms`. GO:0022626 was also added
+  to the core-function locations.
+- The GO:0042026 IBA is now classified as `PROPAGATION_BAD` with
+  `FUNCTIONAL_DIVERGENCE`, rather than a parent/child granularity problem.
+  Protein refolding and de novo cotranslational folding are sibling processes;
+  GO:0051083 is already present with direct IDA evidence from PMID:9670014, so
+  MODIFY here effectively rejects the unsupported propagated refolding claim.
+- The plasma-membrane HDA is now `MARK_AS_OVER_ANNOTATED`, harmonizing the call
+  with the nearly identical Ssb2 paralog. This retains the bulk high-throughput
+  fraction observation without treating plasma membrane as a demonstrated
+  functional compartment for the soluble cytosolic chaperone.
