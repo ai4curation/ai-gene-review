@@ -537,7 +537,7 @@ established:
 | HSP104 | *S. cerevisiae* | P31539 | 46 | MODIFY → GO:0044183 | Disaggregase |
 | HSP26 | *S. cerevisiae* | P15992 | 16 | MODIFY (holdase NTR) | sHSP holdase |
 | HSP60 | *S. cerevisiae* | P19882 | 47 | MODIFY → GO:0044183 | Chaperonin |
-| HSP82 | *S. cerevisiae* | P02829 | 73 | MODIFY → GO:0044183 | HSP90 |
+| HSP82 | *S. cerevisiae* | P02829 | 73 | MODIFY → GO:0140662 | HSP90 |
 | IRE1 | *S. cerevisiae* | P32361 | 46 | OVER_ANNOTATED | UPR sensor |
 | JEM1 | *S. cerevisiae* | P40358 | 15 | MODIFY | ER J-domain co-chaperone |
 | KAR2 | *S. cerevisiae* | P16474 | 42 | MODIFY → GO:0044183 | ER HSP70 (BiP) |
