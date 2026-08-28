@@ -559,7 +559,7 @@ established:
 | SHY1 | *S. cerevisiae* | P53266 | 14 | OVER_ANNOTATED | Cox assembly factor |
 | SQT1 | *S. cerevisiae* | P35184 | 9 | MODIFY | Ribosome assembly |
 | SSA1 | *S. cerevisiae* | P10591 | 71 | MODIFY → GO:0044183 | HSP70 |
-| SSA2 | *S. cerevisiae* | P10592 | 58 | MODIFY → GO:0044183 | HSP70 |
+| SSA2 | *S. cerevisiae* | P10592 | 278 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; ATP-driven folding/refolding |
 | SSA3 | *S. cerevisiae* | P09435 | 55 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSA4 | *S. cerevisiae* | P22202 | 33 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
@@ -576,6 +576,10 @@ established:
 | VPS45 | *S. cerevisiae* | P38932 | 35 | OVER_ANNOTATED | SNARE regulator |
 | YAR1 | *S. cerevisiae* | P46683 | 19 | MODIFY | Rps3 chaperone |
 | YDJ1 | *S. cerevisiae* | P25491 | 49 | MODIFY → GO:0044183 | J-domain co-chaperone |
+
+Annotation counts are pinned GOA-row counts. SSA2 currently represents its 278
+GOA rows with 57 collapsed review records; SSA1, SSA3, and SSA4 reconcile their
+review records one-to-one with 242, 55, and 33 GOA rows, respectively.
 
 </details>
 
