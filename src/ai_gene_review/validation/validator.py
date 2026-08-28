@@ -160,8 +160,8 @@ def validate_reference_finding_supporting_text(
                     "abstract-only cache"
                 )
                 suggestion = (
-                    "Verify the quote against full text; retain full_text_unavailable "
-                    "until a full-text cache is available"
+                    "Verify the quote against full text; use full_text_unavailable to "
+                    "record that the quoted source text is not cached"
                 )
             else:
                 severity = ValidationSeverity.ERROR
@@ -206,6 +206,7 @@ def validate_gene_review(
     check_goa: bool = True,
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
+    publications_dir: Optional[Path] = None,
 ) -> ValidationReport:
     """Run custom best-practices checks on a gene review YAML file.
 
@@ -220,6 +221,7 @@ def validate_gene_review(
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
+        publications_dir: Optional publication-cache directory for quote validation
 
     Returns:
         ValidationReport with detailed validation results
@@ -268,6 +270,7 @@ def validate_gene_review(
             yaml_file_path if check_goa else None,
             check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
+            publications_dir=publications_dir,
         )
 
     return report
@@ -279,6 +282,7 @@ def check_best_practices_rules(
     yaml_file: Optional[Path] = None,
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
+    publications_dir: Optional[Path] = None,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -292,6 +296,7 @@ def check_best_practices_rules(
         yaml_file: Path to YAML file for GOA validation (if enabled)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
+        publications_dir: Optional publication-cache directory for quote validation
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
@@ -300,7 +305,7 @@ def check_best_practices_rules(
     # linkml-term-validator CLI (invoked from justfile), not here.
 
     if check_supporting_text:
-        validate_reference_finding_supporting_text(data, report)
+        validate_reference_finding_supporting_text(data, report, publications_dir)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):

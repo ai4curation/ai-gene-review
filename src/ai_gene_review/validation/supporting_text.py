@@ -41,10 +41,16 @@ def cached_full_text_available(
     publications_dir: Path,
 ) -> Optional[bool]:
     """Return cached full-text availability, or `None` when not recorded."""
-    if not reference_id.startswith("PMID:"):
+    prefix, separator, identifier = reference_id.partition(":")
+    if not separator:
         return None
-    pmid = reference_id.split(":", 1)[1]
-    path = publications_dir / f"PMID_{pmid}.md"
+    if prefix.upper() == "PMID":
+        filename = f"PMID_{identifier}.md"
+    elif prefix.upper() == "DOI":
+        filename = f"DOI_{identifier.replace('/', '_')}.md"
+    else:
+        return None
+    path = publications_dir / filename
     if not path.exists():
         return None
     text = path.read_text()
@@ -54,6 +60,16 @@ def cached_full_text_available(
     if end == -1:
         return None
     frontmatter = yaml.safe_load(text[3:end])
-    if not isinstance(frontmatter, dict) or "full_text_available" not in frontmatter:
+    if not isinstance(frontmatter, dict):
         return None
-    return bool(frontmatter["full_text_available"])
+    if "full_text_available" in frontmatter:
+        return bool(frontmatter["full_text_available"])
+    content_type = frontmatter.get("content_type")
+    if not isinstance(content_type, str):
+        return None
+    normalized_content_type = content_type.lower()
+    if normalized_content_type in {"abstract_only", "unavailable"}:
+        return False
+    if normalized_content_type in {"full_text_html", "full_text_pdf"}:
+        return True
+    return None

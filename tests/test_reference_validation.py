@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from ai_gene_review.validation import validate_gene_review, ValidationSeverity
-from ai_gene_review.validation import validator as validator_module
+from ai_gene_review.validation.supporting_text import cached_full_text_available
 
 
 def test_valid_reference_ids():
@@ -56,10 +56,14 @@ def test_valid_reference_ids():
         temp_path.unlink()
 
 
-def _finding_quote_review(*findings, reference_flag=False):
+def _finding_quote_review(
+    *findings,
+    reference_flag=False,
+    reference_id="PMID:12345",
+):
     """Build a minimal review containing parent-PMID finding quotes."""
     reference = {
-        "id": "PMID:12345",
+        "id": reference_id,
         "title": "Test publication",
         "findings": list(findings),
     }
@@ -74,20 +78,30 @@ def _finding_quote_review(*findings, reference_flag=False):
     }
 
 
-def _write_cached_publication(tmp_path, *, full_text_available):
+def _write_cached_publication(
+    tmp_path,
+    *,
+    full_text_available=None,
+    content_type=None,
+    reference_id="PMID:12345",
+):
     publications_dir = tmp_path / "publications"
     publications_dir.mkdir()
-    availability = "true" if full_text_available else "false"
-    (publications_dir / "PMID_12345.md").write_text(
-        f"---\nfull_text_available: {availability}\n---\n\n"
-        "This exact evidence sentence is cached.\n"
-    )
+    prefix, identifier = reference_id.split(":", 1)
+    filename = f"{prefix}_{identifier.replace('/', '_')}.md"
+    metadata = ["---", f"reference_id: {reference_id}"]
+    if full_text_available is not None:
+        availability = "true" if full_text_available else "false"
+        metadata.append(f"full_text_available: {availability}")
+    if content_type is not None:
+        metadata.append(f"content_type: {content_type}")
+    metadata.extend(["---", "", "This exact evidence sentence is cached.", ""])
+    (publications_dir / filename).write_text("\n".join(metadata))
 
 
-def test_reference_finding_supporting_text_is_validated(tmp_path, monkeypatch):
+def test_reference_finding_supporting_text_is_validated(tmp_path):
     """The public validation path accepts exact text and rejects fabricated text."""
     _write_cached_publication(tmp_path, full_text_available=True)
-    monkeypatch.setattr(validator_module, "get_project_root", lambda: tmp_path)
     data = {
         **_finding_quote_review(
             {
@@ -103,7 +117,11 @@ def test_reference_finding_supporting_text_is_validated(tmp_path, monkeypatch):
 
     review_path = tmp_path / "review.yaml"
     review_path.write_text(yaml.safe_dump(data))
-    report = validate_gene_review(review_path, check_goa=False)
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
     quote_errors = [
         issue
         for issue in report.issues
@@ -114,10 +132,9 @@ def test_reference_finding_supporting_text_is_validated(tmp_path, monkeypatch):
     assert quote_errors[0].path == "references[0].findings[1].supporting_text"
 
 
-def test_abstract_only_finding_mismatch_is_warning(tmp_path, monkeypatch):
+def test_abstract_only_finding_mismatch_is_warning(tmp_path):
     """A quote absent from an abstract-only cache does not block validation."""
     _write_cached_publication(tmp_path, full_text_available=False)
-    monkeypatch.setattr(validator_module, "get_project_root", lambda: tmp_path)
     review_path = tmp_path / "review.yaml"
     review_path.write_text(
         yaml.safe_dump(
@@ -130,7 +147,11 @@ def test_abstract_only_finding_mismatch_is_warning(tmp_path, monkeypatch):
         )
     )
 
-    report = validate_gene_review(review_path, check_goa=False)
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
     quote_issues = [
         issue
         for issue in report.issues
@@ -142,11 +163,10 @@ def test_abstract_only_finding_mismatch_is_warning(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("flag_location", ["reference", "finding"])
 def test_full_text_unavailable_flag_downgrades_mismatch(
-    tmp_path, monkeypatch, flag_location
+    tmp_path, flag_location
 ):
     """Reference- and finding-level escape hatches prevent false hard errors."""
     _write_cached_publication(tmp_path, full_text_available=True)
-    monkeypatch.setattr(validator_module, "get_project_root", lambda: tmp_path)
     finding = {
         "statement": "Full-text result.",
         "supporting_text": "A sentence available only in uncached full text.",
@@ -160,7 +180,72 @@ def test_full_text_unavailable_flag_downgrades_mismatch(
     review_path = tmp_path / "review.yaml"
     review_path.write_text(yaml.safe_dump(data))
 
-    report = validate_gene_review(review_path, check_goa=False)
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
+    quote_issues = [
+        issue
+        for issue in report.issues
+        if issue.check_type == "reference_finding_supporting_text"
+    ]
+    assert len(quote_issues) == 1
+    assert quote_issues[0].severity == ValidationSeverity.WARNING
+
+
+@pytest.mark.parametrize(
+    ("reference_id", "content_type", "expected"),
+    [
+        ("PMID:12345", "abstract_only", False),
+        ("DOI:10.1234/example", "unavailable", False),
+        ("DOI:10.1234/example", "full_text_pdf", True),
+    ],
+)
+def test_legacy_cache_content_type_is_recognized(
+    tmp_path,
+    reference_id,
+    content_type,
+    expected,
+):
+    """Legacy PMID and slugged DOI caches expose availability via content_type."""
+    _write_cached_publication(
+        tmp_path,
+        content_type=content_type,
+        reference_id=reference_id,
+    )
+    assert (
+        cached_full_text_available(reference_id, tmp_path / "publications")
+        is expected
+    )
+
+
+def test_legacy_doi_abstract_only_mismatch_is_warning(tmp_path):
+    """A DOI quote absent from a legacy abstract-only cache remains advisory."""
+    reference_id = "DOI:10.1234/example"
+    _write_cached_publication(
+        tmp_path,
+        content_type="abstract_only",
+        reference_id=reference_id,
+    )
+    review_path = tmp_path / "review.yaml"
+    review_path.write_text(
+        yaml.safe_dump(
+            _finding_quote_review(
+                {
+                    "statement": "Full-text result.",
+                    "supporting_text": "A sentence available only in full text.",
+                },
+                reference_id=reference_id,
+            )
+        )
+    )
+
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
     quote_issues = [
         issue
         for issue in report.issues
