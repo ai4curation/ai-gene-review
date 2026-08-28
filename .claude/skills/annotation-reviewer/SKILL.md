@@ -70,6 +70,46 @@ Two things this implies, both easy to get backwards:
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
+**Do not second-guess what the deterministic pipeline provides.** The GOA tsv, the
+ontology caches, and the validators are produced by deterministic tooling; facts they
+assert or would have flagged are not yours to overrule from memory. In particular:
+
+- **Never claim a GO term is obsolete (or merged, or renamed) from memory.** The
+  validation pipeline checks term ids and labels against the ontology; if a term in the
+  GOA file were obsolete, tooling would surface it. Before writing any review whose
+  rationale depends on obsolescence or a label change, verify against OLS/QuickGO. A
+  MODIFY justified by a false obsolescence claim is worse than no action at all.
+- The same applies to GOA-provided fields generally (term ids, labels, evidence codes,
+  qualifiers, WITH/FROM): treat them as ground truth about what GOA asserts, and spend
+  your judgment on whether the *assertion* is biologically right, not on whether the
+  machine-provided record is what it says it is.
+
+**Read the QUALIFIER column before judging directness.** The GOA tsv's QUALIFIER column
+changes what the annotation actually claims, and a review that ignores it will
+mis-grade rows:
+
+- **`acts_upstream_of_or_within`** (and the other `acts_upstream_of*` qualifiers)
+  already concedes that the gene product acts upstream of, not necessarily within, the
+  process. **Never justify REMOVE or MARK_AS_OVER_ANNOTATED on such a row with "the
+  gene only regulates / only indirectly affects this process"** — that is precisely
+  what the qualifier states, so the criticism is not a defect of the annotation. Judge
+  these rows on other grounds: is the upstream link itself real and supported? Is the
+  term a phenotype-cascade overreach even as an upstream claim? Is the donor context
+  too narrow to transfer? A real-but-peripheral upstream link is KEEP_AS_NON_CORE, not
+  an over-annotation.
+- **`involved_in`** (or no qualifier) claims participation in the process. Here the
+  "regulator annotated as participant" critique is legitimate: MODIFY to a
+  `regulation of X` term, or mark as over-annotated, as evidence dictates.
+- When you review a row whose action turns on this distinction, record the qualifier in
+  the row's `qualifier:` field (copied verbatim from the GOA tsv) so the reasoning is
+  visible.
+
+**Ortholog source reviews are in scope.** When an ISO/ISS row's defect is on the
+source side (the donor human/mouse annotation is itself wrong or misapplied) and the
+source gene has a review in this repository (e.g. `genes/human/<GENE>/`), you may — and
+should — update that review too, rather than only noting the source-side problem in the
+target's review.
+
 Always make use of the `original_reference_id`. If this refers to a PMID, then read the publication (in publications/ directory) and make use of the information there.
 
 3. **Holistic Assessment**: Base your decisions on a synthesized understanding of gene function derived from multiple sources.

@@ -44,3 +44,15 @@ The annotation-reviewer agent will use this data as additional evidence when rev
 ## Step 4: Run annotation review
 
 Invoke the annotation-reviewer subagent to systematically review all annotations.
+
+Two standing rules from the annotation-reviewer skill that apply to every review:
+
+- **Do not second-guess deterministic pipeline outputs.** Term ids, labels, evidence
+  codes, qualifiers and obsoletion status come from deterministic tooling; never assert
+  from memory that a term is obsolete, merged, or renamed — verify via OLS/QuickGO
+  before any rationale depends on it.
+- **Judge directness against the GOA QUALIFIER column.** `acts_upstream_of_or_within`
+  rows already concede indirect/upstream action — "only indirect" is not a ground for
+  removing or over-annotation-marking them; `involved_in` rows are where that critique
+  applies. Ortholog source reviews (e.g. `genes/human/<GENE>/`) are in scope when the
+  defect is on the donor side.
