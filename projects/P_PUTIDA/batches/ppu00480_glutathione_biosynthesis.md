@@ -80,3 +80,35 @@ than nonexistent provider files.
 
 The 31-gene KEGG candidate inventory is retained in
 [`ppu00480_glutathione_biosynthesis.tsv`](ppu00480_glutathione_biosynthesis.tsv).
+
+## 2026-08-13 Follow-up
+
+This ownership pass rechecked every current GOA row and qualifier for `gshA`,
+`gshB`, and `PP_3253`; the existing curation decisions remain biologically
+appropriate. PMID:40302248 adds direct P. putida KT2440 Tn-seq support for the
+identity and an above-threshold copper/cobalt fitness phenotype of `gshA`. No
+metal-response BP is proposed because disrupting glutathione synthesis depletes
+a broadly protective metabolite: the pooled-mutant fitness result is consistent
+with indirect loss of glutathione buffering, not direct GshA involvement in a
+specific metal-response or detoxification process. The same study reports a
+weaker `gshB` copper phenotype that did not pass its statistical threshold, so
+it likewise is not used to infer a response annotation. No organism-specific
+result in that paper establishes `PP_3253` as a physiological substitute for
+GshA.
+
+All five requested OpenScientist jobs were launched and allowed to finish
+without manual termination. The `gshB` gene run completed after 1,001.73
+seconds; its report supports the exact glutathione synthase activity and
+two-step pathway placement but adds no defensible new GO term. The `gshA` and
+`PP_3253` gene runs, generic bacterial-module run, and
+module+UPA00142+PSEPK run each exhausted the full 7,200-second provider timeout
+without a report. The initial 8,100-second gene-timeout requests were rejected
+before launch because OpenScientist caps provider timeouts at 7,200 seconds;
+the corrected 7,200-second jobs were then launched and left to complete.
+
+Annotation-reviewer QA confirmed 6/6 `gshA`, 7/7 `gshB`, and 4/4 `PP_3253`
+GOA rows are represented once with their original qualifiers. Exact enzyme MFs
+and GO:0006750 remain core for canonical GshA and GshB; generic catalytic,
+binding, and localization terms remain over-annotated or non-core. PP_3253's
+specific ligase and process terms remain undecided, its broad C-N ligase class
+is non-core, and no core function is asserted.
