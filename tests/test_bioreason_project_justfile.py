@@ -1,9 +1,10 @@
-"""Execution tests for the BioReason project-local justfile."""
+"""Regression tests for the BioReason project-local justfile."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,17 +12,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_JUSTFILE = REPO_ROOT / "projects/BIOREASON_COMPARISON/justfile"
+PATH_FUNCTION_INTERPOLATION = re.compile(
+    r"\{\{\s*(?:justfile_directory|just_executable|invocation_directory)\(\)\s*\}\}"
+)
 
 
-def test_all_justfile_directory_interpolations_are_quoted() -> None:
-    """Every project-directory interpolation should begin inside a shell quote."""
-    unquoted_lines = [
-        line
-        for line in PROJECT_JUSTFILE.read_text().splitlines()
-        if "{{justfile_directory()}}" in line
-        and '"{{justfile_directory()}}' not in line
+def test_all_path_function_interpolations_are_quoted() -> None:
+    """Every path-producing interpolation should begin inside a shell quote."""
+    text = PROJECT_JUSTFILE.read_text()
+    unquoted_occurrences = [
+        match.group(0)
+        for match in PATH_FUNCTION_INTERPOLATION.finditer(text)
+        if match.start() == 0 or text[match.start() - 1] != '"'
     ]
-    assert unquoted_lines == []
+    assert unquoted_occurrences == []
 
 
 def test_gogpt_overlap_supports_repository_paths_with_spaces(tmp_path: Path) -> None:
