@@ -60,7 +60,7 @@ def main() -> int:
         if rev.exists():
             data = yaml.safe_load(rev.read_text()) or {}
             print(f"-- AIGR review (status: {data.get('status', '?')}) --")
-            print(textwrap.fill((data.get("description") or "").strip()[:1500], 116))
+            print(textwrap.fill((data.get("description") or "").strip()[:900], 116))
             print("-- core_functions --")
             for cf in data.get("core_functions") or []:
                 bits = []
@@ -73,7 +73,7 @@ def main() -> int:
                     bits.append(f"{slot}=" + ", ".join(
                         f"{i['id']} {i['label']}" for i in items if isinstance(i, dict)))
                 print("  * " + "; ".join(bits))
-                print(textwrap.fill((cf.get("description") or "")[:320], 112, initial_indent="    ",
+                print(textwrap.fill((cf.get("description") or "")[:230], 112, initial_indent="    ",
                                     subsequent_indent="    "))
 
         for label, suffix in (("GO-GPT leaf", "gogpt-leaf-predictions"),
@@ -83,7 +83,7 @@ def main() -> int:
                 continue
             data = yaml.safe_load(f.read_text()) or {}
             preds = data.get("predictions") or []
-            shown = [p for p in preds if p["review"]["assessment"] != "UNC"][:10]
+            shown = [p for p in preds if p["review"]["assessment"] != "UNC"][:6]
             print(f"-- {label} ({len(preds)} preds; non-UNC shown) --")
             for p in shown:
                 print(f"   {p['predicted_term']['id']} {p['predicted_term']['label']} "
