@@ -14,7 +14,7 @@
 
 - All 57 logical review records reconcile against the 278 pinned GOA provenance rows;
   no PENDING or UNDECIDED actions remain. The review is therefore marked COMPLETE.
-- Replaced the obsolete/generic chaperone terms GO:0044183 and GO:0051082 with
+- Replaced the generic GO:0044183 and obsolete GO:0051082 chaperone terms with
   GO:0140662 where the evidence supports ATP-dependent folding chaperone activity.
 - Replaced GO:0006616 with GO:0031204. The experimental evidence concerns an Ssa/Ydj1
   contribution to post-translational translocation of a subset of ER precursors, not
