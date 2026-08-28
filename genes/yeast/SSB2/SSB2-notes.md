@@ -27,3 +27,24 @@
 - Roughly half of cellular Ssb is ribosome-associated, but this is dynamic rather
   than stable complex membership, so the core function uses cytosol as location
   and describes the 60S tunnel-exit position in prose instead of `in_complex`.
+
+## 2026-08-28 completion audit
+
+- Reconciled every distinct GOA assertion and added the original qualifiers.
+- Audited all eight IBA rows against their actual GOA PAINT nodes:
+  PTN002500132 for nucleus, plasma membrane, and cytosol; PTN002321897 for
+  cytoplasm; and PTN000452648 for ATP hydrolysis, heat-shock-protein binding,
+  protein-folding chaperone activity, and protein refolding.
+- The plasma-membrane IBA is a compartment-mismatch propagation failure. The
+  independent HDA row from PMID:16622836 is instead retained as an
+  over-annotated bulk-fraction observation, using the paper's exact abstract
+  description of a stripped plasma-membrane fraction.
+- GO:0042026 protein refolding restores activity to an already unfolded or
+  misfolded protein; GO:0051083 describes folding a ribosome-bound nascent chain.
+  Because the direct Ssb evidence establishes the latter rather than the former,
+  the IBA refolding row is modified to GO:0051083 rather than retained as a
+  generic Hsp70 capability. [PMID:9670014 "preventing the misfolding of newly
+  synthesized proteins"]
+- Added machine-readable NEW proposals for GO:0043022 ribosome binding and
+  GO:0022626 cytosolic ribosome, both directly supported by PMID:9670014 and
+  consistent with PMID:1394434. These are missing from the current SSB2 GOA set.
