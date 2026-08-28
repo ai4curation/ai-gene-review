@@ -40,19 +40,25 @@ the ER so it can assemble into V0.
 
 All three `unfolded protein binding` rows are marked over-annotated. GO:0051082
 is obsolete, but no current generic holdase or protein-folding-chaperone term is
-an evidence-matched replacement. Crucially, the full text describes association
-with a folded assembly intermediate: [PMID:9660861, "The first step in the
-assembly pathway would involve the association of the fully translocated and
-folded Vph1p with the Vma12p/Vma22p assembly complex in the ER membrane."] It
-also distinguishes these proteins from general chaperones: [PMID:9660861,
+an evidence-matched replacement. The authors' proposed model, rather than a
+direct folding-state assay, places a folded assembly intermediate at the
+interaction step: [PMID:9660861, "The first step in the assembly pathway would
+involve the association of the fully translocated and folded Vph1p with the
+Vma12p/Vma22p assembly complex in the ER membrane."] The experiments establish
+stabilization in the assembly pathway [PMID:9660861, "We conclude that the
+interaction of Vph1p with the assembly complex stabilizes this Vo subunit in the
+ER allowing it to assemble into the Vo subcomplex."], while the authors
+explicitly distinguish these proteins from general chaperones: [PMID:9660861,
 "Vma12p, Vma21p, and Vma22p represent a class of ER resident proteins dedicated
 to the assembly of a specific enzyme complex, the V-ATPase."] Accordingly, the
-review does not replace GO:0051082 with a holdase/chaperone term and instead
-proposes a dedicated V-ATPase V0-sector assembly-factor activity term.
+review does not replace GO:0051082 with GO:0044183 protein folding chaperone:
+stabilization is demonstrated, but assistance of client protein folding is not.
+It instead proposes a dedicated V-ATPase V0-sector assembly-factor activity term.
 
 For the IBA GO:0051082 row, the PTN source cannot be recovered. The VMA22 source
-seed is classified `SOURCE_BAD` for this term because the experimental mutant
-and assembly evidence does not establish unfolded-protein binding. This is a
+seed is classified `SOURCE_WEAK_OR_INFERRED` because the experimental mutant and
+assembly evidence does not establish unfolded-protein binding; this reflects
+over-scoping rather than a wrong experiment. This is a
 term-scoping/role-conflation problem, not a claim that target self-evidence is
 circular.
 
@@ -61,7 +67,12 @@ circular.
 The PMID:26928762 nucleus HDA row is UNDECIDED. The full cached article describes
 the library and its manual localization calls without co-localization markers,
 but the VMA22-specific supplementary row is absent from the cache. The method
-states: [PMID:26928762, "Since no co-localization markers were used we only
+used amino-terminal GFP tagging, a concrete caveat for a protein with alternative
+initiation products [PMID:26928762, "To establish this strategy we constructed a
+library containing ~1,800 strains where all proteins with known or predicted
+localization to the yeast endomembrane system are tagged with an amino terminal
+(N′) SWAT acceptor module. The used module also contains a constitutive promoter
+and a GFP tag."]. It also states: [PMID:26928762, "Since no co-localization markers were used we only
 assigned localizations that could be easily discriminated by eye: ER, nuclear
 periphery, cytosol, cell periphery, vacuole lumen, vacuole membrane, mitochondria,
 nucleus, bud/bud neck and punctate"]. Focused evidence strongly establishes the
@@ -81,6 +92,6 @@ data limitation above.
 The core function is V-ATPase V0-sector assembly in the ER as part of the
 Vma12-Vma22 assembly complex, with vacuolar acidification as a valid downstream
 process consequence. The NEW ER membrane annotation is supported by focused
-biochemical evidence. The nine physical GOA rows have five ACCEPT decisions,
-three MARK_AS_OVER_ANNOTATED decisions, and one UNDECIDED decision; the review
-also contains one NEW annotation.
+biochemical evidence. The nine physical GOA rows have four ACCEPT decisions,
+three MARK_AS_OVER_ANNOTATED decisions, one KEEP_AS_NON_CORE decision, and one
+UNDECIDED decision; the review also contains one NEW annotation.
