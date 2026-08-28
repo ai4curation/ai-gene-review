@@ -107,9 +107,10 @@ But the two models are wrong in opposite directions, and the aggregate hides tha
   ProTrek's single best result in the benchmark is one of them: *Bordetella* BP0922, an unannotated
   PrpF-family protein, where the rank-1 call (methylitaconate delta-isomerase activity, score 19.66,
   3.2 units clear of rank 2) is exactly the core function the AIGR review derived independently.
-- **Term-level agreement between the models is almost nil**: 8 identical GO terms across all 50
-  proteins ([`argo50_head_to_head.json`](PROTREK_EVALUATION/argo50_head_to_head.json)). They are not
-  two views of one answer.
+- **Term-level agreement between the models is almost nil**: 8 identical GO terms in total, on 7 of
+  the 39 proteins for which ProtNLM2 emitted GO predictions
+  ([`argo50_head_to_head.json`](PROTREK_EVALUATION/argo50_head_to_head.json)). They are not two
+  views of one answer.
 
 ### Recall of the curated core function
 
@@ -196,9 +197,10 @@ threshold, and should exclude short predicted isoforms.
 
 ### 5. The GO index is frozen and has drifted
 
-16 of 150 assessed calls (11%) resolve to terms GO has since **obsoleted**, and 3 more to labels
-that no longer resolve at all — 19 of 150 could not be entered as annotations even when correct. The
-sharpest case is the tobacco PRORP, where the closest-to-correct call (`endonucleolytic cleavage
+Of the 150 assessed (top-3) calls, 10 resolve to terms GO has since **obsoleted** and 2 to labels that
+no longer resolve at all — 12 (8.0%) could not be entered as annotations even when correct. Across
+the full top-5 output the rate is the same: 16 obsolete and 3 unresolved out of 250. The sharpest
+case is the tobacco PRORP, where the closest-to-correct call (`endonucleolytic cleavage
 involved in tRNA processing`) is obsolete: index staleness, not model error, blocks it. This is a
 maintenance property of any retrieval system with a precomputed text index, and it is invisible to
 the user.
