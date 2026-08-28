@@ -67,8 +67,8 @@ call Tsa1 a molecular chaperone and annotate protein folding. GO:0140309 is
 currently labelled "unfolded protein holdase activity," but its unchanged
 definition requires escorting the client to an acceptor or specific location.
 Tsa1 prevents aggregation in situ and is not a carrier, so GO:0140309 was not
-used. A general in-situ holdase activity remains an ontology gap; the review
-records this as a proposed new term while retaining GO:0044183 as the available
+used. A general `holdase chaperone activity` remains an ontology gap; the review
+uses the canonical project NTR name while retaining GO:0044183 as the available
 current chaperone activity.
 
 The final synthesis treats thioredoxin-dependent peroxiredoxin activity and the
