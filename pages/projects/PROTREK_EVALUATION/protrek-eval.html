@@ -1,0 +1,3180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrek ARGO-ProtNLM-50 Prediction Evaluation</title>
+    <style>
+        :root {
+            --color-cor: #16a34a;
+            --color-cnn: #65a30d;
+            --color-lsp: #ca8a04;
+            --color-unc: #6b7280;
+            --color-pli: #dc2626;
+            --color-npi: #ef4444;
+            --color-rep: #f97316;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .assessment-dist {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .assessment-dist .seg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: 0;
+            transition: flex 0.3s;
+        }
+        .seg-COR { background: var(--color-cor); }
+        .seg-CNN { background: var(--color-cnn); }
+        .seg-LSP { background: var(--color-lsp); }
+        .seg-UNC { background: var(--color-unc); }
+        .seg-PLI { background: var(--color-pli); }
+        .seg-NPI { background: var(--color-npi); }
+        .seg-REP { background: var(--color-rep); }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input[type="text"] {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 250px;
+        }
+        .controls select {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--bg-light);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background: #eef2ff; }
+        th .sort-arrow { font-size: 0.65rem; margin-left: 0.3rem; color: var(--text-muted); }
+        td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:hover { background: #fafbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-COR { background: var(--color-cor); }
+        .badge-CNN { background: var(--color-cnn); }
+        .badge-LSP { background: var(--color-lsp); }
+        .badge-UNC { background: var(--color-unc); }
+        .badge-PLI { background: var(--color-pli); }
+        .badge-NPI { background: var(--color-npi); }
+        .badge-REP { background: var(--color-rep); }
+
+        .badge-error {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .term-type {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .gene-link { color: #2563eb; text-decoration: none; }
+        .gene-link:hover { text-decoration: underline; }
+
+        .summary-cell { max-width: 400px; }
+        .summary-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #374151;
+        }
+        tr.expanded .summary-text {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .no-predictions {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .protein-row td { background: #f8fafc; font-weight: 500; }
+
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<h1>ProTrek ARGO-ProtNLM-50 Prediction Evaluation</h1>
+<p class="subtitle"></p>
+
+<div class="summary-bar">
+    <div class="summary-stat">
+        <div class="value">50</div>
+        <div class="label">Proteins</div>
+    </div>
+    <div class="summary-stat">
+        <div class="value">150</div>
+        <div class="label">Predictions</div>
+    </div>
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-cor);">20</div>
+        <div class="label">COR</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-cnn);">20</div>
+        <div class="label">CNN</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-lsp);">12</div>
+        <div class="label">LSP</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-unc);">24</div>
+        <div class="label">UNC</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-pli);">23</div>
+        <div class="label">PLI</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-npi);">50</div>
+        <div class="label">NPI</div>
+    </div>
+    
+    
+    
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-rep);">1</div>
+        <div class="label">REP</div>
+    </div>
+    
+    
+    <div class="summary-stat">
+        <div class="value">0.9</div>
+        <div class="label">Mean CS</div>
+    </div>
+</div>
+
+
+<div class="assessment-dist">
+    
+    
+    <div class="seg seg-COR" style="flex: 20;" title="COR: 20">
+        COR (20)
+    </div>
+    
+    
+    
+    <div class="seg seg-CNN" style="flex: 20;" title="CNN: 20">
+        CNN (20)
+    </div>
+    
+    
+    
+    <div class="seg seg-LSP" style="flex: 12;" title="LSP: 12">
+        LSP (12)
+    </div>
+    
+    
+    
+    <div class="seg seg-UNC" style="flex: 24;" title="UNC: 24">
+        UNC (24)
+    </div>
+    
+    
+    
+    <div class="seg seg-PLI" style="flex: 23;" title="PLI: 23">
+        PLI (23)
+    </div>
+    
+    
+    
+    <div class="seg seg-NPI" style="flex: 50;" title="NPI: 50">
+        NPI (50)
+    </div>
+    
+    
+    
+    <div class="seg seg-REP" style="flex: 1;" title="REP: 1">
+        
+    </div>
+    
+    
+</div>
+
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cor)"></div>COR — Correct novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cnn)"></div>CNN — Correct, not novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-lsp)"></div>LSP — Less precise</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-unc)"></div>UNC — Uncertain</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-pli)"></div>PLI — Paralog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-npi)"></div>NPI — Nonparalog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-rep)"></div>REP — Frequency bias</div>
+</div>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Filter by protein, term, or text…" oninput="filterTable()">
+    <select id="assessmentFilter" onchange="filterTable()">
+        <option value="">All assessments</option>
+        
+        <option value="COR">COR</option>
+        
+        <option value="CNN">CNN</option>
+        
+        <option value="LSP">LSP</option>
+        
+        <option value="UNC">UNC</option>
+        
+        <option value="PLI">PLI</option>
+        
+        <option value="NPI">NPI</option>
+        
+        <option value="REP">REP</option>
+        
+    </select>
+    <select id="typeFilter" onchange="filterTable()">
+        <option value="">All term types</option>
+        
+        <option value="GO_BP">GO_BP</option>
+        
+        <option value="GO_CC">GO_CC</option>
+        
+        <option value="GO_MF">GO_MF</option>
+        
+    </select>
+    <label style="font-size:0.85rem;">
+        <input type="checkbox" id="hideNoPred" onchange="filterTable()"> Hide no-prediction rows
+    </label>
+</div>
+
+<table id="evalTable">
+<thead>
+<tr>
+    <th onclick="sortTable(0)">Protein <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(1)">Organism <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(2)">Predicted Term <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(3)">Type <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(4)">Assessment <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(5)">CS <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(6)">Error <span class="sort-arrow">▼</span></th>
+    <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+
+
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/9PRIM/A0A8C9H4D2/A0A8C9H4D2-ai-review.html">A0A8C9H4D2</a>
+        <br><small style="color:var(--text-muted)">OLFML2A</small>
+    </td>
+    <td><small>Piliocolobus tephrosceles</small></td>
+    <td>
+        <strong>GO:0035582</strong><br>
+        sequestering of BMP in extracellular matrix
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.13). BMP sequestration in the ECM is characterised for other olfactomedin-superfamily members and BMP-binding matrix proteins, not for OLFML2A, which acts as a matricellular regulator downstream of AP-1 and influences integrin, HGF and NGF signalling. The extracellular-matrix half of the claim is right and matches GOA&#39;s extracellular region annotation; the BMP half is a paralog transfer. The term is additionally obsolete in the current GO release, so it is not usable as an annotation regardless.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/9PRIM/A0A8C9H4D2/A0A8C9H4D2-ai-review.html">A0A8C9H4D2</a>
+        <br><small style="color:var(--text-muted)">OLFML2A</small>
+    </td>
+    <td><small>Piliocolobus tephrosceles</small></td>
+    <td>
+        <strong>GO:0036122</strong><br>
+        BMP binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.71). The molecular-function counterpart of the rank-1 error. A five-bladed olfactomedin beta-propeller is a protein-interaction module and BMP binding is chemically plausible for one, but no BMP interaction has been reported for OLFML2A, and this review assigns extracellular matrix structural constituent as the core function instead. Asserting a specific ligand without evidence is exactly the failure mode that makes retrieval-derived annotations hard to trust.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/9PRIM/A0A8C9H4D2/A0A8C9H4D2-ai-review.html">A0A8C9H4D2</a>
+        <br><small style="color:var(--text-muted)">OLFML2A</small>
+    </td>
+    <td><small>Piliocolobus tephrosceles</small></td>
+    <td>
+        <strong>GO:0016205</strong><br>
+        selenocysteine methyltransferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.29). This is not a coherent prediction for a secreted beta-propeller glycoprotein - selenocysteine methyltransferase is a plant/bacterial cytoplasmic SAM-dependent enzyme - and there is no route by which OLFML2A could carry it. It is recorded as UNC rather than NPI because it reads as retrieval noise rather than a substantive claim: at rank 3 the score has already dropped close to the background level for this query, so the ranked list has run out of signal. The practical implication is that a fixed top-k cut on ProTrek output will pick up noise for proteins with weak family matches.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ABRPR/A0A8B8L1Z3/A0A8B8L1Z3-ai-review.html">A0A8B8L1Z3</a>
+        
+    </td>
+    <td><small>Abrus precatorius</small></td>
+    <td>
+        <strong>GO:0140827</strong><br>
+        zinc chaperone activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 9.77, the lowest top-1 score of the 50 proteins). Zinc chaperone activity is metallochaperone insertion of Zn2+ into apo-enzymes, a completely different mechanism from the Hsp40/Hsp70 co-chaperone cycle this protein&#39;s DnaJ domain and HPD motif imply. The word &#34;chaperone&#34; is shared and the biology is not. No zinc-binding site is annotated for this entry.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ABRPR/A0A8B8L1Z3/A0A8B8L1Z3-ai-review.html">A0A8B8L1Z3</a>
+        
+    </td>
+    <td><small>Abrus precatorius</small></td>
+    <td>
+        <strong>GO:0009660</strong><br>
+        amyloplast organization
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 8.97). Amyloplast organization is a starch-storage plastid process with no connection to a J-domain co-chaperone; the protein has no plastid transit peptide. The retrieval appears to be matching plant-ness and disorder rather than any functional feature.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ABRPR/A0A8B8L1Z3/A0A8B8L1Z3-ai-review.html">A0A8B8L1Z3</a>
+        
+    </td>
+    <td><small>Abrus precatorius</small></td>
+    <td>
+        <strong>GO:0030314</strong><br>
+        junctional membrane complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 8.93). The junctional membrane complex is an animal-specific ER/plasma-membrane junction of excitable cells and is not applicable to a plant protein; the call would be a taxon-constraint violation if entered. It is recorded as UNC rather than NPI because at this score the output is indistinguishable from noise, and treating noise as a substantive incorrect claim would overstate what the model asserted. Reported here to document that the scores for this protein never rise above the level where retrieval carries information.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AEDAE/A0A6I8TLE4/A0A6I8TLE4-ai-review.html">A0A6I8TLE4</a>
+        
+    </td>
+    <td><small>Aedes aegypti</small></td>
+    <td>
+        <strong>GO:1905742</strong><br>
+        Ras guanyl-nucleotide exchange factor complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.43). A RasGAP accelerates GTP hydrolysis; a RasGEF catalyses GDP release and loading of GTP. They are opposite activities carried by unrelated catalytic folds, and this protein carries the RasGAP domain (IPR001936, PF00616) with the PROSITE PS00509 catalytic signature. Retrieval matches on shared topic - Ras nucleotide-state regulation - and does not preserve the sign of the regulation, the same directional blindness seen at other queries in this benchmark. It also asserts a complex where the domain evidence supports a single-chain enzyme.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AEDAE/A0A6I8TLE4/A0A6I8TLE4-ai-review.html">A0A6I8TLE4</a>
+        
+    </td>
+    <td><small>Aedes aegypti</small></td>
+    <td>
+        <strong>GO:0045873</strong><br>
+        negative regulation of sevenless signaling pathway
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 15.36). The sevenless pathway is the Drosophila receptor tyrosine kinase-Ras cascade in R7 photoreceptor specification, and negative regulation of it is precisely what Drosophila Gap1 and raskol do; this protein is the Aedes raskol ortholog. The term is unusually insect-appropriate - a rare case in this benchmark of a call that is both taxon-correct and pathway-specific - and it is absent from GOA (which is empty). Scored COR with the caveat that sevenless itself is a Drosophila gene and a curator would need to confirm the Aedes pathway equivalent.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AEDAE/A0A6I8TLE4/A0A6I8TLE4-ai-review.html">A0A6I8TLE4</a>
+        
+    </td>
+    <td><small>Aedes aegypti</small></td>
+    <td>
+        <strong>GO:0043087</strong><br>
+        regulation of GTPase activity
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.36). Correct and novel with respect to GOA, though general: it does not say which GTPase or in which direction. The specific and correct version - negative regulation of Ras protein signal transduction, an exact match to this review&#39;s core process - is present at rank 5, so for this protein the useful answer is inside the top five but not at the top of it.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AQUCT/A0A2G9RZF1/A0A2G9RZF1-ai-review.html">A0A2G9RZF1</a>
+        
+    </td>
+    <td><small>Aquarana catesbeiana</small></td>
+    <td>
+        <strong>GO:0005042</strong><br>
+        netrin receptor activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 11.14). Netrin receptors are DCC/neogenin and UNC5 family transmembrane proteins; this fragment has no transmembrane segment and no immunoglobulin or fibronectin III repeats. The connection appears to run through neuronal guidance biology rather than through any structural feature. Assigning a receptor activity to what is almost certainly one domain of a secreted protease is wrong at every level.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AQUCT/A0A2G9RZF1/A0A2G9RZF1-ai-review.html">A0A2G9RZF1</a>
+        
+    </td>
+    <td><small>Aquarana catesbeiana</small></td>
+    <td>
+        <strong>GO:0060062</strong><br>
+        Spemann organizer formation at the dorsal lip of the blastopore
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.05). This is the most interesting call for this protein and the hardest to score. Tolloid/BMP-1 metalloproteases cleave chordin and so control BMP gradients at the Spemann organizer, and the full-length gene this fragment belongs to is a tolloid family member - so the retrieval has arguably reached the right biology by an indirect route. But it names an embryonic patterning event rather than the protein&#39;s activity, it is asserted for a 156-aa fragment that cannot perform it, and the model gives no sign of the intermediate reasoning. Recorded as uncertain: the right pathway, attached to the wrong object.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/AQUCT/A0A2G9RZF1/A0A2G9RZF1-ai-review.html">A0A2G9RZF1</a>
+        
+    </td>
+    <td><small>Aquarana catesbeiana</small></td>
+    <td>
+        <strong>GO:0062130</strong><br>
+        adhesive extracellular matrix
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">LOCALIZATION_DEFAULT</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.01). The extracellular placement is defensible - this review assigns extracellular region as the only location it will commit to - but the specific term refers to specialised adhesive matrices and is not supported, and it is obsolete in the current GO release so it could not be entered in any case. The generic and correct extracellular region term, which ProtNLM2 did predict for this protein, is not retrieved.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARAHY/A0A444Z7V7/A0A444Z7V7-ai-review.html">A0A444Z7V7</a>
+        
+    </td>
+    <td><small>Arachis hypogaea</small></td>
+    <td>
+        <strong>GO:0009833</strong><br>
+        plant-type primary cell wall biogenesis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 19.27), absent from GOA. Correct at the level stated - CSLD3 orthologs act at sites of rapid polarized wall deposition such as root-hair tips and pollen tubes, and contribute to primary wall biogenesis - but it says nothing about the polymer or the chemistry, which is where the interesting question lies for this protein. Scored LSP as a correct but low-resolution call.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARAHY/A0A444Z7V7/A0A444Z7V7-ai-review.html">A0A444Z7V7</a>
+        
+    </td>
+    <td><small>Arachis hypogaea</small></td>
+    <td>
+        <strong>GO:0052324</strong><br>
+        plant-type cell wall cellulose biosynthetic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 18.95). This commits the protein to cellulose synthesis, which is the CESA subfamily&#39;s role. CSLD proteins synthesise noncellulosic beta-1,4-glycans; GOA&#39;s own cellulose synthase (UDP-forming) IEA annotation for this entry carries the same over-assignment, and ProTrek reinforces it. The model&#39;s free-text retrieval gets this right on the same query, so the error is specific to what the GO index can express for this family - mannan synthase activity exists in the index but is retrieved only at rank 9.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARAHY/A0A444Z7V7/A0A444Z7V7-ai-review.html">A0A444Z7V7</a>
+        
+    </td>
+    <td><small>Arachis hypogaea</small></td>
+    <td>
+        <strong>GO:0016759</strong><br>
+        cellulose synthase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.36). Mechanically this is a parent of the cellulose synthase (UDP-forming) activity already in GOA, so it agrees with the existing annotation and is scored as correct-but-not-novel on that basis. Substantively it inherits the same CESA/CSLD conflation as rank 2, which this review&#39;s account of the family disputes; it is recorded here as agreement with the record rather than as an independent endorsement of the chemistry.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>
+        <br><small style="color:var(--text-muted)">RIC7</small>
+    </td>
+    <td><small>Arabidopsis thaliana</small></td>
+    <td>
+        <strong>GO:1902288</strong><br>
+        regulation of defense response to oomycetes
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.66). RIC7 is a ROP effector acting in guard-cell stomatal signalling; no role in oomycete defense is reported for it or for any characterised RIC family member. The prediction comes from the LRR repeats, which dominate the plant NLR/RLP immune-receptor entries in SwissProt, and ignores the CRIB motif that actually defines the family. Ranks 1-3 and 5 are four graded variants of the same oomycete-response concept, so the model&#39;s entire top-5 commits to one wrong theme.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>
+        <br><small style="color:var(--text-muted)">RIC7</small>
+    </td>
+    <td><small>Arabidopsis thaliana</small></td>
+    <td>
+        <strong>GO:1902289</strong><br>
+        negative regulation of defense response to oomycetes
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 15.51). A directional refinement of the rank-1 error and wrong for the same reason. Its presence alongside the opposite-signed term at rank 3 shows the retrieval is matching the topic of the sentence rather than a directional claim about the protein, so the ranked list carries less information than its length suggests.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>
+        <br><small style="color:var(--text-muted)">RIC7</small>
+    </td>
+    <td><small>Arabidopsis thaliana</small></td>
+    <td>
+        <strong>GO:1902290</strong><br>
+        positive regulation of defense response to oomycetes
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.16). The positively-signed variant of the same wrong theme; it directly contradicts the rank-2 call, and neither is supported. Scored as a third independent incorrect prediction because the ranked list presents it as one.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARTAN/A0A2U1PS28/A0A2U1PS28-ai-review.html">A0A2U1PS28</a>
+        
+    </td>
+    <td><small>Artemisia annua</small></td>
+    <td>
+        <strong>GO:0032544</strong><br>
+        plastid translation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 18.15) and absent from GOA, whose annotations for this entry are all mitochondrial (mitochondrial inner membrane, mitochondrial matrix). The call is correct and it corrects the record: this is the chloroplastic GUF1 paralog, and plastid translation is exactly the process this review assigns. A specific, novel and compartment-correcting prediction is the most valuable single output a function predictor can produce for a mis-targeted automatic annotation.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARTAN/A0A2U1PS28/A0A2U1PS28-ai-review.html">A0A2U1PS28</a>
+        
+    </td>
+    <td><small>Artemisia annua</small></td>
+    <td>
+        <strong>GO:0043253</strong><br>
+        chloroplast ribosome
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.46), also absent from GOA. GUF1/EF-4 acts on translating ribosomes and binds them GTP-dependently through its five-domain architecture and unique LepA_C domain, so placing it at the chloroplast ribosome is correct and specific. Scored COR; a curator might prefer the parent chloroplast stroma (retrieved at rank 13) since the protein associates transiently rather than being a ribosomal constituent.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ARTAN/A0A2U1PS28/A0A2U1PS28-ai-review.html">A0A2U1PS28</a>
+        
+    </td>
+    <td><small>Artemisia annua</small></td>
+    <td>
+        <strong>GO:0009547</strong><br>
+        plastid ribosome
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.26). The parent of the rank-2 call, correct for the same reason and adding nothing; it is recorded as uncertain rather than counted as a second correct prediction, since scoring the same claim twice at two ontology depths would inflate the model&#39;s apparent hit rate. The pattern - the same concept returned at two or three depths within a single top five - recurs across this benchmark and is the main reason a fixed top-k cut overstates how many distinct claims a ProTrek list contains.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ASPOR/Q2U1U6/Q2U1U6-ai-review.html">Q2U1U6</a>
+        <br><small style="color:var(--text-muted)">AO090138000091</small>
+    </td>
+    <td><small>Aspergillus oryzae RIB40</small></td>
+    <td>
+        <strong>GO:0009036</strong><br>
+        type II site-specific deoxyribonuclease activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 10.26). A restriction endonuclease is a bacterial DNA-cleaving enzyme with a PD-(D/E)xK nuclease fold; this protein has an alpha/alpha-toroid polysaccharide-lyase fold and acts on carbohydrate, not DNA. Nothing connects the two. The score is in the benchmark&#39;s bottom quartile, consistent with the retrieval having found no real neighbour for this short sequence.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ASPOR/Q2U1U6/Q2U1U6-ai-review.html">Q2U1U6</a>
+        <br><small style="color:var(--text-muted)">AO090138000091</small>
+    </td>
+    <td><small>Aspergillus oryzae RIB40</small></td>
+    <td>
+        <strong>GO:0018710</strong><br>
+        acetone carboxylase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 9.97). Acetone carboxylase is a large multi-subunit bacterial enzyme of anaerobic acetone metabolism, unrelated in fold, substrate and taxon. Like rank 1 this reads as noise rather than a hypothesis; the two together show that when the embedding has no good neighbour the returned terms are not merely imprecise but arbitrary.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ASPOR/Q2U1U6/Q2U1U6-ai-review.html">Q2U1U6</a>
+        <br><small style="color:var(--text-muted)">AO090138000091</small>
+    </td>
+    <td><small>Aspergillus oryzae RIB40</small></td>
+    <td>
+        <strong>GO:0016977</strong><br>
+        chitosanase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 9.91). The first hit with any relationship to the sequence: chitosanase is a fungal polysaccharide-degrading activity, so the substrate class (a glycan) and the taxon are both right, and the retrieval is at least in the carbohydrate-active world the domain implies. The mechanism is still wrong - chitosanases hydrolyse, while the chondroitin-lyase superfamily eliminates - and no chitosanase motifs are present, so it cannot be accepted. Notable that the mechanistically correct call (gellan lyase activity, a descendant of this review&#39;s core function) sits just below at rank 4, meaning the right answer is present in this protein&#39;s list but not distinguishable by score.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BALMU/A0A8B8WEG2/A0A8B8WEG2-ai-review.html">A0A8B8WEG2</a>
+        <br><small style="color:var(--text-muted)">CDK16</small>
+    </td>
+    <td><small>Balaenoptera musculus</small></td>
+    <td>
+        <strong>GO:0002945</strong><br>
+        cyclin K-CDK13 complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 18.65). CDK13 is a transcriptional CDK that phosphorylates the RNA polymerase II C-terminal domain in complex with cyclin K; CDK16 is a PCTAIRE kinase activated by cyclin Y at the plasma membrane and in the cytoplasm, with substrates PRC1, WIPI2B, Rb, p53 and p27Kip1. Naming a specific cyclin partner is the single most informative thing that can be said about a CDK, and the model asserts the wrong one with the benchmark&#39;s fourth-highest top-1 score.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BALMU/A0A8B8WEG2/A0A8B8WEG2-ai-review.html">A0A8B8WEG2</a>
+        <br><small style="color:var(--text-muted)">CDK16</small>
+    </td>
+    <td><small>Balaenoptera musculus</small></td>
+    <td>
+        <strong>GO:0002944</strong><br>
+        cyclin K-CDK12 complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 18.33), the sister complex of rank 1 and wrong for the same reason. The two together consume the top of the list with the transcriptional-CDK identity; UniProt&#39;s own PANTHER assignment for this entry is PTHR24056:SF174, CYCLIN-DEPENDENT KINASE 16, so the subfamily information was available and the retrieval did not use it.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BALMU/A0A8B8WEG2/A0A8B8WEG2-ai-review.html">A0A8B8WEG2</a>
+        <br><small style="color:var(--text-muted)">CDK16</small>
+    </td>
+    <td><small>Balaenoptera musculus</small></td>
+    <td>
+        <strong>GO:0000308</strong><br>
+        cytoplasmic cyclin-dependent protein kinase holoenzyme complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.40). Correct and appropriately specific: CDK16 does act as a cytoplasmic cyclin-CDK holoenzyme, which is precisely what distinguishes it from the nuclear transcriptional CDKs named at ranks 1 and 2. It is a strict descendant of the cytoplasm annotation already in GOA and matches this review&#39;s assigned location, so it is correct rather than novel. Notably the model produces the right general picture at rank 3 while asserting two incompatible specific complexes above it.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BORPE/Q7VZI5/Q7VZI5-ai-review.html">Q7VZI5</a>
+        <br><small style="color:var(--text-muted)">BP0922</small>
+    </td>
+    <td><small>Bordetella pertussis Tohama I</small></td>
+    <td>
+        <strong>GO:0050100</strong><br>
+        methylitaconate delta-isomerase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 19.66) and an exact match to the core molecular function this review derived independently from the PrpF domain (IPR007400/PF04303), the diaminopimelate-epimerase-like fold, and 2-methylcitrate cycle reconstruction. The protein has no GOA annotations at all, so this is a fully novel, specific and correct EC-level assignment - the outcome the whole retrieval approach is meant to deliver for unannotated bacterial proteins. Confidence is bounded by the same limit as the review itself: no biochemistry has been done on this protein.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BORPE/Q7VZI5/Q7VZI5-ai-review.html">Q7VZI5</a>
+        <br><small style="color:var(--text-muted)">BP0922</small>
+    </td>
+    <td><small>Bordetella pertussis Tohama I</small></td>
+    <td>
+        <strong>GO:0047584</strong><br>
+        4-oxalmesaconate hydratase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.44). A gallate-degradation enzyme (GalB/LigJ) that shares the PrpF-like fold; the reaction is a hydration, not the cis-trans isomerisation PrpF catalyses, and B. pertussis is not known to degrade gallate. This is the fold&#39;s other occupant being reported alongside the right answer, with a 3.2-unit score gap separating them - a case where the score does discriminate, unlike most queries in this benchmark.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BORPE/Q7VZI5/Q7VZI5-ai-review.html">Q7VZI5</a>
+        <br><small style="color:var(--text-muted)">BP0922</small>
+    </td>
+    <td><small>Bordetella pertussis Tohama I</small></td>
+    <td>
+        <strong>GO:0047613</strong><br>
+        aconitate decarboxylase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.86). Cis-aconitate decarboxylase (IRG1/ACOD1) produces itaconate and is mechanistically distinct from PrpF, though it acts on a chemically adjacent substrate; it is a mammalian and fungal immunometabolic enzyme with no B. pertussis counterpart. Ranks 2-5 all substitute a different reaction on a similar C5/C6 dicarboxylate, which is the substrate-neighbourhood pattern seen throughout this benchmark - the difference here is that the correct one won by a clear margin.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+        <br><small style="color:var(--text-muted)">XIRP2</small>
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0001534</strong><br>
+        radial spoke
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">LOCALIZATION_DEFAULT</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.99). The radial spoke is a component of the ciliary and flagellar axoneme; XIRP2 is a sarcomeric Z-disc and intercalated-disc protein with no axonemal localisation reported in any Xin family member. The retrieval appears to be matching the long repetitive coiled-coil-rich character of the sequence to other large filamentous-structure proteins rather than to the Xin repeats themselves.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+        <br><small style="color:var(--text-muted)">XIRP2</small>
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0033150</strong><br>
+        cytoskeletal calyx
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">LOCALIZATION_DEFAULT</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 12.41). The cytoskeletal calyx is the sperm perinuclear theca substructure. XIRP2 is expressed in cardiac and skeletal muscle, not in the sperm head; the existing GOA localisations (Z disc, cell-cell junction, focal adhesion, stress fiber) are all incompatible with this call. Another instance of the model picking a rare, highly specific cytoskeletal compartment from a general cytoskeletal signal.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+        <br><small style="color:var(--text-muted)">XIRP2</small>
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0097493</strong><br>
+        structural molecule activity conferring elasticity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 12.18). This term describes the elastic-spring function of titin and elastin-like proteins. XIRP2 is an F-actin-binding scaffold acting through its 26 Xin repeats; nothing in this review or in the Xin literature supports an elastic structural role, and the family&#39;s characterised activity is actin filament binding and protection from depolymerisation. The call is a plausible-sounding sarcomeric neighbour rather than the correct function - the discrimination failure is between Z-disc proteins, not between unrelated proteins.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CAEEL/A0A061AL94/A0A061AL94-ai-review.html">A0A061AL94</a>
+        <br><small style="color:var(--text-muted)">mcm-4</small>
+    </td>
+    <td><small>Caenorhabditis elegans</small></td>
+    <td>
+        <strong>GO:0015948</strong><br>
+        methanogenesis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 11.39). Methanogenesis is restricted to methanogenic archaea and is impossible in a nematode. The likely path is real but useless: MCM proteins are AAA+ ATPases of archaeal ancestry, so a 74-aa MCM fragment can land near archaeal sequences in the embedding space, and the archaeal text in SwissProt is dominated by methanogen metabolism. A taxon-constraint filter of the kind ProtNLM2&#39;s Evidencer applies would reject this before a user ever saw it.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CAEEL/A0A061AL94/A0A061AL94-ai-review.html">A0A061AL94</a>
+        <br><small style="color:var(--text-muted)">mcm-4</small>
+    </td>
+    <td><small>Caenorhabditis elegans</small></td>
+    <td>
+        <strong>GO:0051911</strong><br>
+        Methanosarcina-phenazine hydrogenase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 10.75). A genus-specific membrane-bound hydrogenase activity, wrong on every axis - taxon, cofactor requirement, fold and function. Notable for how specific the assertion is at a score this low: the retrieval never signals uncertainty by returning a general term, only by returning a low number.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CAEEL/A0A061AL94/A0A061AL94-ai-review.html">A0A061AL94</a>
+        <br><small style="color:var(--text-muted)">mcm-4</small>
+    </td>
+    <td><small>Caenorhabditis elegans</small></td>
+    <td>
+        <strong>GO:0051912</strong><br>
+        CoB--CoM heterodisulfide reductase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 9.70). Third consecutive methanogen-metabolism call, and below 10 the output is not usefully distinguishable from noise; recorded as uncertain rather than as a third independent error. Taken together the five hits for this query are the benchmark&#39;s worst result, and the reason is diagnosable from the input alone: a 74-aa fragment carrying one winged-helix domain does not contain enough of the protein for a whole-sequence embedding to place it. Users of retrieval-based annotation should treat short predicted isoforms as out of scope rather than as hard cases.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CALMI/A0A4W3GVU1/A0A4W3GVU1-ai-review.html">A0A4W3GVU1</a>
+        <br><small style="color:var(--text-muted)">esrp1</small>
+    </td>
+    <td><small>Callorhinchus milii</small></td>
+    <td>
+        <strong>GO:0097158</strong><br>
+        pre-mRNA intronic pyrimidine-rich binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 18.02). Pyrimidine-tract binding defines PTBP1/hnRNP I and the U2AF machinery; ESRP1&#39;s RRMs recognise UGG- and GGU-rich elements, and it is that preference that produces the epithelial splicing program. The two are different RRM-family proteins acting at different positions relative to regulated exons. ProTrek&#39;s PANTHER context for this entry is the generic hnRNP-related family (PTHR13976), which is where the confusion most plausibly originates.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CALMI/A0A4W3GVU1/A0A4W3GVU1-ai-review.html">A0A4W3GVU1</a>
+        <br><small style="color:var(--text-muted)">esrp1</small>
+    </td>
+    <td><small>Callorhinchus milii</small></td>
+    <td>
+        <strong>GO:0043484</strong><br>
+        regulation of RNA splicing
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 17.33), absent from GOA, whose annotations for this entry are limited to RNA binding, nucleic acid binding and nucleus. Correct and a substantial addition: it states what the protein does rather than what it is made of, which is the gap the existing IEA annotations leave.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CALMI/A0A4W3GVU1/A0A4W3GVU1-ai-review.html">A0A4W3GVU1</a>
+        <br><small style="color:var(--text-muted)">esrp1</small>
+    </td>
+    <td><small>Callorhinchus milii</small></td>
+    <td>
+        <strong>GO:0008187</strong><br>
+        poly-pyrimidine tract binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.20), the same PTB-family error as rank 1 at a different ontology node. Two of the top three calls commit to the wrong RNA sequence preference while the correct regulatory process sits between them; a curator taking ranks 1-3 would add one good annotation and two wrong ones.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0010960</strong><br>
+        magnesium ion homeostasis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 16.39), an exact match to the GO_Central IBA annotation and to this review&#39;s core process. Correct and specific - it names magnesium rather than the generic cation transport that the IEA pipeline and ProtNLM2 both stopped at - but already annotated, so not novel.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0055071</strong><br>
+        manganese ion homeostasis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 15.90), separated from the correct rank-1 call by only 0.5 score units. CNNM4 is characterised as a Mg2+ efflux transporter; manganese homeostasis is not a reported CNNM4 function and would not follow from the CBS-domain Mg-ATP sensing mechanism that regulates it. The prediction reflects the model&#39;s difficulty in discriminating which divalent cation a transporter handles, a distinction that matters for annotation and that the score ordering does not resolve.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0010961</strong><br>
+        intracellular magnesium ion homeostasis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.70), a strict descendant of the annotated magnesium ion homeostasis term and absent from GOA. CNNM4 extrudes Mg2+ across the basolateral membrane and so acts directly on the intracellular Mg2+ pool; the more specific term is correct and is a genuine refinement over the existing annotation. Scored COR as a correct novel call, on family/orthology inference rather than direct evidence in dog.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CHRVO/Q7NUH2/Q7NUH2-ai-review.html">Q7NUH2</a>
+        <br><small style="color:var(--text-muted)">CV_2726</small>
+    </td>
+    <td><small>Chromobacterium violaceum ATCC 12472</small></td>
+    <td>
+        <strong>GO:0047598</strong><br>
+        7-dehydrocholesterol reductase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 11.55). A multi-pass membrane sterol reductase of the cholesterol pathway, predicted for a 147-aa soluble DNA-binding protein in a bacterium that does not synthesise sterols. There is no fold, motif or taxonomic route to this call; it is a failure rather than an over-reach. The score is in the benchmark&#39;s bottom quartile and is the only warning a user gets.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CHRVO/Q7NUH2/Q7NUH2-ai-review.html">Q7NUH2</a>
+        <br><small style="color:var(--text-muted)">CV_2726</small>
+    </td>
+    <td><small>Chromobacterium violaceum ATCC 12472</small></td>
+    <td>
+        <strong>GO:0033488</strong><br>
+        cholesterol biosynthetic process via 24,25-dihydrolanosterol
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.21), the pathway counterpart of rank 1 and impossible for the same reason. Four of this protein&#39;s five top calls are sterol metabolism, so the failure is systematic rather than a single stray hit - the embedding has landed in a sterol neighbourhood and every rank reports from there.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CHRVO/Q7NUH2/Q7NUH2-ai-review.html">Q7NUH2</a>
+        <br><small style="color:var(--text-muted)">CV_2726</small>
+    </td>
+    <td><small>Chromobacterium violaceum ATCC 12472</small></td>
+    <td>
+        <strong>GO:1900377</strong><br>
+        negative regulation of secondary metabolite biosynthetic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 4 by score (10.41), reviewed in place of rank 3 whose label (&#34;cholestenone 5-alpha-reductase activity&#34;) does not resolve to any term in the current GO release. This is the only hit in the list with the right shape - a regulatory process - and it is still not supportable: C. violaceum&#39;s best-known secondary metabolite is violacein, whose regulators are quorum-sensing LuxR-type proteins and the MarR homolog VioS, and there is no evidence CV_2726 is among them. Recorded as a lead-shaped miss rather than as a hypothesis, because the correct general statement (this is a transcriptional repressor of some regulon) is already in GOA and was not what the model returned.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COLLI/A0A2I0M3K7/A0A2I0M3K7-ai-review.html">A0A2I0M3K7</a>
+        <br><small style="color:var(--text-muted)">TRUB2</small>
+    </td>
+    <td><small>Columba livia</small></td>
+    <td>
+        <strong>GO:0001056</strong><br>
+        RNA polymerase III activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.51). TRUB2 is a standalone pseudouridine synthase, not a polymerase subunit; nothing in the TruB fold, in GOA, or in the review supports RNA polymerase activity. The retrieval has resolved the query only as far as &#34;acts on RNA&#34; and then defaulted to one of the most heavily annotated RNA-enzyme concepts in SwissProt. The term is additionally obsolete in the current GO release. Ranks 4 and 5 continue the same theme (RNA polymerase III complex, t-UTP complex), so the whole top five commits to nuclear transcription and ribosome biogenesis for a mitochondrial tRNA-modifying enzyme.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COLLI/A0A2I0M3K7/A0A2I0M3K7-ai-review.html">A0A2I0M3K7</a>
+        <br><small style="color:var(--text-muted)">TRUB2</small>
+    </td>
+    <td><small>Columba livia</small></td>
+    <td>
+        <strong>GO:0097619</strong><br>
+        PTEX complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.90). The PTEX translocon is a Plasmodium-specific protein-export machine at the parasitophorous vacuole membrane. It cannot exist in a bird, and the prediction has no relationship to any feature of the sequence. This is the clearest example in the benchmark of a low-scoring query producing output that a taxon constraint check would reject outright - a filter ProtNLM2&#39;s Evidencer applies and ProTrek&#39;s raw retrieval does not.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COLLI/A0A2I0M3K7/A0A2I0M3K7-ai-review.html">A0A2I0M3K7</a>
+        <br><small style="color:var(--text-muted)">TRUB2</small>
+    </td>
+    <td><small>Columba livia</small></td>
+    <td>
+        <strong>GO:0005666</strong><br>
+        RNA polymerase III complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 4 (score 11.36); reviewed in place of rank 3, whose retrieved label (&#34;box C/D snoRNP complex binding&#34;) does not resolve to any term in the current GO release and so cannot be assigned an identifier. As a claim this is wrong for the same reason as rank 1 - TRUB2 is not a polymerase subunit - but at a score of 11.4 for a 142-aa partial sequence the output is indistinguishable from noise, so it is recorded as uncertain rather than as a substantive assertion. Counting the unresolvable rank 3 and the obsolete rank 1, three of this protein&#39;s top five calls cannot be entered as annotations at all, the highest ontology-drift rate of any query in the benchmark.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COTJA/A0A8C2TBA7/A0A8C2TBA7-ai-review.html">A0A8C2TBA7</a>
+        <br><small style="color:var(--text-muted)">PAM</small>
+    </td>
+    <td><small>Coturnix japonica</small></td>
+    <td>
+        <strong>GO:0004504</strong><br>
+        peptidylglycine monooxygenase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 20.43, the highest in the benchmark), an exact match to GOA and to the first core function of this review - the copper- and ascorbate-dependent PHM half-reaction that hydroxylates the C-terminal glycine. Correct and maximally specific, but already annotated.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COTJA/A0A8C2TBA7/A0A8C2TBA7-ai-review.html">A0A8C2TBA7</a>
+        <br><small style="color:var(--text-muted)">PAM</small>
+    </td>
+    <td><small>Coturnix japonica</small></td>
+    <td>
+        <strong>GO:0062112</strong><br>
+        fatty acid primary amide biosynthetic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 19.20). PAM is genuinely the enzyme that produces primary fatty acid amides such as oleamide from N-acylglycines, so this is a real PAM activity rather than a spurious match - but it is a secondary, non-peptide branch of the enzyme&#39;s chemistry, it has not been shown for the quail protein, and this review treats peptide amidation as the core process. Recorded as uncertain: a legitimate lead that a curator would need substrate evidence to accept.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/COTJA/A0A8C2TBA7/A0A8C2TBA7-ai-review.html">A0A8C2TBA7</a>
+        <br><small style="color:var(--text-muted)">PAM</small>
+    </td>
+    <td><small>Coturnix japonica</small></td>
+    <td>
+        <strong>GO:0004598</strong><br>
+        peptidylamidoglycolate lyase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.87), an exact match to GOA and to the second core function - the PAL half-reaction that cleaves the peptidyl-alpha-hydroxyglycine intermediate. Recovering both catalytic domains of a bifunctional enzyme from one sequence embedding is the strongest demonstration in this benchmark that ProTrek is reading domain content rather than returning a single family label; ProtNLM2 found only this half.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CUCME/A0A1S3BTE3/A0A1S3BTE3-ai-review.html">A0A1S3BTE3</a>
+        
+    </td>
+    <td><small>Cucumis melo</small></td>
+    <td>
+        <strong>GO:0004707</strong><br>
+        MAP kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 18.92), an exact match to the ARBA-derived GOA annotation and to this review&#39;s core molecular function. Correct, appropriately specific for what the sequence supports, and separated from the next call by 4 score units - the clearest signal in the benchmark that the model has actually resolved a family rather than guessed within a fold. Not novel: already annotated.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CUCME/A0A1S3BTE3/A0A1S3BTE3-ai-review.html">A0A1S3BTE3</a>
+        
+    </td>
+    <td><small>Cucumis melo</small></td>
+    <td>
+        <strong>GO:0004705</strong><br>
+        JUN kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.87). JNK is a metazoan MAPK subfamily defined by its substrate, c-Jun; plants have no JNK orthologs and no c-Jun. This protein is a Group D (TDY-motif) plant MAPK. The call is simultaneously a within-family paralog error and a taxon-constraint violation, and it is the kind of error ProtNLM2&#39;s Evidencer explicitly filters for - a difference in pipeline design rather than in underlying model quality.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/CUCME/A0A1S3BTE3/A0A1S3BTE3-ai-review.html">A0A1S3BTE3</a>
+        
+    </td>
+    <td><small>Cucumis melo</small></td>
+    <td>
+        <strong>GO:0106310</strong><br>
+        protein serine kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 13.94), another exact match to GOA. Correct but strictly less informative than rank 1; its presence at rank 3 shows the list mixing ontology depths rather than ranking by specificity. A curator taking the top three here would get one useful term, one redundant parent-level term, and one taxonomically impossible one.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DANRE/A0A8M9QG43/A0A8M9QG43-ai-review.html">A0A8M9QG43</a>
+        <br><small style="color:var(--text-muted)">dnajc6</small>
+    </td>
+    <td><small>Danio rerio</small></td>
+    <td>
+        <strong>GO:0016314</strong><br>
+        phosphatidylinositol-3,4,5-trisphosphate 3-phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 16.87). This is the defining catalytic activity of PTEN. Auxilin&#39;s PTEN-like domain is a phosphoinositide-binding module whose phosphatase activity is at best probable and whose established role is membrane targeting; the protein&#39;s function is J-domain recruitment of HSC70. Assigning PTEN&#39;s exact reaction to it is the clearest pseudoenzyme over-annotation in the benchmark, and the model commits to it three times over (ranks 1, 3 and 5 are three phosphoinositide phosphatase specificities).</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DANRE/A0A8M9QG43/A0A8M9QG43-ai-review.html">A0A8M9QG43</a>
+        <br><small style="color:var(--text-muted)">dnajc6</small>
+    </td>
+    <td><small>Danio rerio</small></td>
+    <td>
+        <strong>GO:0061883</strong><br>
+        clathrin-dependent endocytosis involved in vitellogenesis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.30). The parent concept is exactly right - clathrin-dependent endocytosis is annotated in GOA and is central to this review - but the retrieval returns it wrapped in a developmental context the protein does not act in: auxilin is expressed in hindbrain and spinal cord neurons and otic vesicles, not in yolk-protein uptake by oocytes. Scored LSP because a curator can recover the correct annotation by climbing one level to the parent, which is the practical outcome the LSP category is for; but the specific term as returned would be wrong.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DANRE/A0A8M9QG43/A0A8M9QG43-ai-review.html">A0A8M9QG43</a>
+        <br><small style="color:var(--text-muted)">dnajc6</small>
+    </td>
+    <td><small>Danio rerio</small></td>
+    <td>
+        <strong>GO:0052866</strong><br>
+        phosphatidylinositol phosphate phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.68), the parent of the rank-1 call and wrong for the same reason. The three phosphatase calls in the top five are the same claim at three ontology depths, so the ranked list gives an impression of converging evidence where there is really one hypothesis repeated - the practical hazard when retrieval depth is read as independent support.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DEIRA/Q9RSY6/Q9RSY6-ai-review.html">Q9RSY6</a>
+        <br><small style="color:var(--text-muted)">rpsA</small>
+    </td>
+    <td><small>Deinococcus radiodurans R1</small></td>
+    <td>
+        <strong>GO:0034336</strong><br>
+        misfolded RNA binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.57). RNA binding is correct and is annotated; &#34;misfolded RNA&#34; is an RNA-chaperone claim characteristic of CYT-19/DEAD-box helicases, not of bS1. Scored LSP because the term is a descendant of the annotated nucleic acid binding and a curator climbing to the parent recovers a correct annotation, but the qualifier is unsupported. The low absolute score (12.6 against 18.6 for the same query&#39;s free-text hit) is the signal that the GO channel has not resolved this protein.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DEIRA/Q9RSY6/Q9RSY6-ai-review.html">Q9RSY6</a>
+        <br><small style="color:var(--text-muted)">rpsA</small>
+    </td>
+    <td><small>Deinococcus radiodurans R1</small></td>
+    <td>
+        <strong>GO:0008143</strong><br>
+        poly(A) binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 by score (12.14), reviewed in place of rank 2 whose label (&#34;polysome binding&#34;) is obsolete in the current GO release. Poly(A) binding is the PABP function; bacterial mRNAs are not polyadenylated for translation and bS1 recognises the 5&#39; untranslated region, not a 3&#39; poly(A) tail. The shared S1/OB fold between bS1 and eukaryotic RNA-binding proteins is the likely route, and it leads to a claim that is wrong in both mechanism and taxon.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DEIRA/Q9RSY6/Q9RSY6-ai-review.html">Q9RSY6</a>
+        <br><small style="color:var(--text-muted)">rpsA</small>
+    </td>
+    <td><small>Deinococcus radiodurans R1</small></td>
+    <td>
+        <strong>GO:0060212</strong><br>
+        negative regulation of nuclear-transcribed mRNA poly(A) tail shortening
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 4 (score 11.76). A nuclear-transcript deadenylation process, impossible in a bacterium, and by this point in the list the scores have fallen far enough that the output should be read as no answer rather than as an assertion; recorded as uncertain on that basis. The instructive point for the benchmark is that a protein with an unambiguous, heavily-annotated identity can still fail completely in the GO channel while succeeding in the free-text channel - the failure is not a function of how obscure the query is.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROPS/A0A6I8W8A2/A0A6I8W8A2-ai-review.html">A0A6I8W8A2</a>
+        
+    </td>
+    <td><small>Drosophila pseudoobscura pseudoobscura</small></td>
+    <td>
+        <strong>GO:0042806</strong><br>
+        fucose binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 8.94, the second-lowest top-1 score of the 50 queries). Fucose binding is a lectin activity with no relationship to RCC1 beta-propeller repeats or to HERC-family biology. It is recorded as uncertain rather than incorrect because at this score the retrieval carries no information - the model is effectively abstaining and the ranked list is an artefact of always returning k results.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROPS/A0A6I8W8A2/A0A6I8W8A2-ai-review.html">A0A6I8W8A2</a>
+        
+    </td>
+    <td><small>Drosophila pseudoobscura pseudoobscura</small></td>
+    <td>
+        <strong>GO:0017154</strong><br>
+        semaphorin receptor activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 8.86). Semaphorin receptors are plexins - large transmembrane proteins with sema domains. This 169-aa cytoplasmic fragment has no transmembrane segment, no sema domain and no signal peptide. The only shared feature is the seven-bladed beta-propeller architecture common to RCC1 repeats and sema domains, a fold-level coincidence rather than a functional relationship.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROPS/A0A6I8W8A2/A0A6I8W8A2-ai-review.html">A0A6I8W8A2</a>
+        
+    </td>
+    <td><small>Drosophila pseudoobscura pseudoobscura</small></td>
+    <td>
+        <strong>GO:0019783</strong><br>
+        ubiquitin-like protein peptidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 8.75). This is the one hit in the list that touches the protein&#39;s nominal family, and it gets the direction backwards: HERC proteins ligate ubiquitin, they do not cleave it, and in any case this isoform lacks the HECT domain that would be needed for either. Assigning any ubiquitin-cycle catalytic activity to a domain-truncated fragment is exactly the pseudoenzyme trap, made worse by the fragment likely being a computational splice artefact rather than a real gene product.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROVI/B4MAQ2/B4MAQ2-ai-review.html">B4MAQ2</a>
+        
+    </td>
+    <td><small>Drosophila virilis</small></td>
+    <td>
+        <strong>GO:0005049</strong><br>
+        nuclear export signal receptor activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 20.20, second-highest in the benchmark), an exact match to the GOA annotation. Correct: Exportin-5 is a RanGTP-dependent nuclear export receptor. Already annotated, so not novel.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROVI/B4MAQ2/B4MAQ2-ai-review.html">B4MAQ2</a>
+        
+    </td>
+    <td><small>Drosophila virilis</small></td>
+    <td>
+        <strong>GO:0071528</strong><br>
+        tRNA re-export from nucleus
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 17.74), absent from GOA and a strict descendant of the annotated RNA export from nucleus. This is the most lineage-aware call in the benchmark: in Drosophila, Exportin-5 substitutes for the missing Exportin-t and is the primary tRNA nuclear export factor, and the model ranks that role above the pre-miRNA export function that dominates the vertebrate literature. Correct and novel. Whether the model has genuinely learned the fly-specific substitution or has matched insect Exportin-5 sequences that carry this annotation cannot be determined from the retrieval alone, but either way the output is right.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/DROVI/B4MAQ2/B4MAQ2-ai-review.html">B4MAQ2</a>
+        
+    </td>
+    <td><small>Drosophila virilis</small></td>
+    <td>
+        <strong>GO:0035281</strong><br>
+        pre-miRNA export from nucleus
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.50), a strict descendant of the annotated RNA export from nucleus and the canonical Exportin-5 function in miRNA biogenesis. Correct and consistent with this review, though it is the function every Exportin-5 entry carries and so is the expected rather than the informative call.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GADMO/A0A8C5FPT8/A0A8C5FPT8-ai-review.html">A0A8C5FPT8</a>
+        <br><small style="color:var(--text-muted)">tbc1d14</small>
+    </td>
+    <td><small>Gadus morhua</small></td>
+    <td>
+        <strong>GO:0071955</strong><br>
+        recycling endosome to Golgi transport
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.59), absent from GOA and a strict descendant of the annotated vesicle-mediated transport. It matches this review&#39;s core account precisely: TBC1D14 coordinates membrane exchange between RAB11-positive recycling endosomes and the early Golgi/ERGIC. A specific, correct and genuinely new call.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GADMO/A0A8C5FPT8/A0A8C5FPT8-ai-review.html">A0A8C5FPT8</a>
+        <br><small style="color:var(--text-muted)">tbc1d14</small>
+    </td>
+    <td><small>Gadus morhua</small></td>
+    <td>
+        <strong>GO:0099041</strong><br>
+        vesicle tethering to Golgi
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 15.07), also absent from GOA. TBC1D14 recruits the TRAPPIII tethering complex via its TRAPP-binding region, so a tethering role at the Golgi is the correct mechanistic description of what the scaffold does. Correct and novel, though a curator would want to check whether the protein tethers directly or recruits the tether.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GADMO/A0A8C5FPT8/A0A8C5FPT8-ai-review.html">A0A8C5FPT8</a>
+        <br><small style="color:var(--text-muted)">tbc1d14</small>
+    </td>
+    <td><small>Gadus morhua</small></td>
+    <td>
+        <strong>GO:0032483</strong><br>
+        regulation of Rab protein signal transduction
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.96). Together with rank 4 (activation of GTPase activity) this is the TBC-domain assumption: that a protein carrying the Rab-GAP fold regulates Rab nucleotide state. Studies of the mammalian orthologs show TBC1D14 has no GAP activity toward RAB11 and acts as an effector instead, which is why this review assigns small GTPase binding rather than GTPase activator activity as the core function. The existing GOA already carries the same over-annotation by IEA (GTPase activator activity), so ProTrek is reproducing a known error rather than introducing one - but it is still the wrong call, and a retrieval model has no way to notice that a domain is degenerate.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GIBF5/S0EDH7/S0EDH7-ai-review.html">S0EDH7</a>
+        <br><small style="color:var(--text-muted)">FFUJ_06423</small>
+    </td>
+    <td><small>Fusarium fujikuroi IMI 58289</small></td>
+    <td>
+        <strong>GO:1990604</strong><br>
+        IRE1-TRAF2-ASK1 complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 14.84). This is the metazoan ER-stress signalling complex assembled on IRE1alpha; fungi have Ire1 but not TRAF2 or ASK1, so the complex as defined cannot exist in Fusarium. The protein has no ER-luminal sensor domain, no transmembrane segment and no RNase domain, all of which IRE1 requires. The retrieval has matched a kinase fold to one of the best-annotated kinase-containing complexes in SwissProt and carried the whole complex across with it.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GIBF5/S0EDH7/S0EDH7-ai-review.html">S0EDH7</a>
+        <br><small style="color:var(--text-muted)">FFUJ_06423</small>
+    </td>
+    <td><small>Fusarium fujikuroi IMI 58289</small></td>
+    <td>
+        <strong>GO:0031431</strong><br>
+        Dbf4-dependent protein kinase complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 13.01). The DDK complex is Cdc7 plus its Dbf4 regulatory subunit, acting in replication origin firing. Cdc7 is a distinctive kinase with inserted regulatory segments, and nothing in this 342-aa protein&#39;s annotation places it in that subfamily. As at rank 1, a bare kinase-like fold is being resolved into a named complex on no subfamily evidence.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/GIBF5/S0EDH7/S0EDH7-ai-review.html">S0EDH7</a>
+        <br><small style="color:var(--text-muted)">FFUJ_06423</small>
+    </td>
+    <td><small>Fusarium fujikuroi IMI 58289</small></td>
+    <td>
+        <strong>GO:0004694</strong><br>
+        eukaryotic translation initiation factor 2alpha kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 12.40). Naming eIF2alpha as the substrate is unsupported - no substrate is known for this protein - but the term is a strict descendant of protein kinase activity, this review&#39;s core molecular function, so a curator climbing to the parent recovers exactly the right annotation. Scored LSP on that basis: the useful content is the kinase call, and the substrate is decoration the retrieval was forced to add because the GO index offers substrate-specific kinase terms far more often than the generic one.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/JUGRE/A0A2I4G8T1/A0A2I4G8T1-ai-review.html">A0A2I4G8T1</a>
+        
+    </td>
+    <td><small>Juglans regia</small></td>
+    <td>
+        <strong>GO:0050403</strong><br>
+        trans-zeatin O-beta-D-glucosyltransferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.31). Cytokinin O-glucosylation is a real plant UGT activity and UGT73C members do glycosylate hormones, so the call is in the right chemistry; but zeatin O-glucosyltransferases are characterised in the UGT85A/ZOG clade, not UGT73C, and no acceptor has been determined for this walnut protein. Scored LSP rather than PLI because the term is a strict descendant of this review&#39;s core molecular function (UDP-glucosyltransferase activity) and a curator recovers the correct annotation by climbing to the parent - which is what the evidence actually supports.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/JUGRE/A0A2I4G8T1/A0A2I4G8T1-ai-review.html">A0A2I4G8T1</a>
+        
+    </td>
+    <td><small>Juglans regia</small></td>
+    <td>
+        <strong>GO:0050502</strong><br>
+        cis-zeatin O-beta-D-glucosyltransferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 17.29), the cis stereoisomer of rank 1 and 0.02 score units behind it. The pair is a compact demonstration of the resolution limit: the model cannot distinguish two stereochemically distinct acceptors, and reports both as if each were an independent finding. Correct at the parent level, uninformative at the level stated.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/JUGRE/A0A2I4G8T1/A0A2I4G8T1-ai-review.html">A0A2I4G8T1</a>
+        
+    </td>
+    <td><small>Juglans regia</small></td>
+    <td>
+        <strong>GO:0047254</strong><br>
+        2,4-dihydroxy-7-methoxy-2H-1,4-benzoxazin-3(4H)-one 2-D-glucosyltransferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.79). DIMBOA glucosylation is a grass-specific benzoxazinoid defence pathway (maize BX8/BX9); walnut is a eudicot and does not make benzoxazinoids, so this specific acceptor is not available to the protein. Scored LSP on the same reasoning as ranks 1 and 2 - the parent term is right and is what a curator would keep - while noting that the acceptor here is not merely undetermined but taxonomically absent, which the model gives no sign of.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MACFA/A0A2K5UJ34/A0A2K5UJ34-ai-review.html">A0A2K5UJ34</a>
+        <br><small style="color:var(--text-muted)">TTC39C</small>
+    </td>
+    <td><small>Macaca fascicularis</small></td>
+    <td>
+        <strong>GO:0003355</strong><br>
+        cilium movement involved in otolith formation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 14.81), absent from GOA and a strict descendant of the otolith morphogenesis term GOA carries by IEA. The refinement is well grounded: the zebrafish ortholog has IMP evidence for otolith morphogenesis and for heart left/right asymmetry, both cilium-motility-dependent processes, and the C. elegans ortholog is experimentally ciliary. Correct and novel, with the caveat that otoliths are a fish structure - a curator annotating the macaque protein would keep the mechanism (ciliary motility) and drop the fish-specific context.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MACFA/A0A2K5UJ34/A0A2K5UJ34-ai-review.html">A0A2K5UJ34</a>
+        <br><small style="color:var(--text-muted)">TTC39C</small>
+    </td>
+    <td><small>Macaca fascicularis</small></td>
+    <td>
+        <strong>GO:0061512</strong><br>
+        protein localization to cilium
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.43). Consistent with an adaptor acting in cilium assembly, and with the ciliary localisation established for the C. elegans ortholog, but it asserts a specific trafficking role - that TTC39C carries cargo to the cilium - which no ortholog study has shown. Plausible and untested; a good candidate experiment rather than an annotation.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MACFA/A0A2K5UJ34/A0A2K5UJ34-ai-review.html">A0A2K5UJ34</a>
+        <br><small style="color:var(--text-muted)">TTC39C</small>
+    </td>
+    <td><small>Macaca fascicularis</small></td>
+    <td>
+        <strong>GO:0036038</strong><br>
+        MKS complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.41). The MKS module of the ciliary transition zone has a defined membership (MKS1, TMEM67, TMEM216, B9D1/2, CC2D2A and others); TTC39C is not among them and has no B9 or TMEM domain. Being ciliary does not make a protein part of a specific ciliary complex, and asserting complex membership is a much stronger claim than the ciliary localisation the evidence supports. Naming a complex on the strength of a shared compartment recurs across this benchmark and is one of its most consistent error modes.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MAIZE/A0A804UIX9/A0A804UIX9-ai-review.html">A0A804UIX9</a>
+        
+    </td>
+    <td><small>Zea mays</small></td>
+    <td>
+        <strong>GO:0045052</strong><br>
+        protein insertion into ER membrane by GPI attachment sequence
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 10.18). GPI-anchor attachment is carried out by the multi-subunit GPI transamidase; this protein has no PIG-family domain and no similarity to any transamidase subunit. The only supportable component of the call is that it involves an ER membrane protein, which matches the six predicted TM helices. Recorded as uncertain rather than incorrect because at a score of 10.2 the model is effectively reporting no match, and because the term is obsolete in the current GO release so it could not be entered regardless.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MAIZE/A0A804UIX9/A0A804UIX9-ai-review.html">A0A804UIX9</a>
+        
+    </td>
+    <td><small>Zea mays</small></td>
+    <td>
+        <strong>GO:0090698</strong><br>
+        post-embryonic plant morphogenesis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 8.96). A high-frequency plant biological process asserted with no supporting feature: no expression data, no phenotype, no domain implication. It is the kind of call that is nearly unfalsifiable for a plant gene and therefore contributes nothing to annotation, which is why it is scored as an error rather than as a lead.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MAIZE/A0A804UIX9/A0A804UIX9-ai-review.html">A0A804UIX9</a>
+        
+    </td>
+    <td><small>Zea mays</small></td>
+    <td>
+        <strong>GO:0047396</strong><br>
+        glycosylphosphatidylinositol diacylglycerol-lyase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 4 by score (8.79), reviewed in place of rank 3 whose label (&#34;preassembly of GPI anchor in ER membrane&#34;) no longer resolves to a current GO term. Asserting a specific lyase reaction for a protein whose molecular function this review determined to be undeterminable is the failure that matters most here: the correct output for this entry is the root molecular function term, and a retrieval model that always returns k specific terms has no way to produce it. That is a structural property of the approach, not a tuning problem.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+        
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0042575</strong><br>
+        DNA polymerase complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.95). Retroelement reverse transcriptases do act within virus-like particles rather than as free enzymes, so a complex is not absurd - but &#34;DNA polymerase complex&#34; denotes the cellular replicative polymerase holoenzymes, and this protein is not part of one. Recorded as uncertain: the compartment claim is the right shape and the wrong complex, at a score in the benchmark&#39;s lower band.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+        
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0003964</strong><br>
+        RNA-directed DNA polymerase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.93) and the correct defining activity for an RVT_1-domain protein, absent from GOA (which is empty for this entry) and not predicted by ProtNLM2, which stopped at DNA binding and integration. Correct and novel, with the standing caveat that this is a retrotransposon ORF rather than a host gene, so &#34;function&#34; here means the element&#39;s activity.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+        
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0031379</strong><br>
+        RNA-directed RNA polymerase complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.72), with RNA-dependent RNA polymerase activity behind it at rank 4. RdRP is the RNA-virus replicase; a retroelement RT makes DNA from RNA, which is the opposite product. The two are frequently discussed together in the same viral-enzyme text, and the retrieval does not separate them - the same right-neighbourhood-wrong-direction pattern seen with the GEF/GAP and 5&#39;/3&#39; tRNA-processing confusions elsewhere in this benchmark.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6GS20/A0A8B6GS20-ai-review.html">A0A8B6GS20</a>
+        <br><small style="color:var(--text-muted)">MTMR9</small>
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0004438</strong><br>
+        phosphatidylinositol-3-phosphate phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 16.26) and, term for term, the same prediction ProtNLM2 made. MTMR9 is catalytically dead: the CX5R catalytic cysteine is absent, which is why UniProt itself flags the family membership as &#34;non-catalytic&#34;. Its function is to heterodimerise with MTMR6/7/8 and control their localisation and specificity, which this review records as protein phosphatase binding. Two independent models converging on the same wrong catalytic call is a useful negative result: neither sequence-similarity retrieval nor seq2seq naming can detect a missing active-site residue, so pseudoenzymes need a separate check.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6GS20/A0A8B6GS20-ai-review.html">A0A8B6GS20</a>
+        <br><small style="color:var(--text-muted)">MTMR9</small>
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0052629</strong><br>
+        phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 13.66). The second myotubularin substrate specificity, wrong for the same reason. Ranks 1-4 are four phosphoinositide substrates for one absent active site; the ranked list is enumerating the family&#39;s substrate repertoire rather than testing whether this member has an active site at all.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/MYTGA/A0A8B6GS20/A0A8B6GS20-ai-review.html">A0A8B6GS20</a>
+        <br><small style="color:var(--text-muted)">MTMR9</small>
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0051800</strong><br>
+        phosphatidylinositol-3,4-bisphosphate 3-phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 12.80), the third substrate specificity in the same series. Worth recording separately because the existing GOA for this entry already carries phosphatidylinositol dephosphorylation by IEA, so the erroneous catalytic framing is being reinforced from several directions at once; a curator correcting this entry has to overturn the automatic annotation and the model predictions together.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSI/B8BAB0/B8BAB0-ai-review.html">B8BAB0</a>
+        
+    </td>
+    <td><small>Oryza sativa subsp. indica</small></td>
+    <td>
+        <strong>GO:1990714</strong><br>
+        hydroxyproline O-galactosyltransferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 13.50). BURP-domain PG1beta proteins are non-catalytic: they associate with polygalacturonase isozyme 1 and modulate its activity, and carry no glycosyltransferase fold or donor-binding site. Assigning a catalytic transferase activity to a regulatory subunit is the characteristic pseudoenzyme error. The retrieval is probably reading the cell-wall/hydroxyproline-rich glycoprotein context rather than the BURP domain itself.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSI/B8BAB0/B8BAB0-ai-review.html">B8BAB0</a>
+        
+    </td>
+    <td><small>Oryza sativa subsp. indica</small></td>
+    <td>
+        <strong>GO:0043668</strong><br>
+        exine
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 13.29). Exine is the sporopollenin outer layer of the pollen wall. The protein does carry a signal peptide and is expected in the plant cell wall or apoplast, so a wall-associated compartment is not unreasonable, but exine specifically is a pollen structure and there is no expression evidence placing this protein there. Some BURP-family members are anther- and pollen-expressed, so the call cannot be firmly excluded; recorded as uncertain rather than incorrect.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSI/B8BAB0/B8BAB0-ai-review.html">B8BAB0</a>
+        
+    </td>
+    <td><small>Oryza sativa subsp. indica</small></td>
+    <td>
+        <strong>GO:0008707</strong><br>
+        4-phytase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 13.24), with 3-phytase activity immediately behind it at rank 4 - two adjacent regiospecificities of the same activity, neither supported. Phytases are histidine-acid or purple-acid phosphatases; the BURP domain shares no fold or catalytic residues with them. As with rank 1, a catalytic activity is being assigned to a protein whose family is defined by not being catalytic.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html">Q6YYC5</a>
+        <br><small style="color:var(--text-muted)">OsRGLG4</small>
+    </td>
+    <td><small>Oryza sativa subsp. japonica</small></td>
+    <td>
+        <strong>GO:0034051</strong><br>
+        negative regulation of plant-type hypersensitive response
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.60). Nothing links OsRGLG4 to hypersensitive-response regulation; the characterised RGLG activities are auxin-transport regulation (RGLG2), ABA signalling via PP2CA degradation (RGLG1/RGLG5) and GRXS17 ubiquitination (AtRGLG4). Plant defence-response terms are among the most heavily annotated biological processes in the plant portion of SwissProt, and this looks like that prior asserting itself over the RING/vWA architecture the sequence actually carries.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html">Q6YYC5</a>
+        <br><small style="color:var(--text-muted)">OsRGLG4</small>
+    </td>
+    <td><small>Oryza sativa subsp. japonica</small></td>
+    <td>
+        <strong>GO:0080151</strong><br>
+        positive regulation of salicylic acid mediated signaling pathway
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.44). Same defence-signalling theme as rank 1 and unsupported for the same reasons; it also sits in tension with rank 3 (negative regulation of defense response), so the top of the list is not internally consistent. No salicylic-acid phenotype or interaction is reported for any RGLG family member.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html">Q6YYC5</a>
+        <br><small style="color:var(--text-muted)">OsRGLG4</small>
+    </td>
+    <td><small>Oryza sativa subsp. japonica</small></td>
+    <td>
+        <strong>GO:0031348</strong><br>
+        negative regulation of defense response
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.44). The third variation on the defence-response theme, and it directly contradicts rank 2 (positive regulation of salicylic acid signalling): the top three calls assert defence suppression, defence promotion and defence suppression again. None is supported for OsRGLG4. Note that rank 4 (positive regulation of abscisic acid-activated signaling pathway, score 14.38) would have been a defensible lead - Arabidopsis RGLG1/RGLG5 are positive ABA regulators through PP2CA degradation - so the one hit in this list with a real basis falls just outside the top three.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PANPA/A0A2R9CAF4/A0A2R9CAF4-ai-review.html">A0A2R9CAF4</a>
+        <br><small style="color:var(--text-muted)">SLC26A11</small>
+    </td>
+    <td><small>Pan paniscus</small></td>
+    <td>
+        <strong>GO:0008271</strong><br>
+        secondary active sulfate transmembrane transporter activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.71, the highest top-1 score in the benchmark). Exact match to the existing InterPro2GO annotation and to this review&#39;s first core function - electroneutral proton-coupled sulfate exchange across the lysosomal membrane. Correct and specific, but already annotated.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PANPA/A0A2R9CAF4/A0A2R9CAF4-ai-review.html">A0A2R9CAF4</a>
+        <br><small style="color:var(--text-muted)">SLC26A11</small>
+    </td>
+    <td><small>Pan paniscus</small></td>
+    <td>
+        <strong>GO:0015116</strong><br>
+        sulfate transmembrane transporter activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.69). A strict ancestor of the rank-1 term, so mechanically this is a less-precise restatement rather than new information; it is scored positively because it is correct and because the parent term is the appropriate one to use for the channel mode, where the transport is not secondary-active. In practice a curator would keep the rank-1 term and drop this one, which is the general problem with taking a fixed number of ranks from a retrieval list: neighbouring ranks are often the same claim at different ontology depths.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PANPA/A0A2R9CAF4/A0A2R9CAF4-ai-review.html">A0A2R9CAF4</a>
+        <br><small style="color:var(--text-muted)">SLC26A11</small>
+    </td>
+    <td><small>Pan paniscus</small></td>
+    <td>
+        <strong>GO:0098658</strong><br>
+        inorganic anion import across plasma membrane
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">LOCALIZATION_DEFAULT</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.65). The chemistry is right but both the direction and the membrane are wrong for SLC26A11: its primary physiological role is sulfate *export* from the lysosomal lumen to the cytoplasm, not import across the plasma membrane. The prediction is transferred from the plasma-membrane SLC26 paralogs (SLC26A1/A2, which import sulfate into chondrocytes and kidney cells and dominate the family&#39;s SwissProt annotations); it is a paralog-level error that a curator would have to catch, since the term is otherwise entirely plausible for the family.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="REP" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PARTE/A0BFB4/A0BFB4-ai-review.html">A0BFB4</a>
+        
+    </td>
+    <td><small>Paramecium tetraurelia</small></td>
+    <td>
+        <strong>GO:1990604</strong><br>
+        IRE1-TRAF2-ASK1 complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-REP">REP</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 14.17). This same complex is the rank-1 call for S0EDH7, the benchmark&#39;s other uncharacterised protein-kinase-domain protein, in a different kingdom. Two unrelated kinases with no subfamily assignment drawing the identical named metazoan complex as their top hit is a repetition artefact rather than a prediction: the retrieval falls back on a heavily-annotated kinase-containing complex whenever the query embedding carries a kinase fold and nothing more. TRAF2 and ASK1 have no ciliate counterparts, so the call is also taxonomically impossible.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PARTE/A0BFB4/A0BFB4-ai-review.html">A0BFB4</a>
+        
+    </td>
+    <td><small>Paramecium tetraurelia</small></td>
+    <td>
+        <strong>GO:0009931</strong><br>
+        calcium-dependent protein serine/threonine kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 12.69) and a strict descendant of the IBA-annotated protein serine/threonine kinase activity. The refinement is biologically apt for the organism - CAMKs dominate the Paramecium kinome and calcium signalling is central to ciliate biology - but the protein&#39;s PANTHER placement (PTHR44167, LOK/STK-related, with a suggested ATG1/ULK1 affinity) does not point to the CAMK group, and no calcium-binding or calmodulin-binding module is annotated. Plausible and unverifiable: a lead for curation, not an annotation.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PARTE/A0BFB4/A0BFB4-ai-review.html">A0BFB4</a>
+        
+    </td>
+    <td><small>Paramecium tetraurelia</small></td>
+    <td>
+        <strong>GO:0004675</strong><br>
+        transmembrane receptor protein serine/threonine kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 12.59). The receptor framing is wrong - the protein has no transmembrane segment or extracellular domain - but the term is again a descendant of the correct and already-annotated protein serine/threonine kinase activity, so climbing one level recovers a right answer. Scored LSP on that basis. Ranks 2, 3 and 4 offer three mutually exclusive kinase subtypes at nearly identical scores, which is the clearest possible statement that the model has resolved the fold but not the subfamily; the honest output would have been the parent term, which the index does surface, but only at rank 7.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+        <br><small style="color:var(--text-muted)">HSP20A</small>
+    </td>
+    <td><small>Phaeodactylum tricornutum CCAP 1055/1</small></td>
+    <td>
+        <strong>GO:0042542</strong><br>
+        response to hydrogen peroxide
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.00). Small heat shock proteins are induced by oxidative as well as thermal stress in many organisms, so this is not unreasonable, but there is no expression or phenotype evidence for this diatom protein under any stressor and the family&#39;s defining property is heat induction. Ranking peroxide above heat for an HSP20 is the sort of ordering a user should not read as a claim about relative importance. Recorded as uncertain.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+        <br><small style="color:var(--text-muted)">HSP20A</small>
+    </td>
+    <td><small>Phaeodactylum tricornutum CCAP 1055/1</small></td>
+    <td>
+        <strong>GO:0009651</strong><br>
+        response to salt stress
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.43). Same reasoning as rank 1: plausible for an sHSP in a marine organism, unevidenced for this protein. Ranks 1-4 offer four different stressors at scores within 0.7 of each other, so the list expresses &#34;stress-responsive&#34; without resolving which stress - a case where a general term (response to stress) would have been more useful than four specific ones.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+        <br><small style="color:var(--text-muted)">HSP20A</small>
+    </td>
+    <td><small>Phaeodactylum tricornutum CCAP 1055/1</small></td>
+    <td>
+        <strong>GO:1903935</strong><br>
+        response to sodium arsenite
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.32). Arsenite is a classical proteotoxic-stress inducer used to trigger sHSP and heat-shock responses experimentally, so the term is a legitimate descendant of the response-to-stress biology this review assigns; but naming this specific chemical for a diatom protein with no toxicological data is over-committed. Scored LSP because the parent concept a curator would climb to - cellular response to unfolded protein - is one of this review&#39;s core processes.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/RABIT/G1TUN6/G1TUN6-ai-review.html">G1TUN6</a>
+        <br><small style="color:var(--text-muted)">UBE2L6</small>
+    </td>
+    <td><small>Oryctolagus cuniculus</small></td>
+    <td>
+        <strong>GO:0042296</strong><br>
+        ISG15 transferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.37), an exact match to the GOA annotation and to this review&#39;s core molecular function. The call requires distinguishing UBE2L6 from the other UBC-domain E2 enzymes on sequence alone, which the model does - but the term is already annotated (by orthology from human O14933 and mouse Q9QZU9), so the prediction is correct rather than novel.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/RABIT/G1TUN6/G1TUN6-ai-review.html">G1TUN6</a>
+        <br><small style="color:var(--text-muted)">UBE2L6</small>
+    </td>
+    <td><small>Oryctolagus cuniculus</small></td>
+    <td>
+        <strong>GO:0031371</strong><br>
+        ubiquitin conjugating enzyme complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.97). Not present in GOA and scored NO_OVERLAP mechanically, but it is not a novel biological claim: E2 enzymes act in E1-E2-E3 assemblies by definition, and UBE2L6 works with UBA7 and HERC5. The term is a weakly-populated cellular component that GO annotation practice generally avoids in favour of the activity terms already present, so it adds a placement without adding information.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/RABIT/G1TUN6/G1TUN6-ai-review.html">G1TUN6</a>
+        <br><small style="color:var(--text-muted)">UBE2L6</small>
+    </td>
+    <td><small>Oryctolagus cuniculus</small></td>
+    <td>
+        <strong>GO:0061631</strong><br>
+        ubiquitin conjugating enzyme activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.66), an exact match to the existing EC-derived GOA annotation (GO_REF:0000003, EC 2.3.2.23). Correct - UBE2L6 does have ubiquitin-conjugating activity in vitro - and consistent with this review, which treats ISGylation as the primary physiological role. Not novel.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/SOYBN/C6T1A2/C6T1A2-ai-review.html">C6T1A2</a>
+        
+    </td>
+    <td><small>Glycine max</small></td>
+    <td>
+        <strong>GO:0010373</strong><br>
+        negative regulation of gibberellin biosynthetic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.61). The Q-type C2H2 family in plants is large and functionally heterogeneous; gibberellin-pathway regulation is characterised for the ZFP5/ZFP8/GIS trichome-initiation clade, not for this protein, whose closest characterised ortholog is AtZFP7 (ABA signalling) and whose EAR motif points to general transcriptional repression. Assigning a specific hormone pathway on the strength of a shared QALGGH zinc finger is a subfamily-level over-assignment.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/SOYBN/C6T1A2/C6T1A2-ai-review.html">C6T1A2</a>
+        
+    </td>
+    <td><small>Glycine max</small></td>
+    <td>
+        <strong>GO:0009739</strong><br>
+        response to gibberellin
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 17.43). A much weaker claim than rank 1 - &#34;response to gibberellin&#34; is satisfied by any transcriptional change under GA - and plant C2H2 repressors of this class are commonly hormone-responsive, so it cannot be refuted from what is known. But there is no expression or phenotype evidence for this protein either, and the soybean ORFeome context that produced it was a drought-resistance screen rather than a GA screen. Left as uncertain: a lead, not an annotation.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/SOYBN/C6T1A2/C6T1A2-ai-review.html">C6T1A2</a>
+        
+    </td>
+    <td><small>Glycine max</small></td>
+    <td>
+        <strong>GO:1905499</strong><br>
+        trichome papilla formation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 17.26). Trichome papilla formation is the specific developmental readout of the Arabidopsis GIS/ZFP5/ZFP8 module and is transferred here purely by zinc-finger similarity. Soybean trichome development is not known to involve this gene, and the prediction is several inferential steps beyond anything the sequence supports. It illustrates a systematic bias in the GO channel for this protein: all five top hits are biological processes, and the well-supported molecular function (DNA-binding transcription factor activity) and location (nucleus) never appear.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9KZ33/Q9KZ33-ai-review.html">Q9KZ33</a>
+        <br><small style="color:var(--text-muted)">SCO7099</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0006352</strong><br>
+        DNA-templated transcription initiation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 12.76) and the same term ProtNLM2 predicted. It is biologically correct for a sigma factor and is scored NO_OVERLAP only because there is no is_a/part_of path between GOA&#39;s regulation of DNA-templated transcription initiation (which sits under regulation of biological process) and this term; the two are biologically coupled but ontologically disjoint. Treated as correct but not novel, since GOA already asserts the coupled regulatory term. This is a limitation of closure-based scoring, not a ProTrek error.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9KZ33/Q9KZ33-ai-review.html">Q9KZ33</a>
+        <br><small style="color:var(--text-muted)">SCO7099</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0016987</strong><br>
+        sigma factor activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 12.69), an exact match to the GO_Central IBA annotation and to this review&#39;s core molecular function. Correct but already annotated. Worth noting that the molecular function is recovered at rank 2 rather than rank 1: the process term outranks it, which is the general pattern seen across this benchmark.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9KZ33/Q9KZ33-ai-review.html">Q9KZ33</a>
+        <br><small style="color:var(--text-muted)">SCO7099</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0001000</strong><br>
+        bacterial-type RNA polymerase core enzyme binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.99) and absent from GOA. Binding the RNA polymerase core enzyme is the defining physical interaction of a sigma factor and follows directly from the sigma2/sigma4 domain architecture this entry carries; it is a reasonable, specific addition that the existing IEA/IBA pipeline did not emit. Scored COR as a correct novel call, with the caveat that it is an inference from family membership rather than evidence about SCO7099 itself, which has no experimental characterisation.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9L243/Q9L243-ai-review.html">Q9L243</a>
+        <br><small style="color:var(--text-muted)">SCO2678</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0043726</strong><br>
+        5-amino-6-(5-phosphoribitylamino)uracil phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 14.93). This is a real HAD-family activity in riboflavin biosynthesis, so the fold-level inference is right, but naming this particular substrate for SCO2678 goes far beyond what is known: no biochemical assay exists for this protein, its eggNOG assignment (COG1877) points to 5&#39;-nucleotidase/phosphodiesterase chemistry, and HAD enzymes are notoriously promiscuous. Cannot be refuted either - S. coelicolor does make riboflavin - so it is recorded as uncertain. It illustrates a systematic property of retrieval-based prediction: the index contains substrate-specific GO terms and no generic hedge, so the model must commit to a substrate even when the evidence only supports a family.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9L243/Q9L243-ai-review.html">Q9L243</a>
+        <br><small style="color:var(--text-muted)">SCO2678</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0008253</strong><br>
+        5&#39;-nucleotidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.73) and an exact match to this review&#39;s core molecular function, which was reached independently from the HAD_SAK_2 domain (PF18143), COG1877 membership and the precedent of the characterised S. coelicolor extracellular 5&#39;-nucleotidase SCO4152. The protein has no GOA annotations at all, so this is a genuinely novel and correct call - the best single result ProTrek produces on an unannotated protein in this benchmark.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/STRCO/Q9L243/Q9L243-ai-review.html">Q9L243</a>
+        <br><small style="color:var(--text-muted)">SCO2678</small>
+    </td>
+    <td><small>Streptomyces coelicolor A3(2)</small></td>
+    <td>
+        <strong>GO:0047405</strong><br>
+        pyrimidine-5&#39;-nucleotide nucleosidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 13.78). A nucleosidase cleaves the N-glycosidic bond rather than the phosphoester bond, so strictly this names the wrong chemistry for a HAD enzyme. It is scored LSP rather than NPI because it lands on the right substrate class (pyrimidine 5&#39;-nucleotides) and the right pathway role - nucleotide salvage / phosphate scavenging - as the rank-2 call, and so points a curator to the same biology at lower precision. Ranks 4 and 5 (pseudouridine 5&#39;-phosphatase, acid phosphatase) continue the same theme.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TAKRU/A0A674PKV4/A0A674PKV4-ai-review.html">A0A674PKV4</a>
+        <br><small style="color:var(--text-muted)">gas7a</small>
+    </td>
+    <td><small>Takifugu rubripes</small></td>
+    <td>
+        <strong>GO:1990808</strong><br>
+        F-bar domain binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.17) and a relation inversion rather than a biological error: GAS7 contains an F-BAR domain (residues 121-381), and this term is for proteins whose binding partner is an F-BAR domain. Annotating it here would assert that gas7a binds another F-BAR protein, which is not reported. The mistake is characteristic of contrastive text retrieval - the embedding captures that the sequence is &#34;about&#34; F-BAR domains but not whether the protein is the domain&#39;s owner or its ligand - and it is a mistake that InterPro2GO-style mapping structurally cannot make.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TAKRU/A0A674PKV4/A0A674PKV4-ai-review.html">A0A674PKV4</a>
+        <br><small style="color:var(--text-muted)">gas7a</small>
+    </td>
+    <td><small>Takifugu rubripes</small></td>
+    <td>
+        <strong>GO:0035021</strong><br>
+        negative regulation of Rac protein signal transduction
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.40). Rho-family signalling regulation is characterised for other F-BAR/PSTPIP superfamily members (srGAP, PACSIN, PSTPIP1 and the Rho-inhibitory GAS7 activity in the retrieved Function text), not established for GAS7 itself, whose documented roles are neurite outgrowth and clathrin-mediated endocytosis. Rank 4 repeats the same concept without the direction, which again shows the ranked list supplying variants rather than independent evidence.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TAKRU/A0A674PKV4/A0A674PKV4-ai-review.html">A0A674PKV4</a>
+        <br><small style="color:var(--text-muted)">gas7a</small>
+    </td>
+    <td><small>Takifugu rubripes</small></td>
+    <td>
+        <strong>GO:0097750</strong><br>
+        endosome membrane tubulation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 13.82). Membrane tubulation is the generic mechanism of F-BAR domains, so this is mechanistically plausible for gas7a and is close to the membrane-curvature role this review assigns at clathrin-coated pits. But the compartment is different - GOA and this review place the protein at the plasma membrane and clathrin-coated pits, not on endosomes - and no endosomal localisation has been shown for any GAS7 family member. A reasonable hypothesis at the wrong location; left uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TOBAC/A0A1S3Y076/A0A1S3Y076-ai-review.html">A0A1S3Y076</a>
+        
+    </td>
+    <td><small>Nicotiana tabacum</small></td>
+    <td>
+        <strong>GO:0030678</strong><br>
+        mitochondrial ribonuclease P complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.85). This term denotes the animal mitochondrial RNase P holoenzyme (TRMT10C/MRPP1, HSD17B10/MRPP2, PRORP/MRPP3). Plants replaced the ribonucleoprotein RNase P entirely with single-subunit PRORP enzymes that act without partner subunits, so a plant PRORP is not part of this complex. The call also fixes the localisation to mitochondria, whereas Arabidopsis PRORP1 is dual-targeted to chloroplasts and mitochondria and PRORP2/3 are nuclear; the tobacco paralog&#39;s compartment is not established. The retrieval has found the right enzyme and imported the wrong kingdom&#39;s architecture with it.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TOBAC/A0A1S3Y076/A0A1S3Y076-ai-review.html">A0A1S3Y076</a>
+        
+    </td>
+    <td><small>Nicotiana tabacum</small></td>
+    <td>
+        <strong>GO:0072684</strong><br>
+        mitochondrial tRNA 3&#39;-trailer cleavage, endonucleolytic
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 17.00). Wrong end of the tRNA: PRORP performs 5&#39;-leader removal, while 3&#39;-trailer cleavage is the job of RNase Z (ELAC2). The two activities are adjacent steps in tRNA maturation and are frequently described together in the same UniProt entries, which is likely how the retrieval conflated them - but for annotation purposes they are different enzymes. The term is additionally obsolete in the current GO release.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TOBAC/A0A1S3Y076/A0A1S3Y076-ai-review.html">A0A1S3Y076</a>
+        
+    </td>
+    <td><small>Nicotiana tabacum</small></td>
+    <td>
+        <strong>GO:1905267</strong><br>
+        endonucleolytic cleavage involved in tRNA processing
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.92). Biologically this is correct and appropriately general - PRORP is exactly an endonuclease acting in tRNA processing - and it is the closest the GO channel comes to the review&#39;s core process (tRNA 5&#39;-leader removal, GO:0001682). It is recorded as UNC rather than as a correct call because GO obsoleted the term after ProTrek&#39;s index was built, so it cannot be entered as an annotation; the usable equivalent would have to be chosen by a curator. This is the clearest single case in the benchmark where index staleness, not model error, blocks a correct prediction.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TRIV3/A2FPI7/A2FPI7-ai-review.html">A2FPI7</a>
+        
+    </td>
+    <td><small>Trichomonas vaginalis G3</small></td>
+    <td>
+        <strong>GO:0006276</strong><br>
+        plasmid maintenance
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 10.86). KilA-N was first described in bacteriophage and plasmid-borne regulatory proteins, so the association is not fabricated - but T. vaginalis is a eukaryote with no plasmid, the gene sits in the nuclear genome as a lateral transfer, and there is no evidence this protein participates in maintaining any replicon. Recorded as uncertain because the retrieval has identified the domain&#39;s genuine evolutionary origin while saying nothing usable about the protein&#39;s function in its current host.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TRIV3/A2FPI7/A2FPI7-ai-review.html">A2FPI7</a>
+        
+    </td>
+    <td><small>Trichomonas vaginalis G3</small></td>
+    <td>
+        <strong>GO:0005727</strong><br>
+        extrachromosomal circular DNA
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 10.33). A cellular-component call placing the protein on an extrachromosomal replicon that T. vaginalis does not have. It also mislocalises the protein relative to this review&#39;s assignment (nucleus), and it compounds the rank-1 error by turning a provenance signal into a physical location.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/TRIV3/A2FPI7/A2FPI7-ai-review.html">A2FPI7</a>
+        
+    </td>
+    <td><small>Trichomonas vaginalis G3</small></td>
+    <td>
+        <strong>GO:0030322</strong><br>
+        stabilization of membrane potential
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 9.95), with potassium ion leak channel activity behind it at rank 4. Below a score of 10 the list has left the phage neighbourhood and is returning unrelated membrane biology; the protein has no transmembrane segment. The useful observation for this benchmark is that the transition from &#34;defensible but not useful&#34; to &#34;noise&#34; happens within the top five for this query, at almost exactly the score-10 boundary seen in the other low-scoring cases.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0120569</strong><br>
+        phospholipase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (ProTrek score 13.35). GOA carries only the generic hydrolase activity (GO:0016787, IEA/ARBA) plus lipid metabolic process; phospholipase activity is a strict descendant and states the actual chemistry of the patatin fold. It is consistent with the GO_Central IBA annotations on this family (glycerophospholipase GO:0004620, monoacylglycerol lipase GO:0047372) and with the in-repo bioinformatics placing the protein in the pPLAII soluble acyl-hydrolase clade. Novel with respect to this protein&#39;s GOA and more specific than ProtNLM2&#39;s lipase activity call on the same protein.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0031408</strong><br>
+        oxylipin biosynthetic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.59). Oxylipin biosynthesis is the signature of the pPLAIII subfamily and of the jasmonate-pathway lipases that release the alpha-linolenic acid precursor; it is not a property of the pPLAII defense-stress clade to which this protein belongs, and no oxylipin-pathway role is supported anywhere in the review for this entry. The prediction is a subfamily confusion within the patatin family - the retrieval finds the family neighbourhood but not the correct branch of it.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0047499</strong><br>
+        calcium-independent phospholipase A2 activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.09). Biologically this is the right idea - plant patatin-related phospholipases are calcium-independent PLA enzymes - but the term was obsoleted in GO after ProTrek&#39;s text index was built, so the prediction cannot be recorded as a current annotation. It also cannot be confirmed for this entry: the deposited 302-aa model lacks the catalytic-serine nucleophile elbow, so PLA2 regiospecificity is not testable from the sequence as modelled. Kept as UNC rather than scored against the ontology, since the failure is an index/ontology-drift artefact overlaid on a genuinely unverifiable specificity claim.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6NKR6/A0A3B6NKR6-ai-review.html">A0A3B6NKR6</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0047940</strong><br>
+        glucuronokinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 16.31), an exact match to this review&#39;s core molecular function and absent from GOA. The assignment rests on the glucuronokinase-like domain (IPR053034) alongside the GHMP N- and C-terminal domains and on homology to Arabidopsis GLAK2 (Q9LY82). Correct, specific and novel; it also implicitly disputes the existing IEA annotation, which places the protein in the mevalonate pathway.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6NKR6/A0A3B6NKR6-ai-review.html">A0A3B6NKR6</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0019287</strong><br>
+        isopentenyl diphosphate biosynthetic process, mevalonate pathway
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 15.24). Mechanically an exact match to GOA, which would normally score as correct-but-not-novel; it is scored PLI instead because this review concludes the existing IEA annotation is itself a paralog error. The GHMP kinase superfamily contains both the mevalonate-pathway kinases (mevalonate kinase, phosphomevalonate kinase - which ProTrek also returns at ranks 3 and 4) and the sugar-1-kinases; the InterPro evidence places this protein with the latter. The case is a caution for automated scoring against GOA: agreeing with an existing annotation is not the same as being right.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6NKR6/A0A3B6NKR6-ai-review.html">A0A3B6NKR6</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0004631</strong><br>
+        phosphomevalonate kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.07), with mevalonate kinase activity behind it at rank 4. Both are the mevalonate-branch specificities of the GHMP superfamily and both contradict the rank-1 call; the model offers the sugar kinase and the two isoprenoid kinases within 1.3 score units of each other. Discriminating them is exactly the subfamily judgement that determines whether this protein belongs to cell-wall precursor supply or to isoprenoid biosynthesis, and the ranked list does not settle it.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0071558</strong><br>
+        histone H3K27me2/H3K27me3 demethylase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 17.20). The general claim - a 2-oxoglutarate/Fe(II)-dependent JmjC histone demethylase - is right, but the substrate specificity is that of the KDM6/JMJ13-type H3K27 demethylases, a different JmjC subfamily. This protein&#39;s domain architecture (F-box 89-135 + JmjC 285-445 in 511 aa) and its PANTHER subfamily assignment (PTHR12480:SF21) place it in JMJD6, whose characterised plant member AtJMJ22 is an H4R3me2 arginine demethylase. Assigning H3K27 specificity is a within-family subfamily error, the canonical PLI pattern. Notably ProTrek&#39;s own Function-subsection retrieval for the same query returns the correct AtJMJ22 H4R3me2 description at rank 1, so the error is specific to the GO channel.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0032454</strong><br>
+        histone H3K9 demethylase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.68). Same failure as rank 1 with a different lysine position: H3K9 demethylation is the KDM3/KDM4/JMJ25-type activity, not JMJD6. The model is enumerating the frequent JmjC substrate specificities in SwissProt rather than discriminating the subfamily this sequence belongs to.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0071557</strong><br>
+        histone H3-K27 demethylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.38); the biological-process counterpart of the rank-1 error, and wrong for the same reason. It is additionally unusable as an annotation: GO obsoleted this term after ProTrek&#39;s text index was built, so the prediction points at an identifier that no longer exists in the current ontology.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0000159</strong><br>
+        protein phosphatase type 2A complex
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 15.10) and an exact match to an existing GOA annotation. The call is correct - the protein is the A/PR65 scaffolding subunit that holds the PP2A catalytic and regulatory B subunits together - but it is not novel: the term is already annotated for this entry. The value of the prediction is that it is right where a competing model was not, rather than that it adds an annotation.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0010265</strong><br>
+        SCF complex assembly
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">FREQUENCY_BIAS</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 14.57). SCF complex assembly is an unrelated ubiquitin-ligase process; the PP2A A subunit is not an SCF component and has no reported role in SCF assembly. The likely cause is the HEAT/armadillo-like alpha-solenoid repeat architecture, which the model shares with cullin-family scaffolds - a fold-level rather than family-level match.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+        
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0019888</strong><br>
+        protein phosphatase regulator activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 14.01) and again an exact match to an existing GOA annotation. Correct and appropriate for the scaffolding subunit, which modulates PP2A catalytic activity through subunit assembly, but contributes no new information over the current annotation set.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XANCP/Q8P365/Q8P365-ai-review.html">Q8P365</a>
+        <br><small style="color:var(--text-muted)">btuE</small>
+    </td>
+    <td><small>Xanthomonas campestris pv. campestris ATCC 33913</small></td>
+    <td>
+        <strong>GO:0047066</strong><br>
+        phospholipid-hydroperoxide glutathione peroxidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 19.60). This is the GPX4 specificity - reduction of phospholipid hydroperoxides in membranes, the activity central to ferroptosis protection in animals. Bacterial BtuE homologs act on soluble hydroperoxides and are not membrane phospholipid peroxidases; nothing in the sequence or in this review supports the specificity. The vertebrate GPX4 entries are among the most heavily described in SwissProt, which is the likely reason this outranks the correct family-level term.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XANCP/Q8P365/Q8P365-ai-review.html">Q8P365</a>
+        <br><small style="color:var(--text-muted)">btuE</small>
+    </td>
+    <td><small>Xanthomonas campestris pv. campestris ATCC 33913</small></td>
+    <td>
+        <strong>GO:0004602</strong><br>
+        glutathione peroxidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 18.43), absent from GOA (which carries only the parent peroxidase activity) and an exact match to this review&#39;s core molecular function. A real refinement of the existing annotation and the useful output for this protein. The caveat, which the model does not express, is that the reductant for BtuE-type enzymes is often thioredoxin rather than glutathione.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XANCP/Q8P365/Q8P365-ai-review.html">Q8P365</a>
+        <br><small style="color:var(--text-muted)">btuE</small>
+    </td>
+    <td><small>Xanthomonas campestris pv. campestris ATCC 33913</small></td>
+    <td>
+        <strong>GO:0008379</strong><br>
+        thioredoxin peroxidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 15.87). Arguably the most accurate call in the list - E. coli BtuE and many bacterial GPx-family enzymes use thioredoxin, not glutathione, as reductant, and UniProt&#39;s PANTHER subfamily for this entry is named &#34;thioredoxin/glutathione peroxidase BtuE&#34; - but no assay exists for the Xanthomonas protein and the reductant cannot be assigned from sequence. Recorded as uncertain and flagged as a curation lead. That the model&#39;s most defensible call sits at rank 3, below a vertebrate-specific one at rank 1, is a compact illustration of why ProTrek&#39;s ranking should not be read as a confidence ordering over biological correctness.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENNA/D3VIU4/D3VIU4-ai-review.html">D3VIU4</a>
+        <br><small style="color:var(--text-muted)">fliY</small>
+    </td>
+    <td><small>Xenorhabdus nematophila ATCC 19061</small></td>
+    <td>
+        <strong>GO:0015276</strong><br>
+        ligand-gated monoatomic ion channel activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 14.64). FliY is a soluble periplasmic binding protein: it captures L-cystine and hands it to the inner-membrane YecSC components, and has no membrane-spanning region and no conductance pathway. The prediction comes from the type II periplasmic-binding-protein fold, which is genuinely shared with the extracellular ligand-binding domains of ionotropic glutamate receptors - a fold-level match that is structurally real and functionally wrong. It would also be a taxon oddity: ligand-gated ion channels of this type are eukaryotic.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENNA/D3VIU4/D3VIU4-ai-review.html">D3VIU4</a>
+        <br><small style="color:var(--text-muted)">fliY</small>
+    </td>
+    <td><small>Xenorhabdus nematophila ATCC 19061</small></td>
+    <td>
+        <strong>GO:0015811</strong><br>
+        L-cystine transport
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 13.82) and an exact match to this review&#39;s core biological process. Correct, specific, novel with respect to GOA (which is empty for this entry), and arrived at despite the gene name pointing at flagellar biology - the model names the actual substrate of the transporter rather than inheriting the misleading label. The strongest novel-correct call in the bacterial half of the benchmark.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENNA/D3VIU4/D3VIU4-ai-review.html">D3VIU4</a>
+        <br><small style="color:var(--text-muted)">fliY</small>
+    </td>
+    <td><small>Xenorhabdus nematophila ATCC 19061</small></td>
+    <td>
+        <strong>GO:1902024</strong><br>
+        L-histidine transport
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 13.59), only 0.23 score units below the correct rank-2 call. Histidine transport is the function of HisJ, the best-characterised member of solute-binding protein family 3 and the one with the most SwissProt text behind it; this protein is the cystine-specific paralog. The pair is a compact demonstration that ProTrek&#39;s score ordering does not separate the right substrate from the family&#39;s most-annotated substrate, so a user taking the top hit or the top three without checking would annotate both.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+        
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0003677</strong><br>
+        DNA binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 11.49). Correct - eight tandem C2H2 fingers are a sequence-specific DNA-binding module - but a strict ancestor of the RNA polymerase II cis-regulatory region sequence-specific DNA binding already annotated by IBA, and of this review&#39;s core molecular function. Adds nothing over the existing annotation. The specific term GO:0000981 is retrieved at rank 8, so the resolution is available but not at the top of the list.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+        
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0043035</strong><br>
+        chromatin insulator sequence binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 11.42). Insulator binding is the signature of CTCF and a small number of related multi-zinc-finger proteins; it is a specific claim about which DNA elements this protein occupies, and there is no evidence for it. The Krueppel C2H2 family is one of the largest in vertebrate genomes and its members bind widely different sequences, so transferring a specific binding-site class within it is not supportable.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+        
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0005634</strong><br>
+        nucleus
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 11.31), an exact match to the existing IBA and IEA nucleus annotations and to this review&#39;s assigned location. Correct and appropriate, but already annotated - for a zinc-finger transcription factor it is also the least informative thing that could be said.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-ai-review.html">A0A8J1IYX6</a>
+        <br><small style="color:var(--text-muted)">prkcd</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0004691</strong><br>
+        cAMP-dependent protein kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 13.67). PKA and PKC are both AGC-group serine/threonine kinases with homologous catalytic domains, so the fold-level inference is sound and the term is a strict descendant of the protein kinase activity annotated in GOA - a curator climbing to the parent gets a correct annotation, which is why this is scored LSP. But PKCdelta is not cAMP-regulated: its activators are diacylglycerol and phosphatidylserine, and its regulatory region is C1/C2 rather than a cyclic-nucleotide binding domain. Naming the second messenger is the whole content of the term, and it is wrong.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-ai-review.html">A0A8J1IYX6</a>
+        <br><small style="color:var(--text-muted)">prkcd</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0004692</strong><br>
+        cGMP-dependent protein kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 12.62). The second cyclic-nucleotide-dependent AGC kinase, offered alongside the first and mutually exclusive with it. Together ranks 1-3 propose three different regulatory inputs for one kinase within 1.6 score units, which is a clear statement that the model has resolved the group and not the subfamily - and the subfamily is what distinguishes PKCdelta&#39;s DAG-dependent, caspase-cleavable, apoptosis-linked biology from PKA&#39;s.</div></td>
+</tr>
+
+<tr data-assessment="PLI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-ai-review.html">A0A8J1IYX6</a>
+        <br><small style="color:var(--text-muted)">prkcd</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0004679</strong><br>
+        AMP-activated protein kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-PLI">PLI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PARALOG_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 12.08). AMPK is a CAMK-group kinase that functions as a heterotrimer with beta and gamma regulatory subunits; PKCdelta is a monomeric AGC kinase. This is the third distinct kinase identity proposed for the same sequence. Note that the UniProt entry&#39;s own PANTHER assignment (PTHR24351, ribosomal protein S6 kinase) is also off-target, so the automatic annotation and the retrieval are independently confused about this protein - the RefSeq protein name is what identifies it correctly.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/F6WPT1/F6WPT1-ai-review.html">F6WPT1</a>
+        <br><small style="color:var(--text-muted)">arl5a</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0048199</strong><br>
+        vesicle targeting, to, from or within Golgi
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Top-ranked hit (score 16.32), absent from GOA and a strict descendant of the annotated vesicle-mediated transport. It is the correct mechanistic statement for ARL5A: through GARP recruitment it promotes fusion of endosome-derived retrograde carriers with the TGN. Correct, specific and novel.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/F6WPT1/F6WPT1-ai-review.html">F6WPT1</a>
+        <br><small style="color:var(--text-muted)">arl5a</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0006886</strong><br>
+        intracellular protein transport
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 2 (score 16.23), an exact match to the existing IBA annotation. Correct but general, and strictly less informative than rank 1 - another instance of the same concept appearing at two ontology depths within one top five.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../genes/XENTR/F6WPT1/F6WPT1-ai-review.html">F6WPT1</a>
+        <br><small style="color:var(--text-muted)">arl5a</small>
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:1903292</strong><br>
+        protein localization to Golgi membrane
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Rank 3 (score 16.17), an exact match to the IBA and IEA annotations and consistent with ARL5A&#39;s recruitment of effectors to the TGN. Correct, not novel. Three correct process calls in the top three is among the better outcomes in this benchmark; the limitation is that none of them is the molecular function, which the GO channel reaches only at rank 21.</div></td>
+</tr>
+
+
+
+</tbody>
+</table>
+
+<footer>
+    Generated from 50 prediction review YAML files.
+    Assessment categories per de Crécy-Lagard et al. 2025 (PMID:40703034).
+</footer>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const assessment = document.getElementById('assessmentFilter').value;
+    const termType = document.getElementById('typeFilter').value;
+    const hideNoPred = document.getElementById('hideNoPred').checked;
+    const rows = document.querySelectorAll('#evalTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowAssessment = row.dataset.assessment;
+        const rowType = row.dataset.type;
+        const isNoPred = row.dataset.nopred === '1';
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (assessment && rowAssessment !== assessment) show = false;
+        if (termType && rowType !== termType) show = false;
+        if (hideNoPred && isNoPred) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const tbody = document.querySelector('#evalTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        const aVal = (a.children[col] || {}).textContent || '';
+        const bVal = (b.children[col] || {}).textContent || '';
+        const cmp = aVal.localeCompare(bVal, undefined, {numeric: true});
+        return sortAsc ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+
+</body>
+</html>
