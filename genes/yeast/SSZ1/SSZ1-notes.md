@@ -20,6 +20,48 @@
   than removed: the peptide-binding domain is dispensable and classical Hsp70
   substrate binding is unsupported, but transient nascent-chain contacts within
   RAC cannot be excluded from the available evidence.
-- Nuclear and plasma-membrane IBA localizations are unsafe Hsp70-family
-  transfers. Cytoplasm/cytosol are consistent with the characterized site of
-  action, with RAC positioned at the cytoplasmic ribosome.
+- Nuclear and plasma-membrane localizations are unsupported for Ssz1. Cytoplasm
+  and cytosol remain consistent with RAC at the cytoplasmic ribosome.
+
+## 2026-08-28 completion audit
+
+- Reconciled the review against all 75 GOA rows, which collapse to 30 unique
+  term/evidence/reference/qualifier signatures in the YAML; every non-NEW row now
+  records its GOA qualifier explicitly.
+- Audited all eight IBA rows against the current PTHR45639 PAINT snapshot. The
+  active nodes are PTN002321897 (cytoplasm), PTN002500132 (nucleus/cytosol), and
+  PTN000452648 (ATP hydrolysis, heat-shock-protein binding, protein-folding
+  chaperone, and protein refolding).
+- Corrected the localization interpretation. Plasma membrane remains REMOVE, but
+  its root cause is `SOURCE_STALE_OR_MISSING`: the pinned GOA row points to
+  PTN002500132, while the current PAINT snapshot has no plasma-membrane assertion
+  at that node. Nucleus remains REMOVE with `PROPAGATION_BAD`: PMID:20368619
+  directly localizes Jjj1/Zuo1 and discusses Ssb nuclear cycling, whereas its only
+  Ssz1-specific result is 27S rRNA precursor accumulation in an SSZ1 deletion.
+  That phenotype supports GO:0006364 rRNA processing, not `is_active_in nucleus`.
+  [PMID:20368619 "When compared with WT cells, we observed a strong accumulation
+  of the 27S rRNA precursor in Δjjj1 and Δzuo1 strains as well as in Δssz1 and
+  Δssb1/2"]
+- Retained the refolding IBA as `MARK_AS_OVER_ANNOTATED`. Its supported related
+  biology is already represented by two accepted GO:0051083 de novo
+  cotranslational-folding rows, so a redundant MODIFY replacement would weaken
+  the explicit record of the canonical-Hsp70 transfer error.
+- Added a NEW GO:0022626 `cytosolic ribosome` annotation and the same location to
+  `core_functions`, directly supported by the original RAC study. [PMID:11274393
+  "Zuotin and Ssz1p form a ribosome-associated complex (RAC) that is bound to the
+  ribosome via the zuotin subunit."]
+- RAC membership is captured explicitly in the core-function description and
+  evidence, but no `in_complex` GO identifier was asserted: the review found no
+  RAC-specific GO cellular-component term, and using generic `ribosome` as a
+  complex would falsely imply that Ssz1 is a structural ribosomal subunit. The
+  earlier protein-binding wording was corrected so it no longer claims a
+  nonexistent RAC complex annotation.
+- PAINT `source_label` values now use each exact bare machine identifier
+  (`PANTHER:PTN...`) rather than an invented descriptive node label.
+- The review is now COMPLETE: ATP binding is retained, ATP hydrolysis remains
+  removed as a lost Hsp70 subactivity, generic protein-binding rows remain
+  over-annotated, and the experimentally supported cotranslational-folding,
+  translational-fidelity, frameshifting, and ribosome-biogenesis annotations are
+  retained at core or non-core scope as appropriate. Cytosol is retained as the
+  broad core compartment, while all still-broader cytoplasm rows are consistently
+  non-core.
