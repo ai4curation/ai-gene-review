@@ -16,6 +16,12 @@ project depends on and (b) the logic and scientific validity of the project's st
 conclusions. Everything below was re-derived from the committed code and caches; each finding
 names the file and the check that produces it.
 
+> **Status: findings applied.** This page is kept as the audit record. Every finding below has
+> since been fixed in the code, modules and prose — see [What was changed](#what-was-changed-in-response)
+> at the end for the mapping from finding to fix. Findings are left in the past-tense-free
+> original wording so the reasoning stays legible; the fixes are listed separately rather than
+> edited in.
+
 ## Verdict
 
 **The engineering is sound and every published number reproduces exactly. Three of the
@@ -320,6 +326,55 @@ directionality made explicit.
 7. Fix the OXCT1 "0 TPM" figure to 0.46.
 8. Work the gene-annotation list above, starting with the G6PC1 `REMOVE` and the missing G6PC2
    review.
+
+## What was changed in response
+
+All findings above were applied. Engine tests went 38 → 41 passing (three new regression cases);
+all gene reviews and modules still validate.
+
+**Engine, oracles, modules**
+
+| finding | fix |
+|---|---|
+| 3 — phantom dark matter | `modules/methionine_biosynthesis.yaml` restructured: top-level steps are now `homocysteine_formation` → `methylation`, and the aspartate-semialdehyde route (`MJ0100`+`MJ0099`, UniProtKB:Q57564/Q57563, PMID:25938369) is a variant of the *whole* acylation + sulfur-incorporation arm. Title dropped "(from homoserine)". 14 routes. |
+| 3 — oracle coverage | `STEP_KO` gained K23975, K23976 and the previously-unmapped `metZ` (K10764); KEGG cache rebuilt. `syn`/`mja` now `CONSISTENT_ACTIVE`; `rpr` auxotrophy and all four prototroph reconstructions unchanged; **zero** abduction targets remain. |
+| 4 — silent unmapped atoms | new `kegg_oracle.holds_for()` raises `UnmappedStepError` instead of returning `False`; both genome resolvers now use it in place of their duplicated closures. Doctested. |
+| 2a — single-gate misreport | `resolve_zonation.py` now reports `failing_steps` (all of them) beside `missing_gate`. L1 shows three failing steps; L2–L3 fail at `fbpase_step` where `missing_gate` is empty. |
+| 2b — FBP2 rescue | new `zonation_oracle.expressed()` requires an absolute floor (`ABSOLUTE_FLOOR = 1e-5`, inside a 33-fold empty gap) as well as the relative threshold. Blocked zone grows L1 → L1–L3; the threshold sweep becomes genuinely monotonic. |
+| — | `resolve_genomes.route_signature()` rewritten: every branch is decided by a gene that is *present*, never by an `else` default (it had been mislabelling the new route). Hardcoded "8 route combinations" replaced with the computed count. |
+| 5 — Buchnera | `resolve_abduction.py`'s exclusion comment expanded to state the shared-pathway biology; RESULTS.md corrected to match, and Buchnera reframed as the cross-feeding exemplar rather than a plain auxotroph. |
+| 6 — OXCT1 TPM | corrected to 0.46 in both documents. |
+| — | figures regenerated from the corrected engine; `demo_standalone.py`/`demo.html` rebuilt (they embedded the stale module as base64). |
+
+**Prose.** `PATHWAY_SATISFIABILITY.md` and `RESULTS.md` both carry an explicit **retraction** of
+the dark-matter claim with its two root causes; the GTEx section now states that the satisfiable
+set equals `G6PC1 ≥ threshold` and that the credit belongs to curation, not circuit evaluation;
+the zonation section states the multi-step block and the floor; `methods.md` documents both
+oracle rules. Finding 1's point is now the page's own framing rather than a criticism of it.
+
+**Gene reviews** (all 11 validate; statuses set to `COMPLETE`)
+
+- **G6PC1** — the erroneous `REMOVE` of `GO:0016773` is now `KEEP_AS_NON_CORE`, with the
+  phosphohistidine/EC 2.7.1.62 chemistry explained; 6 degenerate `supporting_text` fragments
+  replaced with real quotes and 7 deleted where no supporting quote genuinely exists.
+- **G6PC2** — created from scratch (was missing entirely despite anchoring the paralog-trap
+  claim): notes with inline provenance, every GOA row reviewed, description, core functions.
+- **OXCT1** — 4 degenerate quotes replaced, 4 deleted; PMID:9380443 fetched, verified
+  ("SCOT was detected in all tissues except liver") and added with a `reference_review`.
+- **ACAT1** — reversed thiolysis/CoA chemistry corrected; the missing second `GO:0016453`
+  GOA row added.
+- **LDHB/LDHA/GPD1/PC** — over-general parents moved to `MODIFY` + replacement terms; LDHA's
+  self-contradicting mitochondrion IBA changed to `KEEP_AS_NON_CORE`; GPD1's oxidative
+  (gluconeogenic) direction properly represented; borrowed `IBA`/`IEA` provenance stripped
+  from `NEW` entries.
+- **Conventions harmonised** across the ketolysis and gate genes (over-general parents →
+  `MODIFY`; `identical protein binding` → `MARK_AS_OVER_ANNOTATED`); stray
+  `</content></invoke>` artifacts removed from the G6PC1 and SLC37A4 notes.
+- **`modules/ketone_body_oxidation.yaml`** — "essentially irreversible" softened to distinguish
+  thermodynamic reversibility from net physiological directionality, matching the OXCT1 review.
+
+Not done: the human liver-zonation oracle (still mouse orthologs) remains the project's own
+stated next step, and is out of scope for a review pass.
 
 ## What holds up
 

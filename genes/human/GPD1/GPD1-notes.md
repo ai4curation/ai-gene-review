@@ -96,3 +96,27 @@ Actions:
 
 No REMOVE actions used (all IEAs here are defensible parents/duplicates rather than
 clearly wrong; experimental/bare-binding annotations are per policy not removed).
+
+## Update: the oxidative (gluconeogenic) direction is also core
+
+Earlier in this file the oxidative direction (G3P + NAD+ -> DHAP + NADH) was treated as
+merely the "reverse" of the physiological reaction. That understates it. GPD1 runs both
+ways depending on tissue and nutritional state: the reductive direction dominates in
+adipose tissue and fed liver (glycerolipid synthesis, glycerol-phosphate shuttle), but in
+fasting liver and kidney the flux reverses — glycerol released by adipose lipolysis is
+phosphorylated to G3P by glycerol kinase, and GPD1 oxidises that G3P to DHAP, which is the
+entry point of glycerol carbon into gluconeogenesis. "Since G3P is one of the substrates
+utilized for gluconeogenesis in the liver, the conversion of G3P to DHAP by GPD1 is
+essential for maintaining blood glucose levels during fasting"
+[PMID:27733253 "the conversion of G3P to DHAP by GPD1 is essential"]. This is supported in
+vivo: Gpd1-null BALB/cHeA mice are specifically impaired in gluconeogenesis from glycerol
+[PMID:27733253 "Although lack of GPD1 inhibited gluconeogenesis from glycerol"] and show
+lower blood glucose after glycerol administration
+[PMID:27733253 "The blood glucose levels in the HeA mice were lower than that in the By"].
+It is also the direction UniProt records as physiological for the reaction as written
+[file:human/GPD1/GPD1-uniprot.txt "PhysiologicalDirection=left-to-right"].
+
+Curation change: GO:0046168 glycerol-3-phosphate catabolic process is therefore promoted
+from KEEP_AS_NON_CORE to ACCEPT (core), and a third core function covering the oxidative /
+gluconeogenic direction has been added alongside the biosynthetic and shuttle ones. The
+"Curation decisions (summary)" section above predates this change.

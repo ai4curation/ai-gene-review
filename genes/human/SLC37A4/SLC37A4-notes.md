@@ -83,5 +83,3 @@ GOA and not cached; not used for supporting_text.)
 - CC GO:0005783 (ER, NAS) — correct but less specific than ER membrane. KEEP_AS_NON_CORE.
 - CC GO:0016020 (membrane, IEA/HDA/NAS) — trivially true, far less specific than ER
   membrane. MARK_AS_OVER_ANNOTATED.
-</content>
-</invoke>

@@ -22,7 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ai_gene_review.module_logic import compile_module_file, abduce
-from kegg_oracle import load_cache, ORGANISMS
+from kegg_oracle import load_cache, holds_for, ORGANISMS
 
 MODULE = Path(__file__).parents[2] / "methionine_biosynthesis.yaml"
 
@@ -36,7 +36,16 @@ ACTIVITY = {
     "syn": (True, "obligate photoautotroph; grows in BG-11 mineral medium (no amino acids)"),
     "mja": (True, "chemolithoautotroph; grows on H2 + CO2 mineral medium (synthesises all amino acids)"),
     "rpr": (False, "obligate intracellular methionine auxotroph; imports methionine from the host"),
-    # buc/hin omitted: methionine requirement is contested / host-complemented; not asserted here.
+    # buc/hin omitted deliberately, and the omission is not a hedge:
+    #   Buchnera aphidicola APS is neither a clean prototroph nor a clean auxotroph. Its
+    #   methionine pathway is *shared* with the aphid host -- Buchnera retains the terminal
+    #   MetE step (the only amino-acid biosynthetic gene keeping its ancestral metR
+    #   regulator) and the consortium provisions methionine to the host, with earlier
+    #   intermediates supplied collaboratively. Asserting either phenotype for the
+    #   bacterium alone would be false, so no activity is asserted. It is the natural
+    #   illustration of the "not cell-autonomous / cross-feeding" hypothesis rather than
+    #   of auxotrophy.
+    #   H. influenzae is omitted for the analogous reason (host-complemented).
 }
 
 
@@ -46,11 +55,7 @@ def resolve() -> dict:
     out = {}
     for org, (active, basis) in ACTIVITY.items():
         present = matrix.get(org, {})
-
-        def holds(atom, _p=present):
-            return bool(atom.gene_symbol) and _p.get(atom.gene_symbol, False)
-
-        ab = abduce(circuit, holds, asserted_active=active)
+        ab = abduce(circuit, holds_for(present), asserted_active=active)
         out[org] = {"abduction": ab, "basis": basis}
     return out
 
@@ -78,8 +83,17 @@ def format_report(result: dict) -> str:
     targets = [o for o, r in result.items() if r["abduction"].classification == "ABDUCTION_TARGET"]
     lines.append("== Summary ==")
     lines.append(f"  abduction targets (make methionine but have a pathway gap): {targets}")
-    lines.append("  These are the GapMind-style leads for novel/under-annotated enzymes; the")
-    lines.append("  gap+auxotroph cases instead show the engine correctly predicting an auxotrophy.")
+    if targets:
+        lines.append("  These are the GapMind-style leads for novel/under-annotated enzymes; the")
+        lines.append("  gap+auxotroph cases instead show the engine correctly predicting an auxotrophy.")
+    else:
+        lines.append("  No leads in this panel, and that is the correct result. Every prototroph here")
+        lines.append("  is now reconstructable, and the only gap (rpr) is a genuine auxotroph the")
+        lines.append("  engine correctly predicts. An earlier version of the module modelled only the")
+        lines.append("  O-acyl-homoserine entry to homocysteine and so reported syn and mja as")
+        lines.append("  'metabolic dark matter'; both in fact encode the aspartate-semialdehyde route")
+        lines.append("  (K23975/K23976). That was a model-scope artifact, not a discovery -- the")
+        lines.append("  cautionary case for reading any gap as a lead before the model is adequate.")
     return "\n".join(lines) + "\n"
 
 

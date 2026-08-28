@@ -540,7 +540,7 @@ cached data matrix and hands it to <code>is_satisfied</code> / <code>unsatisfied
 <tr>
 <td>liver zonation</td>
 <td><code>zonation_oracle.py</code></td>
-<td>Halpern 2017 layer profile ≥ relative threshold</td>
+<td>Halpern 2017 layer profile ≥ relative threshold <strong>and</strong> ≥ absolute floor</td>
 </tr>
 <tr>
 <td>substrate entry</td>
@@ -556,6 +556,18 @@ cached data matrix and hands it to <code>is_satisfied</code> / <code>unsatisfied
 </table>
 <p><code>gtex_oracle.py</code> is a real GTEx v8 API client (resolves symbol → versioned GENCODE id,<br />
 alias-aware e.g. <code>G6PC1</code>→<code>G6PC</code>; caches a gene×tissue TSV) — it does not fabricate values.</p>
+<p>Two things an oracle must get right, both learned the hard way (see<br />
+<a href="REVIEW.html">Independent review</a>):</p>
+<ul>
+<li><strong>Never default an undecidable atom to <code>False</code>.</strong> <code>kegg_oracle.holds_for()</code> raises<br />
+<code>UnmappedStepError</code> when an atom's gene symbol has no entry in <code>STEP_KO</code>. Returning <code>False</code><br />
+  instead makes "my lookup table is incomplete" indistinguishable from "this genome lacks the<br />
+  gene", which manufactured two phantom "metabolic dark matter" leads.</li>
+<li><strong>Never let a relative measure stand alone.</strong> <code>zonation_oracle.expressed()</code> requires an<br />
+  absolute floor as well as the relative-to-own-peak threshold, because per-gene peak<br />
+  normalisation otherwise lets a gene the tissue does not express satisfy a step at its own<br />
+  (tiny) maximum.</li>
+</ul>
 <h2 id="abduction-a-gap-is-a-hypothesis">Abduction: a gap is a hypothesis</h2>
 <p><code>abduce(circuit, holds, asserted_active)</code> crosses satisfiability with an <strong>independent</strong> activity<br />
 claim (a growth phenotype, a documented tissue function) and returns an <code>Abduction</code> with one of<br />
@@ -601,6 +613,13 @@ and a fixed <code>GAP_HYPOTHESES</code> set: non-orthologous/unannotated enzyme 
 route · <strong>not cell-autonomous</strong> (intermediate supplied by another cell/organ — the metazoan-only<br />
 explanation) · the activity assertion itself is wrong. The activity column is independent of the<br />
 oracle, so a scored gap is a genuine prediction, not a circular restatement.</p>
+<p><strong>Work the hypotheses in the right order.</strong> Independence of the phenotype axis says nothing<br />
+about whether the <em>gap</em> axis is right, and two of the four hypotheses are about the model<br />
+rather than the organism. The microbial retraction on the main page is the worked example:<br />
+the true explanation was "an unmodelled alternative route", the write-up reached for<br />
+"unannotated enzyme", and the difference was a KO missing from a lookup table. Before treating<br />
+a gap as a lead, confirm (i) the module can represent the routes this organism plausibly uses,<br />
+and (ii) the oracle covers every atom in the module.</p>
 <h2 id="architecture">Architecture</h2>
 <div class="mermaid">
 flowchart LR

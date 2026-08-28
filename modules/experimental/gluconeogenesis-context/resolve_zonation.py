@@ -18,9 +18,10 @@ from pathlib import Path
 
 from ai_gene_review.module_logic import (
     compile_module_file, enumerate_routes, core_atoms, is_satisfied,
+    unsatisfied_steps, step_id,
 )
 from zonation_oracle import (
-    load_profiles, relative_profile, portal_pole, zone_label, N_LAYERS,
+    load_profiles, expressed, portal_pole, zone_label, N_LAYERS,
 )
 
 # Human module symbols -> mouse symbols used in Halpern Table S3.
@@ -33,16 +34,16 @@ HUMAN_TO_MOUSE = {
 def resolve(module_path: str, threshold: float) -> dict:
     circuit = compile_module_file(module_path)
     profiles = load_profiles()
-    rel = {g: relative_profile(p) for g, p in profiles.items()}
     pp = portal_pole(profiles)
 
     def holds_in_layer(atom, layer_idx):
         if not atom.gene_symbol:
             return True
         mouse = HUMAN_TO_MOUSE.get(atom.gene_symbol)
-        if mouse is None or mouse not in rel:
+        if mouse is None or mouse not in profiles:
             return False
-        return rel[mouse][layer_idx] >= threshold
+        # Absolute floor AND relative-to-own-peak: see zonation_oracle.expressed.
+        return expressed(profiles[mouse], layer_idx, threshold)
 
     routes = enumerate_routes(circuit)
     gate = core_atoms(circuit)
@@ -54,11 +55,16 @@ def resolve(module_path: str, threshold: float) -> dict:
 
         sat = is_satisfied(circuit, holds)
         missing = [a.gene_symbol for a in gate if not holds(a)]
+        # Report EVERY failing step, not just the gate atoms. A layer can fail at
+        # several steps at once, and filtering to core_atoms hides that -- which
+        # previously made a multi-step block look like a single-gate one.
+        failing = [step_id(s) for s in unsatisfied_steps(circuit, holds)]
         layers.append({
             "layer": li + 1,
             "zone": zone_label(li, pp),
             "satisfiable": sat,
             "missing_gate": missing,
+            "failing_steps": failing,
         })
     return {
         "periportal_pole_layer": pp + 1,
@@ -75,10 +81,11 @@ def format_report(result: dict, threshold: float) -> str:
                  f"(opposite end = pericentral; from landmark genes)")
     lines.append(f"Gate atoms (required by all {result['routes']} routes): {result['gate']}")
     lines.append(f"Relative-expression threshold: profile/peak >= {threshold}\n")
-    lines.append("layer  zone         gluconeogenesis  missing-gate")
+    lines.append("layer  zone         gluconeogenesis  missing-gate  all-failing-steps")
     for row in L:
         flag = "SATISFIABLE" if row["satisfiable"] else "blocked    "
-        lines.append(f"  L{row['layer']}   {row['zone']:11s}  {flag}      {row['missing_gate']}")
+        lines.append(f"  L{row['layer']}   {row['zone']:11s}  {flag}      "
+                     f"{str(row['missing_gate']):16s} {row['failing_steps']}")
     sat_zones = sorted({r["zone"] for r in L if r["satisfiable"]})
     blk_zones = sorted({r["zone"] for r in L if not r["satisfiable"]})
     lines.append(f"\nSatisfiable zones: {sat_zones}")

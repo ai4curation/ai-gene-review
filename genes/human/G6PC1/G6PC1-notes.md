@@ -69,5 +69,3 @@ transporter defects, not G6PC1.
 - MF: GO:0004346 glucose-6-phosphatase activity (EC 3.1.3.9)
 - BP: GO:0006094 gluconeogenesis; GO:0042593 glucose homeostasis
 - CC: GO:0005789 endoplasmic reticulum membrane (active site luminal)
-</content>
-</invoke>

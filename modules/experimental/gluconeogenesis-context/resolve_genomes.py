@@ -16,17 +16,38 @@ from ai_gene_review.module_logic import (
     compile_module_file, enumerate_routes, active_routes, is_satisfied,
     unsatisfied_steps, step_id,
 )
-from kegg_oracle import load_cache, ORGANISMS, STEP_KO
+from kegg_oracle import load_cache, holds_for, ORGANISMS, STEP_KO
 
 MODULE = Path(__file__).parents[2] / "methionine_biosynthesis.yaml"
 
 
 def route_signature(route_symbols: set[str]) -> str:
-    """Human-readable route description from the present genes in a route."""
-    acyl = "metA(succinyl)" if "metA" in route_symbols else "metX(acetyl)"
-    sulfur = "trans-sulfuration(metB+metC)" if {"metB", "metC"} <= route_symbols else "direct(metY)"
-    methyl = "metH(B12)" if "metH" in route_symbols else "metE(no-B12)"
-    return f"{acyl} | {sulfur} | {methyl}"
+    """Human-readable route description from the genes actually on the route.
+
+    Every branch is decided by a gene that is *present*, never by an ``else``
+    default: an unrecognised combination reports ``(?)`` rather than silently
+    borrowing the label of a route the organism does not use.
+
+    >>> route_signature({"metA", "metB", "metC", "metE"})
+    'metA(succinyl) | trans-sulfuration(metB+metC) | metE(no-B12)'
+    >>> route_signature({"MJ0100", "MJ0099", "metH"})
+    'aspartate-semialdehyde sulfurtransfer (MJ0100+MJ0099) | metH(B12)'
+    """
+    if "MJ0100" in route_symbols:
+        homocysteine = "aspartate-semialdehyde sulfurtransfer (MJ0100+MJ0099)"
+    else:
+        acyl = ("metA(succinyl)" if "metA" in route_symbols
+                else "metX(acetyl)" if "metX" in route_symbols
+                else "acylation(?)")
+        sulfur = ("trans-sulfuration(metB+metC)" if {"metB", "metC"} <= route_symbols
+                  else "direct(metY)" if "metY" in route_symbols
+                  else "direct(metZ)" if "metZ" in route_symbols
+                  else "sulfur-incorporation(?)")
+        homocysteine = f"{acyl} | {sulfur}"
+    methyl = ("metH(B12)" if "metH" in route_symbols
+              else "metE(no-B12)" if "metE" in route_symbols
+              else "methylation(?)")
+    return f"{homocysteine} | {methyl}"
 
 
 def resolve() -> dict:
@@ -37,9 +58,7 @@ def resolve() -> dict:
     out = {}
     for org in ORGANISMS:
         present = matrix.get(org, {})
-
-        def holds(atom, _p=present):
-            return bool(atom.gene_symbol) and _p.get(atom.gene_symbol, False)
+        holds = holds_for(present)
 
         found = is_satisfied(circuit, holds)
         ar = active_routes(circuit, holds)
@@ -52,7 +71,8 @@ def resolve() -> dict:
 
 
 def format_report(result: dict) -> str:
-    lines = ["Module: methionine biosynthesis   (8 route combinations enumerated)\n"]
+    lines = [f"Module: methionine biosynthesis   "
+             f"({result['total_routes']} route combinations enumerated)\n"]
     for org, label in ORGANISMS.items():
         r = result["organisms"][org]
         status = "FOUND" if r["found"] else "GAP"
@@ -78,6 +98,13 @@ def format_report(result: dict) -> str:
                  f"{'metX' in org['hin']['present_genes'] and 'metA' not in org['hin']['present_genes']} (expect True)")
     lines.append(f"  C. glutamicum uses direct sulfhydrylation (metY): "
                  f"{'metY' in org['cgl']['present_genes']} (expect True)")
+    lines.append(f"  Synechocystis + M. jannaschii found via the homoserine-independent "
+                 f"aspartate-semialdehyde route: "
+                 f"{all(org[o]['found'] and 'MJ0100' in org[o]['present_genes'] for o in ['syn', 'mja'])}"
+                 f" (expect True)")
+    lines.append(f"  neither uses a canonical acyltransferase: "
+                 f"{not any({'metA', 'metX'} & set(org[o]['present_genes']) for o in ['syn', 'mja'])}"
+                 f" (expect True)")
     return "\n".join(lines) + "\n"
 
 

@@ -194,13 +194,18 @@ METHIONINE = Path("modules/methionine_biosynthesis.yaml")
 @pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
 def test_methionine_template_structure():
     circuit = compile_module_file(METHIONINE)
+    # Two required steps: reach homocysteine, then methylate it. Acylation and
+    # sulfur incorporation are nested *inside* the acyl-homoserine branch, because
+    # the aspartate-semialdehyde route bypasses both.
     assert [step_id(c) for c in circuit.children] == [
-        "acylation", "sulfur_incorporation", "methylation"]
-    assert len(enumerate_routes(circuit)) == 12
+        "homocysteine_formation", "methylation"]
+    # 6 acyl-homoserine routes (2 acyl x 3 sulfur) + 1 direct route, x 2 synthases
+    assert len(enumerate_routes(circuit)) == 14
     # every step is an OR, so no enzyme is universally required
     assert core_atoms(circuit) == []
     assert sorted({a.gene_symbol for a in iter_atoms(circuit)}) == [
-        "metA", "metB", "metC", "metE", "metH", "metX", "metY", "metZ"]
+        "MJ0099", "MJ0100", "metA", "metB", "metC", "metE", "metH",
+        "metX", "metY", "metZ"]
 
 
 @pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
@@ -213,10 +218,18 @@ def test_methionine_template_structure():
         ({"metX", "metB", "metC", "metE"}, True, []),
         # C. glutamicum-like: trans-sulfuration incomplete (no metC) but metY rescues it
         ({"metX", "metB", "metY", "metE", "metH"}, True, []),
-        # Buchnera-like reduced genome: only metE -> gap at acylation + sulfur step
-        ({"metE"}, False, ["acylation", "sulfur_incorporation"]),
+        # Buchnera-like reduced genome: only metE -> cannot reach homocysteine at all
+        ({"metE"}, False, ["homocysteine_formation"]),
         # missing only the methylation step
         ({"metA", "metB", "metC"}, False, ["methylation"]),
+        # Regression (see projects/PATHWAY_SATISFIABILITY/REVIEW.md): Synechocystis /
+        # M. jannaschii reach homocysteine directly from aspartate semialdehyde and so
+        # encode NO acyltransferase and NO sulfhydrylase. An earlier template modelled
+        # only the acyl-homoserine entry and scored them as "metabolic dark matter".
+        ({"MJ0100", "MJ0099", "metH"}, True, []),
+        ({"MJ0100", "MJ0099", "metE"}, True, []),
+        # ...but the direct route needs BOTH subunits: the catalytic one alone is a gap
+        ({"MJ0100", "metE"}, False, ["homocysteine_formation"]),
     ],
 )
 def test_methionine_genome_reconstruction(present, found, gaps):
@@ -236,10 +249,10 @@ def test_methionine_genome_reconstruction(present, found, gaps):
     [
         # complete pathway, organism known prototroph -> explained
         ({"metA", "metB", "metC", "metE"}, True, "CONSISTENT_ACTIVE", []),
-        # autotroph (makes methionine) but no acylation/sulfur candidates -> abduction lead
-        ({"metH"}, True, "ABDUCTION_TARGET", ["acylation", "sulfur_incorporation"]),
+        # autotroph (makes methionine) but no homocysteine-forming candidate -> abduction lead
+        ({"metH"}, True, "ABDUCTION_TARGET", ["homocysteine_formation"]),
         # nothing encoded, known auxotroph -> engine correctly predicts the auxotrophy
-        (set(), False, "CONSISTENT_INACTIVE", ["acylation", "sulfur_incorporation", "methylation"]),
+        (set(), False, "CONSISTENT_INACTIVE", ["homocysteine_formation", "methylation"]),
         # complete pathway but asserted inactive -> overprediction
         ({"metA", "metB", "metC", "metE"}, False, "OVERPREDICTION", []),
     ],
@@ -256,9 +269,9 @@ def test_abduction_classification(present, active, classification, gaps):
     # only abduction targets carry gap-filling hypotheses
     assert bool(ab.hypotheses) == (classification in {"ABDUCTION_TARGET", "OVERPREDICTION"})
     if classification == "ABDUCTION_TARGET":
-        # the candidate canonical enzymes that were all absent are reported per gap
-        assert ab.gap_candidates["acylation"] == ["metA", "metX"]
-        assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY", "metZ"]
+        # every absent candidate for the gap step is reported, across all its routes
+        assert ab.gap_candidates["homocysteine_formation"] == [
+            "MJ0099", "MJ0100", "metA", "metB", "metC", "metX", "metY", "metZ"]
 
 
 KETOLYSIS = Path("modules/ketone_body_oxidation.yaml")

@@ -148,12 +148,24 @@ Four oracles, one engine — only the predicate's data source changes:
 | oracle | file | atom truth = |
 |---|---|---|
 | GTEx bulk tissue | `gtex_oracle.py` | median TPM ≥ threshold in the tissue |
-| liver zonation | `zonation_oracle.py` | Halpern 2017 layer profile ≥ relative threshold |
+| liver zonation | `zonation_oracle.py` | Halpern 2017 layer profile ≥ relative threshold **and** ≥ absolute floor |
 | substrate entry | (GTEx, substrate module) | precursor-route genes expressed |
 | genome presence | `kegg_oracle.py` | step's KO encoded in the genome (GapMind-style) |
 
 `gtex_oracle.py` is a real GTEx v8 API client (resolves symbol → versioned GENCODE id,
 alias-aware e.g. `G6PC1`→`G6PC`; caches a gene×tissue TSV) — it does not fabricate values.
+
+Two things an oracle must get right, both learned the hard way (see
+[Independent review](REVIEW.md)):
+
+- **Never default an undecidable atom to `False`.** `kegg_oracle.holds_for()` raises
+  `UnmappedStepError` when an atom's gene symbol has no entry in `STEP_KO`. Returning `False`
+  instead makes "my lookup table is incomplete" indistinguishable from "this genome lacks the
+  gene", which manufactured two phantom "metabolic dark matter" leads.
+- **Never let a relative measure stand alone.** `zonation_oracle.expressed()` requires an
+  absolute floor as well as the relative-to-own-peak threshold, because per-gene peak
+  normalisation otherwise lets a gene the tissue does not express satisfy a step at its own
+  (tiny) maximum.
 
 ## Abduction: a gap is a hypothesis
 
@@ -173,6 +185,14 @@ and a fixed `GAP_HYPOTHESES` set: non-orthologous/unannotated enzyme · unmodell
 route · **not cell-autonomous** (intermediate supplied by another cell/organ — the metazoan-only
 explanation) · the activity assertion itself is wrong. The activity column is independent of the
 oracle, so a scored gap is a genuine prediction, not a circular restatement.
+
+**Work the hypotheses in the right order.** Independence of the phenotype axis says nothing
+about whether the *gap* axis is right, and two of the four hypotheses are about the model
+rather than the organism. The microbial retraction on the main page is the worked example:
+the true explanation was "an unmodelled alternative route", the write-up reached for
+"unannotated enzyme", and the difference was a KO missing from a lookup table. Before treating
+a gap as a lead, confirm (i) the module can represent the routes this organism plausibly uses,
+and (ii) the oracle covers every atom in the module.
 
 ## Architecture
 

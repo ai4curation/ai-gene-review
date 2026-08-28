@@ -24,12 +24,21 @@ CACHE = HERE / "cache" / "kegg_presence.tsv"
 KEGG = "https://rest.kegg.jp"
 
 # Step (gene symbol) -> KEGG Orthology id. The methionine-biosynthesis template.
+#
+# This table MUST cover every atom in the module it is used with. An atom the table
+# does not name cannot be resolved, and silently treating it as absent manufactures a
+# fake pathway gap -- see `holds_for` below and projects/PATHWAY_SATISFIABILITY/REVIEW.md.
 STEP_KO = {
     "metA": "K00651",  # homoserine O-succinyltransferase
     "metX": "K00641",  # homoserine O-acetyltransferase
     "metB": "K01739",  # cystathionine gamma-synthase
     "metC": "K01760",  # cystathionine beta-lyase
-    "metY": "K01740",  # O-acylhomoserine sulfhydrylase (direct)
+    "metY": "K01740",  # O-acylhomoserine sulfhydrylase (direct, O-acetyl)
+    "metZ": "K10764",  # O-succinylhomoserine sulfhydrylase (direct, O-succinyl)
+    # Homoserine-independent route: sulfide transferred straight onto L-aspartate
+    # semialdehyde (EC 2.8.1.16). Two obligate subunits. PMID:25938369.
+    "MJ0100": "K23975",  # L-aspartate semialdehyde sulfurtransferase
+    "MJ0099": "K23976",  # ...its iron-sulfur / ferredoxin partner subunit
     "metE": "K00549",  # cobalamin-independent methionine synthase
     "metH": "K00548",  # cobalamin-dependent methionine synthase
 }
@@ -45,6 +54,51 @@ ORGANISMS = {
     "mja": "Methanocaldococcus jannaschii",
     "rpr": "Rickettsia prowazekii",
 }
+
+
+class UnmappedStepError(KeyError):
+    """A module atom has no KEGG Orthology id in :data:`STEP_KO`.
+
+    Deciding such an atom is impossible, and answering ``False`` would be
+    indistinguishable from a genuine genome gap -- which is exactly how the
+    aspartate-semialdehyde route once produced two phantom "metabolic dark matter"
+    hits. Better to fail than to invent a gap.
+    """
+
+
+def holds_for(present_genes: dict[str, bool], step_ko: dict[str, str] | None = None):
+    """Build a per-genome atom predicate that refuses to guess.
+
+    ``present_genes`` maps gene symbol -> encoded?, as returned per organism by
+    :func:`load_cache`. Any atom whose symbol is not in the step->KO table raises
+    :class:`UnmappedStepError` rather than silently counting as absent.
+
+    >>> holds = holds_for({"metA": True, "metX": False}, {"metA": "K00651", "metX": "K00641"})
+    >>> class A: gene_symbol = "metA"
+    >>> holds(A())
+    True
+    >>> class B: gene_symbol = "metX"
+    >>> holds(B())
+    False
+    >>> class C: gene_symbol = "metQQQ"
+    >>> holds(C())
+    Traceback (most recent call last):
+        ...
+    kegg_oracle.UnmappedStepError: "no KEGG Orthology id for step 'metQQQ'; add it to STEP_KO"
+    """
+    table = STEP_KO if step_ko is None else step_ko
+
+    def holds(atom) -> bool:
+        symbol = getattr(atom, "gene_symbol", None)
+        if not symbol:
+            return False
+        if symbol not in table:
+            raise UnmappedStepError(
+                f"no KEGG Orthology id for step {symbol!r}; add it to STEP_KO"
+            )
+        return present_genes.get(symbol, False)
+
+    return holds
 
 
 def present(org: str, ko: str) -> bool:
