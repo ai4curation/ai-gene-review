@@ -230,7 +230,46 @@ def test_publication_headlines_match_generated_metrics() -> None:
     manuscript = (PROJECT_DIR / "article" / "manuscript.tex").read_text()
     supplement = (PROJECT_DIR / "article" / "supplemental-benchmark-details.md").read_text()
     slides = (PROJECT_DIR / "article" / "slides.md").read_text()
+    slides_html = (PROJECT_DIR / "article" / "slides.html").read_text()
+    published_slides_html = (
+        REPO_ROOT
+        / "pages"
+        / "projects"
+        / "BIOREASON_COMPARISON"
+        / "article"
+        / "slides.html"
+    ).read_text()
     manuscript_flat = " ".join(manuscript.split())
+
+    statuses = rl["reference_status_distribution"]
+    complete = statuses["COMPLETE"]
+    draft = statuses["DRAFT"]
+    in_progress = statuses["IN_PROGRESS"]
+    initialized = statuses["INITIALIZED"]
+    assert (
+        f"{complete} are `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"and {initialized} `INITIALIZED`"
+    ) in project
+    assert (
+        f"{complete} are `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"and {initialized} `INITIALIZED`"
+    ) in supplement
+    assert (
+        f"{complete} `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"{initialized} `INITIALIZED`"
+    ) in slides
+    rendered_statuses = (
+        f"{complete} <code>COMPLETE</code>, {draft} <code>DRAFT</code>, "
+        f"{in_progress} <code>IN_PROGRESS</code>, {initialized} "
+        "<code>INITIALIZED</code>"
+    )
+    assert rendered_statuses in slides_html
+    assert published_slides_html == slides_html
+    assert (
+        f"{complete}/139 were \\texttt{{COMPLETE}}, {draft} \\texttt{{DRAFT}}, "
+        f"{in_progress} \\texttt{{IN\\_PROGRESS}}, and {initialized} "
+        "\\texttt{INITIALIZED}."
+    ) in manuscript_flat
 
     assert (
         f"**Overall correctness: {rl['mean_correctness']:.1f}/5** | "

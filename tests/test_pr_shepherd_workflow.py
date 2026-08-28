@@ -115,6 +115,14 @@ def test_reviewer_app_token_cannot_write_pr_contents():
     assert permissions == {"permission-pull-requests": "write"}
 
 
+def test_generated_pages_triggers_on_project_data_files():
+    """Published project data must trigger regeneration of its pages copies."""
+    workflow = _workflow(GENERATE_PAGES)
+    paths = workflow[True]["push"]["paths"]
+    assert "projects/**/*.csv" in paths
+    assert "projects/**/*.json" in paths
+
+
 def test_generated_pages_waits_for_ci_and_exact_head_approval():
     workflow = _workflow(GENERATE_PAGES)
     job = workflow["jobs"]["generate-pages"]
