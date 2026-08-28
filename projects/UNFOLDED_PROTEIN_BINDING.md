@@ -532,7 +532,7 @@ established:
 | EUG1 | *S. cerevisiae* | P32474 | 24 | UNDECIDED | CXXS PDI-family redox/folding factor; the cached evidence does not resolve generic unfolded-protein binding |
 | GET3 | *S. cerevisiae* | Q12154 | 64 | MODIFY | TA protein chaperone |
 | GSF2 | *S. cerevisiae* | Q04697 | 9 | MODIFY | Glucose transporter chaperone |
-| HSC82 | *S. cerevisiae* | P15108 | 47 | MODIFY → GO:0044183 | HSP90 |
+| HSC82 | *S. cerevisiae* | P15108 | 47 | MODIFY → GO:0140662 | HSP90 |
 | HSP10 | *S. cerevisiae* | P38910 | 21 | OVER_ANNOTATED | GroES co-chaperonin |
 | HSP104 | *S. cerevisiae* | P31539 | 46 | MODIFY → GO:0044183 | Disaggregase |
 | HSP26 | *S. cerevisiae* | P15992 | 16 | MODIFY (holdase NTR) | sHSP holdase |
