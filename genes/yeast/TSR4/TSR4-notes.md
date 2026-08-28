@@ -53,17 +53,15 @@ Live QuickGO definitions were checked on 2026-08-28:
 - GO:0140309 unfolded protein holdase activity additionally requires an unfolded
   client to be escorted to an acceptor or location.
 
-Tsr4 clearly binds nascent Rps2 and promotes its solubility. However, curated
-UniProt states that Tsr4 is released before Rps2 nuclear import, and current
-evidence does not identify a direct acceptor, directional handoff, or escort by
-Tsr4 to the nucleus. Consequently, GO:0140597 is not retained as core and
-GO:0140318/GO:0140309 are not proposed. The direct GO:0140597 row and all three
-obsolete GO:0051082 rows are instead MODIFY to GO:0044183, which captures the
-experimentally demonstrated client-stabilizing chaperone activity without
-inventing transport.
+Tsr4 clearly binds nascent Rps2 and promotes its solubility. GO:0140597 is
+retained as the core activity because it is a recent, directly curated IDA and
+the abstract-only cache is insufficient to overrule the curator's full-text
+assessment. This is also consistent with NAP1 and the dedicated ribosomal-
+protein-chaperone cohort. GO:0140318/GO:0140309 are not newly proposed. The
+three obsolete GO:0051082 rows are MODIFY to GO:0044183, which preserves their
+client-stabilizing chaperone biology without treating the obsolete binding term
+as the carrier annotation itself.
 
-The core synthesis is therefore a cytoplasmic, Rps2-specific protein folding
-chaperone whose activity supports ribosomal small-subunit biogenesis and SSU
-rRNA maturation. Experiments that identify the immediate Rps2 acceptor and
-demonstrate directional handoff would be needed before asserting carrier or
-transporter activity.
+The core synthesis is therefore a cytoplasmic, Rps2-specific protein carrier
+chaperone whose activity directly supports ribosomal small-subunit biogenesis;
+SSU-rRNA maturation is retained as a downstream annotated consequence.
