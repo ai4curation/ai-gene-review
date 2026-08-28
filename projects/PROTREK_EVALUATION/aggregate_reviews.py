@@ -25,7 +25,6 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-CALLS = Path(__file__).parent / "argo50_protrek_go_calls.csv"
 CS = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 ORDER = ["COR", "CNN", "LSP", "UNC", "PLI", "NPI", "REP"]
 
@@ -56,15 +55,21 @@ def score_thresholds(scored: list[tuple[float, int]]) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--calls", required=True, type=Path,
+                    help="the cohort's *_protrek_go_calls.csv, which supplies rank and score")
     ap.add_argument("--out", required=True, type=Path)
     args = ap.parse_args()
 
-    calls = list(csv.DictReader(CALLS.open()))
+    calls = list(csv.DictReader(args.calls.open()))
+    cohort_accessions = {r["accession"] for r in calls}
     rank_by = {(r["accession"], r["pred_id"]): (int(r["rank"]), float(r["protrek_score"]),
                                                 r["match_category"], r["aspect"])
                for r in calls if r["pred_id"]}
 
-    files = sorted(glob.glob(str(ROOT / "genes/*/*/*-protrek-predictions-review.yaml")))
+    # A review file belongs to this cohort iff its accession appears in the cohort's
+    # calls file; the two cohorts share the review-file suffix but no accessions.
+    files = [f for f in sorted(glob.glob(str(ROOT / "genes/*/*/*-protrek-predictions-review.yaml")))
+             if (yaml.safe_load(Path(f).read_text()) or {}).get("id") in cohort_accessions]
     scored: list[tuple[float, int]] = []
     counts = Counter()
     errors = Counter()

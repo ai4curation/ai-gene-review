@@ -140,8 +140,29 @@ def ancestors(go_id: str, terms: dict, cache: dict) -> set[str]:
     return seen
 
 
-def load_goa(acc: str) -> set[str]:
-    hits = glob.glob(str(ROOT / "genes" / "*" / acc / f"{acc}-goa.tsv"))
+def gene_dir_map(queries: Path | None) -> dict[str, Path]:
+    """accession -> gene directory.
+
+    Cohorts differ in how gene directories are named: ARGO-ProtNLM-50 uses the
+    accession, ARGO139 uses the gene symbol. When a queries TSV carrying
+    species_dir/symbol is supplied it is authoritative; otherwise fall back to
+    globbing for a directory named after the accession.
+    """
+    if not queries:
+        return {}
+    out = {}
+    with queries.open() as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            if row.get("species_dir") and row.get("symbol"):
+                out[row["accession"]] = ROOT / "genes" / row["species_dir"] / row["symbol"]
+    return out
+
+
+def load_goa(acc: str, dirs: dict[str, Path]) -> set[str]:
+    if acc in dirs:
+        hits = [str(p) for p in dirs[acc].glob("*-goa.tsv")]
+    else:
+        hits = glob.glob(str(ROOT / "genes" / "*" / acc / f"{acc}-goa.tsv"))
     if not hits:
         return set()
     terms = set()
@@ -162,7 +183,12 @@ def main() -> int:
     ap.add_argument("--topk", type=int, default=5, help="ProTrek ranks kept as the prediction set")
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--summary-out", type=Path, default=None)
+    ap.add_argument("--queries", type=Path, default=None,
+                    help="query TSV with species_dir/symbol columns, for cohorts whose "
+                         "gene directories are not named after the accession")
     args = ap.parse_args()
+
+    dirs = gene_dir_map(args.queries)
 
     obo = ensure_frozen_go()
     by_label, terms, obsolete_by_label = parse_obo(obo)
@@ -200,7 +226,7 @@ def main() -> int:
             unresolved[label] += 1
 
         if acc not in goa_cache:
-            goa_cache[acc] = load_goa(acc)
+            goa_cache[acc] = load_goa(acc, dirs)
         goa = goa_cache[acc]
 
         if resolution == "obsolete_in_go":
