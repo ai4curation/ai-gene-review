@@ -84,24 +84,19 @@ assert or would have flagged are not yours to overrule from memory. In particula
   your judgment on whether the *assertion* is biologically right, not on whether the
   machine-provided record is what it says it is.
 
-**Ignore the qualifier/relation field.** The GAF/GOA QUALIFIER column
-(`involved_in`, `acts_upstream_of_or_within`, `located_in`, `enables`, etc.) is NOT
-part of what you review in this project. Where the fetch pipeline has copied it into a
-row's `qualifier:` field, treat it as inert machine-fetched data: do not cite it to
-justify, soften, or overturn an action, do not add or edit it yourself, and do not
-build directness arguments on it in either direction. Judge directness on the biology
-alone: "this gene merely regulates / indirectly affects the process" remains a
-legitimate ground for MODIFY / MARK_AS_OVER_ANNOTATED / REMOVE regardless of how the
-GOA row is qualified.
-
-The two exceptions, which ARE applied consistently and must be respected, are the ones
-the pipeline does surface into the YAML:
-
-- **NOT** annotations → the row's `negated: true` field. A negated annotation asserts
-  the absence of the function; never review it as if it claimed the function.
-- **`contributes_to`** → the row's `qualifier: contributes_to`. The gene product is a
-  complex subunit contributing to (not independently possessing) the activity; grade
-  the annotation on that weaker claim.
+**Work from the review YAML; you never need the GOA tsv.** The `existing_annotations`
+rows are seeded deterministically from the GOA tsv, so everything to review is already
+in the YAML. Review each annotation on one question: **does this gene product execute
+a function in this process** (or have this activity, or act in this location) — judged
+on the biology, from the literature and your synthesized understanding of the gene.
+If you do open the tsv, ignore the gene-product-to-term relationship type (the
+QUALIFIER column) — it plays no role in review reasoning, and any such value you
+encounter in a YAML row is likewise inert; never add, edit, or argue from it. The two
+annotation flags that DO matter are applied consistently and surfaced in the YAML
+rows: `negated: true` (a NOT annotation asserts the absence of the function — never
+review it as if it claimed the function) and `qualifier: contributes_to` (a complex
+subunit contributing to, not independently possessing, the activity — grade the
+annotation on that weaker claim).
 
 **Ortholog source reviews are in scope.** When an ISO/ISS row's defect is on the
 source side (the donor human/mouse annotation is itself wrong or misapplied) and the

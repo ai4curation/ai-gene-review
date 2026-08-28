@@ -51,9 +51,11 @@ Two standing rules from the annotation-reviewer skill that apply to every review
   codes, qualifiers and obsoletion status come from deterministic tooling; never assert
   from memory that a term is obsolete, merged, or renamed — verify via OLS/QuickGO
   before any rationale depends on it.
-- **Ignore the GOA qualifier/relation field.** Do not cite `involved_in` /
-  `acts_upstream_of*` / etc. to justify or soften actions, and do not add or edit the
-  `qualifier:` field yourself; judge directness on the biology. The only qualifiers
-  that matter for review are NOT (`negated: true`) and `contributes_to`, which must be
-  respected. Ortholog source reviews (e.g. `genes/human/<GENE>/`) are in scope when
-  the defect is on the donor side.
+- **Review from the YAML; the GOA tsv is just its seed.** The reviewer works from the
+  review YAML's `existing_annotations` (seeded deterministically from the tsv) and
+  judges each row on "does this gene product execute a function in this process". The
+  tsv never needs to be opened; if it is, ignore the gene-product-to-term relationship
+  type (QUALIFIER column). The only annotation flags that matter are NOT
+  (`negated: true`) and `qualifier: contributes_to`, which must be respected.
+  Ortholog source reviews (e.g. `genes/human/<GENE>/`) are in scope when the defect
+  is on the donor side.
