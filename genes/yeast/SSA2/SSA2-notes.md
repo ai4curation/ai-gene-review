@@ -17,8 +17,11 @@
 - Replaced the obsolete/generic chaperone terms GO:0044183 and GO:0051082 with
   GO:0140662 where the evidence supports ATP-dependent folding chaperone activity.
 - Replaced GO:0006616 with GO:0031204. The experimental evidence concerns an Ssa/Ydj1
-  contribution to post-translational import of a subset of ER precursors, not
-  SRP-dependent cotranslational targeting [PMID:8754838; PMID:8947547].
+  contribution to post-translational translocation of a subset of ER precursors, not
+  SRP-dependent cotranslational targeting [PMID:8754838; PMID:8947547]. GO:0031204 is
+  retained instead of its broader parent GO:0006620 because PMID:8754838 reports an
+  in-vivo translocation block; the negative PMID:8947547 cell-free result is recorded
+  as assay-context counterevidence and keeps this role non-core.
 - Retained nucleus, vacuolar membrane, cell wall, mitochondrion, and the experimental
   plasma-membrane HDA as non-core localizations. The cell-wall and vacuolar-membrane
   evidence is directly supported [PMID:8755907; PMID:10745074]; the plasma-membrane
@@ -31,11 +34,12 @@
 - Kept broad nuclear import as non-core because its direct support is the specialized
   tRNA-import pathway rather than the central folding/refolding mechanism.
 
-## Citation correction
+## Citation adjudication
 
-- PMID:12761219 concerns *Candida albicans* Ssa1/2 proteins, not *S. cerevisiae* SSA2.
-  It is retained in the reference inventory but marked `MISCITED`/`NONE` and is not used
-  to support any SSA2 claim.
+- PMID:12761219 begins from *Candida albicans* Ssa1/2 but directly assays isogenic
+  *S. cerevisiae* SSA1/SSA2 mutants. Reduced histatin-5 killing of the delta-ssa2
+  single mutant and the stronger double-mutant phenotype support a specialized
+  Ssa2 cell-envelope receptor role [PMID:12761219].
 
 ## Project relevance
 
@@ -50,7 +54,7 @@
   primary membrane-resident function.
 - Its live QuickGO query reported only the HDA row and asserted that no IBA exists. This
   conflicts with the pinned `SSA2-goa.tsv`, which contains both an IBA/GO_REF:0000033 row
-  (dated 2025-09-03) and an HDA/PMID:16622836 row. The report also treated the Candida
-  histatin paper as SSA2 evidence. The provider report is therefore marked `DISPUTED`;
-  its conservative localization judgment is retained, but those database/species claims
-  are not propagated into the review.
+  (dated 2025-09-03) and an HDA/PMID:16622836 row. Its use of the histatin paper is
+  valid because the paper directly assays *S. cerevisiae* SSA mutants. The provider
+  report remains `DISPUTED` only for the incorrect live-database claim; its conservative
+  localization judgment is retained.
