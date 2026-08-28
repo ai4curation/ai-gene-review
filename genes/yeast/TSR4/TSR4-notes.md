@@ -59,8 +59,10 @@ the abstract-only cache is insufficient to overrule the curator's full-text
 assessment. This is also consistent with NAP1 and the dedicated ribosomal-
 protein-chaperone cohort. GO:0140318/GO:0140309 are not newly proposed. The
 three obsolete GO:0051082 rows are MODIFY to GO:0044183, which preserves their
-client-stabilizing chaperone biology without treating the obsolete binding term
-as the carrier annotation itself.
+client-stabilizing, anti-aggregation facet. This replacement is complementary
+to the separately curated GO:0140597 carrier annotation rather than an argument
+against carrier activity; the explicit GO:0044183 target follows the UPB project
+decision for TSR4.
 
 The core synthesis is therefore a cytoplasmic, Rps2-specific protein carrier
 chaperone whose activity directly supports ribosomal small-subunit biogenesis;
