@@ -13,6 +13,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def test_refresh_bioreason_sidecars_uses_project_generator(tmp_path: Path) -> None:
     """The public recipe should invoke the deterministic generator through uv."""
+    generator = REPO_ROOT / "projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py"
+    assert generator.exists()
+
     fake_bin = tmp_path / "fake bin"
     fake_bin.mkdir()
     log_path = tmp_path / "argv.json"
@@ -34,8 +37,14 @@ with open(os.environ["BIOREASON_SIDECAR_ARGV_LOG"], "w") as handle:
     env["PATH"] = f"{fake_bin}{os.pathsep}{env['PATH']}"
     env["BIOREASON_SIDECAR_ARGV_LOG"] = str(log_path)
     result = subprocess.run(
-        ["just", "refresh-bioreason-benchmark-sidecars"],
-        cwd=REPO_ROOT,
+        [
+            "just",
+            "--justfile",
+            str(REPO_ROOT / "justfile"),
+            "--working-directory",
+            str(tmp_path),
+            "refresh-bioreason-benchmark-sidecars",
+        ],
         capture_output=True,
         text=True,
         check=False,
