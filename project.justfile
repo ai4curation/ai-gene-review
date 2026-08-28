@@ -1477,6 +1477,10 @@ render-bioreason-eval:
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
 
+# Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
+refresh-bioreason-benchmark-sidecars:
+    uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
     uv run ai-gene-review render-projects --all

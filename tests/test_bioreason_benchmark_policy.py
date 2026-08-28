@@ -182,7 +182,7 @@ def test_generated_sidecars_match_current_sources(tmp_path: Path) -> None:
     ):
         assert (tmp_path / filename).read_bytes() == (PROJECT_DIR / filename).read_bytes(), (
             f"{filename} is stale; run "
-            "python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py"
+            "`just refresh-bioreason-benchmark-sidecars` from the repository root"
         )
 
 
