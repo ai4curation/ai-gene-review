@@ -23,7 +23,7 @@ def test_all_path_function_interpolations_are_quoted() -> None:
     unquoted_occurrences = [
         match.group(0)
         for match in PATH_FUNCTION_INTERPOLATION.finditer(text)
-        if match.start() == 0 or text[match.start() - 1] != '"'
+        if match.start() == 0 or text[match.start() - 1] not in {'"', "'"}
     ]
     assert unquoted_occurrences == []
 
