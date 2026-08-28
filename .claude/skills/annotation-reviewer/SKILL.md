@@ -84,25 +84,24 @@ assert or would have flagged are not yours to overrule from memory. In particula
   your judgment on whether the *assertion* is biologically right, not on whether the
   machine-provided record is what it says it is.
 
-**Read the QUALIFIER column before judging directness.** The GOA tsv's QUALIFIER column
-changes what the annotation actually claims, and a review that ignores it will
-mis-grade rows:
+**Ignore the qualifier/relation field.** The GAF/GOA QUALIFIER column
+(`involved_in`, `acts_upstream_of_or_within`, `located_in`, `enables`, etc.) is NOT
+part of what you review in this project. Where the fetch pipeline has copied it into a
+row's `qualifier:` field, treat it as inert machine-fetched data: do not cite it to
+justify, soften, or overturn an action, do not add or edit it yourself, and do not
+build directness arguments on it in either direction. Judge directness on the biology
+alone: "this gene merely regulates / indirectly affects the process" remains a
+legitimate ground for MODIFY / MARK_AS_OVER_ANNOTATED / REMOVE regardless of how the
+GOA row is qualified.
 
-- **`acts_upstream_of_or_within`** (and the other `acts_upstream_of*` qualifiers)
-  already concedes that the gene product acts upstream of, not necessarily within, the
-  process. **Never justify REMOVE or MARK_AS_OVER_ANNOTATED on such a row with "the
-  gene only regulates / only indirectly affects this process"** — that is precisely
-  what the qualifier states, so the criticism is not a defect of the annotation. Judge
-  these rows on other grounds: is the upstream link itself real and supported? Is the
-  term a phenotype-cascade overreach even as an upstream claim? Is the donor context
-  too narrow to transfer? A real-but-peripheral upstream link is KEEP_AS_NON_CORE, not
-  an over-annotation.
-- **`involved_in`** (or no qualifier) claims participation in the process. Here the
-  "regulator annotated as participant" critique is legitimate: MODIFY to a
-  `regulation of X` term, or mark as over-annotated, as evidence dictates.
-- When you review a row whose action turns on this distinction, record the qualifier in
-  the row's `qualifier:` field (copied verbatim from the GOA tsv) so the reasoning is
-  visible.
+The two exceptions, which ARE applied consistently and must be respected, are the ones
+the pipeline does surface into the YAML:
+
+- **NOT** annotations → the row's `negated: true` field. A negated annotation asserts
+  the absence of the function; never review it as if it claimed the function.
+- **`contributes_to`** → the row's `qualifier: contributes_to`. The gene product is a
+  complex subunit contributing to (not independently possessing) the activity; grade
+  the annotation on that weaker claim.
 
 **Ortholog source reviews are in scope.** When an ISO/ISS row's defect is on the
 source side (the donor human/mouse annotation is itself wrong or misapplied) and the
