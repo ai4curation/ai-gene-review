@@ -50,6 +50,9 @@
   2026-08-27 audit expands every repeated dataset row with its exact WITH/FROM
   identifier and removes a redundant `NEW` pseudo-row from
   `existing_annotations`; the review now reconciles exactly 242/242.
+- A stricter post-rebase audit also confirmed one-to-one WITH/FROM provenance
+  for every IPI row after adding the exact pinned accession to ten singleton
+  review summaries.
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA1 and
   describes its constitutive cytosolic Hsp70 role. SSA1 is also part of the
   BIOREASON_COMPARISON benchmark, but that project consumes the review through
