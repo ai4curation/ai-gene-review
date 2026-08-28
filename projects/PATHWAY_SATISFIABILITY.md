@@ -3,6 +3,25 @@ title: "Pathway satisfiability: context-resolved module logic"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_gene_symbols: false
+manual_reviews:
+  - reviewed_by: claude
+    date: 2026-08-28
+    status: CHANGES_REQUESTED
+    notes: >-
+      All code, validation and published numbers reproduce exactly (38/38 engine tests;
+      10/10 gene reviews and 4/4 modules valid; every resolver matches its published
+      table). Findings are in the interpretation layer. See
+      PATHWAY_SATISFIABILITY/REVIEW.md for the full review.
+    todos:
+      - "Retract the microbial 'metabolic dark matter' claim: both abduction targets encode K23975 (AspSA sulfurtransferase, EC 2.8.1.16) in KEGG - mja:MJ_0100, syn:slr0689 - so the gap is an incomplete STEP_KO table, not an unannotated enzyme"
+      - "Add K23975/K23976 to kegg_oracle.STEP_KO and add the aspartate-semialdehyde route to modules/methionine_biosynthesis.yaml"
+      - "Make the genome oracle fail loudly on unmapped atoms instead of returning False (metZ is already silently unmapped)"
+      - "Restate the GTEx result: the satisfiable set equals 'G6PC1 >= threshold' at every threshold, so the circuit adds no discriminating power; the value is the curated grounding of the terminal step"
+      - "Zonation: report unsatisfied_steps, not just missing_gate - the pericentral pole fails at three steps (pepck, fbpase, glucose_release), not only G6PC1"
+      - "Zonation: per-gene peak normalisation lets FBP2 (~8000x lower absolute) satisfy the FBPase step in layers 2-4; add an absolute floor and re-check the periportal result"
+      - "Correct the Buchnera framing in RESULTS.md to match resolve_abduction.py's own caution (shared/collaborative pathway, not plain auxotrophy)"
+      - "OXCT1 liver is 0.46 TPM in the committed cache, not 0"
+      - "Gene reviews: revert the G6PC1 REMOVE of GO:0016773 (phosphotransferase activity is real for G6Pase); create a G6PC2 review; reconcile GPD1 and LDHA core_functions with the directions the modules assign them"
 ---
 
 # Pathway satisfiability
@@ -37,6 +56,10 @@ Gluconeogenesis is "present" in every human cell, yet glucose output is restrict
 tissues and, within the liver, to a few cell layers. This project resolves the pathway *into*
 that context.
 
+> **Independent review** (annotation quality, logic, and validity of the conclusions below,
+> with reproduction commands): **[Independent review](PATHWAY_SATISFIABILITY/REVIEW.md)**.
+> Several claims on this page are flagged there as overstated — read it alongside the results.
+>
 > **How it works** (model, engine, `src` paths, and commands to reproduce every result) lives
 > in the companion notebook: **[Methods & reproduction](PATHWAY_SATISFIABILITY/methods.md)**.
 > It is the eukaryotic analogue of GapMind's prokaryotic step-finding.
