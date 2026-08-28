@@ -12,17 +12,24 @@
 
 ## Annotation decisions
 
+- All 57 logical review records reconcile against the 278 pinned GOA provenance rows;
+  no PENDING or UNDECIDED actions remain. The review is therefore marked COMPLETE.
 - Replaced the obsolete/generic chaperone terms GO:0044183 and GO:0051082 with
   GO:0140662 where the evidence supports ATP-dependent folding chaperone activity.
 - Replaced GO:0006616 with GO:0031204. The experimental evidence concerns an Ssa/Ydj1
   contribution to post-translational import of a subset of ER precursors, not
   SRP-dependent cotranslational targeting [PMID:8754838; PMID:8947547].
-- Retained nucleus, plasma membrane, vacuolar membrane, cell wall, and mitochondrion as
-  non-core localizations. The cell-wall and vacuolar-membrane evidence is directly
-  supported [PMID:8755907; PMID:10745074]; the plasma-membrane cache is abstract-only
-  and does not name SSA2 [PMID:16622836].
+- Retained nucleus, vacuolar membrane, cell wall, mitochondrion, and the experimental
+  plasma-membrane HDA as non-core localizations. The cell-wall and vacuolar-membrane
+  evidence is directly supported [PMID:8755907; PMID:10745074]; the plasma-membrane
+  cache is abstract-only and does not name SSA2 [PMID:16622836]. The separate pinned
+  plasma-membrane IBA is removed because current PTHR19375 data contain no GO:0005886
+  assertion at its cited PTN002500132 node
+  [file:interpro/panther/PTHR19375/PTHR19375-paint.tsv].
 - Marked generic nucleotide binding as over-annotated because ATP binding/hydrolysis and
   ATP-dependent chaperone activity are already represented more informatively.
+- Kept broad nuclear import as non-core because its direct support is the specialized
+  tRNA-import pathway rather than the central folding/refolding mechanism.
 
 ## Citation correction
 
