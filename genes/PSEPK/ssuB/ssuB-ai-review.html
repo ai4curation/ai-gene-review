@@ -1,0 +1,2530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ssuB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ssuB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R93" target="_blank" class="term-link">
+                        Q88R93
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ssuB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R93" data-a="DESCRIPTION: SsuB is the cytoplasmic nucleotide-binding subunit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SsuB is the cytoplasmic nucleotide-binding subunit of the SsuABC alkanesulfonate importer. Two SsuB subunits bind and hydrolyze ATP at the inner-membrane SsuC permease to power uptake of SsuA-bound aliphatic sulfonates.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0005524" data-r="file:PSEPK/ssuB/ssuB-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The canonical ABC nucleotide-binding domain contains an annotated ATP-binding P-loop.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This true but broad activity is retained as non-core context; E. coli SsuB P0AAI1 is the specific ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;ATP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ABC_TRANSPORTER_1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0016887" data-r="file:PSEPK/ssuB/ssuB-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SsuB is a canonical ABC-transporter ATPase with intact nucleotide-binding and catalytic motifs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> QuickGO returned no rows for Q88R93, but the exact reviewed record assigns the ATP-coupled EC 7.6.2.14 reaction and ABC domain; E. coli SsuB P0AAI1 is the specific ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Responsible for energy coupling to the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ABC_TRANSPORTER_1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042959" target="_blank" class="term-link">
+                                    GO:0042959
+                                </a>
+                            </span>
+                            <span class="term-label">ABC-type alkanesulfonate transporter transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10781534" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10781534
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Deletion analysis of the Escherichia coli taurine and alkane...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0042959" data-r="PMID:10781534" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SsuB supplies ATP hydrolysis to the SsuABC complex-level transport activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ATPase does not independently move substrate; it contributes energy coupling to the binding-protein-dependent SsuABC importer. E. coli SsuB P0AAI1 is the specific ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Part of the ABC transporter complex SsuABC involved in</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10781534" target="_blank" class="term-link">
+                                        PMID:10781534
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the individual components of the two transport systems were not functionally exchangeable</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042918" target="_blank" class="term-link">
+                                    GO:0042918
+                                </a>
+                            </span>
+                            <span class="term-label">alkanesulfonate transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10781557" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10781557
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The ssu locus plays a key role in organosulfur metabolism in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0042918" data-r="PMID:10781557" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SsuB powers SsuABC-mediated alkanesulfonate uptake.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pseudomonas and E. coli genetics establish SsuABC as the uptake arm of the ssu pathway, while the exact Q88R93 record assigns the energy-coupling subunit and E. coli SsuB P0AAI1 provides the ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10781557" target="_blank" class="term-link">
+                                        PMID:10781557
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an ATP-binding cassette-type transporter (ssuABC)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">aliphatic sulfonates import</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0005886" data-r="file:PSEPK/ssuB/ssuB-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SsuB is peripherally associated with the cytoplasmic face of the bacterial inner membrane through SsuC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact reviewed record assigns SsuB to the cell inner membrane as a peripheral membrane protein; E. coli SsuB P0AAI1 is the ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peripheral membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055052" target="_blank" class="term-link">
+                                    GO:0055052
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex, substrate-binding subunit-containing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R93" data-a="GO:0055052" data-r="file:PSEPK/ssuB/ssuB-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SsuB is the duplicated ATP-binding active unit of the SsuABC importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt specifies the SsuB2-SsuC2-SsuA complex composition, which matches GO:0055052; E. coli SsuB P0AAI1 is the ISS comparator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The complex is composed of two ATP-binding proteins (SsuB)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes ATP as the duplicated nucleotide-binding motor of the SsuABC alkanesulfonate importer and couples that energy to SsuC-mediated uptake.</h3>
+                <span class="vote-buttons" data-g="Q88R93" data-a="FUNCTION: Hydrolyzes ATP as the duplicated nucleotide-bindin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042918" target="_blank" class="term-link">
+                                alkanesulfonate transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055052" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex, substrate-binding subunit-containing
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Part of the ABC transporter complex SsuABC involved in</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ssuB/ssuB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">SsuB supplies the energy that couples these components together.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ssuB/ssuB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry Q88R93 for Pseudomonas putida KT2440 SsuB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SsuB is the energy-coupling ATPase of the SsuABC aliphatic-sulfonate importer.</div>
+
+                        <div class="finding-text">"Responsible for energy coupling to the"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The importer contains two SsuB ATPases, two SsuC permeases, and one SsuA binding protein.</div>
+
+                        <div class="finding-text">"The complex is composed of two ATP-binding proteins (SsuB)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ssuB/ssuB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PSEPK SsuB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report corroborates SsuB as the SsuABC nucleotide-binding motor while distinguishing orthology and family inference from target-protein biochemistry.</div>
+
+                        <div class="finding-text">"Direct biochemical characterization of the KT2440 SsuB protein itself has not been reported"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The completed report identifies the exact accession and locus.</div>
+
+                        <div class="finding-text">"SsuB (UniProt Q88R93; locus PP_0240)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10781557" target="_blank" class="term-link">
+                            PMID:10781557
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The ssu locus plays a key role in organosulfur metabolism in Pseudomonas putida S-313.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Pseudomonas ssu locus encodes SsuABC and is required for broad organosulfur utilization.</div>
+
+                        <div class="finding-text">"an ATP-binding cassette-type transporter (ssuABC)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10781534" target="_blank" class="term-link">
+                            PMID:10781534
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deletion analysis of the Escherichia coli taurine and alkanesulfonate transport systems.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli deletion/complementation establishes the intact SsuABC complex as an alkanesulfonate uptake system.</div>
+
+                        <div class="finding-text">"Complementation analysis of in-frame deletion mutants confirmed that the growth phenotypes obtained were the result of the in-frame deletions constructed."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the basal and SsuA/SsuC-stimulated ATPase kinetics of KT2440 SsuB?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R93" data-a="Q: What are the basal and SsuA/SsuC-stimulated ATPase..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute Q88R93 with SsuA and SsuC in proteoliposomes and measure substrate-dependent ATP hydrolysis and uptake across an alkanesulfonate panel.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R93" data-a="EXPERIMENT: Reconstitute Q88R93 with SsuA and SsuC in proteoli..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ssuB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R93" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: SsuB (Q88R93, PP_0240) — Aliphatic Sulfonate Import ATP-Binding Protein of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-13T04:11:35.480717</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ssuB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ssuB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ssub-q88r93-pp_0240-aliphatic-sulfonate-import-atp-binding-protein-of-pseudomonas-putida-kt2440">Functional Annotation Report: SsuB (Q88R93, PP_0240) — Aliphatic Sulfonate Import ATP-Binding Protein of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>SsuB (UniProt Q88R93; locus PP_0240) is the cytoplasmic ATP-binding and ATP-hydrolyzing subunit — the "motor" nucleotide-binding domain (NBD) — of the SsuABC ABC-type importer that actively translocates aliphatic (organo-)sulfonates across the inner membrane of <em>Pseudomonas putida</em> KT2440.</strong> Its single, well-defined molecular function is to bind and hydrolyze ATP (EC 7.6.2.14), converting chemical energy into the conformational cycling that drives substrate transport. SsuB does not itself recognize or bind the sulfonate substrate; that role belongs to the periplasmic solute-binding protein SsuA (PP_0237) and the integral-membrane permease SsuC (PP_0239). SsuB supplies the energy that couples these components together.</p>
+<p>The physiological purpose of this transport system is <strong>sulfur scavenging under sulfate starvation</strong>. When <em>P. putida</em> is deprived of its preferred sulfur sources (inorganic sulfate and cysteine), it induces the <em>ssuEADCB(F)</em> operon to import and metabolize alternative organosulfur compounds — in particular aliphatic sulfonates such as methanesulfonate and other alkanesulfonates. Once imported by SsuABC, these compounds are desulfonated in the cytoplasm by the two-component FMNH₂-dependent monooxygenase system SsuD/SsuE, releasing sulfite for assimilation into cysteine and downstream sulfur-containing biomolecules. SsuB therefore sits at the entry point of this pathway, at the cytoplasmic face of the inner membrane.</p>
+<p>Expression of the entire <em>ssu</em> system is tightly controlled: it is a member of the <strong>sulfate-starvation-induced (SSI) stimulon</strong> and is governed by the LysR-type master regulator <strong>CysB</strong>, being repressed in the presence of sulfate/cysteine and derepressed upon sulfur limitation. The functional assignment of SsuB rests on strong convergent evidence: (i) sequence analysis showing all canonical ABC-ATPase catalytic motifs; (ii) genetic studies in closely related <em>P. putida</em> strains (S-313 and DS1) demonstrating that disruption of the <em>ssu</em> operon abolishes growth on aliphatic sulfonates; (iii) mechanistic understanding of the ABC-importer family exemplified by the maltose transporter MalFGK₂; and (iv) HAMAP/UniProt curation assigning a defined 2:2:1 (SsuB:SsuC:SsuA) complex stoichiometry. Direct biochemical characterization of the KT2440 SsuB protein itself has not been reported, so its function is assigned by robust homology and operon-context inference rather than by protein-specific enzymology.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-ssub-is-the-atp-hydrolyzing-subunit-of-the-ssuabc-aliphatic-sulfonate-abc-importer">Finding 1 — SsuB is the ATP-hydrolyzing subunit of the SsuABC aliphatic sulfonate ABC importer</h3>
+<p>SsuB is a 270-amino-acid protein encoded by locus PP_0240 in <em>P. putida</em> KT2440 and annotated as the ABC-transporter ATP-binding protein of the <em>ssu</em> (sulfonate utilization) system, carrying EC number 7.6.2.14 (ABC-type aliphatic-sulfonate transporter, ATP-hydrolyzing). Sequence analysis confirms a single canonical nucleotide-binding domain (the ABC domain spanning approximately residues 17–238) that contains every diagnostic motif of a functional ABC ATPase:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Sequence</th>
+<th>Approx. residues</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Walker A / P-loop</td>
+<td>GRSGCGKS</td>
+<td>49–56</td>
+<td>ATP phosphate binding (annotated ATP-binding site)</td>
+</tr>
+<tr>
+<td>ABC signature (C-loop)</td>
+<td>LSGGQ</td>
+<td>~138</td>
+<td>Hallmark of the ABC transporter family; couples the two NBDs</td>
+</tr>
+<tr>
+<td>Walker B</td>
+<td>LLLLDE</td>
+<td>~158</td>
+<td>Coordinates Mg²⁺ and activates the catalytic water for ATP hydrolysis</td>
+</tr>
+<tr>
+<td>Switch region</td>
+<td>VTHD (His)</td>
+<td>~172</td>
+<td>γ-phosphate sensing; conformational switch</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of an intact Walker A, ABC signature, Walker B, and switch histidine is definitive for a catalytically active ABC ATPase. Within the <em>ssuEADCB(F)</em> operon, the division of labor is clear: <strong>ssuC</strong> encodes the integral-membrane permease that forms the translocation channel; <strong>ssuA</strong> encodes the periplasmic (solute-binding) protein that captures the sulfonate substrate; and <strong>ssuB</strong> provides the two cytoplasmic ATPase subunits that energize the transport cycle.</p>
+<p>This assignment is directly supported by the original identification of the operon in <em>P. putida</em> S-313, which described "<em>the ssuEADCBF operon, which contained genes for an ATP-binding cassette-type transporter (ssuABC), a two-component reduced flavin mononucleotide-dependent monooxygenase (ssuED)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10781557/">PMID: 10781557</a>). Work in <em>Corynebacterium glutamicum</em> independently confirmed the three-component architecture, noting that "<em>the clustered genes ssuC, ssuB, and ssuA, putatively encoding the components of an ABC-type transporter system, are required for the utilization of aliphatic sulfonates</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16204527/">PMID: 16204527</a>). The mechanistic role of the ATPase subunit is grounded in the broader ABC-transporter literature: "<em>ATP-binding cassette (ABC) transporters use the energy of ATP hydrolysis to transport a large diversity of molecules actively across biological membranes</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/31560984/">PMID: 31560984</a>). In the maltose importer paradigm, this ATPase role is played by the MalK dimer — the structural and functional homolog of the SsuB dimer.</p>
+<h3 id="finding-2-the-ssuabc-transporter-imports-aliphatic-sulfonates-as-a-sulfur-source-the-substrate-is-desulfonated-intracellularly-by-the-ssud-monooxygenase">Finding 2 — The SsuABC transporter imports aliphatic sulfonates as a sulfur source; the substrate is desulfonated intracellularly by the SsuD monooxygenase</h3>
+<p>The biological purpose of SsuABC-mediated transport is to deliver aliphatic sulfonates into the cytoplasm, where the sulfur atom is liberated for assimilation. Genetic evidence from <em>P. putida</em> S-313 is decisive: transposon insertions distributed across the <em>ssuEADCBF</em> operon — including the <em>ssuABC</em> transporter genes — abolished growth on a range of organosulfur compounds, and the pleiotropic phenotype was complemented by the intact operon. Specifically, these mutants "<em>were also deficient in growth with a variety of other organosulfur sources, including aromatic and aliphatic sulfate esters, methionine, and aliphatic sulfonates other than the natural sulfonates taurine and cysteate</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10781557/">PMID: 10781557</a>). This establishes that an intact <em>ssu</em> operon — SsuB included — is required for utilization of aliphatic sulfonates and other organosulfur sources.</p>
+<p>The transporter operates upstream of intracellular desulfonation. SsuD is an FMNH₂-dependent alkanesulfonate monooxygenase that cleaves the carbon–sulfur bond of the imported sulfonate, releasing sulfite; SsuE is the NAD(P)H-dependent FMN reductase that supplies reduced flavin to SsuD. In <em>P. putida</em> DS1, studies of dimethyl sulfide (DMS) catabolism demonstrated that "<em>Disruption of ssuD and SsuD enzymatic activity demonstrated that methanesulfonate is a metabolic intermediate of DMS and desulfonated by SsuD. Disruption of ssuC or ssuF also led to a DMS-utilization-defective phenotype</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12835925/">PMID: 12835925</a>). This places the SsuABC transporter (via the <em>ssuC</em> permease phenotype) directly in the pathway that imports methanesulfonate for SsuD-mediated desulfonation. The logical role of SsuB is to energize the import step that precedes this cytoplasmic C–S bond cleavage.</p>
+<p>Notably, the <em>ssu</em> system handles <em>aliphatic</em> sulfonates that are not the "natural" sulfonates taurine and cysteate — the latter are transported and metabolized by a distinct taurine (<em>tau</em>) system. This substrate distinction is a defining feature of the aliphatic-sulfonate (<em>ssu</em>) pathway and is reflected in the HAMAP rule name for SsuB ("Aliphatic sulfonates import ATP-binding protein").</p>
+<h3 id="finding-3-the-ssu-system-is-a-sulfate-starvation-induced-regulon-controlled-by-the-master-regulator-cysb">Finding 3 — The <em>ssu</em> system is a sulfate-starvation-induced regulon controlled by the master regulator CysB</h3>
+<p>SsuB is not expressed constitutively; the entire <em>ssu</em> system is induced only when the cell is starved for its preferred sulfur sources. This regulatory logic was first established in <em>Escherichia coli</em>, where the <em>tauABCD</em> and <em>ssuEADCB</em> clusters "<em>are required for the utilization of taurine and alkanesulfonates as sulfur sources and are expressed only under conditions of sulfate or cysteine starvation</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10781534/">PMID: 10781534</a>). The same principle applies in <em>P. putida</em>.</p>
+<p>In <em>P. putida</em>, the sulfate-starvation response is governed by the LysR-type transcriptional regulator <strong>CysB</strong>, acting as the master regulator atop a hierarchical control system. Studies of the methylsulfur (<em>sfn</em>) regulon showed that "<em>CysB is a master regulator that controls the sulfate starvation response of the sfn operons, as is the case for the sulfonate utilization genes of Escherichia coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/18456803/">PMID: 18456803</a>). CysB thus controls the sulfonate/organosulfur utilization genes — including the <em>ssu</em> operon — as part of the sulfate-starvation-induced (SSI) stimulon, while a secondary σ⁵⁴-dependent regulator SfnR governs the more specialized methylsulfur branch. Physiological studies of <em>P. putida</em> S-313 further demonstrated that the <em>ssu</em> locus is part of the SSI stimulon and that organosulfur utilization is repressed by sulfate/cysteine and derepressed upon sulfur limitation, with a defined hierarchy of preferred versus scavenged sulfur sources (<a href="https://pubmed.ncbi.nlm.nih.gov/8800815/">PMID: 8800815</a>). This regulatory context is important for interpreting SsuB's function: it operates specifically as a sulfur-scavenging device, activated only when the cell must extract sulfur from organosulfonates.</p>
+<h3 id="finding-4-kt2440-specific-genomic-evidence-ssub-pp_0240-is-the-terminal-atpase-gene-of-an-intact-ssueadcb-operon-with-a-curated-221-complex-stoichiometry">Finding 4 — KT2440-specific genomic evidence: <em>ssuB</em> (PP_0240) is the terminal ATPase gene of an intact <em>ssuEADCB</em> operon, with a curated 2:2:1 complex stoichiometry</h3>
+<p>Direct analysis of the <em>P. putida</em> KT2440 genome confirms that all cognate components of a functional sulfonate-utilization system are present and organized in a single operon (PP_0236–PP_0240):</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product</th>
+<th>KEGG ortholog</th>
+<th>EC / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0236</td>
+<td><em>ssuE</em></td>
+<td>NAD(P)H-dependent FMN reductase</td>
+<td>K00299</td>
+<td>Supplies FMNH₂ to SsuD</td>
+</tr>
+<tr>
+<td>PP_0237</td>
+<td><em>ssuA</em></td>
+<td>Sulfonate solute-binding protein</td>
+<td>K15553</td>
+<td>Periplasmic; "transport of isethionate"</td>
+</tr>
+<tr>
+<td>PP_0238</td>
+<td><em>ssuD</em></td>
+<td>Alkanesulfonate monooxygenase</td>
+<td>K04091</td>
+<td>EC 1.14.14.5; C–S bond cleavage</td>
+</tr>
+<tr>
+<td>PP_0239</td>
+<td><em>ssuC</em></td>
+<td>ABC transporter permease</td>
+<td>K15554</td>
+<td>Integral inner-membrane channel</td>
+</tr>
+<tr>
+<td><strong>PP_0240</strong></td>
+<td><strong><em>ssuB</em></strong></td>
+<td><strong>ABC transporter ATP-binding protein</strong></td>
+<td><strong>K15555</strong></td>
+<td><strong>EC 7.6.2.14; the NBD/ATPase</strong></td>
+</tr>
+</tbody>
+</table>
+<p>UniProt/HAMAP rule <strong>MF_01724</strong> curation states that SsuB is "<em>Part of the ABC transporter complex SsuABC involved in aliphatic sulfonates import. Responsible for energy coupling to the transport system,</em>" and specifies a complex stoichiometry of <strong>two ATP-binding proteins (SsuB), two transmembrane proteins (SsuC), and one solute-binding protein (SsuA)</strong> — i.e., an SsuB₂SsuC₂SsuA₁ assembly typical of type I ABC importers. The subcellular location is the <strong>cell inner membrane, as a peripheral membrane protein</strong> on the cytoplasmic face. The GO annotations reinforce this functional picture: alkanesulfonate transmembrane transport (GO:0042918), ATP binding (GO:0005524), and ATP hydrolysis (GO:0016887). Domain/family assignments (eggNOG COG1116; Pfam PF00005, ABC_tran) place SsuB firmly within the ABC-transporter ATPase superfamily.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>SsuB functions as one of two identical ATPase subunits that form the cytoplasmic motor of a <strong>type I ABC importer</strong>. The transport cycle, inferred from the well-studied maltose importer (MalFGK₂-E) paradigm and applicable to SsuABC by homology, can be represented as follows:</p>
+<div class="codehilite"><pre><span></span><code>PERIPLASM
+   ┌─────────────────────────────────────────────┐
+   │   Aliphatic sulfonate (e.g. methanesulfonate)│
+   │            │                                  │
+   │            ▼                                  │
+   │        [ SsuA ]  ← periplasmic binding protein│
+   │            │  captures substrate, docks onto  │
+   │            │  permease                         │
+   ══════════════════════════════════════════════════  INNER MEMBRANE
+   │        [ SsuC | SsuC ]  ← permease (channel)  │
+   │            │        │                          │
+   │        [ SsuB ]  [ SsuB ]  ← ATPase dimer (NBD)│
+   │          ATP        ATP                        │
+   │           └──hydrolysis──┘                     │
+CYTOPLASM   │
+    ▼
+Sulfonate released into cytoplasm
+    │
+    ▼
+       [ SsuD + SsuE ]  → desulfonation (C–S cleavage)
+    │
+    ▼
+      Sulfite (SO₃²⁻)
+    │
+    ▼
+Assimilation → cysteine → sulfur metabolism
+</code></pre></div>
+
+<p><strong>Step-by-step mechanism (by analogy to MalFGK₂-E):</strong></p>
+<ol>
+<li><strong>Substrate capture.</strong> The periplasmic binding protein SsuA scavenges an aliphatic sulfonate and docks onto the periplasmic face of the SsuC permease dimer.</li>
+<li><strong>ATP binding closes the NBD dimer.</strong> Two ATP molecules bind at the interface of the SsuB dimer, sandwiched between the Walker A/B motifs of one SsuB and the LSGGQ signature of the partner SsuB. ATP binding drives NBD dimer closure and pushes the transporter toward the outward-facing state.</li>
+<li><strong>Substrate translocation.</strong> Conformational coupling through SsuC opens a cytoplasm-facing cavity; the sulfonate is released into the cytoplasm.</li>
+<li><strong>ATP hydrolysis resets the cycle.</strong> SsuB hydrolyzes ATP (γ-phosphate cleavage sensed by the switch histidine); Pi and ADP release reopen the NBD dimer, returning the transporter to the inward-facing resting state.</li>
+</ol>
+<p>The maltose-transporter studies illuminate why the ATPase (SsuB analog, MalK) depends on the other subunits for productive turnover. Basal ATPase activity of the isolated motor is low; it is stimulated by the binding protein and substrate. As shown for MalFGK₂: "<em>the basal ATPase activity of MalFGK2 is very low because the cleavage of ATP is rate-limiting … open-state MalE stabilizes MalFGK2 in the outward-facing conformation until maltose triggers return to the inward-facing state for substrate and Pi release</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26338707/">PMID: 26338707</a>). Reciprocal transmembrane signaling ensures ATP is not wasted in the absence of substrate: "<em>three functionally relevant conformations are found also in the periplasmic MalF-P2 loop, strictly dependent on cytoplasmic nucleotide binding and periplasmic docking of liganded MalE</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/19395376/">PMID: 19395376</a>). By extension, SsuB's ATP hydrolysis is expected to be coupled to and stimulated by SsuA-delivered sulfonate, providing an energy-efficient, demand-driven import mechanism.</p>
+<p><strong>Integration into sulfur metabolism.</strong> SsuB sits at the membrane entry point of the sulfur-scavenging pathway. The imported sulfonate is desulfonated by SsuD (with reduced flavin from SsuE), releasing sulfite that feeds into the cysteine-biosynthetic sulfate-assimilation pathway. The whole module is switched on only when the cell is starved for sulfate/cysteine, under CysB control. Thus SsuB's role is best summarized as: <strong>the ATP-driven motor that admits aliphatic sulfonates into the cytoplasm so their sulfur can be harvested during sulfate starvation.</strong></p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10781557/">10781557</a></td>
+<td><em>The ssu locus plays a key role in organosulfur metabolism in P. putida S-313</em></td>
+<td>Identifies the <em>ssuEADCBF</em> operon and <em>ssuABC</em> as an ABC transporter; shows operon disruption abolishes growth on aliphatic sulfonates and other organosulfur sources. <strong>Primary genetic evidence.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12835925/">12835925</a></td>
+<td><em>Genes essential for dimethyl sulfide utilization in P. putida DS1</em></td>
+<td>Shows <em>ssuC</em> permease disruption causes a sulfonate-utilization defect and that methanesulfonate is desulfonated by SsuD — placing SsuABC upstream of cytoplasmic desulfonation. <strong>Primary genetic evidence.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16204527/">16204527</a></td>
+<td><em>ssu/seu genes of C. glutamicum in sulfonate utilization</em></td>
+<td>Confirms <em>ssuA/B/C</em> form the three-component ABC transporter required for aliphatic sulfonate utilization. <strong>Comparative genetic evidence.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10781534/">10781534</a></td>
+<td><em>Deletion analysis of E. coli taurine and alkanesulfonate transport systems</em></td>
+<td>Establishes that <em>ssu</em> genes are induced only under sulfate/cysteine starvation and distinguishes <em>ssu</em> (alkanesulfonate) from <em>tau</em> (taurine) systems. <strong>Regulatory/substrate-specificity evidence.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18456803/">18456803</a></td>
+<td><em>CysB and SfnR hierarchical regulation in P. putida</em></td>
+<td>Identifies CysB as the master regulator of the sulfate-starvation response and sulfonate-utilization genes. <strong>Regulatory evidence in the target organism.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8800815/">8800815</a></td>
+<td><em>Sulfur assimilation and the SSI stimulon in P. putida S-313</em></td>
+<td>Places sulfonate utilization within the sulfate-starvation-induced stimulon and defines the sulfur-source hierarchy. <strong>Physiological context.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31560984/">31560984</a></td>
+<td><em>An integrated transport mechanism of the maltose ABC importer</em></td>
+<td>Provides the mechanistic ABC-importer paradigm: ATP hydrolysis energizes active transport. <strong>Mechanistic model.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26338707/">26338707</a></td>
+<td><em>Sequential action of MalE and maltose in MalFGK2</em></td>
+<td>Explains substrate-coupled stimulation of the NBD ATPase — directly relevant to how SsuB turnover is regulated. <strong>Mechanistic model.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19395376/">19395376</a></td>
+<td><em>Transmembrane signaling in MalFGK2-E</em></td>
+<td>Demonstrates reciprocal NBD–permease–binding-protein communication that gates ATP hydrolysis. <strong>Mechanistic model.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23509285/">23509285</a></td>
+<td><em>Conformational plasticity of the type I maltose ABC importer</em></td>
+<td>Details NBD open/closed cycling coupled to nucleotide and binding-protein states. <strong>Mechanistic model.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28267156/">28267156</a></td>
+<td><em>MBP stabilizes the partially closed MalFGK conformation</em></td>
+<td>Supports the binding-protein-driven conformational coupling of the NBD dimer. <strong>Mechanistic model.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15661012/">15661012</a></td>
+<td><em>SfnR regulates the sfnFG operon for dimethyl sulphone utilization</em></td>
+<td>Context for the broader methylsulfur/sulfate-starvation regulon in P. putida DS1. <strong>Regulatory context.</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on evidence quality:</strong> The functional assignment of SsuB rests on a combination of (i) direct genetic evidence in closely related <em>P. putida</em> strains (S-313, DS1) and in <em>C. glutamicum</em>, showing the <em>ssu</em> transporter is required for aliphatic sulfonate utilization; (ii) definitive sequence/motif analysis identifying SsuB as a catalytically competent ABC ATPase; (iii) HAMAP/UniProt curation (rule MF_01724) assigning the complex stoichiometry and subcellular location; and (iv) a well-characterized mechanistic paradigm (MalFGK₂) for the type I ABC importer family. No study has biochemically characterized the KT2440 SsuB protein in isolation, so the specific kinetic and structural properties of this exact protein are inferred rather than measured.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No protein-specific biochemistry for KT2440 SsuB.</strong> There is no published in vitro measurement of ATP hydrolysis rate, Km/kcat, Mg²⁺ dependence, or crystal/cryo-EM structure for the Q88R93 protein itself. Its catalytic function is assigned by homology and motif analysis, not by direct enzymology.</p>
+</li>
+<li>
+<p><strong>Substrate specificity of the KT2440 system is inferred.</strong> The precise spectrum of aliphatic sulfonates transported by the KT2440 SsuABC complex has not been directly measured. Substrate range is inferred from S-313 and DS1 genetic studies and from the SsuA binding-protein annotation (which references isethionate/alkanesulfonates). The defining exclusion of taurine and cysteate (handled by the <em>tau</em> system) is based on cross-species work.</p>
+</li>
+<li>
+<p><strong>Complex assembly not verified experimentally in KT2440.</strong> The 2:2:1 SsuB:SsuC:SsuA stoichiometry is a HAMAP-curated inference based on the type I ABC-importer paradigm, not a directly determined structure for this organism.</p>
+</li>
+<li>
+<p><strong>Operon boundaries and the <em>ssuF</em> component.</strong> The KT2440 operon is annotated as <em>ssuEADCB</em> (PP_0236–PP_0240); the <em>ssuF</em> gene seen in S-313 (implicated in DS1 phenotypes) may or may not be present/co-regulated in KT2440, which is a minor open question about accessory factors.</p>
+</li>
+<li>
+<p><strong>Regulatory fine detail.</strong> While CysB is established as the master regulator, the exact CysB-binding site(s), inducer identity (e.g., an O-acetylserine-type coinducer), and quantitative induction kinetics for the KT2440 <em>ssu</em> promoter have not been mapped in the target strain.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Biochemical characterization of recombinant SsuB.</strong> Express and purify Q88R93, and measure basal and SsuC/SsuA-stimulated ATPase activity (Km, kcat for ATP; Mg²⁺ dependence). Confirm the predicted role of the switch histidine and Walker B glutamate via site-directed mutagenesis (e.g., E→Q catalytically dead mutant).</p>
+</li>
+<li>
+<p><strong>Reconstitution of the SsuABC complex.</strong> Co-express SsuB, SsuC, and SsuA, reconstitute into proteoliposomes, and demonstrate ATP-dependent, SsuA-mediated uptake of defined aliphatic sulfonates (e.g., methanesulfonate, ethanesulfonate) to directly verify substrate specificity and coupling.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the cryo-EM structure of the SsuABC complex in apo, ATP-bound, and ADP states to confirm the 2:2:1 stoichiometry and the NBD open/closed cycle predicted from the MalFGK₂ paradigm.</p>
+</li>
+<li>
+<p><strong>Targeted knockout in KT2440.</strong> Construct a clean <em>ssuB</em> (PP_0240) deletion in KT2440 and test growth on a panel of aliphatic sulfonates vs. sulfate/cysteine controls; complement with the wild-type gene to confirm the phenotype is SsuB-specific rather than polar.</p>
+</li>
+<li>
+<p><strong>Regulatory mapping.</strong> Use ChIP or EMSA to define the CysB-binding site upstream of the KT2440 <em>ssuE</em> promoter, and RT-qPCR/RNA-seq under sulfate-replete vs. sulfate-starved conditions to quantify induction and confirm CysB dependence in the target strain.</p>
+</li>
+<li>
+<p><strong>Substrate-profiling.</strong> Perform growth-based and transport-based assays across a broad organosulfur panel to delineate the exact aliphatic-sulfonate substrate range of the KT2440 system and confirm the taurine/cysteate exclusion.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report prepared from a 3-iteration autonomous investigation. Functional assignment of SsuB (Q88R93) is well supported by convergent genetic, bioinformatic, regulatory, and mechanistic evidence, with the principal gap being the absence of direct biochemical/structural characterization of this specific protein.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ssuB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ssuB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10781557</li>
+<li>PMID:16204527</li>
+<li>PMID:31560984</li>
+<li>PMID:12835925</li>
+<li>PMID:10781534</li>
+<li>PMID:18456803</li>
+<li>PMID:8800815</li>
+<li>PMID:26338707</li>
+<li>PMID:19395376</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ssuB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R93" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ssub-curation-notes">ssuB curation notes</h1>
+<h2 id="identity-and-iss-provenance">Identity and ISS provenance</h2>
+<ul>
+<li>Q88R93 is reviewed as the PP_0240 ATP-binding subunit of the KT2440 SsuABC<br />
+  importer [file:PSEPK/ssuB/ssuB-uniprot.txt, "Part of the ABC transporter<br />
+  complex SsuABC involved in"]. The record specifies an SsuB2-SsuC2-SsuA<br />
+  assembly [file:PSEPK/ssuB/ssuB-uniprot.txt, "The complex is composed of two<br />
+  ATP-binding proteins (SsuB)"].</li>
+<li>E. coli SsuB P0AAI1 is the explicit <code>supporting_entities</code> comparator on every<br />
+  ISS annotation. The conserved ABC transporter domain and ATP-binding feature<br />
+  support ATP binding/hydrolysis, while the syntenic <code>ssuEADCB</code> context supports<br />
+  alkanesulfonate specificity.</li>
+<li>GO:0005524 ATP binding is retained as a low-information <code>NEW</code> annotation but<br />
+  is not the core function. The informative biology is ATP hydrolysis coupled<br />
+  to contribution to GO:0042959, whose official QuickGO label includes the<br />
+  doubled word <code>transporter</code>.</li>
+</ul>
+<h2 id="research-coverage">Research coverage</h2>
+<p>The completed OpenScientist report materialized at<br />
+<code>ssuB-deep-research-openscientist.md</code>. It correctly notes that direct<br />
+biochemical characterization of KT2440 SsuB itself has not been reported<br />
+[file:PSEPK/ssuB/ssuB-deep-research-openscientist.md, "Direct biochemical<br />
+characterization of the KT2440 SsuB protein itself has not been reported"].<br />
+Identifiers, motifs, complex composition, and central pathway claims were<br />
+independently checked against UniProt and cached primary literature.</p>
+<h2 id="residual-uncertainty">Residual uncertainty</h2>
+<p>Target-protein ATPase kinetics, stimulation by cognate SsuA/SsuC, and the exact<br />
+transported substrate range remain unmeasured.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R93
+gene_symbol: ssuB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  SsuB is the cytoplasmic nucleotide-binding subunit of the SsuABC
+  alkanesulfonate importer. Two SsuB subunits bind and hydrolyze ATP at the
+  inner-membrane SsuC permease to power uptake of SsuA-bound aliphatic
+  sulfonates.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+  qualifier: enables
+  review:
+    summary: The canonical ABC nucleotide-binding domain contains an annotated ATP-binding P-loop.
+    action: NEW
+    reason: This true but broad activity is retained as non-core context; E. coli SsuB P0AAI1 is the specific ISS comparator.
+    supported_by:
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: /ligand=&#34;ATP&#34;
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: ABC_TRANSPORTER_1
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+  qualifier: enables
+  review:
+    summary: SsuB is a canonical ABC-transporter ATPase with intact nucleotide-binding and catalytic motifs.
+    action: NEW
+    reason: QuickGO returned no rows for Q88R93, but the exact reviewed record assigns the ATP-coupled EC 7.6.2.14 reaction and ABC domain; E. coli SsuB P0AAI1 is the specific ISS comparator.
+    supported_by:
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: Responsible for energy coupling to the
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: ABC_TRANSPORTER_1
+- term:
+    id: GO:0042959
+    label: ABC-type alkanesulfonate transporter transporter activity
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: PMID:10781534
+  qualifier: contributes_to
+  review:
+    summary: SsuB supplies ATP hydrolysis to the SsuABC complex-level transport activity.
+    action: NEW
+    reason: The ATPase does not independently move substrate; it contributes energy coupling to the binding-protein-dependent SsuABC importer. E. coli SsuB P0AAI1 is the specific ISS comparator.
+    supported_by:
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: Part of the ABC transporter complex SsuABC involved in
+    - reference_id: PMID:10781534
+      supporting_text: the individual components of the two transport systems were not functionally exchangeable
+- term:
+    id: GO:0042918
+    label: alkanesulfonate transmembrane transport
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: PMID:10781557
+  qualifier: involved_in
+  review:
+    summary: SsuB powers SsuABC-mediated alkanesulfonate uptake.
+    action: NEW
+    reason: Pseudomonas and E. coli genetics establish SsuABC as the uptake arm of the ssu pathway, while the exact Q88R93 record assigns the energy-coupling subunit and E. coli SsuB P0AAI1 provides the ISS comparator.
+    supported_by:
+    - reference_id: PMID:10781557
+      supporting_text: an ATP-binding cassette-type transporter (ssuABC)
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: aliphatic sulfonates import
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+  qualifier: located_in
+  review:
+    summary: SsuB is peripherally associated with the cytoplasmic face of the bacterial inner membrane through SsuC.
+    action: NEW
+    reason: The exact reviewed record assigns SsuB to the cell inner membrane as a peripheral membrane protein; E. coli SsuB P0AAI1 is the ISS comparator.
+    supported_by:
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: Peripheral membrane protein
+- term:
+    id: GO:0055052
+    label: ATP-binding cassette (ABC) transporter complex, substrate-binding subunit-containing
+  evidence_type: ISS
+  supporting_entities:
+  - UniProtKB:P0AAI1
+  original_reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+  qualifier: part_of
+  review:
+    summary: SsuB is the duplicated ATP-binding active unit of the SsuABC importer.
+    action: NEW
+    reason: UniProt specifies the SsuB2-SsuC2-SsuA complex composition, which matches GO:0055052; E. coli SsuB P0AAI1 is the ISS comparator.
+    supported_by:
+    - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+      supporting_text: The complex is composed of two ATP-binding proteins (SsuB)
+references:
+- id: file:PSEPK/ssuB/ssuB-uniprot.txt
+  title: UniProtKB reviewed entry Q88R93 for Pseudomonas putida KT2440 SsuB
+  findings:
+  - statement: SsuB is the energy-coupling ATPase of the SsuABC aliphatic-sulfonate importer.
+    supporting_text: Responsible for energy coupling to the
+  - statement: The importer contains two SsuB ATPases, two SsuC permeases, and one SsuA binding protein.
+    supporting_text: The complex is composed of two ATP-binding proteins (SsuB)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact reviewed accession, locus PP_0240, HAMAP rule, EC, ABC motifs, complex composition, and membrane association verified; assignments are homology-based.
+- id: file:PSEPK/ssuB/ssuB-deep-research-openscientist.md
+  title: OpenScientist gene research for PSEPK SsuB
+  findings:
+  - statement: The report corroborates SsuB as the SsuABC nucleotide-binding motor while distinguishing orthology and family inference from target-protein biochemistry.
+    supporting_text: Direct biochemical characterization of the KT2440 SsuB protein itself has not been reported
+  - statement: The completed report identifies the exact accession and locus.
+    supporting_text: SsuB (UniProt Q88R93; locus PP_0240)
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Provider synthesis used for retrieval and limitations; identifiers and central claims were independently checked against UniProt and cached primary literature.
+- id: PMID:10781557
+  title: The ssu locus plays a key role in organosulfur metabolism in Pseudomonas putida S-313.
+  full_text_unavailable: true
+  findings:
+  - statement: The Pseudomonas ssu locus encodes SsuABC and is required for broad organosulfur utilization.
+    supporting_text: an ATP-binding cassette-type transporter (ssuABC)
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct S-313 locus genetics; not a biochemical assay of KT2440 Q88R93.
+- id: PMID:10781534
+  title: Deletion analysis of the Escherichia coli taurine and alkanesulfonate transport systems.
+  full_text_unavailable: true
+  findings:
+  - statement: E. coli deletion/complementation establishes the intact SsuABC complex as an alkanesulfonate uptake system.
+    supporting_text: Complementation analysis of in-frame deletion mutants confirmed that the growth phenotypes obtained were the result of the in-frame deletions constructed.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct ortholog-system genetics used as ISS support.
+core_functions:
+- description: Hydrolyzes ATP as the duplicated nucleotide-binding motor of the SsuABC alkanesulfonate importer and couples that energy to SsuC-mediated uptake.
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  contributes_to_molecular_function:
+    id: GO:0042959
+    label: ABC-type alkanesulfonate transporter transporter activity
+  directly_involved_in:
+  - id: GO:0042918
+    label: alkanesulfonate transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0055052
+    label: ATP-binding cassette (ABC) transporter complex, substrate-binding subunit-containing
+  supported_by:
+  - reference_id: file:PSEPK/ssuB/ssuB-uniprot.txt
+    supporting_text: Part of the ABC transporter complex SsuABC involved in
+  - reference_id: file:PSEPK/ssuB/ssuB-deep-research-openscientist.md
+    supporting_text: SsuB supplies the energy that couples these components together.
+suggested_questions:
+- question: What are the basal and SsuA/SsuC-stimulated ATPase kinetics of KT2440 SsuB?
+suggested_experiments:
+- description: Reconstitute Q88R93 with SsuA and SsuC in proteoliposomes and measure substrate-dependent ATP hydrolysis and uptake across an alkanesulfonate panel.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
