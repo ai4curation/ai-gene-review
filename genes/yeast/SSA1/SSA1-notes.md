@@ -53,6 +53,15 @@
 - A stricter post-rebase audit also confirmed one-to-one WITH/FROM provenance
   for every IPI row after adding the exact pinned accession to ten singleton
   review summaries.
+- PR review follow-up separated two targeted Ssa1-Sse1 biochemical/structural
+  studies from bulk interaction screens: the former support refinement of
+  generic protein binding to heat shock protein binding, whereas partner
+  identity alone does not. The GO:0031072 IBA rationale is now anchored to
+  PAINT node PTN000452648 and those targeted studies rather than to discounted
+  high-throughput IPI rows. [PMID:16688211 "that the yeast homologue, Sse1p,
+  acts as an efficient nucleotide exchange factor"] [PMID:18555782 "Here we
+  present the crystal structure of the yeast NEF Sse1p (Hsp110) in complex with
+  the nucleotide-binding domain (NBD) of Hsp70."]
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA1 and
   describes its constitutive cytosolic Hsp70 role. SSA1 is also part of the
   BIOREASON_COMPARISON benchmark, but that project consumes the review through
