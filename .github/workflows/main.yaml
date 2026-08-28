@@ -78,6 +78,11 @@ jobs:
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
+            history:
+              - 'history/**/*.yaml'
+              - 'src/ai_gene_review/schema/history.yaml'
+              - 'scripts/new_history.py'
+              - 'scripts/backfill_history_from_prs.py'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
@@ -155,6 +160,58 @@ jobs:
           steps.changes.outputs.infra == 'true' ||
           steps.changes.outputs.modules == 'true'
         run: just validate-modules
+
+      # History records (append-only session provenance under history/, ported
+      # from dismech) validate against src/ai_gene_review/schema/history.yaml.
+      # Cheap, so run whenever they or their tooling change, or on the full pass.
+      - name: Validate history records (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.history == 'true'
+        run: |
+          just validate-history-all
+          uv run pytest tests/test_history_schema.py -q
+
+      # Advisory-only nudge (never fails the build): if a PR edits curated
+      # content (gene reviews or modules) but adds no matching history/ record,
+      # warn so curation provenance keeps pace with content. See docs/history.md
+      # and `just new-history`.
+      - name: Check curation history coverage
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # GitHub's own PR file list reflects only what the PR itself changes
+          # (a local two-dot diff misblames main's newer commits on branches
+          # behind main). `status == "added"` replaces --diff-filter=A.
+          PR_FILES="repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+          CHANGED=$(gh api --paginate "$PR_FILES" --jq '.[].filename')
+          ADDED_HISTORY=$(gh api --paginate "$PR_FILES" \
+            --jq '.[] | select(.status == "added") | .filename' \
+            | grep -E '^history/.*\.yaml$' || true)
+
+          CURATED=$(echo "$CHANGED" \
+            | grep -E '^(genes/[^/]+/[^/]+/[^/]+-ai-review\.yaml|modules/[^/]+\.yaml)$' \
+            || true)
+
+          if [ -z "$CURATED" ]; then
+            echo "No curated-content changes; skipping history-coverage nudge."
+            exit 0
+          fi
+
+          if [ -z "$ADDED_HISTORY" ]; then
+            echo "::warning::This PR changes curated content but adds no history/ record." \
+              " Consider scaffolding one with \`just new-history\` (see docs/history.md)."
+            echo "Curated files changed:"
+            echo "$CURATED"
+          else
+            echo "History records added:"
+            echo "$ADDED_HISTORY"
+          fi
 
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI
