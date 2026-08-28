@@ -183,6 +183,38 @@ def test_correct_go_branches_pass():
         temp_path.unlink()
 
 
+def test_current_go_label_passes_external_validator():
+    """The cached current GO label must pass the external validator."""
+    data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST_CURRENT_LABEL",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test reviewed live GO label alias",
+        "core_functions": [
+            {
+                "description": "Test holdase function",
+                "molecular_function": {
+                    "id": "GO:0140309",
+                    "label": "unfolded protein holdase activity",
+                },
+            }
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(data, f)
+        temp_path = Path(f.name)
+
+    try:
+        result = _run_term_validator(temp_path)
+        output = result.stdout + result.stderr
+        assert result.returncode == 0, output
+        assert "Label mismatch for 'GO:0140309'" not in output, output
+        assert "Validation passed" in output, output
+    finally:
+        temp_path.unlink()
+
+
 @pytest.mark.integration
 def test_real_gene_branch_validation():
     """Test GO branch validation on a real gene file that should pass."""
