@@ -54,6 +54,92 @@ def test_valid_reference_ids():
         temp_path.unlink()
 
 
+def test_reference_finding_supporting_text_is_validated():
+    """Top-level finding quotes inherit and validate against the parent PMID."""
+    data = {
+        "id": "P10592",
+        "gene_symbol": "SSA2",
+        "taxon": {"id": "NCBITaxon:559292", "label": "Saccharomyces cerevisiae"},
+        "description": "A test review with a grounded reference finding.",
+        "references": [
+            {
+                "id": "PMID:8947547",
+                "title": (
+                    "The refolding activity of the yeast heat shock proteins Ssa1 "
+                    "and Ssa2 defines their role in protein translocation."
+                ),
+                "findings": [
+                    {
+                        "statement": "Ssa1/2 depletion did not impair translocation.",
+                        "supporting_text": (
+                            "Depletion of Ssa1/2p had no effect on the efficiency "
+                            "of translocation in this in vitro assay."
+                        ),
+                    }
+                ],
+            }
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(data, f)
+        temp_path = Path(f.name)
+
+    try:
+        report = validate_gene_review(temp_path, check_goa=False)
+        quote_errors = [
+            issue
+            for issue in report.issues
+            if issue.check_type == "reference_finding_supporting_text"
+            and issue.severity == ValidationSeverity.ERROR
+        ]
+        assert quote_errors == []
+    finally:
+        temp_path.unlink()
+
+
+def test_reference_finding_supporting_text_mismatch_is_error():
+    """Fabricated finding text is a blocking validation error."""
+    data = {
+        "id": "P10592",
+        "gene_symbol": "SSA2",
+        "taxon": {"id": "NCBITaxon:559292", "label": "Saccharomyces cerevisiae"},
+        "description": "A test review with an ungrounded reference finding.",
+        "references": [
+            {
+                "id": "PMID:8947547",
+                "title": (
+                    "The refolding activity of the yeast heat shock proteins Ssa1 "
+                    "and Ssa2 defines their role in protein translocation."
+                ),
+                "findings": [
+                    {
+                        "statement": "An invented result.",
+                        "supporting_text": "This sentence is not in the publication.",
+                    }
+                ],
+            }
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(data, f)
+        temp_path = Path(f.name)
+
+    try:
+        report = validate_gene_review(temp_path, check_goa=False)
+        quote_errors = [
+            issue
+            for issue in report.issues
+            if issue.check_type == "reference_finding_supporting_text"
+            and issue.severity == ValidationSeverity.ERROR
+        ]
+        assert len(quote_errors) == 1
+        assert "PMID:8947547" in quote_errors[0].message
+    finally:
+        temp_path.unlink()
+
+
 def test_invalid_reference_id():
     """Test that annotations with invalid reference IDs are caught."""
     data = {

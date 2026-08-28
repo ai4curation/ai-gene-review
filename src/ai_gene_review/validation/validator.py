@@ -73,6 +73,79 @@ def get_schema_path() -> Path:
     return Path(__file__).parent.parent / "schema" / "gene_review.yaml"
 
 
+def validate_reference_finding_supporting_text(
+    data: Dict[str, Any],
+    report: ValidationReport,
+) -> None:
+    """Validate quotes stored directly on top-level reference findings.
+
+    `references[].findings[].supporting_text` inherits its literature
+    identifier from the parent reference, so the external reference validator
+    does not see it as a normal `supported_by` evidence item. Check these
+    quotes explicitly with the same deterministic substring validator.
+    """
+    try:
+        from linkml_reference_validator.models import ReferenceValidationConfig
+        from linkml_reference_validator.validation.supporting_text_validator import (
+            SupportingTextValidator,
+        )
+    except ImportError:
+        return
+
+    validator = SupportingTextValidator(
+        ReferenceValidationConfig(
+            cache_dir=get_project_root() / "publications",
+            fetch_full_text=False,
+        )
+    )
+    for i, reference in enumerate(data.get("references", [])):
+        if not isinstance(reference, dict):
+            continue
+        reference_id = reference.get("id")
+        if not isinstance(reference_id, str):
+            continue
+        if reference_id.split(":", 1)[0].upper() not in {"PMID", "DOI"}:
+            continue
+        for j, finding in enumerate(reference.get("findings", [])):
+            if not isinstance(finding, dict):
+                continue
+            supporting_text = finding.get("supporting_text")
+            if not isinstance(supporting_text, str) or not supporting_text.strip():
+                continue
+            path = f"references[{i}].findings[{j}].supporting_text"
+            try:
+                result = validator.validate(supporting_text, reference_id)
+            except Exception as exc:  # noqa: BLE001 - external publication cache
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    (
+                        f"Finding supporting text could not be verified for "
+                        f"{reference_id}: {type(exc).__name__}: {exc}"
+                    ),
+                    path=path,
+                    validation_category="ReferenceValidator",
+                    check_type="reference_finding_supporting_text",
+                )
+                continue
+            if result.is_valid:
+                continue
+            message = str(getattr(result, "message", "") or "")
+            if "could not fetch" in message.lower() or "no records found" in message.lower():
+                severity = ValidationSeverity.WARNING
+                prefix = "Finding supporting text could not be verified"
+            else:
+                severity = ValidationSeverity.ERROR
+                prefix = "Finding supporting text is not a verbatim publication substring"
+            report.add_issue(
+                severity,
+                f"{prefix} for {reference_id}: {message}",
+                path=path,
+                suggestion="Replace the quote with an exact substring from the cached publication",
+                validation_category="ReferenceValidator",
+                check_type="reference_finding_supporting_text",
+            )
+
+
 def load_schema() -> SchemaView:
     """Load the LinkML schema.
 
@@ -112,7 +185,7 @@ def validate_gene_review(
         schema_path: Unused (kept for backward compatibility)
         check_best_practices: Whether to check for best practices (soft failures)
         check_goa: Whether to validate against GOA file (enabled by default)
-        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
 
     Returns:
@@ -160,6 +233,7 @@ def validate_gene_review(
             data,
             report,
             yaml_file_path if check_goa else None,
+            check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
         )
 
@@ -183,7 +257,7 @@ def check_best_practices_rules(
         data: The parsed YAML data
         report: ValidationReport to add warnings to
         yaml_file: Path to YAML file for GOA validation (if enabled)
-        check_supporting_text: Unused (kept for backward compatibility)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
     """
     if progress_callback:
@@ -191,6 +265,9 @@ def check_best_practices_rules(
 
     # Note: GO branch validation for core_functions is handled by
     # linkml-term-validator CLI (invoked from justfile), not here.
+
+    if check_supporting_text:
+        validate_reference_finding_supporting_text(data, report)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
