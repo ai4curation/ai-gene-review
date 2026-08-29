@@ -118,7 +118,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # Five upstream reviews moved these levels. The HdeB re-review retains
+        # Six upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
         # post-review (+1 post_review only), while the HdeA comprehensive review
@@ -127,10 +127,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # terms and two GO-valued core slots without changing either overlap count.
         # The CpxP comprehensive review adds one post-review term and two GO-valued
         # core slots, also without changing either overlap count. surA, Spy, and CpxP
-        # advanced to COMPLETE, moving the reference-status distribution 67->70
-        # COMPLETE in the benchmark sidecars. GOA is unaffected, distinguishing
-        # upstream review edits from a comparison regression.
-        "post_review": {"overlap": 860, "total": 2772, "pred": 8871},
+        # DnaJ removes two net post-review terms and three predicted overlaps after
+        # resolving miscited CAFA rows. Its core count and overlap stay unchanged:
+        # evidence-backed GO:0001671 replaces overclaimed GO:0043335 in the core set.
+        # surA, Spy, CpxP, and DnaJ advanced to COMPLETE, moving the reference-status
+        # distribution 67->71 COMPLETE in the benchmark sidecars. GOA is unaffected,
+        # distinguishing upstream review edits from a comparison regression.
+        "post_review": {"overlap": 857, "total": 2770, "pred": 8871},
         "core": {"overlap": 350, "total": 1231, "pred": 8871},
     }
 
