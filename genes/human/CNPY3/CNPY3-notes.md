@@ -53,8 +53,9 @@ DISEASE + RN 13]
 2. GO:0005783 endoplasmic reticulum (IEA, GO_REF:0000044, from UniProt SubCell) — correct, ACCEPT.
 3. GO:0005515 protein binding has four exact PMID signatures from high-throughput interactomes
    (PMID:28514442, 32296183, 32814053, 33961781), spanning thirteen physical GOA rows. KEEP_AS_NON_CORE:
-   these IPI rows record interactions, but bare protein binding is uninformative and the heterogeneous
-   partner sets do not support a single evidence-matched replacement. The cached abstract-only
+   IPI asserts observed physical interactions and no evidence contradicts them, so the rows are retained.
+   Bare protein binding is uninformative and the heterogeneous partner sets do not support a single
+   evidence-matched replacement, which makes them non-core rather than invalid. The cached abstract-only
    PMID:32814053 cannot adjudicate individual interactions, so no misattribution claim is made.
 4. GO:0005102 signaling receptor binding (IEA, GO_REF:0000107, ortholog transfer from mouse Q9DAU1) —
    redundant with the IBA; keep as non-core.
@@ -63,9 +64,12 @@ DISEASE + RN 13]
 
 ## Chaperone-term decision
 
-- GO:0051082 is formally obsolete and is not retained or proposed for CNPY3. PMID:20865800 shows a
-  substrate-loading co-chaperone that requires gp96 for efficient TLR binding; it does not demonstrate
-  autonomous passive binding to an unfolded protein.
+- GO:0051082 is formally obsolete and is not retained or proposed for CNPY3. Live QuickGO is authoritative:
+  its API currently returns the name `obsolete unfolded protein binding`, `isObsolete=true`, and the
+  replacement considerations GO:0044183 and GO:0140309. The repository's local `ontologies/go.tsv`
+  snapshot is stale (dated 2026-03-21) and must not be used to reverse that live status. PMID:20865800
+  shows a substrate-loading co-chaperone that requires gp96 for efficient TLR binding; it does not
+  demonstrate autonomous passive binding to an unfolded protein.
 - GO:0044183 protein folding chaperone is not asserted as a CNPY3 MF. CNPY3 is required for the gp96
   folding system, but it lacks intrinsic ATPase activity and is described as a co-chaperone
   [PMID:20865800 "CNPY3 has neither intrinsic ATPase activity nor the ability to significantly modulate
@@ -82,8 +86,14 @@ DISEASE + RN 13]
 - MF: GO:0051879 Hsp90 protein binding (direct mouse biochemical evidence; conserved human function
   by orthology).
 - BP: GO:0034975 protein folding in endoplasmic reticulum (TLR folding in ER).
+- BP: GO:0072657 protein localization to membrane. Mouse Cnpy3 silencing traps TLR9 precursors in the
+  ER [PMID:20865800 "we found that TLR9 precursors were trapped in the ER of cells with silenced
+  expression of either gp96 or CNPY3 (Fig. 5b)."]. This supports CNPY3-dependent TLR ER exit and
+  membrane delivery; the human annotation is transferred by orthology.
 - BP: GO:0045087 innate immune response (UniProtKB-KW Immunity/Innate immunity).
-- BP: GO:0034123 positive regulation of toll-like receptor signaling pathway (required for TLR signaling).
+- BP: GO:0034123 positive regulation of toll-like receptor signaling pathway is retained as a downstream,
+  non-core NEW process context. It reflects loss of TLR responses after disruption of the maturation
+  module, not direct signaling catalysis by CNPY3.
 
 ## PAINT and signature audit (2026-08-28)
 
@@ -92,7 +102,7 @@ DISEASE + RN 13]
   (`MGI:MGI:1919279`) and mouse Cnpy4 (`MGI:MGI:1913705`). The transfer is retained as
   `NO_FAILURE_NON_CORE`; mouse Cnpy3 supplies direct TLR-complex evidence.
 - The 18 physical GOA rows collapse to 9 exact qualifier-aware signatures: 6 `enables` and 3
-  `located_in`. Each is represented exactly once. Four additional author-proposed annotations are
+  `located_in`. Each is represented exactly once. Five additional author-proposed annotations are
   retained as NEW.
-- Final actions across all 13 review entries: 3 ACCEPT, 6 KEEP_AS_NON_CORE, 4 NEW, 0 MODIFY,
+- Final actions across all 14 review entries: 3 ACCEPT, 6 KEEP_AS_NON_CORE, 5 NEW, 0 MODIFY,
   0 REMOVE, 0 MARK_AS_OVER_ANNOTATED, and 0 UNDECIDED.
