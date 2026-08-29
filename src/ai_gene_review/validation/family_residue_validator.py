@@ -60,7 +60,13 @@ class Outcome(str, Enum):
 
 @dataclass
 class ResidueCheck:
-    """One curated position, checked against the anchor sequence."""
+    """One curated position, checked against the anchor sequence.
+
+    ``kind`` names the check that produced this result, so results can be grouped by
+    check rather than by the data they happened to touch. Without it there is no way
+    to ask "has this check ever failed?", which is the question that catches an
+    assertion that cannot fail.
+    """
 
     family: str
     site_id: str
@@ -70,10 +76,11 @@ class ResidueCheck:
     observed: str | None
     outcome: Outcome
     message: str
+    kind: str = "RESIDUE"
 
     def __str__(self) -> str:
         return (
-            f"[{self.outcome.value}] {self.family}#{self.site_id} "
+            f"[{self.outcome.value}] {self.kind} {self.family}#{self.site_id} "
             f"{self.accession}:{self.position} {self.message}"
         )
 
@@ -212,6 +219,9 @@ def check_anchor_residues(
         if motif:
             results.append(_check_motif(family, site_id, anchor, seq, motif))
 
+    for r in results:
+        if r.kind == "RESIDUE":
+            r.kind = "ANCHOR_RESIDUE"
     return results
 
 
@@ -227,16 +237,19 @@ def _check_motif(
         return ResidueCheck(
             family, site_id, anchor, start, [pattern], None, Outcome.FAIL,
             f"block {start}-{end} is out of range for a {len(seq)}-residue sequence",
+            kind="MOTIF",
         )
     block = seq[start - 1 : end]
     if re.fullmatch(pattern, block):
         return ResidueCheck(
             family, site_id, anchor, start, [pattern], block, Outcome.PASS,
             f"block {start}-{end} is {block!r}, matches /{pattern}/",
+            kind="MOTIF",
         )
     return ResidueCheck(
         family, site_id, anchor, start, [pattern], block, Outcome.FAIL,
         f"block {start}-{end} is {block!r}, does not match /{pattern}/",
+        kind="MOTIF",
     )
 
 
@@ -267,6 +280,8 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
                              f"determined_by_site '{site}' is not a residue site in this "
                              f"review; known sites are {sorted(known) or '(none)'}")
             )
+    for r in results:
+        r.kind = "TERM_SITE_REF"
     return results
 
 
@@ -368,6 +383,9 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
                     f"terms present are {sorted(terms_here)}",
                 )
             )
+    for r in results:
+        if r.kind == "RESIDUE":
+            r.kind = "NODE_SEEDS" if "seed" in r.message else "NODE_ASSERTION"
     return results
 
 
@@ -454,10 +472,13 @@ def check_controls(review: dict, cache: SequenceCache) -> list[ResidueCheck]:
                     family, site_id, control, is_positive, expected, cache
                 )
             )
+    for r in results:
+        if r.kind == "RESIDUE":
+            r.kind = "CONTROL_STRUCTURE"
     return results
 
 
-def _check_control_residue(
+def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable outcome
     family: str,
     site_id: str,
     control: dict,
@@ -474,17 +495,20 @@ def _check_control_residue(
         return ResidueCheck(
             family, site_id, acc, 0, sorted(expected), None, Outcome.UNRESOLVED,
             f"{kind} control declares no position/residue, so its assertion is unchecked",
+            kind="CONTROL_RESIDUE",
         )
     observed = _residue_at(cache.get(acc), pos)
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
             f"{kind} control position {pos} is beyond the end of the sequence",
+            kind="CONTROL_RESIDUE",
         )
     if observed != claimed:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), observed, Outcome.FAIL,
             f"{kind} control claims {claimed} at {pos} but the sequence has {observed}",
+            kind="CONTROL_RESIDUE",
         )
     carries = observed in expected
     if is_positive and not carries:
@@ -502,6 +526,7 @@ def _check_control_residue(
     return ResidueCheck(
         family, site_id, acc, pos, sorted(expected), observed, Outcome.PASS,
         f"{kind} control has {observed} at {pos}, as expected for a {kind} control",
+        kind="CONTROL_RESIDUE",
     )
 
 
