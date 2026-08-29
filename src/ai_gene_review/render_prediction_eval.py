@@ -82,9 +82,16 @@ def find_review_link(yaml_path: Path, output_path: Path | None = None) -> str | 
 
 
 def collect_predictions(
-    pattern: str, root: Path | None = None, output_path: Path | None = None,
+    pattern: str,
+    root: Path | None = None,
+    output_path: Path | None = None,
+    ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Collect prediction review data from YAML files matching *pattern*.
+
+    When *ids* is given, only reviews whose top-level ``id`` is in that set are
+    kept. This is how a single glob is narrowed to one cohort when several
+    cohorts share a naming convention.
 
     >>> collect_predictions('nonexistent-pattern-*.yaml')
     []
@@ -94,6 +101,8 @@ def collect_predictions(
     results = []
     for p in paths:
         data = load_prediction_review(p)
+        if ids is not None and data.get("id") not in ids:
+            continue
         data["review_link"] = find_review_link(p, output_path)
         results.append(data)
     return results
@@ -201,10 +210,27 @@ def main() -> None:
         default=".",
         help="Root directory for glob resolution (default: .)",
     )
+    parser.add_argument(
+        "--ids-from",
+        default=None,
+        help="Restrict to reviews whose id appears in the first column of this "
+             "TSV/CSV (header row skipped). Use to render one cohort when "
+             "several share a file-naming convention.",
+    )
     args = parser.parse_args()
 
+    ids = None
+    if args.ids_from:
+        import csv as _csv
+        with open(args.ids_from) as fh:
+            sniff = _csv.reader(fh, delimiter="\t" if args.ids_from.endswith(".tsv") else ",")
+            rows = list(sniff)
+        ids = {r[0].strip() for r in rows[1:] if r and r[0].strip()}
+
     out_path = Path(args.output) if args.output else None
-    proteins = collect_predictions(args.pattern, root=Path(args.root), output_path=out_path)
+    proteins = collect_predictions(
+        args.pattern, root=Path(args.root), output_path=out_path, ids=ids,
+    )
     if not proteins:
         print(f"No files found matching '{args.pattern}' under {args.root}", file=sys.stderr)
         sys.exit(1)

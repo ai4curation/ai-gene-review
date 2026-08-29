@@ -362,8 +362,9 @@
         <h1 id="protrek-evaluation-pipeline-and-reproduction">ProTrek evaluation — pipeline and reproduction</h1>
 <p>Scripts and data for evaluating ProTrek (Su et al., <em>Nat Biotechnol</em> 2026,<br />
 <a href="https://doi.org/10.1038/s41587-025-02836-0">doi:10.1038/s41587-025-02836-0</a>) on the<br />
-ARGO-ProtNLM-50 benchmark. See <a href="../PROTREK_EVALUATION.html"><code>../PROTREK_EVALUATION.md</code></a><br />
-for the findings.</p>
+two cohorts — <strong>ARGO-ProtNLM-50</strong> (50 unreviewed TrEMBL proteins, shared with the ProtNLM2<br />
+evaluation) and <strong>ARGO139</strong> (the 139 genes of the BioReason comparison). See<br />
+<a href="../PROTREK_EVALUATION.html"><code>../PROTREK_EVALUATION.md</code></a> for the findings.</p>
 <h2 id="why-the-predictions-had-to-be-generated-not-downloaded">Why the predictions had to be generated, not downloaded</h2>
 <p>ProTrek is a <strong>retrieval</strong> model, not a function predictor: it publishes model weights and<br />
 precomputed embedding indexes, not a table of per-protein predictions. There is no<br />
@@ -384,7 +385,7 @@ huggingface-cli<span class="w"> </span>download<span class="w"> </span>westlake-
 </code></pre></div>
 
 <p>A CPU-only PyTorch environment is enough; the 50-protein run takes about 4 minutes on<br />
-4 cores. Only ProTrek's protein encoder is loaded — the text side is the precomputed index.</p>
+4 cores and the 139-protein run about 8 minutes. Only ProTrek's protein encoder is loaded — the text side is the precomputed index.</p>
 <h2 id="pipeline">Pipeline</h2>
 <div class="codehilite"><pre><span></span><code><span class="c1"># 1. assemble query sequences from the cached UniProt flatfiles</span>
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/build_inputs.py
@@ -418,6 +419,51 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
 uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/dump_context.py<span class="w"> </span>A0A3B6GK97
 </code></pre></div>
 
+<h2 id="cohort-2-argo139">Cohort 2: ARGO139</h2>
+<p>Same steps, different query set. Gene directories in this cohort are named by <strong>gene symbol</strong><br />
+rather than accession, so cohort-aware scripts take <code>--queries</code> and address genes as<br />
+<code>SPECIES/SYMBOL</code> (several symbols — <code>Akt1</code>, <code>Egfr</code>, <code>Myc</code>, <code>Notch1</code>, <code>Pten</code> — occur in more<br />
+than one species).</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 1-3. build, retrieve, analyse</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/build_argo139_inputs.py
+python<span class="w"> </span>projects/PROTREK_EVALUATION/run_protrek_retrieval.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--weights<span class="w"> </span>weights/ProTrek_650M<span class="w"> </span>--faiss-dir<span class="w"> </span>faiss_index<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--queries<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_sequences.tsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--subsections<span class="w"> </span>GO_annotation<span class="w"> </span>Function<span class="w"> </span>Subcellular_location<span class="w"> </span>Catalytic_activity<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--topk<span class="w"> </span><span class="m">25</span><span class="w"> </span>--out<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_protrek_hits.tsv
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/analyze_hits.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--hits<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_protrek_hits.tsv<span class="w"> </span>--topk<span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--queries<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_sequences.tsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_protrek_go_calls.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--summary-out<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_protrek_summary.json
+
+<span class="c1"># 4. the memorisation control: how many queries are SwissProt (i.e. in the searched index)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/check_swissprot_membership.py
+
+<span class="c1"># 5. curation digests, then author judgement-only specs and emit review YAMLs</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/dump_argo139_context.py<span class="w"> </span>yeast/SIR2<span class="w"> </span>worm/pink-1
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/write_reviews.py<span class="w"> </span>spec.json
+
+<span class="c1"># 6. aggregate the curated assessments, and compare with BioReason-SFT / GO-GPT</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/aggregate_reviews.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--calls<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_protrek_go_calls.csv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_assessment_summary.json
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_three_way.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_three_way.json
+
+<span class="c1"># 7. render the interactive assessment table for this cohort only</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>ai_gene_review.render_prediction_eval<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s1">&#39;genes/*/*/*-protrek-predictions-review.yaml&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--ids-from<span class="w"> </span>projects/PROTREK_EVALUATION/argo139_sequences.tsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>-o<span class="w"> </span>projects/PROTREK_EVALUATION/protrek-eval-argo139.html<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--title<span class="w"> </span><span class="s1">&#39;ProTrek ARGO139 Prediction Evaluation&#39;</span>
+</code></pre></div>
+
+<p><code>write_reviews.py</code> takes a compact JSON spec in which the reviewer supplies only judgement<br />
+(assessment code, rationale, error type, supporting references) and names the prediction by<br />
+<strong>rank</strong>; the GO id, label, aspect and score are filled in from the committed<br />
+<code>*_protrek_go_calls.csv</code>, so a review can never drift from the retrieval it describes. It<br />
+refuses any rank whose label did not resolve to a GO id.</p>
 <h2 id="files">Files</h2>
 <table>
 <thead>
@@ -482,6 +528,62 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
 <tr>
 <td><code>control_protrek_hits.tsv</code></td>
 <td>Positive-control retrieval output</td>
+</tr>
+<tr>
+<td><code>build_argo139_inputs.py</code></td>
+<td>Assembles the 139 ARGO139 query sequences</td>
+</tr>
+<tr>
+<td><code>check_swissprot_membership.py</code></td>
+<td>SwissProt vs TrEMBL per query — the memorisation control</td>
+</tr>
+<tr>
+<td><code>dump_argo139_context.py</code></td>
+<td>Per-gene curation digest, addressed as <code>SPECIES/SYMBOL</code></td>
+</tr>
+<tr>
+<td><code>write_reviews.py</code></td>
+<td>Emits prediction-review YAMLs from a judgement-only JSON spec</td>
+</tr>
+<tr>
+<td><code>aggregate_reviews.py</code></td>
+<td>Aggregates the curated assessments for one cohort</td>
+</tr>
+<tr>
+<td><code>argo139_three_way.py</code></td>
+<td>ProTrek vs BioReason-SFT vs GO-GPT on the same 139 genes</td>
+</tr>
+<tr>
+<td><code>core_function_recall.py</code></td>
+<td>Rank at which each curated core function is retrieved</td>
+</tr>
+<tr>
+<td><code>score_vs_length.py</code></td>
+<td>Top-1 score against sequence length across both cohorts</td>
+</tr>
+<tr>
+<td><code>argo139_sequences.tsv</code></td>
+<td>ARGO139 query set</td>
+</tr>
+<tr>
+<td><code>argo139_protrek_hits.tsv</code></td>
+<td>Raw ranked retrieval output for ARGO139</td>
+</tr>
+<tr>
+<td><code>argo139_protrek_go_calls.csv</code></td>
+<td>Top-5 GO calls with resolution + GOA overlap category</td>
+</tr>
+<tr>
+<td><code>argo139_assessment_summary.json</code></td>
+<td>Curated assessment counts, error types, score calibration</td>
+</tr>
+<tr>
+<td><code>argo139_three_way.json</code></td>
+<td>Three-model comparison output</td>
+</tr>
+<tr>
+<td><code>argo139_swissprot_status.csv</code></td>
+<td>SwissProt section status per ARGO139 query</td>
 </tr>
 </tbody>
 </table>

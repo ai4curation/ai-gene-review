@@ -39,7 +39,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(ROOT / "src"))
 
-from analyze_hits import SENTENCE_RE, ancestors, normalize_label, parse_obo  # noqa: E402
+from analyze_hits import (  # noqa: E402
+    SENTENCE_RE,
+    ancestors,
+    gene_dir_map,
+    normalize_label,
+    parse_obo,
+)
 from ai_gene_review.bioreason_ontology import ensure_frozen_go  # noqa: E402
 
 ASPECT_SLOT = {
@@ -49,9 +55,12 @@ ASPECT_SLOT = {
 }
 
 
-def core_terms(acc: str) -> dict[str, set[str]]:
+def core_terms(acc: str, dirs: dict[str, Path]) -> dict[str, set[str]]:
     """Reference terms per aspect from the gene's AIGR review core_functions."""
-    hits = glob.glob(str(ROOT / "genes" / "*" / acc / f"{acc}-ai-review.yaml"))
+    if acc in dirs:
+        hits = [str(p) for p in dirs[acc].glob("*-ai-review.yaml")]
+    else:
+        hits = glob.glob(str(ROOT / "genes" / "*" / acc / f"{acc}-ai-review.yaml"))
     out = {"molecular function": set(), "biological process": set(), "cellular component": set()}
     if not hits:
         return out
@@ -75,8 +84,11 @@ def main() -> int:
     ap.add_argument("--max-rank", type=int, default=25)
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--summary-out", type=Path, default=None)
+    ap.add_argument("--queries", type=Path, default=None,
+                    help="query TSV with species_dir/symbol columns (see analyze_hits.py)")
     args = ap.parse_args()
 
+    dirs = gene_dir_map(args.queries)
     by_label, terms, obsolete_by_label = parse_obo(ensure_frozen_go())
     cache: dict[str, set[str]] = {}
 
@@ -86,7 +98,7 @@ def main() -> int:
 
     out_rows = []
     for acc in accs:
-        refs = core_terms(acc)
+        refs = core_terms(acc, dirs)
         ranked = []
         for r in sorted((x for x in rows if x["accession"] == acc), key=lambda x: int(x["rank"])):
             m = SENTENCE_RE.match(r["text"].strip())
