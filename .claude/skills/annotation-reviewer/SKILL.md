@@ -70,6 +70,18 @@ Two things this implies, both easy to get backwards:
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
+**A `propagation_review` should not be a bare enum block.** When you add one
+(root_cause + failure_modes), also trace the annotation's proximate source(s) and
+record them under `source_entities`, each with a `source_status` and a short
+source-specific `comment` — that comment is where the block's explanation lives, since
+the schema keeps `PropagationReview` itself free-text-free (the full rationale stays in
+`review.reason`). For an ISO row the sources are the donor gene product(s) in the GOA
+WITH/FROM column (consulting the tsv for donor tracing is fine — just ignore its
+QUALIFIER column); for an IBA row use the PANTHER:PTN ancestral node, not the extant
+member list. If tracing cannot recover a donor, say so via
+`source_status: SOURCE_STALE_OR_MISSING` or `UNRESOLVED` rather than omitting the
+entry. Never invent gene symbols for `source_label` — omit it when unsure.
+
 **Do not second-guess what the deterministic pipeline provides.** The GOA tsv, the
 ontology caches, and the validators are produced by deterministic tooling; facts they
 assert or would have flagged are not yours to overrule from memory. In particular:
