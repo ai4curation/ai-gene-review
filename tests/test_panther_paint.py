@@ -183,6 +183,7 @@ def test_write_family_paint_writes_tsv_only(tmp_path: Path):
     assert len(tsv_lines) == 3
     assert all(line.startswith("PTHR000\tPTN000019791") for line in tsv_lines[1:])
     assert "PTN002681965" not in tsv_path.read_text()
+    assert b"\r\n" not in tsv_path.read_bytes()
 
 
 def test_write_family_paint_empty_nodes(tmp_path: Path):
@@ -309,6 +310,12 @@ def test_fetch_all_family_paint_bulk(tmp_path: Path):
     (panther / "PTHR1" / "PTHR1-entries.csv").write_text("id,name\nP14635,a\n")
     # A family whose member never appears in the leaf GAF -> no nodes -> skipped.
     (panther / "EMPTY" / "EMPTY-entries.csv").write_text("id,name\nP00000,x\n")
+    # A prior refresh may have left a slice that is no longer backed upstream.
+    stale_slice = panther / "EMPTY" / "EMPTY-paint.tsv"
+    stale_slice.write_text(
+        "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate\n"
+        "EMPTY\tPTN_OLD\tGO:0000001\tP\tIBD\tfalse\tUniProtKB:P00000\t\t20200101\n"
+    )
 
     cache_dir = tmp_path / ".cache"
     _seed_cache(cache_dir)
@@ -316,5 +323,5 @@ def test_fetch_all_family_paint_bulk(tmp_path: Path):
     counts = fetch_all_family_paint(panther, cache_dir=cache_dir)
     assert counts == {"PTHR1": 2}
     assert (panther / "PTHR1" / "PTHR1-paint.tsv").exists()
-    # Empty family is skipped by default.
-    assert not (panther / "EMPTY" / "EMPTY-paint.tsv").exists()
+    # Empty families are skipped and any obsolete prior slice is removed.
+    assert not stale_slice.exists()

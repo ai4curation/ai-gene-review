@@ -289,7 +289,7 @@ def write_family_paint(
     selected.sort(key=lambda r: (r.node, r.aspect, r.go_id))
 
     with tsv_path.open("w", newline="") as fh:
-        writer = csv.writer(fh, delimiter="\t")
+        writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(_TSV_HEADER)
         for rec in selected:
             writer.writerow(
@@ -449,6 +449,9 @@ def fetch_all_family_paint(
         nodes = family_nodes.get(family, set())
         n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
         if skip_empty and n_annotations == 0:
+            stale_slice = fdir / f"{family}-paint.tsv"
+            if stale_slice.exists():
+                stale_slice.unlink()
             continue
         write_family_paint(family, nodes, ibd_index, fdir)
         counts[family] = n_annotations
