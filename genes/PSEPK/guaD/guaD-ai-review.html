@@ -1,0 +1,2612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>guaD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>guaD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F18" target="_blank" class="term-link">
+                        Q88F18
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "guaD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F18" data-a="DESCRIPTION: GuaD is the predicted zinc-dependent guanine deami..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GuaD is the predicted zinc-dependent guanine deaminase that hydrolytically converts guanine to xanthine and ammonium, supplying xanthine to downstream purine-base oxidation. The exact KT2440 protein has not been characterized biochemically; its assignment is supported by the diagnostic guanine-deaminase family classification, conserved reaction annotation, and PANTHER phylogenetic propagation from characterized orthologs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter predicts a soluble cytosolic location for GuaD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A cytosolic location is compatible with purine-base metabolism, but it is an inferred family-level localization and does not define the enzyme&#39;s core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                    GO:0006147
+                                </a>
+                            </span>
+                            <span class="term-label">guanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0006147" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GuaD consumes guanine in the single deamination step that produces xanthine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the immediate biological process of the predicted guanine deaminase reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/guaD/guaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Purine metabolism; guanine degradation; xanthine from guanine:</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR11271	PTN000138455	GO:0006147</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0008270" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The guanine-deaminase family is predicted to use one catalytic zinc ion per subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Zinc binding is a credible catalytic cofactor property but is ancillary to the exact guanine deaminase activity. GOA names PTN002259155 in WITH/FROM; the cached family PAINT slice independently records the same term at the experimentally seeded IBD node PTN000138455.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/guaD/guaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 zinc ion per subunit.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR11271	PTN000138455	GO:0008270</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                                    GO:0008892
+                                </a>
+                            </span>
+                            <span class="term-label">guanine deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0008892" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GuaD is predicted to catalyze guanine hydrolysis to xanthine and ammonium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact reaction, diagnostic InterPro family, and PANTHER node propagated from experimentally annotated orthologs converge on guanine deaminase activity. GOA names PTN002259155 in WITH/FROM, while the cached family PAINT slice independently records the term at IBD node PTN000138455. No direct enzymology has been reported for Q88F18 itself.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/guaD/guaD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=guanine + H2O + H(+) = xanthine + NH4(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+
+                                </span>
+
+                                <div class="support-text">PTHR11271	PTN000138455	GO:0008892</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/guaD/guaD-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **guaD** (ordered locus **PP_4281**; UniProt **Q88F18**) of *Pseudomonas putida* strain KT2440 encodes **guanine deaminase** (guanase; EC 3.5.4.3)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0016787" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad parent is true but adds no information beyond guanine deaminase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the leaf-level GO:0008892 annotation rather than this generic catalytic class.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016810" target="_blank" class="term-link">
+                                    GO:0016810
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0016810" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent class is entailed by the exact guanine deaminase reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008892 provides the informative substrate-specific molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019239" target="_blank" class="term-link">
+                                    GO:0019239
+                                </a>
+                            </span>
+                            <span class="term-label">deaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0019239" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad deaminase term is redundant with guanine deaminase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008892 captures the same chemistry with the relevant substrate specificity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046098" target="_blank" class="term-link">
+                                    GO:0046098
+                                </a>
+                            </span>
+                            <span class="term-label">guanine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F18" data-a="GO:0046098" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GuaD participates specifically in guanine catabolism rather than an unspecified guanine process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006147 is the more informative process term for the direction of this reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent guanine deaminase predicted to hydrolyze guanine to xanthine and ammonium, providing xanthine for downstream purine-base oxidation.</h3>
+                <span class="vote-buttons" data-g="Q88F18" data-a="FUNCTION: Zinc-dependent guanine deaminase predicted to hydr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008892" target="_blank" class="term-link">
+                            guanine deaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006147" target="_blank" class="term-link">
+                                guanine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/guaD/guaD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=guanine + H2O + H(+) = xanthine + NH4(+);</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+
+                        </span>
+
+                        <div class="finding-text">PTHR11271	PTN000138455	GO:0008892</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/guaD/guaD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No direct enzymology on the KT2440 protein.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro mappings supplied broad hydrolase-class annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter supplied cytosol, broad deaminase, and guanine-metabolism annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated methods supplied the exact guanine-deaminase activity and catabolic-process annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/guaD/guaD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 GuaD (Q88F18)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns guanine deamination to xanthine and a zinc cofactor by automated rules.</div>
+
+                        <div class="finding-text">"Reaction=guanine + H2O + H(+) = xanthine + NH4(+);"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PTHR11271 PAINT annotations</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PTN000138455 carries guanine deaminase activity propagated from characterized ortholog seeds.</div>
+
+                        <div class="finding-text">"PTHR11271	PTN000138455	GO:0008892"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26355499" target="_blank" class="term-link">
+                            PMID:26355499
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a chemoreceptor that specifically mediates chemotaxis toward metabolizable purine derivatives.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 can use guanine and other purine derivatives as sole nitrogen sources.</div>
+
+                        <div class="finding-text">"permitting their use as sole nitrogen sources"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/guaD/guaD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for Pseudomonas putida KT2440 guaD</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the target as guanine deaminase while explicitly acknowledging the absence of target-specific enzymology.</div>
+
+                        <div class="finding-text">"No direct enzymology on the KT2440 protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified Q88F18 preferentially deaminate guanine under physiologically relevant conditions in KT2440?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: bacterial purine-catabolism experts</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F18" data-a="Q: Does purified Q88F18 preferentially deaminate guan..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88F18 and measure zinc-dependent steady-state kinetics for guanine, including a limited alternative-substrate panel to distinguish its primary reaction from possible promiscuous activities.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme activity assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F18" data-a="EXPERIMENT: Purify Q88F18 and measure zinc-dependent steady-st..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(guaD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F18" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *guaD* (PP_4281 / UniProt Q88F18): Guanine Deaminase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-19T09:00:24.263919</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="guaD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="guaD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-guad-pp_4281-uniprot-q88f18-guanine-deaminase-of-pseudomonas-putida-kt2440">Functional Annotation of <em>guaD</em> (PP_4281 / UniProt Q88F18): Guanine Deaminase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> guaD (ordered locus PP_4281) · <strong>UniProt:</strong> Q88F18 · <strong>EC:</strong> 3.5.4.3<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440)<br />
+<strong>Protein length:</strong> 434 aa · <strong>Cofactor:</strong> Zn²⁺ · <strong>Family:</strong> metallo-dependent hydrolases superfamily, ATZ/TRZ (amidohydrolase) family; Pfam PF01979</p>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>guaD</strong> (ordered locus <strong>PP_4281</strong>; UniProt <strong>Q88F18</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>guanine deaminase</strong> (guanase; EC 3.5.4.3), a <strong>Zn²⁺-dependent metallo-hydrolase</strong> that catalyzes the hydrolytic deamination of the free purine base <strong>guanine to xanthine plus ammonia</strong> (guanine + H₂O + H⁺ → xanthine + NH₄⁺; Rhea RHEA:14665). This is the enzyme's primary and committed physiological reaction, and it constitutes the single "guanine → xanthine" step (UniPathway UPA00603) that funnels guanine into the bacterial purine-catabolic pathway. The gene symbol <em>guaD</em> is <strong>unambiguous and correct</strong> for this protein: the annotated reaction, protein family, catalytic residues, organism, and genomic context all align consistently, so this report proceeds with confidence on the intended target.</p>
+<p>At the molecular level, Q88F18 is a <strong>~434-residue member of the amidohydrolase (ATZ/TRZ) superfamily</strong> (Pfam PF01979 Amidohydro_1; InterPro IPR006680, IPR014311, IPR011059, IPR032466). It adopts the (β/α)₈ TIM-barrel fold characteristic of this superfamily and coordinates a single catalytic <strong>zinc ion</strong> through a conserved <strong>His-His-His-Asp</strong> ligand set (His78, His80, His233, Asp323 in the KT2440 numbering), which sequence-motif analysis mapped one-to-one onto the experimentally defined metal sites of orthologous guanine deaminases from <em>E. coli</em> and human. This places Q88F18 firmly in the "large" amidohydrolase-type guanine deaminase class, distinct from the smaller cytidine-deaminase-superfamily guanine deaminases (e.g., that of <em>Bacillus subtilis</em>).</p>
+<p>Physiologically, guanine deaminase performs the <strong>committed entry step of purine-base catabolism</strong> in the cytoplasm. Its product, xanthine, is oxidized by an adjacent <strong>xanthine dehydrogenase</strong> and processed through urate and allantoin, allowing the cell to reclaim the purine ring's nitrogen for assimilation. Consistent with this role, <em>guaD</em> orthologs are transcriptionally controlled by <strong>nitrogen availability</strong> (via NtrC), and in KT2440 the gene sits in a dedicated chromosomal <strong>purine-degradation island</strong> immediately next to the xanthine dehydrogenase genes and downstream urate/allantoin-degrading enzymes. Notably, KT2440 guanine deaminase also exhibits a <strong>promiscuous ammeline-deaminase activity</strong>, linking this housekeeping purine enzyme to the environmentally important bacterial degradation of s-triazine compounds (melamine/atrazine metabolites).</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-primary-function-guanine-deaminase-guanine-xanthine-nh3-ec-3543">Finding 1 — Primary function: guanine deaminase, guanine → xanthine + NH₃ (EC 3.5.4.3)</h3>
+<p>The primary and defining function of Q88F18 is the <strong>hydrolytic deamination of guanine to xanthine</strong>, releasing ammonia. UniProt annotates the reaction explicitly as guanine + H₂O + H⁺ = xanthine + NH₄⁺ (Rhea RHEA:14665; EC 3.5.4.3), assigned to the pathway "Purine metabolism; guanine degradation; xanthine from guanine, step 1/1" (UniPathway UPA00603). The protein is 434 amino acids, encoded by <em>guaD</em> / ordered locus PP_4281 (KEGG ppu:PP_4281, KO K01487).</p>
+<p>This assignment is strongly supported by the biochemical literature, which uniformly defines guanine deaminase by exactly this reaction. As stated by Liaw and colleagues, <em>"Guanine deaminase, a key enzyme in the nucleotide metabolism, catalyzes the hydrolytic deamination of guanine into xanthine"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/15180998/">PMID: 15180998</a>. The reaction's role in feeding downstream purine oxidation is likewise well documented: <em>"Guanine deaminase (GD) catalyzes the conversion of guanine to xanthine, providing substrate for downstream oxidation by XO"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/42203193/">PMID: 42203193</a>. Because the deamination of guanine to xanthine is the universally conserved, class-defining activity of this enzyme, the functional annotation of Q88F18 as guanine deaminase can be made with very high confidence.</p>
+<h3 id="finding-2-q88f18-is-a-zn2-dependent-amidohydrolase-superfamily-enzyme-atztrz-family">Finding 2 — Q88F18 is a Zn²⁺-dependent amidohydrolase-superfamily enzyme (ATZ/TRZ family)</h3>
+<p>Q88F18 belongs to the <strong>metallo-dependent hydrolases superfamily, ATZ/TRZ (amidohydrolase) family</strong>. UniProt lists a <strong>Zn(2+) cofactor</strong>, and the domain architecture — Pfam PF01979 (Amidohydro_1); InterPro IPR006680 (Amidohydro-rel), IPR014311 (Guanine deaminase, TIGR02967), and IPR011059/IPR032466 (metal-dependent hydrolase) — is diagnostic of the (β/α)₈ TIM-barrel amidohydrolase fold. At 434 residues, Q88F18 is the <strong>large, amidohydrolase-type guanine deaminase</strong>, which is mechanistically and evolutionarily distinct from the small (~156-aa) cytidine-deaminase-superfamily guanine deaminases.</p>
+<p>The closest biochemically characterized relative of this type is <strong>NE0047 from <em>Nitrosomonas europaea</em></strong>, a zinc-dependent guanine deaminase with a catalytic efficiency of kcat/KM = 1.2 × 10⁵ M⁻¹ s⁻¹. Bitra and colleagues confirmed that <em>"NE0047 from Nitrosomonas europaea has been annotated as a zinc-dependent deaminase"</em> and demonstrated that <em>"the extreme nine-amino acid C-terminal loop forms an active site flap"</em> that gates the active site during catalysis <a href="https://pubmed.ncbi.nlm.nih.gov/23557066/">PMID: 23557066</a>. These features — a mononuclear catalytic zinc and a C-terminal active-site flap — are hallmarks of the amidohydrolase-type guanine deaminase family to which Q88F18 belongs, supporting both its cofactor requirement and its catalytic architecture.</p>
+<h3 id="finding-3-q88f18-conserves-the-canonical-mononuclear-zn-active-site-his78his80his233asp323">Finding 3 — Q88F18 conserves the canonical mononuclear-Zn active site (His78/His80/His233/Asp323)</h3>
+<p>Direct sequence-motif analysis of the 434-residue Q88F18 sequence identified the <strong>complete, canonical amidohydrolase metal-binding set</strong>. The diagnostic β1 metal-binding motif <strong>D-T-H-I-H</strong> (residues 76–80) supplies the His-x-His zinc-ligand pair <strong>His78/His80</strong>; a second conserved <strong>M-H-T-H</strong> element (residues ~229–233) supplies the third histidine ligand (<strong>His233</strong>); and the β6 <strong>G-T-D-V-G</strong> motif (residues 321–325) supplies the zinc-ligating aspartate <strong>Asp323</strong>.</p>
+<p>Critically, these four positions align one-to-one with the experimentally annotated Zn²⁺ ligands of characterized orthologs: <em>E. coli</em> GuaD (P76641) His82/His84/His237/Asp327, and human GDA/cypin (Q9Y2T3) His82/His84/His240/Asp330. Substrate-binding residues conserved in the orthologs (e.g., <em>E. coli</em> His209; human His213) are likewise present in the equivalent region of Q88F18. The perfect correspondence of the entire His/His/His/Asp catalytic constellation — not merely overall sequence similarity — provides strong structural-bioinformatic evidence that Q88F18 is a <strong>catalytically competent guanine deaminase</strong>, not a degenerate or misannotated family member. This finding is consistent with the demonstration that this enzyme family coordinates a catalytic zinc <a href="https://pubmed.ncbi.nlm.nih.gov/23557066/">PMID: 23557066</a>.</p>
+<h3 id="finding-4-pathway-role-committed-entry-step-of-purine-ring-catabolism-for-nitrogen-assimilation">Finding 4 — Pathway role: committed entry step of purine-ring catabolism for nitrogen assimilation</h3>
+<p>Guanine deaminase initiates the <strong>catabolic degradation of the guanine purine ring</strong>, enabling purines to serve as a nitrogen (and, in some organisms, carbon) source. In <em>Pseudomonas aeruginosa</em>, the purine-degradation pathway was genetically defined to comprise adenine deaminase (puuA), <strong>guanine deaminase (puuB)</strong>, xanthine dehydrogenase (puuC), uricase (puuD), allantoinase (puuE), and allantoicase (puuF). The classic mutant study established this ordered set: <em>"Mutants that are deficient in adenine deaminase (puuA), guanine deaminase (puuB), xanthine dehydrogenase (puuC), uricase (puuD), allantoinase (puuE), and/or allantoicase (puuF) were isolated"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/104142/">PMID: 104142</a>. This places guanine deaminase as the <strong>guanine-entry step</strong> in <em>Pseudomonas</em> purine catabolism, and the <em>P. putida</em> KT2440 <em>guaD</em> is the direct ortholog occupying that position.</p>
+<p>The pathway's physiological purpose — nitrogen assimilation — is reflected in its regulation. In <em>Klebsiella pneumoniae</em>, guanine deaminase activity is embedded in an allantoin/purine assimilation gene cluster, and its expression is controlled by the global nitrogen regulator NtrC: <em>"Expression of guaD is mainly regulated by nitrogen availability through the action of NtrC"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/21357483/">PMID: 21357483</a>. This nitrogen-responsive control demonstrates that guaD functions physiologically in purine-nitrogen scavenging, consistent with KT2440 encoding the full downstream machinery (xanthine dehydrogenase, urate oxidation, allantoin degradation) needed to route xanthine onward toward assimilable nitrogen.</p>
+<h3 id="finding-5-genomic-context-in-kt2440-guad-lies-within-a-purine-catabolism-gene-island-next-to-xanthine-dehydrogenase">Finding 5 — Genomic context in KT2440: guaD lies within a purine-catabolism gene island next to xanthine dehydrogenase</h3>
+<p>KEGG genomic-context analysis of ppu:PP_4281 (chromosomal position 4,871,626–4,872,930; KO K01487; EC 3.5.4.3; module M00959 "Guanine ribonucleotide degradation, GMP ⇒ Urate"; pathway ppu00230 Purine metabolism) shows that <em>guaD</em> sits within a <strong>contiguous purine-degradation island</strong>. Its immediate neighbors form a functionally coherent cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Product</th>
+<th>Role relative to guaD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_4277</td>
+<td>GntR-family regulator</td>
+<td>Candidate transcriptional regulator</td>
+</tr>
+<tr>
+<td>PP_4278</td>
+<td>Xanthine dehydrogenase subunit XdhA</td>
+<td>Consumes guaD product (xanthine)</td>
+</tr>
+<tr>
+<td>PP_4279</td>
+<td>Xanthine dehydrogenase subunit XdhB</td>
+<td>Consumes guaD product</td>
+</tr>
+<tr>
+<td>PP_4280</td>
+<td>Xanthine dehydrogenase accessory factor</td>
+<td>Adjacent, directly upstream</td>
+</tr>
+<tr>
+<td><strong>PP_4281</strong></td>
+<td><strong>Guanine deaminase (guaD)</strong></td>
+<td><strong>Guanine → xanthine (this study)</strong></td>
+</tr>
+<tr>
+<td>PP_4283</td>
+<td>GntR-family regulator</td>
+<td>Candidate transcriptional regulator</td>
+</tr>
+<tr>
+<td>PP_4284</td>
+<td>Putative purine transporter</td>
+<td>Substrate uptake</td>
+</tr>
+<tr>
+<td>PP_4285</td>
+<td>5-hydroxyisourate hydrolase</td>
+<td>Downstream (urate branch)</td>
+</tr>
+<tr>
+<td>PP_4286</td>
+<td>Allantoinase</td>
+<td>Downstream (allantoin branch)</td>
+</tr>
+</tbody>
+</table>
+<p>The physical co-localization of guaD with the very enzyme (xanthine dehydrogenase) that consumes its product, together with downstream urate- and allantoin-degrading enzymes, a candidate purine transporter, and GntR-family regulators, strongly corroborates guaD's assigned pathway position. This mirrors the ordered <em>Pseudomonas</em> purine pathway (guanine deaminase → xanthine dehydrogenase → … → allantoinase) defined genetically in <em>P. aeruginosa</em> <a href="https://pubmed.ncbi.nlm.nih.gov/104142/">PMID: 104142</a>. Analogous multi-gene purine-utilization clusters, including guanine deaminase and homologs noted in <em>Pseudomonas</em>, have also been described in <em>Klebsiella oxytoca</em> <a href="https://pubmed.ncbi.nlm.nih.gov/19060149/">PMID: 19060149</a>.</p>
+<h3 id="finding-6-promiscuous-ammeline-deaminase-activity-links-kt2440-guanine-deaminase-to-s-triazine-metabolism">Finding 6 — Promiscuous ammeline-deaminase activity links KT2440 guanine deaminase to s-triazine metabolism</h3>
+<p>Beyond its canonical purine role, KT2440 guanine deaminase exhibits a documented <strong>secondary (promiscuous) ammeline-deaminase activity</strong>. Seffernick and colleagues demonstrated the ammeline-deamination phenotype directly in wild-type <em>P. putida</em> KT2440 (and <em>E. coli</em> K12) and identified guanine deaminase as the responsible enzyme — an <em>E. coli</em> guaD deletion abolished the activity. The authors report: <em>"The ammeline degradation phenotype was demonstrated in wild-type Escherichia coli and Pseudomonas strains, including E. coli K12 and Pseudomonas putida KT2440"</em> and that <em>"Bioinformatics analysis of these and other genomes led to the hypothesis that the ammeline deaminating enzyme was guanine deaminase"</em> <a href="https://pubmed.ncbi.nlm.nih.gov/20023034/">PMID: 20023034</a>.</p>
+<p>This promiscuity is mechanistically sensible: ammeline (a hydroxy-s-triazine) docks in the guanine-deaminase active site much like guanine, and the amidohydrolase superfamily is evolutionarily related to the s-triazine (atrazine/melamine) hydrolases. Indeed, recent work traces the atrazine-degradation enzyme AtzB to an amidohydrolase progenitor with guanine deaminase (GuaD) activity, underscoring the deep functional overlap between guanine deaminases and s-triazine hydrolases <a href="https://pubmed.ncbi.nlm.nih.gov/41953217/">PMID: 41953217</a>. This link is biologically relevant because it connects a conserved housekeeping purine enzyme to the biodegradation of environmental s-triazine pollutants — a role of particular interest in the environmentally versatile <em>P. putida</em>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the six findings yields a coherent mechanistic picture of Q88F18 as the <strong>cytoplasmic, zinc-dependent gatekeeper of guanine catabolism</strong> in <em>P. putida</em> KT2440.</p>
+<p><strong>Catalytic mechanism.</strong> Q88F18 adopts the (β/α)₈ TIM-barrel amidohydrolase fold and coordinates a single catalytic Zn²⁺ ion via His78, His80, His233, and Asp323. In the canonical amidohydrolase mechanism, the active-site zinc polarizes and deprotonates a water molecule to generate a zinc-bound hydroxide nucleophile; this hydroxide attacks C2 of the guanine ring, and the conserved aspartate acts as a general acid/base to shuttle protons, culminating in loss of ammonia and formation of xanthine. A mobile C-terminal loop (the "active-site flap," as characterized in the NE0047 ortholog) is expected to close over the bound substrate to sequester it from bulk solvent during catalysis.</p>
+<p><strong>Pathway flux.</strong> The reaction sits at a committed branch point of purine-base catabolism:</p>
+<div class="codehilite"><pre><span></span><code> guanine
+    │  guaD / PP_4281 (Q88F18)   [Zn²⁺; His78/His80/His233/Asp323]
+    │  guanine + H2O + H+ → xanthine + NH4+
+    ▼
+ xanthine ──── (also produced from hypoxanthine / adenine branch)
+    │  xanthine dehydrogenase (PP_4278/4279/4280, XdhAB + accessory)
+    ▼
+  urate
+    │  urate oxidation (PP_4285 5-hydroxyisourate hydrolase, etc.)
+    ▼
+allantoin
+    │  allantoinase (PP_4286) → allantoate → …
+    ▼
+released NH3 / carbon skeletons → nitrogen (and carbon) assimilation
+</code></pre></div>
+
+<p>The genomic clustering (Finding 5) is the physical embodiment of this metabolic logic: guaD is transcribed within an island containing its immediate downstream consumer (xanthine dehydrogenase), further ring-opening enzymes, a putative purine importer, and local GntR regulators. The ammonia released by guaD, together with the nitrogen liberated during downstream ring cleavage, is the ultimate physiological payoff — which is why guaD expression is coupled to global nitrogen status through NtrC in related bacteria (Finding 4).</p>
+<p><strong>Two faces of one active site.</strong> The same active-site geometry that recognizes guanine also accommodates the structurally similar hydroxy-s-triazine ammeline (Finding 6). This is not a separate enzyme but a promiscuous side-activity of guanine deaminase, and it exemplifies how the amidohydrolase superfamily serves as an evolutionary reservoir from which novel xenobiotic-degrading activities (e.g., atrazine/melamine hydrolysis) can emerge.</p>
+<p><strong>Localization.</strong> All available evidence indicates guaD operates as a <strong>soluble, cytoplasmic</strong> enzyme. It has no signal peptide or transmembrane annotation, its substrate (free guanine) and partners (xanthine dehydrogenase, purine transporter) are cytoplasmic, and its family members are characterized as soluble proteins. This localization is inferred from family/domain architecture and genomic context rather than from direct KT2440 experimental data.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Assignment</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction</td>
+<td>guanine + H₂O + H⁺ → xanthine + NH₄⁺</td>
+<td>UniProt/Rhea; EC 3.5.4.3</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Guanine (primary); ammeline (promiscuous)</td>
+<td>Family conservation; KT2440 phenotype</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Mononuclear Zn²⁺</td>
+<td>His78/His80/His233/Asp323 conserved</td>
+</tr>
+<tr>
+<td>Fold/family</td>
+<td>(β/α)₈ TIM-barrel amidohydrolase (ATZ/TRZ)</td>
+<td>Pfam PF01979; InterPro</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Purine catabolism, guanine-entry step</td>
+<td>UniPathway UPA00603; KEGG M00959</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm (inferred)</td>
+<td>No signal/TM; soluble family</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>Nitrogen availability (NtrC in orthologs)</td>
+<td>K. pneumoniae guaD</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15180998/">15180998</a></td>
+<td><em>Crystal structure of B. subtilis guanine deaminase</em></td>
+<td>Defines the class reaction: hydrolytic deamination of guanine to xanthine (EC 3.5.4.3). Note: the B. subtilis enzyme is the small cytidine-deaminase-superfamily type, contrasting with Q88F18's amidohydrolase type.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42203193/">42203193</a></td>
+<td><em>Purine analog antivirals and serum uric acid</em></td>
+<td>Confirms guanine deaminase converts guanine to xanthine, feeding downstream oxidation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23557066/">23557066</a></td>
+<td><em>Guanine deaminase from N. europaea (NE0047)</em></td>
+<td>Characterizes the amidohydrolase-type, zinc-dependent guanine deaminase most similar to Q88F18; defines the C-terminal active-site flap and catalytic zinc.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21357483/">21357483</a></td>
+<td><em>Regulation of allantoinase/guanine deaminase cluster in K. pneumoniae</em></td>
+<td>Shows guaD expression is nitrogen-regulated via NtrC, establishing the physiological purine-nitrogen-assimilation role.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/104142/">104142</a></td>
+<td><em>Chromosomal location of genes for purine degradation in P. aeruginosa</em></td>
+<td>Genetically defines the ordered Pseudomonas purine pathway placing guanine deaminase (puuB) as the guanine-entry step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20023034/">20023034</a></td>
+<td><em>Bacterial ammeline metabolism via guanine deaminase</em></td>
+<td>Directly demonstrates ammeline-deaminase activity in P. putida KT2440 and attributes it to guanine deaminase.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41953217/">41953217</a></td>
+<td><em>Discovery of AtzB evolving from a GuaD-like progenitor</em></td>
+<td>Documents the evolutionary link between guanine deaminase and s-triazine hydrolases, contextualizing the ammeline promiscuity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19060149/">19060149</a></td>
+<td><em>Purine utilization by K. oxytoca</em></td>
+<td>Independent purine-catabolism gene cluster (including guanine deaminase) with homologs noted in Pseudomonas, supporting pathway conservation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the annotation.</strong> Every independent line of evidence — the annotated reaction and pathway (UniProt/Rhea/KEGG), the domain architecture (Pfam/InterPro), the conserved His/His/His/Asp zinc site mapped onto experimentally validated orthologs, the genomic co-localization with xanthine dehydrogenase, the nitrogen-responsive regulation of guaD orthologs, and the experimentally observed ammeline activity in KT2440 itself — converges on the same conclusion. The gene symbol <em>guaD</em> is therefore <strong>correct and unambiguous</strong> for Q88F18; there is no evidence of a same-symbol conflict in a different organism, and all cited literature pertains to genuine guanine deaminases.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on the KT2440 protein.</strong> There are, to our knowledge, no purified-enzyme kinetic parameters (kcat, KM, kcat/KM for guanine, metal-dependence assays) for Q88F18 specifically. The functional assignment rests on strong homology, conserved catalytic residues, and pathway/genomic context rather than direct biochemical characterization of this exact protein.</p>
+</li>
+<li>
+<p><strong>Localization is inferred, not measured.</strong> Cytoplasmic localization is deduced from the absence of signal/transmembrane features and from the soluble nature of characterized family members, not from experimental fractionation or imaging in KT2440.</p>
+</li>
+<li>
+<p><strong>Catalytic residues assigned by sequence-motif alignment.</strong> The His78/His80/His233/Asp323 zinc ligands were identified by motif analysis and cross-referenced to orthologs; no experimental crystal structure or site-directed mutagenesis of Q88F18 confirms these positions directly. An AlphaFold model or crystal structure would strengthen this.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity breadth untested for Q88F18.</strong> While the ammeline promiscuity is documented for KT2440 as an organism, the quantitative substrate profile of the specific PP_4281 gene product (e.g., activity on 8-azaguanine, other purine analogs, or s-triazines) has not been directly measured.</p>
+</li>
+<li>
+<p><strong>Regulatory model borrowed from orthologs.</strong> NtrC/nitrogen control of guaD is established in <em>K. pneumoniae</em>; the specific regulators for PP_4281 (the neighboring GntR-family proteins PP_4277/PP_4283) and the actual transcriptional response in KT2440 remain to be experimentally verified.</p>
+</li>
+<li>
+<p><strong>Downstream xanthine dehydrogenase is not the sole guanine sink.</strong> Xanthine can also arise from hypoxanthine/adenine branches, so the quantitative contribution of guaD to purine-nitrogen assimilation under different conditions is not resolved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Clone, express, and purify Q88F18 (His-tagged) and determine steady-state kinetics for guanine (kcat, KM, kcat/KM), confirm Zn²⁺ dependence (metal-chelation and reconstitution), and test a substrate panel — 8-azaguanine, ammeline, ammelide, melamine, and other purine analogs — to quantify the primary vs. promiscuous activities.</p>
+</li>
+<li>
+<p><strong>Structure determination / modeling.</strong> Solve a crystal structure (ideally with bound substrate/product or a transition-state analog such as iso-azepinomycin, <a href="https://pubmed.ncbi.nlm.nih.gov/23891230/">PMID: 23891230</a>) or, at minimum, build and analyze an AlphaFold model to validate the His78/His80/His233/Asp323 zinc site and the C-terminal active-site flap geometry.</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis.</strong> Individually mutate His78, His80, His233, and Asp323 to confirm their roles as zinc ligands and their essentiality for catalysis.</p>
+</li>
+<li>
+<p><strong>Genetic phenotyping in KT2440.</strong> Construct a clean PP_4281 deletion and test growth on guanine as sole nitrogen source; complement to confirm; and assess loss of ammeline-deaminase activity to link PP_4281 directly to the KT2440 ammeline phenotype.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Perform cell fractionation and/or fluorescent-fusion imaging to confirm cytoplasmic localization.</p>
+</li>
+<li>
+<p><strong>Regulatory dissection.</strong> Use transcriptional reporters and knockouts of the neighboring GntR-family regulators (PP_4277, PP_4283) and nitrogen-regulatory genes to define how PP_4281 expression responds to nitrogen source and purine availability in KT2440.</p>
+</li>
+<li>
+<p><strong>Pathway flux analysis.</strong> Employ ¹⁵N-labeled guanine tracing to quantify guaD's contribution to nitrogen assimilation and confirm channeling of xanthine to the adjacent xanthine dehydrogenase.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from 3 completed investigation iterations, 6 confirmed findings, and 26 reviewed papers. All functional claims are grounded in cited primary literature or database annotations as indicated.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="guaD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="guaD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15180998</li>
+<li>PMID:42203193</li>
+<li>PMID:23557066</li>
+<li>PMID:21357483</li>
+<li>PMID:19060149</li>
+<li>PMID:20023034</li>
+<li>PMID:41953217</li>
+<li>PMID:23891230</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(guaD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F18" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="guad-pp_4281-q88f18-curation-notes">guaD (PP_4281; Q88F18) curation notes</h1>
+<h2 id="evidence-retained">Evidence retained</h2>
+<ul>
+<li>UniProt assigns the exact reaction guanine + H2O + H+ -&gt; xanthine + NH4+ (RHEA:14665) and a zinc cofactor by automated rules [file:PSEPK/guaD/guaD-uniprot.txt, "Reaction=guanine + H2O + H(+) = xanthine + NH4(+);"]</li>
+<li>InterPro IPR014311 identifies the guanine-deaminase family, and PANTHER node PTN000138455 propagates GO:0008892 from experimentally annotated ortholog seeds [file:interpro/panther/PTHR11271/PTHR11271-paint.tsv, "PTHR11271 PTN000138455 GO:0008892"].</li>
+<li>The OpenScientist report independently retrieved the same identity and reaction but states that there is no direct enzymology for Q88F18 [file:PSEPK/guaD/guaD-deep-research-openscientist.md, "No direct enzymology on the KT2440 protein."].</li>
+<li>KT2440 can use guanine and other purine derivatives as sole nitrogen sources, confirming organism-level pathway flux but not assigning that phenotype specifically to GuaD [PMID:26355499, "permitting their use as sole nitrogen sources"].</li>
+</ul>
+<h2 id="curation-decisions">Curation decisions</h2>
+<ul>
+<li>Accept GO:0008892 and GO:0006147 as the informative core function and process.</li>
+<li>Keep zinc binding and predicted cytosol only as non-core properties.</li>
+<li>Mark generic hydrolase/deaminase parents and broad guanine metabolism as over-annotations because exact child terms are present.</li>
+<li>Do not promote the report's inferred catalytic-residue numbering, regulation, cytosolic localization, or ammeline promiscuity to established KT2440 facts.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F18
+gene_symbol: guaD
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  GuaD is the predicted zinc-dependent guanine deaminase that hydrolytically
+  converts guanine to xanthine and ammonium, supplying xanthine to downstream
+  purine-base oxidation. The exact KT2440 protein has not been characterized
+  biochemically; its assignment is supported by the diagnostic guanine-deaminase
+  family classification, conserved reaction annotation, and PANTHER phylogenetic
+  propagation from characterized orthologs.
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: TreeGrafter predicts a soluble cytosolic location for GuaD.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A cytosolic location is compatible with purine-base metabolism, but it is
+      an inferred family-level localization and does not define the enzyme&#39;s
+      core function.
+- term:
+    id: GO:0006147
+    label: guanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: GuaD consumes guanine in the single deamination step that produces xanthine.
+    action: ACCEPT
+    reason: This is the immediate biological process of the predicted guanine deaminase reaction.
+    supported_by:
+    - reference_id: file:PSEPK/guaD/guaD-uniprot.txt
+      supporting_text: &#39;PATHWAY: Purine metabolism; guanine degradation; xanthine from guanine:&#39;
+    - reference_id: file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+      supporting_text: &#34;PTHR11271\tPTN000138455\tGO:0006147&#34;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The guanine-deaminase family is predicted to use one catalytic zinc ion per subunit.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Zinc binding is a credible catalytic cofactor property but is ancillary to
+      the exact guanine deaminase activity. GOA names PTN002259155 in WITH/FROM;
+      the cached family PAINT slice independently records the same term at the
+      experimentally seeded IBD node PTN000138455.
+    supported_by:
+    - reference_id: file:PSEPK/guaD/guaD-uniprot.txt
+      supporting_text: &#39;Note=Binds 1 zinc ion per subunit.&#39;
+    - reference_id: file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+      supporting_text: &#34;PTHR11271\tPTN000138455\tGO:0008270&#34;
+- term:
+    id: GO:0008892
+    label: guanine deaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: GuaD is predicted to catalyze guanine hydrolysis to xanthine and ammonium.
+    action: ACCEPT
+    reason: &gt;-
+      The exact reaction, diagnostic InterPro family, and PANTHER node propagated
+      from experimentally annotated orthologs converge on guanine deaminase activity.
+      GOA names PTN002259155 in WITH/FROM, while the cached family PAINT slice
+      independently records the term at IBD node PTN000138455. No direct
+      enzymology has been reported for Q88F18 itself.
+    supported_by:
+    - reference_id: file:PSEPK/guaD/guaD-uniprot.txt
+      supporting_text: &#39;Reaction=guanine + H2O + H(+) = xanthine + NH4(+);&#39;
+    - reference_id: file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+      supporting_text: &#34;PTHR11271\tPTN000138455\tGO:0008892&#34;
+    - reference_id: file:PSEPK/guaD/guaD-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **guaD** (ordered locus **PP_4281**; UniProt **Q88F18**) of *Pseudomonas putida* strain KT2440 encodes **guanine deaminase** (guanase; EC 3.5.4.3)
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This broad parent is true but adds no information beyond guanine deaminase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Retain the leaf-level GO:0008892 annotation rather than this generic catalytic class.
+- term:
+    id: GO:0016810
+    label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This parent class is entailed by the exact guanine deaminase reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008892 provides the informative substrate-specific molecular function.
+- term:
+    id: GO:0019239
+    label: deaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: The broad deaminase term is redundant with guanine deaminase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0008892 captures the same chemistry with the relevant substrate specificity.
+- term:
+    id: GO:0046098
+    label: guanine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: GuaD participates specifically in guanine catabolism rather than an unspecified guanine process.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0006147 is the more informative process term for the direction of this reaction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro mappings supplied broad hydrolase-class annotations.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter supplied cytosol, broad deaminase, and guanine-metabolism annotations.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined automated methods supplied the exact guanine-deaminase activity and catabolic-process annotations.
+- id: file:PSEPK/guaD/guaD-uniprot.txt
+  title: UniProtKB entry for Pseudomonas putida KT2440 GuaD (Q88F18)
+  findings:
+  - statement: UniProt assigns guanine deamination to xanthine and a zinc cofactor by automated rules.
+    supporting_text: &#39;Reaction=guanine + H2O + H(+) = xanthine + NH4(+);&#39;
+- id: file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+  title: PANTHER PTHR11271 PAINT annotations
+  findings:
+  - statement: PTN000138455 carries guanine deaminase activity propagated from characterized ortholog seeds.
+    supporting_text: &#34;PTHR11271\tPTN000138455\tGO:0008892&#34;
+- id: PMID:26355499
+  title: Identification of a chemoreceptor that specifically mediates chemotaxis toward metabolizable purine derivatives.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The abstract directly supports guanine utilization by KT2440 at the
+      organism level but does not identify GuaD as the responsible enzyme.
+  findings:
+  - statement: KT2440 can use guanine and other purine derivatives as sole nitrogen sources.
+    supporting_text: permitting their use as sole nitrogen sources
+- id: file:PSEPK/guaD/guaD-deep-research-openscientist.md
+  title: OpenScientist deep-research report for Pseudomonas putida KT2440 guaD
+  reference_review:
+    relevance: MEDIUM
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      Useful retrieval synthesis for target identity and the family-level reaction,
+      but it promotes inferred residues, localization, regulation, and promiscuity
+      to target-specific claims without direct Q88F18 experiments.
+  findings:
+  - statement: The report identifies the target as guanine deaminase while explicitly acknowledging the absence of target-specific enzymology.
+    supporting_text: No direct enzymology on the KT2440 protein.
+core_functions:
+- description: &gt;-
+    Zinc-dependent guanine deaminase predicted to hydrolyze guanine to xanthine
+    and ammonium, providing xanthine for downstream purine-base oxidation.
+  molecular_function:
+    id: GO:0008892
+    label: guanine deaminase activity
+  directly_involved_in:
+  - id: GO:0006147
+    label: guanine catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/guaD/guaD-uniprot.txt
+    supporting_text: &#39;Reaction=guanine + H2O + H(+) = xanthine + NH4(+);&#39;
+  - reference_id: file:interpro/panther/PTHR11271/PTHR11271-paint.tsv
+    supporting_text: &#34;PTHR11271\tPTN000138455\tGO:0008892&#34;
+  - reference_id: file:PSEPK/guaD/guaD-deep-research-openscientist.md
+    supporting_text: No direct enzymology on the KT2440 protein.
+proposed_new_terms: []
+suggested_questions:
+- question: Does purified Q88F18 preferentially deaminate guanine under physiologically relevant conditions in KT2440?
+  experts:
+  - bacterial purine-catabolism experts
+suggested_experiments:
+- description: &gt;-
+    Purify Q88F18 and measure zinc-dependent steady-state kinetics for guanine,
+    including a limited alternative-substrate panel to distinguish its primary
+    reaction from possible promiscuous activities.
+  experiment_type: enzyme activity assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
