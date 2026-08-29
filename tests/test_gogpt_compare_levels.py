@@ -118,15 +118,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # post_review moved 859/2767 -> 858/2766 when bc38824fc9 ("Run the four
-        # SL subprojects; refute the redundancy hypothesis", in PR #2467)
-        # flipped GO:0016020 on genes/ANOGA/TOLL9 from ACCEPT to
-        # MARK_AS_OVER_ANNOTATED, which is not in DIRECT_POST_REVIEW_ACTIONS.
-        # The term left the reference set and the overlap together, so both
-        # figures drop by one; goa and core are unaffected, which is what
-        # distinguishes an upstream review edit from a regression here.
-        "post_review": {"overlap": 858, "total": 2766, "pred": 8871},
-        "core": {"overlap": 349, "total": 1224, "pred": 8871},
+        # The HdeB re-review retained GO:0051082 as an interim post-review/core
+        # term, increasing both levels by one. The current SlyD review also
+        # retains GO:0005515 post-review, adding the second post-review term.
+        "post_review": {"overlap": 860, "total": 2768, "pred": 8871},
+        "core": {"overlap": 350, "total": 1225, "pred": 8871},
     }
 
 
