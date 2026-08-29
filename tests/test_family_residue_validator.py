@@ -658,34 +658,102 @@ def test_absent_unchecked_and_unindexed_members_get_different_advice(tmp_path):
     assert "UniProt was not consulted" in unchecked.message
 
 
+def _review_with_subfamily(slot: str, curie: str, label: str = "ELSEWHERE") -> dict:
+    """Build a review placing `curie` in one of the three subfamily-constrained slots."""
+    base: dict = {"family_id": "PANTHER:PTHR00001", "family_name": "SOME FAMILY"}
+    entry = {"id": curie, "label": label}
+    if slot == "subfamilies[].subfamily_id":
+        base["subfamilies"] = [{"subfamily_id": curie, "label": label}]
+    elif slot == "node_assessments[].affected_subfamilies[]":
+        base["node_assessments"] = [{
+            "node_id": "PANTHER:PTN000001",
+            "asserted_term": {"id": "GO:1", "label": "x"},
+            "assessment": "NEEDS_PRUNING",
+            "assessment_reason": "t",
+            "affected_subfamilies": [entry],
+        }]
+    else:
+        base["term_assessments"] = [{
+            "assessed_term": {"id": "GO:1", "label": "x"},
+            "scope": "SUBFAMILY_ONLY",
+            "applicable_subfamilies": [entry],
+        }]
+    return base
+
+
+#: Every slot whose value must be a subfamily of the review's own family. Parametrized
+#: over all three because their failure modes differ in visibility:
+#: applicable_subfamilies produces loud false CONFLICTs, while affected_subfamilies
+#: silently stops check_pruning_conflicts examining the node -- absent conflicts read
+#: as no conflicts, so an untested slot there would hide rather than misfire.
+SUBFAMILY_CONSTRAINED_SLOTS = [
+    "subfamilies[].subfamily_id",
+    "node_assessments[].affected_subfamilies[]",
+    "term_assessments[].applicable_subfamilies[]",
+]
+
+
+@pytest.mark.parametrize("slot", SUBFAMILY_CONSTRAINED_SLOTS)
 @pytest.mark.parametrize(
     "curie,fragment",
     [
-        # a bare family: worse than a foreign subfamily, because no gene's SF can
-        # match it and every member retaining the term becomes a false CONFLICT
+        # a bare family: no gene's SF can match it downstream
         ("PANTHER:PTHR00001", "is a family, not a subfamily"),
         ("PANTHER:PTHR99999:SF1", "belongs to a different family"),
     ],
 )
-def test_subfamily_slots_reject_non_subfamilies_and_foreign_families(curie, fragment):
+def test_subfamily_slots_reject_non_subfamilies_and_foreign_families(
+    slot, curie, fragment
+):
     from ai_gene_review.validation.family_residue_validator import check_panther_ids
 
-    review = {
-        "family_id": "PANTHER:PTHR00001",
-        "family_name": "SOME FAMILY",
-        "term_assessments": [{
-            "assessed_term": {"id": "GO:1", "label": "x"},
-            "scope": "SUBFAMILY_ONLY",
-            "applicable_subfamilies": [{"id": curie, "label": "ELSEWHERE"}],
-        }],
-    }
     labels = dict(PANTHER_LABELS, **{curie: "ELSEWHERE"})
+    review = _review_with_subfamily(slot, curie)
     (result,) = [
         r for r in check_panther_ids(review, labels, PANTHER_MEMBERS)
         if r.kind == "PANTHER_FAMILY_SCOPE"
     ]
     assert result.outcome is Outcome.FAIL
     assert fragment in result.message
+    assert result.site_id == slot, "the failure must name the slot it came from"
+
+
+@pytest.mark.parametrize("slot", SUBFAMILY_CONSTRAINED_SLOTS)
+def test_every_constrained_slot_is_reached_by_the_iterator(slot):
+    """The constraint travels with the term, so no slot can be dropped by a rename."""
+    from ai_gene_review.validation.family_residue_validator import _iter_panther_terms
+
+    review = _review_with_subfamily(slot, "PANTHER:PTHR00001:SF1", "A SUBFAMILY")
+    constrained = {
+        term.path for term in _iter_panther_terms(review) if term.must_be_own_subfamily
+    }
+    assert slot in constrained
+
+
+def test_unresolvable_curie_is_reported_as_unresolvable_not_as_a_family():
+    """Resolution is checked first; a non-PANTHER CURIE gets the clearer message."""
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    review = _review_with_subfamily(
+        "term_assessments[].applicable_subfamilies[]", "GO:0008745"
+    )
+    (result,) = [
+        r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
+        if r.outcome is Outcome.FAIL
+    ]
+    assert result.kind == "PANTHER_ID"
+    assert "does not resolve" in result.message
+
+
+def test_unusable_family_id_is_unresolved_not_silently_skipped():
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    review = {"family_id": "NOT-A-CURIE", "family_name": "x"}
+    (result,) = [
+        r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
+        if r.kind == "PANTHER_FAMILY_SCOPE"
+    ]
+    assert result.outcome is Outcome.UNRESOLVED
 
 
 def test_own_family_subfamily_in_a_subfamily_slot_is_accepted():

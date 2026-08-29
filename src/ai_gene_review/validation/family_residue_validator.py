@@ -42,14 +42,14 @@ import json
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 from enum import Enum
 from pathlib import Path
 from typing import Iterable
 
 import yaml
 
-if TYPE_CHECKING:  # pragma: no cover - import cycle at runtime
+if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
@@ -318,20 +318,49 @@ def _panther_index(
     )
 
 
+class PantherTerm(NamedTuple):
+    """One PANTHER identifier found in a review, with the rule that governs it.
+
+    ``must_be_own_subfamily`` travels with the term rather than being matched against a
+    set of path strings elsewhere. A path-string set is a rename away from silently
+    dropping a slot: SUBFAMILY_SLOTS previously had to spell
+    ``"affected_subfamilies[]"`` exactly, and that slot's failure mode is invisible --
+    ``check_pruning_conflicts`` skips genes not in the affected set, so a bad id there
+    does not misfire, it quietly stops the pruning check from examining the node, and
+    absent conflicts read as no conflicts.
+    """
+
+    path: str
+    curie: str | None
+    label: str | None
+    must_be_own_subfamily: bool = False
+
+
 def _iter_panther_terms(review: dict):
-    """Yield (path, id, label_or_None) for every PANTHER identifier in the review."""
-    yield "family_id", review.get("family_id"), review.get("family_name")
+    """Yield a :class:`PantherTerm` for every PANTHER identifier in the review."""
+    yield PantherTerm("family_id", review.get("family_id"), review.get("family_name"))
     for sub in review.get("subfamilies") or []:
-        yield "subfamilies[].subfamily_id", sub.get("subfamily_id"), sub.get("label")
+        yield PantherTerm(
+            "subfamilies[].subfamily_id", sub.get("subfamily_id"), sub.get("label"),
+            must_be_own_subfamily=True,
+        )
         if sub.get("clade_node_id"):
-            yield "subfamilies[].clade_node_id", sub["clade_node_id"], None
+            yield PantherTerm(
+                "subfamilies[].clade_node_id", sub["clade_node_id"], None
+            )
     for node in review.get("node_assessments") or []:
-        yield "node_assessments[].node_id", node.get("node_id"), None
+        yield PantherTerm("node_assessments[].node_id", node.get("node_id"), None)
         for sf in node.get("affected_subfamilies") or []:
-            yield "affected_subfamilies[]", sf.get("id"), sf.get("label")
+            yield PantherTerm(
+                "node_assessments[].affected_subfamilies[]", sf.get("id"),
+                sf.get("label"), must_be_own_subfamily=True,
+            )
     for ta in review.get("term_assessments") or []:
         for sf in ta.get("applicable_subfamilies") or []:
-            yield "applicable_subfamilies[]", sf.get("id"), sf.get("label")
+            yield PantherTerm(
+                "term_assessments[].applicable_subfamilies[]", sf.get("id"),
+                sf.get("label"), must_be_own_subfamily=True,
+            )
 
 
 def check_panther_ids(
@@ -361,22 +390,33 @@ def check_panther_ids(
         _panther_family_base,
     )
 
-    #: Slots whose value must be a subfamily *of this review's own family*. Stated on
-    #: the path rather than sniffed from the string: a bare family id here is worse
-    #: than a foreign subfamily, because check_scope_violations builds `allowed` as a
-    #: raw id set, no gene's PTHRnnnnn:SFn can match it, and every member retaining
-    #: the term is then emitted as a CONFLICT against curation that is fine.
-    SUBFAMILY_SLOTS = {
-        "subfamilies[].subfamily_id",
-        "affected_subfamilies[]",
-        "applicable_subfamilies[]",
-    }
     own_family = _panther_family_base(family)
+    if family and own_family is None:
+        results.append(
+            ResidueCheck(
+                family, "family_id", family, 0, [], None, Outcome.UNRESOLVED,
+                "family_id is not a usable PANTHER family CURIE, so subfamilies "
+                "cannot be checked against it",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        )
 
-    for path, curie, label in _iter_panther_terms(review):
+    for term in _iter_panther_terms(review):
+        path, curie, label = term.path, term.curie, term.label
         if not curie or curie.startswith("PANTHER:PTN"):
             continue
-        if path in SUBFAMILY_SLOTS:
+        # Resolution first: a non-PANTHER CURIE is not "a family, not a subfamily",
+        # it is simply unresolvable, and that is the clearer message.
+        if curie not in labels:
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.FAIL,
+                    f"{curie} does not resolve in panther.obo",
+                    kind="PANTHER_ID",
+                )
+            )
+            continue
+        if term.must_be_own_subfamily:
             if not _is_panther_subfamily(curie):
                 results.append(
                     ResidueCheck(
@@ -398,15 +438,6 @@ def check_panther_ids(
                     )
                 )
                 continue
-        if curie not in labels:
-            results.append(
-                ResidueCheck(
-                    family, path, curie, 0, [], None, Outcome.FAIL,
-                    f"{curie} does not resolve in panther.obo",
-                    kind="PANTHER_ID",
-                )
-            )
-            continue
         official = labels[curie]
         if label is not None and label != official:
             results.append(
