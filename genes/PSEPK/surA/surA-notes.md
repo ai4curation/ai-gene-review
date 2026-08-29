@@ -93,3 +93,20 @@ one KEEP_AS_NON_CORE. The extra author-supplied current-term proposal is one NEW
 Direct biochemical confirmation of Q88QT4 carrier-holdase and PPIase activities remains
 desirable because its UniProt evidence level is PE=3 and no P. putida-specific
 experimental publication was identified in the cache.
+
+## PR #2731 dependency resolution
+
+The two external dependencies that originally blocked the ISS proposal are now
+resolved. Merged project policy explicitly classifies SurA as a carrier-holdase:
+GO:0140309 requires escort "to an acceptor molecule or to a specific location," and
+delivery within one compartment is sufficient when a defined acceptor such as
+YaeT/BAM is demonstrated [`projects/UNFOLDED_PROTEIN_BINDING.md`]. The aligned
+E. coli donor review now independently asserts NEW GO:0140309 for P0ABZ6
+[`genes/ECOLI/surA/surA-ai-review.yaml`].
+
+The P. putida annotation remains ISS rather than direct experimental evidence.
+PMID:26344570 supplies the donor's IDA basis for stabilizing an unfolded FhuA state
+during stepwise membrane insertion, while PMID:17908933 independently supplies the
+YaeT/BAM acceptor endpoint. P0ABZ6 is recorded machine-readably in
+`supporting_entities`; Q88QT4 itself has no direct organism-specific assay in the
+cached literature. The seven physical GOA decisions are unchanged.
