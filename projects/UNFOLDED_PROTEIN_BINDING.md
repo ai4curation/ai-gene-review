@@ -366,7 +366,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 8 | **ER quality control** | UGGT1, ERLEC1, SYVN1 (human); Uggt1 (rat); CNE1, EPS1, PDI1, EUG1, ROT1, IRE1 (yeast); IRE1 (T. reesei); CSH3 (C. albicans); Edem2 (fly) | OVER_ANNOTATED or REMOVE (sensors, not chaperones) |
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
-| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/Spy/SlyD await the general holdase NTR; CpxP is over-annotated. HdeB's current GO:0140309 proposal needs acceptor/destination re-review |
+| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy/SlyD await the general holdase NTR; CpxP is over-annotated. HdeB re-review found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
 | 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX, RidA (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
@@ -493,7 +493,7 @@ established:
 | DnaK | *E. coli* | P0A6Y8 | 61 | MODIFY → GO:0044183 | HSP70 foldase/holdase |
 | GroEL | *E. coli* | P0A6F5 | 64 | MODIFY → GO:0044183 | Chaperonin |
 | HdeA | *E. coli* | P0AES9 | 14 | MODIFY → holdase NTR; retain GO:0051082 interim | Acid-activated in-situ holdase; GO:0042026 for refolding process |
-| HdeB | *E. coli* | P0AET2 | 8 | Current review: MODIFY → GO:0140309; re-review needed | Acid-activated holdase; defined acceptor/destination not yet established |
+| HdeB | *E. coli* | P0AET2 | 8 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Acid-activated in-situ holdase; no defined acceptor or delivery destination |
 | RidA | *E. coli* | P0AF93 | 22 | OVER_ANNOTATED | Reactive intermediate deaminase |
 | SecB | *E. coli* | P0AG86 | 27 | MODIFY → GO:0140309 | Secretion carrier-holdase |
 | Skp | *E. coli* | P0AEU7 | 34 | MODIFY → GO:0140309 | Periplasmic OMP carrier-holdase |
