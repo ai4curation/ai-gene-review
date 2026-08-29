@@ -48,3 +48,23 @@ not proposed for this gene and carrier-specific GO:0140309 is inapplicable.
 The review is COMPLETE. The remaining experimental gap is direct biochemical
 reconstitution of Q88DU2 with its KT2440 DnaJ and GrpE partners, which would
 permit an IDA annotation to GO:0140662.
+
+## 2026-08-29 — PR #2730 follow-up
+
+The ISS source for the GO:0140662 NEW annotation is now explicit as
+`UniProtKB:P0A6Y8` in annotation-level `supporting_entities`. This accession was
+independently verified from the repository: `genes/ECOLI/DnaK/DnaK-ai-review.yaml`
+identifies P0A6Y8 as E. coli DnaK, the reviewed UniProt cache records
+`DNAK_ECOLI` with gene name `dnaK`, and the UPB cross-species table uses the same
+accession.
+
+ATP hydrolysis remains ACCEPTed as a physical GOA annotation but is no longer
+duplicated as a separate top-level core function. It is the mechanistic engine
+of the single GO:0140662 chaperone-cycle core. The unused UniProt reference entry
+was removed because its generic "Acts as a chaperone" statement added no
+material support beyond the two literature sources.
+
+Project follow-up: the UPB decision-rule table routes ATP-dependent Hsp70s to
+GO:0140662, while its historical cross-species E. coli DnaK row still says
+GO:0044183. This one-gene PR follows the more specific current rule and leaves
+the project-table cleanup to a separate scoped change.
