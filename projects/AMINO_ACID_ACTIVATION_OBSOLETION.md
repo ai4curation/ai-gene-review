@@ -74,7 +74,7 @@ the *indirect* transamidation route (misacylated Glu-tRNA(Gln) formed by a
 non-discriminating GluRS, then amidated by GatCAB), and its MF counterpart is
 `GO:0050567 glutaminyl-tRNA synthase (glutamine-hydrolyzing) activity`, not a
 glutamine-tRNA ligase. Whether it is genuinely in the same obsoletion batch
-should be confirmed before any in-repo edits, because **six of this repo's
+should be confirmed before any in-repo edits, because **five of this repo's
 fifteen affected reviews hang on `GO:0070681` alone**, and it is also the source
 term for a `concepts` node in `modules/bacterial_aminoacyl_trna_charging.yaml`.
 
@@ -141,8 +141,9 @@ All 20 mitochondrial terms map to the **same** MF as their cytosolic twin.
 | mitochondrial tyrosyl-tRNA aminoacylation | GO:0070184 | 4 | 296 |
 | mitochondrial valyl-tRNA aminoacylation | GO:0070185 | 0 | **0** |
 
-**Seven of the twenty mitochondrial terms have zero annotations of any kind**, as
-does `GO:1990762`. The mitochondrial block carries 24 experimental annotations
+**Six of the twenty mitochondrial terms have zero annotations of any kind**
+(`GO:0070147`, `GO:0070148`, `GO:0070151`, `GO:0070152`, `GO:0070157`,
+`GO:0070185`), as does `GO:1990762`. The mitochondrial block carries 24 experimental annotations
 across all 20 terms — fewer than `GO:0006432` alone. This is strong independent
 support for the upstream position: the compartment-qualified terms were created
 to mirror the cytosolic set, not because curators needed them.
@@ -287,7 +288,7 @@ go-annotation#6525 for the full list. Two observations:
 
 ## Scope
 
-- **Organisms**: broad. In-repo: human (4), PSEPK (5), POPTR (2), DANRE (1),
+- **Organisms**: broad. In-repo: human (5), PSEPK (6), POPTR (2), DANRE (1),
   METTP (1). Upstream: SGD/FlyBase/EcoCyc-dominant, i.e. yeast, fly and *E. coli*.
 - **GO branch**: BP only. **No MF term is obsoleted** — the 20 `<aa>-tRNA ligase
   activity` terms and `GO:0050567` all remain, and are where specificity now lives.
@@ -309,8 +310,8 @@ Priority order.
 3. **DANRE/gtpbp3** (Q501Z5) — the six-annotation over-annotation cluster; the
    sole basis for two of the obsoleted terms. Should drive an upstream comment
    before the batch is finalised.
-4. **The four GatCAB reviews** (POPTR/GATC, PSEPK/gatA, PSEPK/gatB, PSEPK/gatC,
-   METTP/gatC — five reviews) — all hinge on `GO:0070681`, whose inclusion in the
+4. **The five GatCAB reviews** (POPTR/GATC, PSEPK/gatA, PSEPK/gatB, PSEPK/gatC,
+   METTP/gatC) — all hinge on `GO:0070681`, whose inclusion in the
    batch is the open question above. Hold until that is settled.
 5. **POPTR/ALARS** (B9HQZ6) — clean mechanical case; IBA + IEA, both ACCEPT, one
    `core_functions` entry.
@@ -356,7 +357,7 @@ the window for contributing the gtpbp3 finding is now.
   2026-08-28) and go-ontology#15375 (open since 2018; PRs #32537 and #32541
   merged 2026-08-26/27). Obsoletion not yet applied. All 43 terms plus
   `GO:0006418`, `GO:0070127`, `GO:0004813` and `GO:0050567` confirmed live in
-  QuickGO; per-term annotation counts, the seven zero-annotation mitochondrial
+  QuickGO; per-term annotation counts, the six zero-annotation mitochondrial
   terms, and the single-annotation attributions for `GO:0061475`, `GO:0070144`,
   `GO:0070149`, `GO:0070153` and `GO:0070155` all verified via the QuickGO
   annotation API. In-repo impact enumerated by parsing all 15 affected review
