@@ -3478,7 +3478,7 @@ def fetch_panther_paint(
             "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
             "this downloads/caches PAINT GAFs)..."
         )
-        counts = fetch_all_family_paint(
+        counts, removed = fetch_all_family_paint(
             panther_root, cache_dir=cache, force_download=force_download
         )
         total = sum(counts.values())
@@ -3486,6 +3486,10 @@ def fetch_panther_paint(
             f"✓ Wrote PAINT slices for {len(counts)} family/families "
             f"({total} node-level annotations total)."
         )
+        if removed:
+            typer.echo(
+                f"  Removed {len(removed)} stale slice(s): {', '.join(removed)}"
+            )
         return
 
     if not family:
@@ -3510,6 +3514,10 @@ def fetch_panther_paint(
         extra_uniprot=extra_uniprot,
         force_download=force_download,
     )
+    if tsv_path is None:
+        typer.echo(f"✓ {family}: {len(nodes)} node(s), no node-level annotations")
+        typer.echo("  No PAINT slice retained; any stale slice was removed.")
+        return
     n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
     typer.echo(
         f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
