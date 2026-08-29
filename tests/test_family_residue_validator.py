@@ -559,9 +559,9 @@ def test_sf0_really_contains_both_seld_and_sps1():
     Drosophila Sps1 is why that term cannot be scoped by subfamily. Asserted here so
     the justification is not prose-only.
     """
-    from ai_gene_review.validation.family_residue_validator import load_panther_members
+    from ai_gene_review.etl.panther_families import load_member_index
 
-    members = load_panther_members(Path("interpro/panther/panther-members.tsv"))
+    members = load_member_index(Path("interpro/panther/panther-members.tsv"))
     assert members["P16456"] == "PTHR10256:SF0"   # SelD, catalytic
     assert members["O18373"] == "PTHR10256:SF0"   # Sps1, arginine-substituted
     assert members["Q99611"] == "PTHR10256:SF1"   # SEPHS2, the catalytic branch
@@ -613,3 +613,50 @@ def test_motif_site_control_with_a_wrong_residue_still_fails():
     residue = [r for r in results if r.kind == "CONTROL_RESIDUE"]
     assert [r.outcome for r in residue] == [Outcome.FAIL]
     assert "but the sequence has C" in residue[0].message
+
+
+def test_subfamily_of_a_different_family_is_caught():
+    """A stray family in applicable_subfamilies would contradict gene reviews.
+
+    It resolves in panther.obo and its label is verbatim correct, so neither the id nor
+    the label check notices -- and applicable_subfamilies is what the cross-checker
+    turns into CONFLICT verdicts.
+    """
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    review = {
+        "family_id": "PANTHER:PTHR00001",
+        "family_name": "SOME FAMILY",
+        "term_assessments": [{
+            "assessed_term": {"id": "GO:1", "label": "x"},
+            "scope": "SUBFAMILY_ONLY",
+            "applicable_subfamilies": [
+                {"id": "PANTHER:PTHR99999:SF1", "label": "ELSEWHERE"}
+            ],
+        }],
+    }
+    labels = dict(PANTHER_LABELS, **{"PANTHER:PTHR99999:SF1": "ELSEWHERE"})
+    (result,) = [
+        r for r in check_panther_ids(review, labels, PANTHER_MEMBERS)
+        if r.kind == "PANTHER_FAMILY_SCOPE"
+    ]
+    assert result.outcome is Outcome.FAIL
+    assert "different family" in result.message
+
+
+def test_absent_and_unindexed_members_get_different_advice():
+    """"No family exists" must not be reported as "run the indexer"."""
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    class Gaps:
+        absent = {"P00003"}
+        unchecked: set[str] = set()
+
+    review = _panther_review(members=("P00003", "P99999"))
+    results = [
+        r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS, Gaps())
+        if r.kind == "PANTHER_MEMBERSHIP"
+    ]
+    messages = {r.accession: r.message for r in results}
+    assert "re-indexing will not help" in messages["P00003"]
+    assert "not indexed yet" in messages["P99999"]

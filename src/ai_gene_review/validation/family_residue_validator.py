@@ -41,6 +41,7 @@ from __future__ import annotations
 import json
 import urllib.request
 from dataclasses import dataclass, field
+from functools import lru_cache
 from enum import Enum
 from pathlib import Path
 from typing import Iterable
@@ -89,11 +90,10 @@ class ResidueCheck:
 class SequenceCache:
     """Fetches and caches UniProt sequences.
 
-    Sequences are cached on disk so repeated local runs do not refetch. The cache is
-    NOT restored in CI -- ``.cache`` is gitignored and no workflow step restores it --
-    so a CI run resolves every sequence over the network. That is why the
-    validate-families step is scoped to family-review and infra changes rather than
-    firing on every gene PR.
+    Sequences are cached on disk so repeated runs do not refetch. ``.cache`` is
+    gitignored, so in CI the cache is restored by an ``actions/cache`` step rather than
+    coming from the checkout -- on a cold key the first run still resolves every
+    sequence over the network.
 
     No try/except around the fetch: a network failure should surface, not be silently
     converted into an UNRESOLVED result that looks like curation uncertainty.
@@ -285,32 +285,31 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
     return results
 
 
-def load_panther_labels(obo_path: Path) -> dict[str, str]:
-    """Parse ``panther.obo`` into a CURIE -> official name map.
+@lru_cache(maxsize=None)
+def _panther_index(panther_dir: Path) -> tuple[dict[str, str], dict[str, str], object]:
+    """Load the PANTHER artifacts once per directory.
 
-    A deliberate line parser rather than an OBO library: this file is a flat stanza list
-    and the project has been bitten before by a parser that silently returns None for
-    PANTHER terms, which would turn every label check into a false pass.
+    Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
+    tested, they skip the artifact's comment block deliberately rather than by luck,
+    and ``load_member_index`` degrades to an empty mapping on a fresh checkout instead
+    of raising. Cached because ``panther.obo`` is 13.8 MB and this runs once per family
+    review file.
+
+    The third element distinguishes an accession PANTHER genuinely has no family for
+    from one whose lookup was never done -- reporting both as "run
+    refresh-panther-members" would give advice that cannot work for the former.
     """
-    labels: dict[str, str] = {}
-    current: str | None = None
-    for line in obo_path.read_text().split("\n"):
-        if line.startswith("id: "):
-            current = line[4:].strip()
-        elif line.startswith("name: ") and current:
-            labels[current] = line[6:].strip()
-            current = None
-    return labels
+    from ai_gene_review.etl.panther_families import (
+        load_member_index,
+        load_member_index_gaps,
+        load_obo_names,
+    )
 
-
-def load_panther_members(members_path: Path) -> dict[str, str]:
-    """Parse ``panther-members.tsv`` into a UniProt accession -> family:SF map."""
-    members: dict[str, str] = {}
-    for line in members_path.read_text().split("\n")[1:]:
-        parts = line.split("\t")
-        if len(parts) >= 2 and parts[0]:
-            members[parts[0]] = parts[1]
-    return members
+    return (
+        load_obo_names(panther_dir / "panther.obo"),
+        load_member_index(panther_dir / "panther-members.tsv"),
+        load_member_index_gaps(panther_dir / "panther-members.tsv"),
+    )
 
 
 def _iter_panther_terms(review: dict):
@@ -330,7 +329,10 @@ def _iter_panther_terms(review: dict):
 
 
 def check_panther_ids(
-    review: dict, labels: dict[str, str], members: dict[str, str]
+    review: dict,
+    labels: dict[str, str],
+    members: dict[str, str],
+    gaps: object = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -348,8 +350,24 @@ def check_panther_ids(
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
+    bare_family = family.split(":", 1)[-1] if family else ""
+
     for path, curie, label in _iter_panther_terms(review):
         if not curie or curie.startswith("PANTHER:PTN"):
+            continue
+        # A subfamily of a DIFFERENT family resolves and carries a verbatim-correct
+        # label, so neither check below would notice it. applicable_subfamilies drives
+        # CONFLICT verdicts against gene reviews, so a stray family there would
+        # contradict curation on the strength of an unrelated classification.
+        if ":SF" in curie and bare_family and not curie.startswith(f"{family}:SF"):
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.FAIL,
+                    f"{curie} is a subfamily of a different family; this review is "
+                    f"about {family}",
+                    kind="PANTHER_FAMILY_SCOPE",
+                )
+            )
             continue
         if curie not in labels:
             results.append(
@@ -388,11 +406,17 @@ def check_panther_ids(
         for member in sub.get("representative_members") or []:
             acc = (member.get("id") or "").split(":")[-1]
             if acc not in members:
+                absent = bool(gaps and acc in getattr(gaps, "absent", set()))
+                detail = (
+                    "PANTHER and UniProt hold no family for it, so membership cannot "
+                    "be checked and re-indexing will not help"
+                    if absent
+                    else "not indexed yet; run `just refresh-panther-members`"
+                )
                 results.append(
                     ResidueCheck(
                         family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
-                        "not in panther-members.tsv, so subfamily membership was not "
-                        "checked; run `just refresh-panther-members` to index it",
+                        f"membership not checked: {detail}",
                         kind="PANTHER_MEMBERSHIP",
                     )
                 )
@@ -678,7 +702,9 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
     )
 
 
-def validate_family_review(path: Path, cache_dir: Path) -> list[ResidueCheck]:
+def validate_family_review(
+    path: Path, cache_dir: Path, panther_dir: Path = Path("interpro/panther")
+) -> list[ResidueCheck]:
     """Run all residue checks for one family review file.
 
     >>> from pathlib import Path
@@ -693,16 +719,14 @@ def validate_family_review(path: Path, cache_dir: Path) -> list[ResidueCheck]:
 
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
-    paint_index = load_paint_index(Path("interpro/panther"))
-    panther_dir = Path("interpro/panther")
-    labels = load_panther_labels(panther_dir / "panther.obo")
-    members = load_panther_members(panther_dir / "panther-members.tsv")
+    paint_index = load_paint_index(panther_dir)
+    labels, members, gaps = _panther_index(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
         + check_term_assessment_site_refs(review)
-        + check_panther_ids(review, labels, members)
+        + check_panther_ids(review, labels, members, gaps)
     )
 
 

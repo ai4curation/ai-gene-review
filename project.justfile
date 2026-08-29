@@ -2719,11 +2719,14 @@ panther-report-stats *args="":
 
 # ============== PANTHER Family Reviews ==============
 
-# Validate curated PANTHER family reviews: (1) structural schema validation
-# against FamilyReview, and (2) deterministic residue-site validation -- every
-# curated position is resolved against the anchor protein's actual UniProt
-# sequence, so a claim like "the catalytic Cys is at position N" is contradicted
-# when it is wrong. Sequences are cached under .cache/uniprot_seq.
+# Validate curated PANTHER family reviews, in four stages:
+#   1. structural schema validation against FamilyReview;
+#   2. GO term id/label validation via linkml-term-validator;
+#   3. residue-site validation -- every curated position resolved against the
+#      anchor's actual UniProt sequence, plus controls, PAINT node assertions and
+#      PANTHER id/label/membership;
+#   4. cross-checks against the gene corpus, and gene-level residue claims.
+# Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
 validate-families:
     #!/usr/bin/env bash
     set -uo pipefail

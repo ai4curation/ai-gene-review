@@ -122,6 +122,18 @@ jobs:
           restore-keys: |
             oaklib-${{ runner.os }}-
 
+      # Residue validation resolves UniProt sequences. Caching them keeps
+      # validate-families from depending on UniProt being reachable on every run,
+      # which is what lets it stay scoped to gene changes as well as family ones.
+      # Same weekly rotation as above; sequences change far less often than that.
+      - name: Cache UniProt sequences
+        uses: actions/cache@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            uniprot-seq-${{ runner.os }}-
+
       # Scope validation to what changed: a change to schema/validators/config could
       # affect every gene (-> full validate-all); otherwise validate only changed genes.
       - name: Validate gene reviews (scoped)
@@ -155,19 +167,18 @@ jobs:
       # Family reviews carry residue sites and node assessments that gene reviews
       # cite, so a change to either side can break the join.
       #
-      # Scoped to family-review changes and to infra, NOT to every gene-review PR.
-      # Residue validation resolves sequences from UniProt, so running it on all gene
-      # PRs would make routine curation depend on a third-party service being
-      # reachable -- an outage would then block work that cannot possibly have broken
-      # these checks. Sequences are cached, but a PR touching a gene that has never
-      # been fetched would still reach the network. A gene claim citing a family site
-      # is caught by the scheduled full run and by any PR that touches the site.
+      # Also fires on gene changes, because a gene residue_claim can cite a family
+      # site and the join breaks from either side. The UniProt cache restored above is
+      # what makes that affordable: without it every run would resolve each sequence
+      # over the network, and an upstream outage would block curation that cannot have
+      # broken these checks.
       - name: Validate family reviews (scoped)
         if: >-
           github.event_name == 'schedule' ||
           github.event_name == 'workflow_dispatch' ||
           steps.changes.outputs.infra == 'true' ||
-          steps.changes.outputs.families == 'true'
+          steps.changes.outputs.families == 'true' ||
+          steps.changes.outputs.genes == 'true'
         run: just validate-families
 
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
