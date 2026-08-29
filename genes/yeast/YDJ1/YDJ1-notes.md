@@ -17,22 +17,30 @@
   binding signatures remain marked over-annotated; specific Hsp70/heat-shock
   protein binding terms capture the informative partner biology.
 
-- All six IBA annotations were reviewed from their GOA WITH/FROM provenance.
-  Cytosol, cellular response to heat, protein refolding, and obsolete unfolded
-  protein binding use PTN001531327; ATPase activator activity uses PTN002376157;
-  nucleus uses PTN001180221. YDJ1 is an experimental descendant source at the
-  first two nodes, which is valid PAINT grounding rather than circular evidence.
-  The SGD:S000005021 source at PTN001531327 and PTN001180221 is APJ1, a
-  class-A/type-I Ydj1 paralog, not SIS1.
-  The current local PTHR44298 PAINT table retains PTN002376157, while the other
-  node identifiers remain recoverable from current GOA WITH/FROM rows.
+- All six IBA annotations were reviewed from their exact GOA WITH/FROM
+  provenance. Cytosol, cellular response to heat, protein refolding, and
+  obsolete unfolded protein binding use PTN001531327; ATPase activator activity
+  uses PTN002376157; nucleus uses PTN001180221. YDJ1 is an experimental
+  descendant source at PTN001531327 and PTN002376157, which is valid PAINT
+  grounding rather than circular evidence. The SGD:S000005021 source on the
+  unfolded-protein-binding and nucleus rows is APJ1, a class-A/type-I Ydj1
+  paralog, not SIS1. YDJ1 belongs to PTHR43888, not PTHR44298. After fetching
+  the correct family through the repository wrappers, the current PAINT table
+  retains PTN001531327, PTN001180221, and PTN002376157. Their current node-level
+  terms and seeds support five IBA transfers; PTN001531327 no longer carries
+  obsolete GO:0051082. Direct YDJ1 evidence independently supports the core
+  biological decisions.
 
-- GO:0051082 is obsolete in live GO. For Ydj1, replacement by GO:0044183 protein
-  folding chaperone is evidence-matched: the direct study found both suppression
-  of thermally induced luciferase aggregation and productive Ssa1-dependent
-  refolding [PMID:9774392, “Ydj1:Ssa1 could promote up to four times more
-  luciferase folding than Sis1:Ssa1.”]. All three GO:0051082 assertions are
-  therefore consistently modified to GO:0044183.
+- GO:0051082 is obsolete in live GO, whose official obsoletion comment gives
+  GO:0044183 protein folding chaperone and GO:0140309 unfolded protein holdase
+  activity as evidence-dependent consider terms
+  [AmiGO GO:0051082, accessed 2026-08-28](https://amigo.geneontology.org/amigo/term/GO%3A0051082).
+  Ydj1 directly supports both:
+  it suppressed thermally induced luciferase aggregation and, paired with Ssa1,
+  promoted productive refolding [PMID:9774392, “Ydj1:Ssa1 could promote up to
+  four times more luciferase folding than Sis1:Ssa1.”]. All three GO:0051082
+  assertions are therefore modified to both evidence-matched successor
+  activities, and both activities are represented in the core-function model.
 
 - The CAFA-assigned IDA `chaperone-mediated protein complex assembly` row has
   empty WITH/FROM and cites an abstract-only human p23 paper [PMID:10811660].
@@ -55,3 +63,20 @@
   experimental annotations were not overruled when the abstract lacked assay
   detail. Full text is locally available for PMID:19536198, PMID:23217712,
   PMID:25344756, PMID:25853343, PMID:26928762, and PMID:37968396.
+
+## 2026-08-28 dedicated re-review addendum
+
+- Recounted the current export directly: 62 physical GOA rows collapse to 49
+  qualifier-aware signatures (21 IPI rows account for most of the collapse).
+  Every signature is represented exactly once and has a manual action; there
+  are no pending or undecided entries.
+- Rechecked the obsolete-term successors against the current GO ontology and
+  separated the two activities supported by PMID:9774392 instead of treating
+  all unfolded-client evidence as folding alone.
+- Rechecked all six IBA rows against current GOA and the correct PTHR43888
+  PANTHER PAINT cache. PTN001531327, PTN001180221, and PTN002376157 are all
+  present, so the biologically supported transfers retain no-failure provenance
+  classifications. The obsolete GO:0051082 row remains a term-scoping issue.
+- PMID:10811660 was manually classified as `MISCITED`/`NONE` for YDJ1: its
+  abstract reports human p23 assays and supplies no YDJ1-specific experimental
+  support for the CAFA-assigned IDA row.
