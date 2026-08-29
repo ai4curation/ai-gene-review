@@ -21,3 +21,11 @@ GO:0044183 was not substituted: the evidence shows aggregation prevention follow
 - PMID:17085547 and PMID:25391835 are abstract-only in the repository cache. Their abstracts directly support the experimental GO rows and core holdase conclusion, so no experimental annotation was overruled from incomplete evidence.
 - PMID:26593705 is cached in full text and supports a folded, dynamic-dimer mechanism at mildly acidic pH: “HdeB activation is coupled to its intrinsic dynamics instead of structural changes, and therefore its functional mechanism is apparently different from HdeA.”
 - UniProt independently records that HdeB is required for optimal acid-stress protection, prevents aggregation of multiple periplasmic proteins, contains a signal peptide, and localizes to the periplasm. [file:ECOLI/HdeB/HdeB-uniprot.txt]
+
+## PR #2736 review follow-up
+
+- Corrected both GO:0051082 `MODIFY` rows so `proposed_replacement_terms` now uses the machine-readable CRYAA/project convention `id: NTR`, `label: holdase chaperone activity (NTR needed; GO:0140309 does not fit -- carrier-specific)`. The existing physical GO:0051082 rows remain present as interim annotations; they no longer self-replace with their own obsolete ID.
+- Reordered the core-function description to lead with HdeB biology and close with the interim ontology caveat.
+- Restored the UniProt-supported regulation context to the standalone description: induction by EvgS/EvgA and negative regulation by H-NS and TorS/TorR. [file:ECOLI/HdeB/HdeB-uniprot.txt]
+- Added a literature-supported `NEW` GO:0050821 protein stabilization BP. Direct suppression of periplasmic-protein aggregation fits stabilization and does not imply that HdeB actively catalyzes client refolding. [PMID:17085547 "Thus, we can conclude that Escherichia coli possesses two acid stress chaperones that prevent periplasmic-protein aggregation at acidic pH."]
+- Clarified the BP specificity chain (GO:0009268 response to pH → GO:0010447 response to acidic pH → GO:1990451 cellular stress response to acidic pH) and recorded that the two experimental GO:0010447 rows retain GOA's broader `acts_upstream_of_or_within` qualifier while GO:1990451 uses `involved_in`.
