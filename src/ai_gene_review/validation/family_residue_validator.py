@@ -179,21 +179,30 @@ def check_anchor_residues(
             continue
 
         seq = cache.get(anchor)
+        pinned = site.get("anchor_sequence_version")
+        drift = ""
+        if pinned is not None:
+            current = cache.sequence_version(anchor)
+            if current is not None and current != pinned:
+                drift = (
+                    f" [anchor sequence version has moved {pinned} -> {current} "
+                    "since this site was curated]"
+                )
         for res in site.get("residues") or []:
             pos = res["position"]
             expected = list(res["expected"])
             observed = _residue_at(seq, pos)
             if observed is None:
                 outcome = Outcome.FAIL
-                msg = f"position beyond end of sequence (length {len(seq)})"
+                msg = f"position beyond end of sequence (length {len(seq)}){drift}"
             elif observed in expected:
                 outcome = Outcome.PASS
-                msg = f"expected {'/'.join(expected)}, found {observed}"
+                msg = f"expected {'/'.join(expected)}, found {observed}{drift}"
             else:
                 outcome = Outcome.FAIL
                 msg = (
                     f"expected {'/'.join(expected)}, found {observed} "
-                    f"-- the curated position does not carry the curated residue"
+                    f"-- the curated position does not carry the curated residue{drift}"
                 )
             results.append(
                 ResidueCheck(family, site_id, anchor, pos, expected, observed, outcome, msg)
@@ -308,6 +317,41 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
             )
             continue
 
+        # seeds, when declared, must actually appear in PAINT's with-list for this
+        # (node, term). A curated seed list is allowed to be a readable subset, but a
+        # seed PAINT never recorded is a fabrication.
+        declared = {
+            s.get("id", "").split(":")[-1]
+            for s in (assessment.get("seeds") or [])
+            if isinstance(s, dict)
+        }
+        if declared:
+            paint_seeds: set[str] = set()
+            for r in family_rows:
+                if getattr(r, "go_id", "") == term:
+                    paint_seeds |= {
+                        piece.split(":")[-1]
+                        for piece in (getattr(r, "seeds", "") or "").split("|")
+                        if piece
+                    }
+            unknown = declared - paint_seeds
+            if unknown:
+                results.append(
+                    ResidueCheck(
+                        family_id, node, term, 0, [], None, Outcome.FAIL,
+                        f"declared seed(s) {sorted(unknown)} do not appear in PAINT's "
+                        f"with-list for this node and term",
+                    )
+                )
+            else:
+                results.append(
+                    ResidueCheck(
+                        family_id, node, term, 0, [], None, Outcome.PASS,
+                        f"all {len(declared)} declared seed(s) appear in PAINT's "
+                        f"with-list of {len(paint_seeds)}",
+                    )
+                )
+
         terms_here = {getattr(r, "go_id", "") for r in family_rows}
         if term in terms_here:
             results.append(
@@ -328,36 +372,53 @@ def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck
 
 
 def check_controls(review: dict, cache: SequenceCache) -> list[ResidueCheck]:
-    """Sanity-check declared controls.
+    """Validate the declared positive and negative controls.
 
-    A positive control must not be the anchor's own accession repeated -- that proves
-    nothing -- and both control lists must be non-empty for a site whose requirement is
-    REQUIRED, since a REQUIRED site is the only kind that licenses contradicting a gene
-    review.
+    Controls are what make a residue site trustworthy, so this resolves them rather
+    than merely counting them. An earlier PGRP analysis in this repo used Drosophila
+    PGRP-LE as a "catalytic" control when it is itself non-catalytic, and every real
+    amidase then appeared to have lost the site; that is the error this catches.
+
+    Structural checks, always run:
+
+    * a ``REQUIRED`` site needs both positive and negative controls, since only
+      ``REQUIRED`` licenses contradicting a gene review;
+    * no protein may be listed as both;
+    * at least one positive control must be a protein other than the anchor. The
+      anchor defines the positions, so asserting that the anchor has them is
+      tautological and cannot corroborate anything.
+
+    Residue checks, run per control that supplies ``control_position`` and
+    ``control_residue``: the stated residue must really be there, a positive control
+    must carry one of the site's expected residues, and a negative control must not.
+    A control without a declared position is reported UNRESOLVED -- its assertion is
+    simply unchecked, which is worth surfacing rather than silently accepting.
     """
     family = review.get("family_id", "?")
+    default_anchor = (review.get("reference_protein") or {}).get("id")
     results: list[ResidueCheck] = []
 
     for site in review.get("residue_sites") or []:
         site_id = site.get("site_id", "?")
-        strengths = {
-            req.get("strength") for req in (site.get("required_for") or [])
+        anchor = (site.get("anchor") or {}).get("id") or default_anchor
+        strengths = {req.get("strength") for req in (site.get("required_for") or [])}
+        pos_ctl = site.get("positive_controls") or []
+        neg_ctl = site.get("negative_controls") or []
+        expected = {
+            r for res in (site.get("residues") or []) for r in (res.get("expected") or [])
         }
-        pos_ctl = [c["id"] for c in site.get("positive_controls") or []]
-        neg_ctl = [c["id"] for c in site.get("negative_controls") or []]
 
-        if "REQUIRED" in strengths:
-            if not pos_ctl or not neg_ctl:
-                results.append(
-                    ResidueCheck(
-                        family, site_id, "-", 0, [], None, Outcome.FAIL,
-                        "a REQUIRED site needs both positive and negative controls; "
-                        f"got {len(pos_ctl)} positive, {len(neg_ctl)} negative",
-                    )
+        if "REQUIRED" in strengths and (not pos_ctl or not neg_ctl):
+            results.append(
+                ResidueCheck(
+                    family, site_id, "-", 0, [], None, Outcome.FAIL,
+                    "a REQUIRED site needs both positive and negative controls; "
+                    f"got {len(pos_ctl)} positive, {len(neg_ctl)} negative",
                 )
-                continue
+            )
+            continue
 
-        overlap = set(pos_ctl) & set(neg_ctl)
+        overlap = {c["id"] for c in pos_ctl} & {c["id"] for c in neg_ctl}
         if overlap:
             results.append(
                 ResidueCheck(
@@ -366,14 +427,82 @@ def check_controls(review: dict, cache: SequenceCache) -> list[ResidueCheck]:
                     f"{sorted(overlap)}",
                 )
             )
-        else:
+
+        independent = [c for c in pos_ctl if c["id"] != anchor]
+        if pos_ctl and not independent:
+            results.append(
+                ResidueCheck(
+                    family, site_id, "-", 0, [], None, Outcome.FAIL,
+                    "the only positive control is the anchor itself, which is "
+                    "tautological; name a different protein that has the site",
+                )
+            )
+        elif pos_ctl:
             results.append(
                 ResidueCheck(
                     family, site_id, "-", 0, [], None, Outcome.PASS,
-                    f"{len(pos_ctl)} positive and {len(neg_ctl)} negative controls declared, disjoint",
+                    f"{len(pos_ctl)} positive ({len(independent)} independent of the "
+                    f"anchor) and {len(neg_ctl)} negative controls, disjoint",
+                )
+            )
+
+        for control, is_positive in [(c, True) for c in pos_ctl] + [
+            (c, False) for c in neg_ctl
+        ]:
+            results.append(
+                _check_control_residue(
+                    family, site_id, control, is_positive, expected, cache
                 )
             )
     return results
+
+
+def _check_control_residue(
+    family: str,
+    site_id: str,
+    control: dict,
+    is_positive: bool,
+    expected: set[str],
+    cache: SequenceCache,
+) -> ResidueCheck:
+    """Resolve one control's declared residue and check it behaves as claimed."""
+    kind = "positive" if is_positive else "negative"
+    acc = control["id"]
+    pos = control.get("control_position")
+    claimed = control.get("control_residue")
+    if pos is None or claimed is None:
+        return ResidueCheck(
+            family, site_id, acc, 0, sorted(expected), None, Outcome.UNRESOLVED,
+            f"{kind} control declares no position/residue, so its assertion is unchecked",
+        )
+    observed = _residue_at(cache.get(acc), pos)
+    if observed is None:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
+            f"{kind} control position {pos} is beyond the end of the sequence",
+        )
+    if observed != claimed:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), observed, Outcome.FAIL,
+            f"{kind} control claims {claimed} at {pos} but the sequence has {observed}",
+        )
+    carries = observed in expected
+    if is_positive and not carries:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), observed, Outcome.FAIL,
+            f"positive control has {observed} at {pos}, which is not one of the "
+            f"site's expected residues {sorted(expected)} -- it does not have the site",
+        )
+    if not is_positive and carries:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), observed, Outcome.FAIL,
+            f"negative control has {observed} at {pos}, which IS an expected residue "
+            f"-- it has the site and cannot serve as a negative control",
+        )
+    return ResidueCheck(
+        family, site_id, acc, pos, sorted(expected), observed, Outcome.PASS,
+        f"{kind} control has {observed} at {pos}, as expected for a {kind} control",
+    )
 
 
 def validate_family_review(path: Path, cache_dir: Path) -> list[ResidueCheck]:

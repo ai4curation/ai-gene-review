@@ -59,6 +59,7 @@ class Verdict(str, Enum):
 
     OK = "OK"
     CONFLICT = "CONFLICT"
+    UNRESOLVED = "UNRESOLVED"
 
 
 @dataclass(frozen=True)
@@ -171,6 +172,19 @@ def check_scope_violations(
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
             if not actions:
+                continue
+            if scope == "SUBFAMILY_ONLY" and gene.subfamily is None:
+                # No PANTHER subfamily cross-reference, so we cannot tell whether the
+                # gene falls inside the allowed set. That is missing information, not
+                # a contradiction.
+                results.append(
+                    CrossCheck(
+                        "SCOPE_VIOLATION", family, gene.symbol, None, term,
+                        "/".join(sorted(actions)), Verdict.UNRESOLVED,
+                        "gene has no PANTHER subfamily cross-reference, so it cannot be "
+                        "placed inside or outside the term's allowed subfamilies",
+                    )
+                )
                 continue
             retained = actions & RETAINING_ACTIONS
             if retained:

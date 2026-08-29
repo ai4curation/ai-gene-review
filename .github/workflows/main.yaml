@@ -72,6 +72,8 @@ jobs:
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
+            families:
+              - 'interpro/panther/**/*-review.yaml'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
@@ -149,6 +151,19 @@ jobs:
           steps.changes.outputs.infra == 'true' ||
           steps.changes.outputs.modules == 'true'
         run: just validate-modules
+
+      # Family reviews carry residue sites and node assessments that gene reviews
+      # cite, so a change to either side can break the join. Runs when a family
+      # review changes, when a gene review changes (a gene claim may cite a site),
+      # or when validation behaviour changes.
+      - name: Validate family reviews (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.families == 'true' ||
+          steps.changes.outputs.genes == 'true'
+        run: just validate-families
 
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI

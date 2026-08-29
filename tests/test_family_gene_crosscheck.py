@@ -151,11 +151,16 @@ def test_index_genes_by_family_extracts_join_keys(tmp_path):
     assert refs["PGRPLB"].subfamily == CATALYTIC_SF
 
 
-def test_gene_with_no_subfamily_still_checked_against_scope(tmp_path):
-    """A gene lacking an SF cross-reference cannot be in the allowed set, so it is flagged."""
+def test_gene_with_no_subfamily_is_unresolved_not_conflicting(tmp_path):
+    """Missing subfamily information is a gap, not a contradiction.
+
+    Without a PANTHER SF cross-reference we cannot place the gene inside or outside the
+    allowed set, so reporting a conflict would assert more than we know.
+    """
     gene = _write_gene(tmp_path, "PGRPX", None, "ACCEPT")
     (result,) = check_scope_violations(_family_review(), {FAMILY: [gene]})
-    assert result.verdict is Verdict.CONFLICT
+    assert result.verdict is Verdict.UNRESOLVED
+    assert "no PANTHER subfamily cross-reference" in result.message
 
 
 def test_gene_actions_for_term_collects_multiple_rows(tmp_path):

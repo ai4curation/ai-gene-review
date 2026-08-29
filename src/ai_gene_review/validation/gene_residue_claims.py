@@ -230,7 +230,13 @@ def check_claim(
 
 
 def load_family_sites(panther_dir: Path) -> dict[str, set[int]]:
-    """Map ``<family_id>#<site_id>`` -> the anchor positions that site declares."""
+    """Map ``<family_id>#<site_id>`` -> the anchor positions that site covers.
+
+    A site defined by a ``motif`` rather than by individual residues covers the whole
+    declared block, so its span is expanded here. Without that a motif-only site would
+    yield an empty position set and every gene claim citing it would fail -- a site
+    that exists but can never be cited.
+    """
     sites: dict[str, set[int]] = {}
     for path in sorted(panther_dir.glob("PTHR*/PTHR*-review.yaml")):
         review = yaml.load(path.read_text(), Loader=_Loader)
@@ -239,9 +245,13 @@ def load_family_sites(panther_dir: Path) -> dict[str, set[int]]:
             continue
         for site in review.get("residue_sites") or []:
             key = f"{family}#{site.get('site_id')}"
-            sites[key] = {
+            positions = {
                 r["position"] for r in (site.get("residues") or []) if "position" in r
             }
+            motif = site.get("motif")
+            if motif and "start" in motif and "end" in motif:
+                positions |= set(range(motif["start"], motif["end"] + 1))
+            sites[key] = positions
     return sites
 
 

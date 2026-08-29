@@ -145,8 +145,7 @@ def test_weaker_strength_does_not_require_controls():
     review = _review(
         [{"position": 1, "expected": ["M"]}], strength="ASSOCIATED", pos_ctl=[], neg_ctl=[]
     )
-    (result,) = check_controls(review, CACHE)
-    assert result.outcome is Outcome.PASS
+    assert not [r for r in check_controls(review, CACHE) if r.outcome is Outcome.FAIL]
 
 
 def test_protein_listed_as_both_control_types_fails():
@@ -156,9 +155,85 @@ def test_protein_listed_as_both_control_types_fails():
         pos_ctl=[{"id": "UniProtKB:P00009"}],
         neg_ctl=[{"id": "UniProtKB:P00009"}],
     )
-    (result,) = check_controls(review, CACHE)
-    assert result.outcome is Outcome.FAIL
-    assert "both positive and negative" in result.message
+    results = check_controls(review, CACHE)
+    assert any("both positive and negative" in r.message for r in results
+               if r.outcome is Outcome.FAIL)
+
+
+# --- controls are now resolved, not merely counted -------------------------
+
+CTL_CACHE = StubCache({
+    "P00001": TOY,            # MACDEFGHIKLC -- position 3 is C
+    "GOOD01": "MACDEFGHIKLC",  # C at 3  -> valid positive control
+    "BAD001": "MASDEFGHIKLC",  # S at 3  -> valid negative control
+})
+
+
+def _ctl_review(pos_ctl, neg_ctl, expected=("C",)):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "residue_sites": [{
+            "site_id": "s",
+            "anchor": {"id": "UniProtKB:P00001"},
+            "site_source": "UNIPROT_FEATURE",
+            "residues": [{"position": 3, "expected": list(expected)}],
+            "required_for": [{"term": {"id": "GO:1"}, "strength": "REQUIRED",
+                              "rationale": "t"}],
+            "positive_controls": pos_ctl,
+            "negative_controls": neg_ctl,
+        }],
+    }
+
+
+def test_positive_control_lacking_the_site_is_caught():
+    """A 'catalytic' control that does not have the site -- the PGRP-LE mistake."""
+    review = _ctl_review(
+        [{"id": "UniProtKB:GOOD01", "control_position": 3, "control_residue": "C"},
+         {"id": "UniProtKB:BAD001", "control_position": 3, "control_residue": "S"}],
+        [{"id": "UniProtKB:BAD001", "control_position": 3, "control_residue": "S"}],
+    )
+    results = check_controls(review, CTL_CACHE)
+    bad = [r for r in results if r.outcome is Outcome.FAIL
+           and "does not have the site" in r.message]
+    assert len(bad) == 1
+
+
+def test_negative_control_that_has_the_site_is_caught():
+    review = _ctl_review(
+        [{"id": "UniProtKB:GOOD01", "control_position": 3, "control_residue": "C"}],
+        [{"id": "UniProtKB:GOOD01", "control_position": 3, "control_residue": "C"}],
+    )
+    results = check_controls(review, CTL_CACHE)
+    assert any("cannot serve as a negative control" in r.message for r in results)
+
+
+def test_control_with_a_wrong_declared_residue_is_caught():
+    review = _ctl_review(
+        [{"id": "UniProtKB:GOOD01", "control_position": 3, "control_residue": "W"}],
+        [{"id": "UniProtKB:BAD001", "control_position": 3, "control_residue": "S"}],
+    )
+    results = check_controls(review, CTL_CACHE)
+    assert any("but the sequence has C" in r.message for r in results)
+
+
+def test_control_without_a_position_is_unresolved():
+    review = _ctl_review(
+        [{"id": "UniProtKB:GOOD01"}],
+        [{"id": "UniProtKB:BAD001", "control_position": 3, "control_residue": "S"}],
+    )
+    results = check_controls(review, CTL_CACHE)
+    assert any(r.outcome is Outcome.UNRESOLVED and "unchecked" in r.message
+               for r in results)
+
+
+def test_anchor_as_its_only_positive_control_is_rejected():
+    """Asserting the anchor has the positions that define it proves nothing."""
+    review = _ctl_review(
+        [{"id": "UniProtKB:P00001", "control_position": 3, "control_residue": "C"}],
+        [{"id": "UniProtKB:BAD001", "control_position": 3, "control_residue": "S"}],
+    )
+    results = check_controls(review, CTL_CACHE)
+    assert any("tautological" in r.message for r in results)
 
 
 def test_summarize_counts_outcomes():
@@ -305,8 +380,10 @@ def test_real_pgrp_node_assessments_check_out():
         Path(".cache/uniprot_seq"),
     )
     node_results = [r for r in results if r.accession.startswith("GO:")]
-    assert len(node_results) == 2
+    # two node/term pairings plus a seed check for each
+    assert len(node_results) == 4, [str(r) for r in node_results]
     assert all(r.outcome is Outcome.PASS for r in node_results)
+    assert sum("seed" in r.message for r in node_results) == 2
 
 
 # --------------------------------------------------------------------------
@@ -362,3 +439,48 @@ def test_real_sephs_family_review_validates():
     )
     failures = [r for r in results if r.outcome is Outcome.FAIL]
     assert not failures, [str(f) for f in failures]
+
+
+# --- node_assessment seeds must appear in PAINT's with-list ----------------
+
+
+class FakeRow:
+    def __init__(self, family, go_id, seeds=""):
+        self.family, self.go_id, self.seeds = family, go_id, seeds
+
+
+def _seed_review(seed_ids):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "node_assessments": [{
+            "node_id": "PANTHER:PTN000001",
+            "asserted_term": {"id": "GO:1", "label": "x"},
+            "assessment": "SOUND",
+            "assessment_reason": "t",
+            "seeds": [{"id": s} for s in seed_ids],
+        }],
+    }
+
+
+SEED_PAINT = {
+    "PANTHER:PTN000001": [
+        FakeRow("PTHR00001", "GO:1", "UniProtKB:P11111|FB:FBgn0000001|ZFIN:ZDB-1")
+    ]
+}
+
+
+@pytest.mark.parametrize(
+    "seeds,outcome",
+    [
+        (["UniProtKB:P11111"], Outcome.PASS),                       # subset is fine
+        (["UniProtKB:P11111", "FB:FBgn0000001"], Outcome.PASS),
+        (["UniProtKB:P99999"], Outcome.FAIL),                       # invented seed
+    ],
+)
+def test_declared_seeds_are_checked_against_paint(seeds, outcome):
+    """A curated seed list may be a subset, but not a fabrication."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    results = check_node_assessments(_seed_review(seeds), SEED_PAINT)
+    seed_results = [r for r in results if "seed" in r.message]
+    assert [r.outcome for r in seed_results] == [outcome]

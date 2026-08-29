@@ -2738,6 +2738,12 @@ validate-families:
         uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
             --target-class FamilyReview "$f" || rc=1
     done <<< "$files"
+    echo "Validating GO term ids and labels..."
+    while IFS= read -r f; do
+        uv run linkml-term-validator validate-data "$f" \
+            -s src/ai_gene_review/schema/family_review.yaml \
+            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+    done <<< "$files"
     echo "Validating curated residue sites against UniProt sequences..."
     uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
     echo "Cross-checking family reviews against the gene corpus..."

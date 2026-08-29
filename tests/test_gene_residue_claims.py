@@ -292,3 +292,37 @@ def test_real_claims_pin_current_sequence_versions():
         )
         drifted = [r for r in results if "sequence version has moved" in r.detail]
         assert not drifted, [str(d) for d in drifted]
+
+
+def test_motif_only_site_can_be_cited(tmp_path):
+    """A motif-defined site covers its whole block, so a claim inside it resolves.
+
+    Regression: previously load_family_sites returned an empty position set for a
+    motif-only site, so every site_ref citing one failed -- a site that existed but
+    could never be referenced.
+    """
+    d = tmp_path / "PTHR00001"
+    d.mkdir()
+    (d / "PTHR00001-review.yaml").write_text(yaml.safe_dump({
+        "family_id": "PANTHER:PTHR00001",
+        "residue_sites": [
+            {"site_id": "cxxc",
+             "motif": {"pattern_regex": "C..C", "start": 10, "end": 13}}
+        ],
+    }))
+    sites = load_family_sites(tmp_path)
+    assert sites["PANTHER:PTHR00001#cxxc"] == {10, 11, 12, 13}
+
+
+def test_residue_and_motif_positions_are_unioned(tmp_path):
+    d = tmp_path / "PTHR00002"
+    d.mkdir()
+    (d / "PTHR00002-review.yaml").write_text(yaml.safe_dump({
+        "family_id": "PANTHER:PTHR00002",
+        "residue_sites": [
+            {"site_id": "mixed",
+             "residues": [{"position": 5, "expected": ["C"]}],
+             "motif": {"pattern_regex": "C.C", "start": 20, "end": 22}}
+        ],
+    }))
+    assert load_family_sites(tmp_path)["PANTHER:PTHR00002#mixed"] == {5, 20, 21, 22}
