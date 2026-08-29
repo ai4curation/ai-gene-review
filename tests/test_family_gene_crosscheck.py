@@ -7,6 +7,7 @@ change meaning when the real corpus does.
 """
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -64,8 +65,9 @@ def _write_gene(tmp_path: Path, symbol: str, sf: str | None, action: str,
     if sf:
         lines.append(f"DR   PANTHER; {sf.split(':', 1)[1]}; SUBFAM; 1.")
     (d / f"{symbol}-uniprot.txt").write_text("\n".join(lines) + "\n")
-    ann = {"term": {"id": term, "label": "x"}, "evidence_type": "IBA",
-           "review": {"action": action}}
+    ann: dict[str, Any] = {"term": {"id": term, "label": "x"},
+                           "evidence_type": "IBA",
+                           "review": {"action": action}}
     if negated:
         ann["negated"] = True
     (d / f"{symbol}-ai-review.yaml").write_text(
