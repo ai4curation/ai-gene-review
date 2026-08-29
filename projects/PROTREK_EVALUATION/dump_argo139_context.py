@@ -6,7 +6,11 @@ gene the BioReason evaluation scored: UniProt identity lines, curated GOA, the
 AIGR review's description and core-function terms, the existing GO-GPT and
 BioReason-SFT VDCL calls for the same gene, and ProTrek's ranked hits.
 
-Usage: uv run python projects/PROTREK_EVALUATION/dump_argo139_context.py SYMBOL [SYMBOL ...]
+Genes are addressed as SPECIES/SYMBOL because ARGO139 contains the same symbol in
+several species (Akt1, Egfr, Myc, Notch1, Pten). A bare SYMBOL is accepted only
+when it is unambiguous within the cohort.
+
+Usage: uv run python projects/PROTREK_EVALUATION/dump_argo139_context.py SPECIES/SYMBOL [...]
 """
 from __future__ import annotations
 
@@ -29,15 +33,28 @@ def main() -> int:
     if not wanted:
         raise SystemExit(__doc__)
 
-    queries = {r["symbol"]: r for r in csv.DictReader(QUERIES.open(), delimiter="\t")}
+    rows = list(csv.DictReader(QUERIES.open(), delimiter="\t"))
+    queries = {f"{r['species_dir']}/{r['symbol']}": r for r in rows}
+    by_symbol: dict[str, list[dict]] = {}
+    for r in rows:
+        by_symbol.setdefault(r["symbol"], []).append(r)
     hits = list(csv.DictReader(HITS.open(), delimiter="\t")) if HITS.exists() else []
     calls = list(csv.DictReader(CALLS.open())) if CALLS.exists() else []
 
-    for symbol in wanted:
-        q = queries.get(symbol)
-        if not q:
-            print(f"!! {symbol} not in ARGO139")
-            continue
+    for name in wanted:
+        q = queries.get(name)
+        if q is None:
+            candidates = by_symbol.get(name, [])
+            if len(candidates) == 1:
+                q = candidates[0]
+            elif len(candidates) > 1:
+                print(f"!! {name} is ambiguous in ARGO139: "
+                      + ", ".join(f"{c['species_dir']}/{c['symbol']}" for c in candidates))
+                continue
+            else:
+                print(f"!! {name} not in ARGO139")
+                continue
+        symbol = q["symbol"]
         acc, d = q["accession"], ROOT / "genes" / q["species_dir"] / symbol
         print(f"\n{'=' * 72}\n### {symbol} ({q['species_dir']}, {acc}, {q['length']} aa)")
 
@@ -52,8 +69,17 @@ def main() -> int:
             terms = {}
             for row in csv.DictReader(goa.open(), delimiter="\t"):
                 terms.setdefault(row["GO TERM"], (row["GO NAME"], set()))[1].add(row["GO EVIDENCE CODE"])
-            print(f"-- GOA ({len(terms)} terms) --")
-            for t, (name, ev) in sorted(terms.items()):
+            # Richly annotated genes (Akt1 has 173 terms) would swamp the digest, so
+            # only experimental/curated evidence is listed once the set gets large;
+            # the ProTrek call list below already carries the GOA-overlap verdict.
+            exp = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HDA", "HMP", "TAS", "IC"}
+            shown = sorted(terms.items())
+            note = ""
+            if len(shown) > 30:
+                shown = [(t, v) for t, v in shown if v[1] & exp][:30]
+                note = f"; showing {len(shown)} with experimental/curated evidence"
+            print(f"-- GOA ({len(terms)} terms{note}) --")
+            for t, (name, ev) in shown:
                 print(f"   {t} {name} [{','.join(sorted(ev))}]")
 
         rev = d / f"{symbol}-ai-review.yaml"
