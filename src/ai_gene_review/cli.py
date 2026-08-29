@@ -3066,9 +3066,22 @@ def render_modules(
         typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
     elif files:
         total_warnings = []
-        for module_file in files:
+        had_errors = False
+        for requested_file in files:
+            module_file = requested_file
+            if not module_file.exists() and module_file.parent == Path("."):
+                filename = (
+                    module_file.name
+                    if module_file.suffix == ".yaml"
+                    else f"{module_file.name}.yaml"
+                )
+                candidate = modules_dir / filename
+                if candidate.exists():
+                    module_file = candidate
+
             if not module_file.exists():
-                typer.echo(f"Error: File not found: {module_file}", err=True)
+                typer.echo(f"Error: File not found: {requested_file}", err=True)
+                had_errors = True
                 continue
 
             try:
@@ -3087,9 +3100,12 @@ def render_modules(
                     typer.echo(f"Rendered {module_file} -> {output_path}")
             except Exception as error:
                 typer.echo(f"Error rendering {module_file}: {error}", err=True)
+                had_errors = True
 
         if total_warnings and not verbose:
             typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+        if had_errors:
+            raise typer.Exit(code=1)
     else:
         typer.echo("Please specify file(s) or use --all to render all modules", err=True)
         raise typer.Exit(code=1)
