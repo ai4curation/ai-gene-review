@@ -42,11 +42,15 @@ import json
 import urllib.request
 from dataclasses import dataclass, field
 from functools import lru_cache
+from typing import TYPE_CHECKING
 from enum import Enum
 from pathlib import Path
 from typing import Iterable
 
 import yaml
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle at runtime
+    from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
 
@@ -286,7 +290,9 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
 
 
 @lru_cache(maxsize=None)
-def _panther_index(panther_dir: Path) -> tuple[dict[str, str], dict[str, str], object]:
+def _panther_index(
+    panther_dir: Path,
+) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps]":
     """Load the PANTHER artifacts once per directory.
 
     Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
@@ -332,7 +338,7 @@ def check_panther_ids(
     review: dict,
     labels: dict[str, str],
     members: dict[str, str],
-    gaps: object = None,
+    gaps: "MemberIndexGaps | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -350,25 +356,48 @@ def check_panther_ids(
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
-    bare_family = family.split(":", 1)[-1] if family else ""
+    from ai_gene_review.validation.module_validator import (
+        _is_panther_subfamily,
+        _panther_family_base,
+    )
+
+    #: Slots whose value must be a subfamily *of this review's own family*. Stated on
+    #: the path rather than sniffed from the string: a bare family id here is worse
+    #: than a foreign subfamily, because check_scope_violations builds `allowed` as a
+    #: raw id set, no gene's PTHRnnnnn:SFn can match it, and every member retaining
+    #: the term is then emitted as a CONFLICT against curation that is fine.
+    SUBFAMILY_SLOTS = {
+        "subfamilies[].subfamily_id",
+        "affected_subfamilies[]",
+        "applicable_subfamilies[]",
+    }
+    own_family = _panther_family_base(family)
 
     for path, curie, label in _iter_panther_terms(review):
         if not curie or curie.startswith("PANTHER:PTN"):
             continue
-        # A subfamily of a DIFFERENT family resolves and carries a verbatim-correct
-        # label, so neither check below would notice it. applicable_subfamilies drives
-        # CONFLICT verdicts against gene reviews, so a stray family there would
-        # contradict curation on the strength of an unrelated classification.
-        if ":SF" in curie and bare_family and not curie.startswith(f"{family}:SF"):
-            results.append(
-                ResidueCheck(
-                    family, path, curie, 0, [], None, Outcome.FAIL,
-                    f"{curie} is a subfamily of a different family; this review is "
-                    f"about {family}",
-                    kind="PANTHER_FAMILY_SCOPE",
+        if path in SUBFAMILY_SLOTS:
+            if not _is_panther_subfamily(curie):
+                results.append(
+                    ResidueCheck(
+                        family, path, curie, 0, [], None, Outcome.FAIL,
+                        f"{curie} is a family, not a subfamily; a family id here "
+                        "matches no member's subfamily and would flag every one of "
+                        "them as a scope violation",
+                        kind="PANTHER_FAMILY_SCOPE",
+                    )
                 )
-            )
-            continue
+                continue
+            if own_family and _panther_family_base(curie) != own_family:
+                results.append(
+                    ResidueCheck(
+                        family, path, curie, 0, [], None, Outcome.FAIL,
+                        f"{curie} belongs to a different family; this review is "
+                        f"about {family}",
+                        kind="PANTHER_FAMILY_SCOPE",
+                    )
+                )
+                continue
         if curie not in labels:
             results.append(
                 ResidueCheck(
@@ -406,13 +435,18 @@ def check_panther_ids(
         for member in sub.get("representative_members") or []:
             acc = (member.get("id") or "").split(":")[-1]
             if acc not in members:
-                absent = bool(gaps and acc in getattr(gaps, "absent", set()))
-                detail = (
-                    "PANTHER and UniProt hold no family for it, so membership cannot "
-                    "be checked and re-indexing will not help"
-                    if absent
-                    else "not indexed yet; run `just refresh-panther-members`"
-                )
+                if gaps is not None and acc in gaps.absent:
+                    detail = (
+                        "PANTHER and UniProt hold no family for it, so membership "
+                        "cannot be checked and re-indexing will not help"
+                    )
+                elif gaps is not None and acc in gaps.unchecked:
+                    detail = (
+                        "UniProt was not consulted for it; rerun "
+                        "`just refresh-panther-members` to resolve its status"
+                    )
+                else:
+                    detail = "not indexed yet; run `just refresh-panther-members`"
                 results.append(
                     ResidueCheck(
                         family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
