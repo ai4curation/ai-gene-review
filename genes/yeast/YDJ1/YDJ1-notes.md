@@ -24,17 +24,18 @@
   descendant source at PTN001531327 and PTN002376157, which is valid PAINT
   grounding rather than circular evidence. The SGD:S000005021 source on the
   unfolded-protein-binding and nucleus rows is APJ1, a class-A/type-I Ydj1
-  paralog, not SIS1. The current local PTHR44298 PAINT table retains
-  PTN002376157 with the exact seven seeds reported in GOA. PTN001531327 and
-  PTN001180221 no longer occur anywhere in the current local PAINT exports;
-  their identifiers and descendant evidence are therefore recoverable only
-  from current GOA WITH/FROM. Those four and one rows respectively are recorded
-  as `SOURCE_STALE_OR_MISSING` provenance, while their biological decisions are
-  supported independently by YDJ1-specific evidence.
+  paralog, not SIS1. YDJ1 belongs to PTHR43888, not PTHR44298. After fetching
+  the correct family through the repository wrappers, the current PAINT table
+  retains PTN001531327, PTN001180221, and PTN002376157. Their current node-level
+  terms and seeds support five IBA transfers; PTN001531327 no longer carries
+  obsolete GO:0051082. Direct YDJ1 evidence independently supports the core
+  biological decisions.
 
 - GO:0051082 is obsolete in live GO, whose official obsoletion comment gives
   GO:0044183 protein folding chaperone and GO:0140309 unfolded protein holdase
-  activity as evidence-dependent consider terms. Ydj1 directly supports both:
+  activity as evidence-dependent consider terms
+  [AmiGO GO:0051082, accessed 2026-08-28](https://amigo.geneontology.org/amigo/term/GO%3A0051082).
+  Ydj1 directly supports both:
   it suppressed thermally induced luciferase aggregation and, paired with Ssa1,
   promoted productive refolding [PMID:9774392, “Ydj1:Ssa1 could promote up to
   four times more luciferase folding than Sis1:Ssa1.”]. All three GO:0051082
@@ -72,10 +73,10 @@
 - Rechecked the obsolete-term successors against the current GO ontology and
   separated the two activities supported by PMID:9774392 instead of treating
   all unfolded-client evidence as folding alone.
-- Rechecked all six IBA rows against current GOA and the local PANTHER PAINT
-  cache. Only PTN002376157 is still present; this provenance limitation is now
-  explicit in each affected propagation review and is not misclassified as a
-  biological propagation failure.
+- Rechecked all six IBA rows against current GOA and the correct PTHR43888
+  PANTHER PAINT cache. PTN001531327, PTN001180221, and PTN002376157 are all
+  present, so the biologically supported transfers retain no-failure provenance
+  classifications. The obsolete GO:0051082 row remains a term-scoping issue.
 - PMID:10811660 was manually classified as `MISCITED`/`NONE` for YDJ1: its
   abstract reports human p23 assays and supplies no YDJ1-specific experimental
   support for the CAFA-assigned IDA row.
