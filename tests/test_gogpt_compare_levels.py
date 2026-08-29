@@ -118,9 +118,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # The HdeB re-review retained GO:0051082 as an interim post-review/core
-        # term, increasing both levels by one. The current SlyD review also
-        # retains GO:0005515 post-review, adding the second post-review term.
+        # Two upstream reviews moved these levels. The HdeB re-review retains
+        # GO:0051082 as an explicit interim post-review/core term (+1 to both
+        # post_review and core). Separately, surA now retains GO:0005515
+        # post-review (+1 post_review only) and its status advanced to COMPLETE,
+        # which moves the reference-status distribution 67->68 COMPLETE in the
+        # benchmark sidecars. GOA is unaffected, distinguishing upstream review
+        # edits from a comparison regression.
         "post_review": {"overlap": 860, "total": 2768, "pred": 8871},
         "core": {"overlap": 350, "total": 1225, "pred": 8871},
     }
