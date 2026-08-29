@@ -111,6 +111,9 @@ Applying the project's own discipline to the audit itself:
 
 ## Suggested actions (none applied)
 
+> Finding 1 is tracked as
+> [issue #2761](https://github.com/ai4curation/ai-gene-review/issues/2761).
+
 1. Retype the 27 self-source rows to `SUPPORTS_TRANSFER` with an ADPRS-style comment,
    and fix the AAK1-style prose that states the inverted reading. This is mechanical and
    safe: the rule is explicit and the evidence check above confirms it case by case.
