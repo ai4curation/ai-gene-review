@@ -89,6 +89,7 @@ from ai_gene_review.etl.panther_families import (
     is_placeholder_label,
     label_drift,
     load_member_index,
+    load_member_index_gaps,
     load_subfamily_counts,
 )
 from ai_gene_review.validation.supporting_text import (
@@ -1113,6 +1114,8 @@ def validate_family_members(
     member_index: Dict[str, str],
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
+    permanently_absent: Optional[Set[str]] = None,
+    unknown_to_uniprot: Optional[Set[str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1124,8 +1127,12 @@ def validate_family_members(
     descriptor that names ``PTHR11375`` while its representative member sits in
     ``PTHR13337`` is provably mis-grounded regardless of how its label reads.
 
-    Accessions absent from the (pruned) index are not checkable and degrade to a
-    warning, so a newly cited protein never fails the build spuriously.
+    An accession absent from the index makes the descriptor uncheckable, which is
+    an error rather than a warning: this is the only check that can catch a
+    guessed family id, and the unindexed case is precisely the one new curation
+    produces, so warning here disabled it exactly when it was needed. Accessions
+    the index records as ``# unresolved`` -- both sources consulted, no PANTHER
+    family exists -- are exempt, since no refresh can ever resolve them.
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1142,11 +1149,52 @@ def validate_family_members(
             if accession in member_index
         }
         if not known:
-            warnings.append(
+            missing = set(use.representative_accessions)
+            # Two different gaps wear the same face here. If the index records
+            # every one of these accessions as `# unresolved` -- both sources
+            # consulted, PANTHER has no family -- then no refresh can ever
+            # resolve them, and erroring would fail the build permanently while
+            # advising a command that has already been run. That case is
+            # informational. Anything else is a stale or never-looked-up index,
+            # where the refresh is a real remedy.
+            absent = permanently_absent or set()
+            # `missing` is non-empty via iter_family_member_uses, but this is
+            # public: an empty set is a subset of anything, so an exemption
+            # would fire for a descriptor naming no members at all.
+            if missing and missing <= absent:
+                warnings.append(
+                    f"{use.path}: PANTHER has no family for "
+                    f"({_format_limited(missing)}), so family membership cannot "
+                    "be checked for this descriptor; recorded as unresolved in "
+                    "interpro/panther/panther-members.tsv"
+                )
+                continue
+            # An ERROR, not a warning. This is the check that catches a guessed
+            # family id, and it is silently skipped exactly when it is most
+            # needed: new curation cites new proteins, which are by definition
+            # the ones missing from the index. Degrading to a warning meant 78%
+            # of these checks were dark across the open-PR backlog while the
+            # sweep reported zero grounding failures. An index that does not
+            # cover what we cite is a defect in the index, so it fails the build
+            # until `just refresh-panther-members` resolves the accession.
+            # Point at the remedy that can actually work. An accession UniProt
+            # was asked about and did not return is a typo, an obsolete id, or a
+            # secondary/demerged accession -- rerunning the refresh will never
+            # resolve it, so advising one sends the curator in a loop.
+            unknown = (unknown_to_uniprot or set()) & missing
+            if unknown:
+                remedy = (
+                    f"UniProt returned no record for {_format_limited(unknown)}; "
+                    "verify the accession exists and is current (it may be a "
+                    "typo, obsolete, or a secondary/demerged id)"
+                )
+            else:
+                remedy = "run `just refresh-panther-members`"
+            errors.append(
                 f"{use.path}: none of the representative members "
-                f"({_format_limited(set(use.representative_accessions))}) are in "
-                "interpro/panther/panther-members.tsv, so family membership was "
-                "not checked; refresh with `just refresh-panther-members`"
+                f"({_format_limited(missing)}) are in "
+                "interpro/panther/panther-members.tsv, so family membership "
+                f"could not be checked; {remedy}"
             )
             continue
 
@@ -1691,6 +1739,8 @@ def validate_module_file(
             panther_dir = project_root / "interpro" / "panther"
         paint_index = load_paint_index(panther_dir)
 
+    members_path = project_root / "interpro" / "panther" / "panther-members.tsv"
+    _member_gaps = load_member_index_gaps(members_path)
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
@@ -1698,6 +1748,8 @@ def validate_module_file(
         subfamily_counts=load_subfamily_counts(
             project_root / "interpro" / "panther" / "panther.obo"
         ),
+        permanently_absent=_member_gaps.absent,
+        unknown_to_uniprot=_member_gaps.unknown,
     )
 
     terms = list(iter_terms(doc))

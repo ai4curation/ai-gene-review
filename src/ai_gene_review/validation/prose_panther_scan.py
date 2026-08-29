@@ -153,7 +153,7 @@ def main(argv: List[str] | None = None) -> int:
 
     missing = {c.accession for c in claims if c.accession not in index}
     if missing and args.online:
-        index.update(fetch_panther_from_uniprot(missing))
+        index.update(fetch_panther_from_uniprot(missing).families)
 
     # The index records two distinct kinds of gap. ``gaps.absent``: both sources
     # were consulted and PANTHER has no family, so the claim can never be

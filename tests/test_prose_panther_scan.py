@@ -11,7 +11,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.etl.panther_families import write_member_index
+from ai_gene_review.etl.panther_families import (
+    UniProtPantherLookup,
+    write_member_index,
+)
 from ai_gene_review.validation.prose_panther_scan import (
     Claim,
     collect_claims,
@@ -88,7 +91,13 @@ def test_collect_claims_walks_a_directory(modules_dir):
 def _run(monkeypatch, modules_dir, index, unresolved=None, consulted_uniprot=True):
     """Point the scan at a temporary members file and modules directory."""
     members = modules_dir.parent / "panther-members.tsv"
-    write_member_index(index, members, unresolved, consulted_uniprot)
+    # A boolean is enough for these callers, which never mix the two kinds; the
+    # writer itself takes the sets separately so a mixed batch cannot be
+    # mislabelled.
+    if consulted_uniprot:
+        write_member_index(index, members, unresolved, None)
+    else:
+        write_member_index(index, members, None, unresolved)
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT",
         modules_dir.parent,
@@ -172,7 +181,7 @@ def test_main_does_not_double_count_an_online_resolved_accession(
     write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.fetch_panther_from_uniprot",
-        lambda accessions: {"Q88ND1": "PTHR11908:SF1"},
+        lambda accessions: UniProtPantherLookup({"Q88ND1": "PTHR11908:SF1"}, {"Q88ND1"}),
     )
     members = modules_dir.parent / "interpro" / "panther"
     members.mkdir(parents=True, exist_ok=True)
