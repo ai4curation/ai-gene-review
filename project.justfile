@@ -2235,6 +2235,19 @@ deep-research-backfill provider *args="":
 
 # ============== Publications Cache Management ==============
 
+# Warm the publications cache via the linkml-reference-validator full-text
+# provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Covers
+# DOI-only records without a PMC ID; every cleanly concluded attempt is durably
+# tagged full_text_attempted so bounded runs drain the backlog incrementally
+# (dismech-style warm-reference-cache).
+# Example: just warm-publications 200
+warm-publications limit="100":
+    uv run ai-gene-review warm-publications --limit {{limit}}
+
+# Non-network preview of what a warm sweep would attempt
+warm-publications-preview limit="20":
+    uv run ai-gene-review warm-publications --dry-run --limit {{limit}}
+
 # Refresh publications cache for PMC articles with missing full text (small batch)
 refresh-publications count="50":
     @echo "Refreshing publications cache ({{count}} articles)..."
