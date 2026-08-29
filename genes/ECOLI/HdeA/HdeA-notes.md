@@ -25,3 +25,8 @@ The three experimental GO:0044183 protein folding chaperone rows are retained. A
 - GO:0042802 identical protein binding remains `MARK_AS_OVER_ANNOTATED` because the specific physical GO:0042803 homodimerization activity is present and experimentally supported.
 - Broad and specific periplasm/local acid-response rows remain accepted; their exact GOA qualifiers are now explicit in YAML.
 - The standalone description remains biological and project-independent, covering compartment, pH-dependent activation, aggregation prevention, controlled release, and cooperation with HdeB/DegP/SurA.
+
+## PR #2740 follow-up — 2026-08-29
+
+- Revised the GO:0006457 `MODIFY` rationale to describe the parent term as too general and uninformative about HdeA's demonstrated pH-triggered refolding mechanism, while retaining GO:0042026 and the distinction between process involvement and folding catalysis.
+- Narrowed the PMID:9298646 and PMID:9731767 reference-review notes to claims visible in their abstract-only caches. `correctness: VERIFIED` remains appropriate for verified citation identity and the explicitly available abstract claims; it does not assert verification of inaccessible full-text assay details.
