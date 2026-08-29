@@ -20,6 +20,11 @@ Backfilled records are deliberately conservative:
 - ``details`` always states that the record was backfilled from PR metadata,
   so a later reader can weigh it accordingly. Enrich by hand where the PR
   discussion holds more context.
+- A target whose primary file does not exist on the checkout is skipped with
+  a message rather than written. The derived path is a convention, and the
+  convention breaks for GO-CAM dirs without a ``-review.yaml``, gene dirs
+  touched only in ancillary files, and closed-unmerged PRs; committed records
+  must point at a real file.
 
 Requirements: this script shells out to the ``gh`` CLI and needs it installed
 and authenticated (``gh auth status``). It does not fall back to anything
@@ -151,6 +156,27 @@ def collect_targets(files: list[dict]) -> list[Target]:
         key = (t.kind, t.organism, t.slug)
         targets.setdefault(key, t).files[f["filename"]] = f["status"]
     return list(targets.values())
+
+
+def target_path_exists(target: Target) -> bool:
+    """Whether the target's primary file resolves on this checkout.
+
+    ``classify_file`` derives the primary path by convention from the directory
+    a changed file sits in, and the convention does not always hold. The common
+    case is GO-CAMs: every ``gocams/<MODEL>/`` file maps to
+    ``<MODEL>-review.yaml``, but the review file is optional and most models
+    have only the cached ``-src.yaml``. Gene directories touched solely in
+    ancillary files (notes, bioinformatics/) can likewise lack an
+    ``-ai-review.yaml``, and so can closed-unmerged PRs whose files never
+    landed.
+
+    ``tests/test_history_schema.py::test_committed_history_records_follow_layout``
+    requires every committed record's ``target.path`` to exist (or to carry
+    ``target.superseded_by``), so writing such a record turns a backfill into a
+    red ``main``. ``scripts/new_history.py`` guards the same way via
+    ``target_missing_warning``.
+    """
+    return (ROOT_DIR / target.path).exists()
 
 
 def existing_record_for(target: Target, pr_url: str) -> Path | None:
@@ -312,7 +338,7 @@ def main(argv: list[str] | None = None) -> int:
         numbers.extend(pr_numbers_for_state(args.state, args.limit))
     numbers = sorted(set(numbers))
 
-    written, skipped = 0, 0
+    written, skipped, missing = 0, 0, 0
     for number in numbers:
         pr = fetch_pr(number)
         targets = collect_targets(pr["files"])
@@ -320,6 +346,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"PR #{number}: no curated targets touched; skipping.")
             continue
         for target in targets:
+            if not target_path_exists(target):
+                print(
+                    f"PR #{number} -> {target.path}: target file does not exist "
+                    "on this checkout; skipping (a committed record must point "
+                    "at a real file). Write one by hand with an explicit path "
+                    "if this target is genuinely curated."
+                )
+                missing += 1
+                continue
             existing = existing_record_for(target, pr["url"])
             if existing:
                 print(f"PR #{number} -> {target.path}: record exists ({existing.relative_to(ROOT_DIR)}); skipping.")
@@ -340,7 +375,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Wrote {out_path}")
             written += 1
 
-    print(f"Done: {written} written, {skipped} skipped.", file=sys.stderr)
+    print(
+        f"Done: {written} written, {skipped} skipped, "
+        f"{missing} skipped for a missing target file.",
+        file=sys.stderr,
+    )
     if written:
         print("Next: just validate-history-all && git add history/", file=sys.stderr)
     return 0

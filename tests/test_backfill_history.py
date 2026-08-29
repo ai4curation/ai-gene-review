@@ -57,6 +57,42 @@ def test_classify_other_kinds(backfill):
     assert backfill.classify_file("reports/validation-all.tsv") is None
 
 
+def test_gocam_src_only_target_is_reported_missing(backfill):
+    """A gocam dir with only a cached -src.yaml has no valid record target.
+
+    ``classify_file`` derives ``<MODEL>-review.yaml`` by convention, but the
+    review file is optional and almost no model has one. Writing a record for
+    such a target fails ``test_committed_history_records_follow_layout``, so
+    the backfiller must recognise it as missing.
+    """
+    src_only = sorted(
+        p
+        for p in ROOT_DIR.glob("gocams/*/*-src.yaml")
+        if not p.with_name(f"{p.parent.name}-review.yaml").exists()
+    )
+    assert src_only, "expected at least one gocam model without a -review.yaml"
+
+    model_dir = src_only[0].parent
+    target = backfill.classify_file(
+        f"gocams/{model_dir.name}/{src_only[0].name}"
+    )
+    assert target.kind == "gocam"
+    assert target.path == f"gocams/{model_dir.name}/{model_dir.name}-review.yaml"
+    assert not backfill.target_path_exists(target)
+
+
+def test_target_path_exists_for_a_real_gene_review(backfill):
+    target = backfill.classify_file("genes/human/CFAP300/CFAP300-notes.md")
+    assert target.path == "genes/human/CFAP300/CFAP300-ai-review.yaml"
+    assert backfill.target_path_exists(target)
+
+
+def test_target_path_exists_is_false_for_a_bogus_slug(backfill):
+    target = backfill.classify_file("genes/human/NOT_A_REAL_GENE_XYZ/notes.md")
+    assert target is not None
+    assert not backfill.target_path_exists(target)
+
+
 def _fake_pr(**overrides):
     pr = {
         "number": 2500,
