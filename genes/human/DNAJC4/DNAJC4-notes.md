@@ -23,12 +23,14 @@
 - These are high-throughput / focused interactome screens; "protein binding" (GO:0005515) is uninformative; partners (HTT, WFS1) do not define a chaperone client repertoire.
 
 ## Curation judgment
-- No core molecular function is asserted. GO:0051082 is formally obsolete, and its
+- GO:0030544 Hsp70 protein binding is retained as a deliberately hedged core
+  prediction from the canonical J domain and intact HPD motif, consistent with the
+  treatment of similarly uncharacterized J proteins in this repository. It is not a
+  claim of direct biochemical validation [file:human/DNAJC4/DNAJC4-uniprot.txt
+  "LHPDRDPGNP"]. GO:0051082 is formally obsolete, and its
   current consider terms, GO:0044183 protein folding chaperone and GO:0140309
   unfolded protein holdase activity, require activities that have not been assayed
-  for DNAJC4. A J domain makes HSP70 binding/ATPase stimulation plausible, but neither
-  GO:0030544 nor GO:0001671 is established for this protein. This is an explicit
-  no-term recommendation pending direct biochemical evidence.
+  for DNAJC4. GO:0001671 ATPase activator activity also remains unverified.
 - Membrane localization: predicted single-pass TM; reasonable to KEEP_AS_NON_CORE / ACCEPT as predicted.
 - Protein binding IPI (HTT, WFS1): MARK_AS_OVER_ANNOTATED because the generic term
   adds no mechanistic information, while preserving the interaction provenance.
