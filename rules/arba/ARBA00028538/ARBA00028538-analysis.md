@@ -132,7 +132,12 @@ sets actually do:
 | mechanistically unrelated | 12, 26, 37, 43 | 4 | **no** — kinase, glycolysis, heme, lipid *binding* |
 
 So at most 26 of 51 sets (51%) survive even the loosest reading, and none of
-those 24 needs a term as vague as GO:0008610. The five catabolic sets and four
+those 26 needs a term as vague as GO:0008610. That 26 is itself the generous
+count: it includes CS16, CS30 and CS44, whose CATH superfamilies (cytochrome
+b5-like; Ets-1 winged helix) suggest the condition keys on a non-catalytic or
+spurious domain assignment, which is why the review flags them for
+re-examination rather than retention. Excluding them leaves 23 of 51 (45%).
+The five catabolic sets and four
 unrelated sets — 9 of 51 — would become *false* annotations under the remap, not
 merely imprecise ones. LpxH (CS38) is the instructive counter-case: it is a
 hydrolase, but its hydrolysis is an obligate step *inside* the anabolic Raetz
