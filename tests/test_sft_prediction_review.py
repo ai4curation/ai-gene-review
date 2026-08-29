@@ -24,8 +24,11 @@ from scripts.auto_review_sft_predictions import (
 )
 from scripts.hf_to_sft_predictions import (
     assess_prediction,
+    load_aigr_review,
     ontology_label_note,
 )
+from scripts.gogpt_predict import deterministic_assessment, load_review_decisions
+from ai_gene_review.sft_prediction_evidence import PROVENANCE_LIMITED_NEGATIVE
 
 
 def test_load_aigr_actions_preserves_mixed_decisions(tmp_path):
@@ -43,6 +46,84 @@ existing_annotations:
     assert load_aigr_term_actions(review_file) == {
         "GO:0000001": {"ACCEPT", "REMOVE"}
     }
+
+
+def test_load_aigr_actions_marks_only_negative_miscitation_decisions(tmp_path):
+    review_file = tmp_path / "review.yaml"
+    review_file.write_text(
+        """
+references:
+  - id: PMID:1
+    reference_review: {correctness: MISCITED}
+  - id: PMID:2
+    reference_review: {correctness: WRONG_IDENTIFIER}
+  - id: PMID:3
+    reference_review: {correctness: VERIFIED}
+  - id: PMID:4
+    reference_review:
+  - reference_review: {correctness: MISCITED}
+existing_annotations:
+  - term: {id: "GO:0000001", label: miscited negative}
+    original_reference_id: PMID:1
+    review: {action: REMOVE}
+  - term: {id: "GO:0000002", label: wrong-identifier negative}
+    original_reference_id: PMID:2
+    review: {action: MARK_AS_OVER_ANNOTATED}
+  - term: {id: "GO:0000003", label: verified negative}
+    original_reference_id: PMID:3
+    review: {action: REMOVE}
+  - term: {id: "GO:0000004", label: unreviewed negative}
+    original_reference_id: PMID:4
+    review: {action: REMOVE}
+  - term: {id: "GO:0000005", label: positive despite miscitation}
+    original_reference_id: PMID:1
+    review: {action: ACCEPT}
+"""
+    )
+
+    expected = {
+        "GO:0000001": {PROVENANCE_LIMITED_NEGATIVE},
+        "GO:0000002": {PROVENANCE_LIMITED_NEGATIVE},
+        "GO:0000003": {"REMOVE"},
+        "GO:0000004": {"REMOVE"},
+        "GO:0000005": {"ACCEPT"},
+    }
+    assert load_aigr_term_actions(review_file) == expected
+    assert load_aigr_review(review_file)[0] == expected
+    assert load_review_decisions(review_file) == expected
+
+
+def test_provenance_limited_negative_defaults_to_uncertain():
+    actions = {"GO:0000001": {PROVENANCE_LIMITED_NEGATIVE}}
+    assert auto_assess("GO:0000001", {"GO:0000001"}, actions, set())[:2] == (
+        "UNC",
+        1,
+    )
+    result = assess_prediction("GO:0000001", {"GO:0000001"}, actions, set())
+    assert (result["assessment"], result["confidence_score"]) == ("UNC", 1)
+    assert deterministic_assessment("GO:0000001", actions)[0] == "UNC"
+
+
+def test_verified_negative_remains_decisive_alongside_provenance_limited_action():
+    exact_actions = {"REMOVE", PROVENANCE_LIMITED_NEGATIVE}
+    actions = {"GO:0000001": exact_actions}
+    assert auto_assess("GO:0000001", {"GO:0000001"}, actions, set())[:2] == (
+        "NPI",
+        0,
+    )
+    result = assess_prediction("GO:0000001", {"GO:0000001"}, actions, set())
+    assert (result["assessment"], result["confidence_score"]) == ("NPI", 0)
+    assert deterministic_assessment("GO:0000001", actions)[0] == "NPI"
+
+
+def test_modify_remains_less_precise_alongside_provenance_limited_action():
+    actions = {"GO:0000001": {"MODIFY", PROVENANCE_LIMITED_NEGATIVE}}
+    assert auto_assess("GO:0000001", {"GO:0000001"}, actions, set())[:2] == (
+        "LSP",
+        2,
+    )
+    result = assess_prediction("GO:0000001", {"GO:0000001"}, actions, set())
+    assert (result["assessment"], result["confidence_score"]) == ("LSP", 2)
 
 
 def test_deterministic_reclassification_uses_only_exact_contradictions():
