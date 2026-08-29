@@ -27,7 +27,9 @@ the effective proteolysis of a subset of misfolded substrates by the DegP protea
 GO:0140767, *enzyme-substrate adaptor activity*, therefore provides a current and
 specific molecular-function annotation. The experimental evidence code is retained
 as EXP, matching the source GOA row rather than inferring a stronger assay type from
-an abstract-only cache. A second NEW annotation, GO:0070298 *negative regulation of
+an abstract-only cache. Because loss of CpxP prevents effective degradation in the
+same study, the broad GO:0030162 row is modified to GO:0045862, *positive regulation
+of proteolysis*. A second NEW annotation, GO:0070298 *negative regulation of
 phosphorelay signal transduction system*, records the directly demonstrated CpxA
 inhibition process represented in the core-function synthesis.
 
@@ -66,7 +68,7 @@ abstract-only in the local cache. Their experimental annotations were not remove
 second-guessed beyond what their abstracts directly establish. PMID:21317898 and
 PMID:25207645 have cached full text. The homodimer IPI and broad response-to-stress IDA
 are retained as `KEEP_AS_NON_CORE`: both are supported, but neither states a direct
-core mechanism. Final physical action counts are ACCEPT 4, KEEP_AS_NON_CORE 2,
-MODIFY 2, MARK_AS_OVER_ANNOTATED 3, with no REMOVE, UNDECIDED, or PENDING rows. Two
+core mechanism. Final physical action counts are ACCEPT 3, KEEP_AS_NON_CORE 2,
+MODIFY 3, MARK_AS_OVER_ANNOTATED 3, with no REMOVE, UNDECIDED, or PENDING rows. Two
 separate NEW annotations capture GO:0140767 DegP adaptor molecular function and
 GO:0070298 Cpx phosphorelay inhibition.
