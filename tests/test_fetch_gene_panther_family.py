@@ -30,11 +30,16 @@ def test_main_fetches_resolved_family(tmp_path: Path, monkeypatch) -> None:
         "YDJ1",
         "DR   PANTHER; PTHR43888; DNAJ-LIKE-2, ISOFORM A-RELATED; 1.\n",
     )
-    calls = []
+    calls: list[tuple[str, Path]] = []
+
+    def fake_fetch(family_id: str, base_path: Path) -> bool:
+        calls.append((family_id, base_path))
+        return True
+
     monkeypatch.setattr(
         fetch_gene_panther_family,
         "_fetch_panther_family_data",
-        lambda family_id, base_path: calls.append((family_id, base_path)) or True,
+        fake_fetch,
     )
 
     result = fetch_gene_panther_family.main(
