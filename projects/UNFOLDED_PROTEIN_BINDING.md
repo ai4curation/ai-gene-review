@@ -366,7 +366,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 8 | **ER quality control** | UGGT1, ERLEC1, SYVN1 (human); Uggt1 (rat); CNE1, EPS1, PDI1, EUG1, ROT1, IRE1 (yeast); IRE1 (T. reesei); CSH3 (C. albicans); Edem2 (fly) | OVER_ANNOTATED or REMOVE (sensors, not chaperones) |
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
-| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy/SlyD await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
+| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy/SlyD await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
 | 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX, RidA (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
@@ -442,7 +442,8 @@ established:
    supports DegP substrate-adaptor activity (GO:0140767) and positive regulation of
    proteolysis (GO:0045862), while its CpxA interaction supports signaling-receptor
    inhibition (GO:0030547) and negative regulation of phosphorelay signaling (GO:0070298).
-   These validate the foldase/holdase framework in a phylogenetically distant lineage.
+   These E. coli proteins collectively validate the foldase/holdase framework in a
+   phylogenetically distant lineage.
 
 3. **CnoX (E. coli)** — Redox-activated holdase with thioredoxin domain. Interesting
    mechanistic variant: becomes an active holdase specifically under oxidative stress when
@@ -492,7 +493,7 @@ established:
 | Nmnat | *D. melanogaster* | Q9VC03 | 32 | MODIFY | Neuroprotective chaperone |
 | Edem2 | *D. melanogaster* | Q9VK27 | 23 | OVER_ANNOTATED | ERAD sensor, not chaperone |
 | CnoX | *E. coli* | P77395 | 12 | MODIFY → GO:0044183 | Redox-activated holdase |
-| CpxP | *E. coli* | P0AE85 | 11 | MARK_AS_OVER_ANNOTATED; NEW GO:0140767, GO:0070298; MODIFY → GO:0045862 | DegP substrate adaptor and CpxA inhibitor; weak in-vitro chaperone activity does not establish a general holdase function |
+| CpxP | *E. coli* | P0AE85 | 11 | MARK_AS_OVER_ANNOTATED; NEW GO:0140767, GO:0070298; MODIFY → GO:0030547, GO:0045862 | DegP substrate adaptor and CpxA inhibitor; weak in-vitro chaperone activity does not establish a general holdase function |
 | DnaJ | *E. coli* | P08622 | 48 | MODIFY → GO:0044183 | J-domain co-chaperone |
 | DnaK | *E. coli* | P0A6Y8 | 61 | MODIFY → GO:0044183 | HSP70 foldase/holdase |
 | GroEL | *E. coli* | P0A6F5 | 64 | MODIFY → GO:0044183 | Chaperonin |
