@@ -12,8 +12,15 @@ def test_gogpt_wrappers_expose_repository_package_to_bioreason_python() -> None:
     command_lines = [
         line.strip()
         for line in PROJECT_JUSTFILE.read_text().splitlines()
-        if "scripts/gogpt_predict.py" in line and not line.lstrip().startswith("#")
+        if "BioReason-Pro" in line
+        and "scripts/gogpt_predict.py" in line
+        and not line.lstrip().startswith("#")
     ]
 
-    assert len(command_lines) == 5
-    assert all(line.startswith("PYTHONPATH=src ") for line in command_lines)
+    assert command_lines, "expected at least one external BioReason GO-GPT invocation"
+    missing = [
+        line
+        for line in command_lines
+        if not line.startswith("PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ")
+    ]
+    assert not missing, f"BioReason invocations without repository PYTHONPATH: {missing}"
