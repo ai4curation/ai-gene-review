@@ -307,3 +307,58 @@ def test_real_pgrp_node_assessments_check_out():
     node_results = [r for r in results if r.accession.startswith("GO:")]
     assert len(node_results) == 2
     assert all(r.outcome is Outcome.PASS for r in node_results)
+
+
+# --------------------------------------------------------------------------
+# RESIDUE_DETERMINED term assessments must point at a real site
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "site,outcome",
+    [("real_site", Outcome.PASS), ("no_such_site", Outcome.FAIL)],
+)
+def test_determined_by_site_must_resolve(site, outcome):
+    """A RESIDUE_DETERMINED pointer that names no site is a dangling reference."""
+    from ai_gene_review.validation.family_residue_validator import (
+        check_term_assessment_site_refs,
+    )
+
+    review = {
+        "family_id": "PANTHER:PTHR00001",
+        "residue_sites": [{"site_id": "real_site"}],
+        "term_assessments": [
+            {
+                "assessed_term": {"id": "GO:1", "label": "x"},
+                "scope": "RESIDUE_DETERMINED",
+                "determined_by_site": site,
+            }
+        ],
+    }
+    (result,) = check_term_assessment_site_refs(review)
+    assert result.outcome is outcome
+
+
+def test_non_residue_determined_assessments_are_ignored():
+    from ai_gene_review.validation.family_residue_validator import (
+        check_term_assessment_site_refs,
+    )
+
+    review = {
+        "family_id": "PANTHER:PTHR00001",
+        "term_assessments": [
+            {"assessed_term": {"id": "GO:1"}, "scope": "FAMILY_WIDE"}
+        ],
+    }
+    assert check_term_assessment_site_refs(review) == []
+
+
+@pytest.mark.integration
+def test_real_sephs_family_review_validates():
+    """The SEPHS family review, including its RESIDUE_DETERMINED scoping."""
+    results = validate_family_review(
+        Path("interpro/panther/PTHR10256/PTHR10256-review.yaml"),
+        Path(".cache/uniprot_seq"),
+    )
+    failures = [r for r in results if r.outcome is Outcome.FAIL]
+    assert not failures, [str(f) for f in failures]

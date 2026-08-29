@@ -196,6 +196,36 @@ def _check_motif(
     )
 
 
+def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
+    """A ``RESIDUE_DETERMINED`` term assessment must point at a real site in this review.
+
+    Without this the pointer is decorative: a term could claim its applicability is
+    decided by a site that does not exist, and nothing would notice.
+    """
+    family = review.get("family_id", "?")
+    known = {
+        s.get("site_id") for s in (review.get("residue_sites") or []) if s.get("site_id")
+    }
+    results: list[ResidueCheck] = []
+    for assessment in review.get("term_assessments") or []:
+        site = assessment.get("determined_by_site")
+        if not site:
+            continue
+        term = (assessment.get("assessed_term") or {}).get("id", "?")
+        if site in known:
+            results.append(
+                ResidueCheck(family, site, term, 0, [], None, Outcome.PASS,
+                             f"determined_by_site resolves to site '{site}'")
+            )
+        else:
+            results.append(
+                ResidueCheck(family, site, term, 0, [], None, Outcome.FAIL,
+                             f"determined_by_site '{site}' is not a residue site in this "
+                             f"review; known sites are {sorted(known) or '(none)'}")
+            )
+    return results
+
+
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
     """Check every ``node_assessment`` against the family's own cached PAINT rows.
 
@@ -331,6 +361,7 @@ def validate_family_review(path: Path, cache_dir: Path) -> list[ResidueCheck]:
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
+        + check_term_assessment_site_refs(review)
     )
 
 
