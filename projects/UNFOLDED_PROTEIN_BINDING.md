@@ -366,7 +366,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
 | 11 | **Periplasmic chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | MODIFY → GO:0044183 (holdase/chaperone) |
 | 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
-| 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX, RidA (E. coli) | MODIFY → GO:0044183 (stress-activated holdase) |
+| 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX, RidA (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
 | 15 | **Other** | NPM1, TMEM67 (human); NAP1, GET3 (yeast); St13, Serpinh1 (mouse/rat); Nmnat (fly); nud-1, hsp-12.3, hsp-12.6 (worm); tigA (A. niger); GIP1 (Arabidopsis) | Gene-specific decisions |
 
@@ -450,9 +450,12 @@ established:
    of OVER_ANNOTATED. The T. reesei review also flagged metazoan-specific GO terms
    (IRE1-TRAF2-ASK1 complex) that are biologically impossible in fungi.
 
-6. **Peroxiredoxins (TSA1, pmp20, tpx1)** — Dual-function: peroxidase at low oxidative
-   stress, holdase chaperone at high stress (after overoxidation of catalytic Cys). Confirms
-   that GO:0051082 is appropriate for the chaperone function but should become holdase NTR.
+6. **Peroxiredoxins (TSA1, pmp20, tpx1; PP_1084/PpPrx as a literature-only gap case)** —
+   Dual-function peroxidase/holdases whose oligomeric state controls aggregation-prevention
+   activity. PP_1084 provides the clearest discriminator: its full text explicitly reports
+   suppression of model-substrate aggregation and failure to detect foldase activity
+   (PMID:21104173). This supports the holdase NTR rather than GO:0044183; the older
+   GO:0044183 decisions for TSA1, pmp20 and tpx1 should be re-reviewed under the same rule.
 
 <details>
 <summary>Full non-human gene table (click to expand)</summary>
