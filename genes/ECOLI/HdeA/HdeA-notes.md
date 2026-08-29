@@ -30,3 +30,9 @@ The three experimental GO:0044183 protein folding chaperone rows are retained. A
 
 - Revised the GO:0006457 `MODIFY` rationale to describe the parent term as too general and uninformative about HdeA's demonstrated pH-triggered refolding mechanism, while retaining GO:0042026 and the distinction between process involvement and folding catalysis.
 - Narrowed the PMID:9298646 and PMID:9731767 reference-review notes to claims visible in their abstract-only caches. `correctness: VERIFIED` remains appropriate for verified citation identity and the explicitly available abstract claims; it does not assert verification of inaccessible full-text assay details.
+
+## PR #2741 follow-up — 2026-08-29
+
+- Anchored the PMID:9298646 signal-peptide claim to the UniProt record's `PROTEIN SEQUENCE OF 22-33` attribution and `SIGNAL 1..21` feature, while keeping the abstract's limited subcellular-location wording separate and not treating it as HdeA-specific compartment proof.
+- Recorded that the cached PMID:9731767 entry contains no result-bearing abstract, whereas UniProt explicitly attributes 2.2-A crystallography and the Cys39-Cys87 disulfide to that PMID.
+- Simplified the GO:0006457 BP rationale to the specificity argument: the parent is too general, GO:0042026 captures the demonstrated neutralization-triggered refolding process, and this does not imply that HdeA catalyzes folding chemistry.
