@@ -76,8 +76,10 @@ OpenScientist report, but the report's incorrect PTHR43828/SF10 family identifie
 is not used; the repository's PTHR24198:SF165 membership and current PAINT table
 are authoritative for provenance.
 
-Both GO:0051082 `unfolded protein binding` rows are modified to the more specific
-GO:0140597 `protein carrier chaperone`. This is not a generic holdase inference:
+GO:0051082 `unfolded protein binding` is obsolete in current GO, whose obsoletion
+comment recommends replacement by an activity term. Both rows are modified to
+the more specific GO:0140597 `protein carrier chaperone`. This is not a generic
+holdase inference:
 Yar1 binds nascent Rps3, prevents aggregation, maintains solubility, and
 accompanies the client toward its assembly site. The protein-binding rows remain
 marked over-annotated because the specific Rps3 carrier-chaperone term is more
