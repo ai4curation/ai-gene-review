@@ -53,10 +53,11 @@ SurA is a periplasmic protein bearing a cleavable N-terminal signal peptide
 
 - MF core: PPIase activity (GO:0003755) — real enzymatic activity per the family
   rule (EC 5.2.1.8), confirmed in the ortholog; retain as a (secondary) core MF.
-- MF core: chaperone / unfolded protein binding — SurA's primary in vivo function
-  is holdase chaperone activity toward unfolded OMPs. GO:0051082 (unfolded protein
-  binding) captures this; GO:0044183 (protein folding chaperone) is the more
-  appropriate MF for the chaperone activity (proposed as a new MF term to add).
+- MF core: carrier-holdase activity — SurA binds unfolded OMPs and escorts them across
+  the periplasm to BAM while preventing off-pathway misfolding. GO:0051082 is now
+  obsolete. GO:0140309 (unfolded protein holdase activity) is carrier-specific and
+  fits SurA because its client is delivered to a defined acceptor/location; this is
+  unlike an in-situ holdase for which the term would be inappropriate.
 - BP: protein folding (GO:0006457) and Gram-negative-bacterium-type cell outer
   membrane assembly (GO:0043165) are well supported and core.
 - BP: protein stabilization (GO:0050821) is a broad, mechanistically-implied
@@ -68,3 +69,27 @@ SurA is a periplasmic protein bearing a cleavable N-terminal signal peptide
 - MF: peptide binding (GO:0042277) is a generic supporting binding term; SurA does
   recognize OMP peptide motifs, but the more informative MF terms are the chaperone
   and PPIase terms. Mark as over-annotated.
+
+## 2026-08-29 dedicated re-review
+
+The current QuickGO export contains seven qualifier-aware signatures, each reviewed
+exactly once: two `enables`, three `involved_in`, and two `located_in`. All are IEA;
+there are no IBA annotations and therefore no PTN/PAINT node to audit. The PANTHER
+family entry is classification evidence, not an IBA provenance claim.
+
+The former author-supplied NEW GO:0051082 row was not a current physical GOA signature.
+It reflected a legacy UniRule assignment that remains visible in the UniProt flat file,
+but GO:0051082 is obsolete. It was replaced by a NEW GO:0140309 ISS annotation with
+the experimentally characterized E. coli SurA (UniProtKB:P0ABZ6) recorded as the
+supporting entity. This is an evidence-specific replacement: E. coli SurA is reported
+as responsible for "the periplasmic transit of the bulk mass of OMPs to the YaeT
+complex" [PMID:17908933], and SurA prevents FhuA misfolding by "stabilizing a dynamic,
+unfolded state" during stepwise membrane insertion [PMID:26344570]. These cached
+records are abstract-only, so the review uses only their explicit abstract claims and
+does not convert them into direct P. putida evidence.
+
+The seven current GOA decisions remain four ACCEPT, two MARK_AS_OVER_ANNOTATED, and
+one KEEP_AS_NON_CORE. The extra author-supplied current-term proposal is one NEW.
+Direct biochemical confirmation of Q88QT4 carrier-holdase and PPIase activities remains
+desirable because its UniProt evidence level is PE=3 and no P. putida-specific
+experimental publication was identified in the cache.
