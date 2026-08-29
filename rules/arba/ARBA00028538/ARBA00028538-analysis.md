@@ -320,7 +320,15 @@ antecedents.
 3. Re-derive, as separate pathway-scoped rules, only the condition sets whose
    family assignment is specific enough to name a product: sphingolipid/ceramide
    biosynthesis (GO:0030148, GO:0046513) from CS1, 4, 8, 9, 18, 27, 36;
-   glycosphingolipid biosynthesis (GO:0006688) from CS13, 21, 40; lipid-A
+   glycosphingolipid biosynthesis from CS13, 21 and 40, each taking the specific
+   child it warrants rather than the shared parent GO:0006688 — CS13 (UGT8/CGT)
+   GO:0006682 galactosylceramide biosynthetic process and CS40 (UGCG)
+   GO:0006679 glucosylceramide biosynthetic process, with only CS21 (B4GALT6,
+   acceptor unverified) falling back to GO:0006688; plant and bacterial
+   glycolipid biosynthesis (GO:0009247) from CS17, for which GO:0019375
+   galactolipid biosynthetic process is the exact child, and CS41; fungal
+   complex-sphingolipid biosynthesis (GO:0051999 mannosyl-inositol
+   phosphorylceramide biosynthetic process) from CS11; lipid-A
    biosynthesis (GO:0009245) from CS7, 24, 38; GPI-anchor biosynthesis
    (GO:0006506) from CS22, 46, 47; dolichyl-phosphate-mannose biosynthesis
    (GO:0180047) from CS23 and CS50 merged. Everything else — the hydrolases, the
