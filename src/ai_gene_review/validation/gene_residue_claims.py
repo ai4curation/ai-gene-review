@@ -70,6 +70,23 @@ def _residue_at(seq: str, position: int) -> str | None:
     return seq[position - 1] if 1 <= position <= len(seq) else None
 
 
+def _version_note(cache: SequenceCache, spec: dict, acc: str) -> str:
+    """Describe sequence-version drift, if the claim pinned one and it has moved.
+
+    Kept separate from the residue comparison so the two signals do not get confused.
+    A drifted version with a still-correct residue is fine; a drifted version with a
+    wrong residue usually *explains* the wrong residue, and saying so turns a bare
+    contradiction into an actionable one.
+    """
+    claimed_v = spec.get("sequence_version")
+    if claimed_v is None:
+        return ""
+    current_v = cache.sequence_version(acc)
+    if current_v is None or current_v == claimed_v:
+        return ""
+    return f" [sequence version has moved {claimed_v} -> {current_v} since this claim]"
+
+
 def _check_position(
     cache: SequenceCache, spec: dict, label: str, gene: str, term: str, kind: str
 ) -> tuple[ClaimCheck, str | None]:
@@ -78,12 +95,14 @@ def _check_position(
     pos = spec["position"]
     claimed = spec["residue"]
     seq = cache.get(acc)
+    drift = _version_note(cache, spec, acc)
     observed = _residue_at(seq, pos)
     if observed is None:
         return (
             ClaimCheck(
                 kind, gene, term,
-                f"{label} {acc}:{pos} is beyond the end of a {len(seq)}-residue sequence",
+                f"{label} {acc}:{pos} is beyond the end of a "
+                f"{len(seq)}-residue sequence{drift}",
                 ClaimOutcome.FAIL,
             ),
             None,
@@ -92,13 +111,15 @@ def _check_position(
         return (
             ClaimCheck(
                 kind, gene, term,
-                f"{label} {acc}:{pos} claimed {claimed} but the sequence has {observed}",
+                f"{label} {acc}:{pos} claimed {claimed} but the sequence "
+                f"has {observed}{drift}",
                 ClaimOutcome.FAIL,
             ),
             observed,
         )
     return (
-        ClaimCheck(kind, gene, term, f"{label} {acc}:{pos} is {observed} as claimed",
+        ClaimCheck(kind, gene, term,
+                   f"{label} {acc}:{pos} is {observed} as claimed{drift}",
                    ClaimOutcome.PASS),
         observed,
     )

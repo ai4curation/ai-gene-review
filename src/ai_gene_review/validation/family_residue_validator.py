@@ -90,25 +90,60 @@ class SequenceCache:
 
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
+    _versions: dict[str, int] = field(default_factory=dict)
+
+    def _fetch_json(self, acc: str) -> dict:
+        req = urllib.request.Request(
+            UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
+        )
+        with urllib.request.urlopen(req, timeout=60) as fh:
+            return json.load(fh)
 
     def get(self, accession: str) -> str:
-        """Return the amino-acid sequence for a UniProt accession."""
+        """Return the amino-acid sequence for a UniProt accession.
+
+        A cached sequence is used even when no version file sits beside it: an older
+        cache entry is still a valid sequence, and requiring both would force a refetch
+        of everything the first time versions were introduced.
+        """
         acc = accession.split(":")[-1]
         if acc in self._mem:
             return self._mem[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        path = self.cache_dir / f"{acc}.seq"
-        if path.exists():
-            seq = path.read_text().strip()
+        seq_path = self.cache_dir / f"{acc}.seq"
+        if seq_path.exists():
+            seq = seq_path.read_text().strip()
         else:
-            req = urllib.request.Request(
-                UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
-            )
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                seq = json.load(fh)["sequence"]["value"]
-            path.write_text(seq)
+            data = self._fetch_json(acc)
+            seq = data["sequence"]["value"]
+            seq_path.write_text(seq)
+            version = data.get("entryAudit", {}).get("sequenceVersion")
+            if version is not None:
+                (self.cache_dir / f"{acc}.sv").write_text(str(version))
+                self._versions[acc] = version
         self._mem[acc] = seq
         return seq
+
+    def sequence_version(self, accession: str) -> int | None:
+        """Return the UniProt sequence version, fetching it only if not already known.
+
+        Looked up lazily: only a claim that actually pinned a version asks for this, so
+        an unversioned corpus costs no extra requests.
+        """
+        acc = accession.split(":")[-1]
+        if acc in self._versions:
+            return self._versions[acc]
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        ver_path = self.cache_dir / f"{acc}.sv"
+        if ver_path.exists():
+            version = int(ver_path.read_text().strip())
+        else:
+            version = self._fetch_json(acc).get("entryAudit", {}).get("sequenceVersion")
+            if version is None:
+                return None
+            ver_path.write_text(str(version))
+        self._versions[acc] = version
+        return version
 
 
 def _residue_at(seq: str, position: int) -> str | None:
