@@ -276,17 +276,24 @@ def write_family_paint(
     nodes: Set[str],
     ibd_index: Dict[str, List[IBDRecord]],
     out_dir: Path,
-) -> Path:
+) -> Optional[Path]:
     """Write the per-family PAINT slice as ``<FAM>-paint.tsv``.
 
     One row per node-level annotation (IBD/IRD/IKR, plus any IBA-on-node) for the
-    family's ``PTN`` nodes, ordered by node, aspect, GO id. Returns the TSV path.
+    family's ``PTN`` nodes, ordered by node, aspect, GO id. Seed identifiers are
+    sorted because GAF with/from order is not significant. Returns the TSV path,
+    or ``None`` after removing any obsolete slice when there are no annotations.
     """
     tsv_path = out_dir / f"{family}-paint.tsv"
 
     # Stable ordering: by node, then aspect, then GO id.
     selected = [rec for node in nodes for rec in ibd_index.get(node, [])]
     selected.sort(key=lambda r: (r.node, r.aspect, r.go_id))
+
+    if not selected:
+        if tsv_path.exists():
+            tsv_path.unlink()
+        return None
 
     with tsv_path.open("w", newline="") as fh:
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
@@ -300,7 +307,7 @@ def write_family_paint(
                     rec.aspect,
                     rec.evidence,
                     "true" if rec.negated else "false",
-                    "|".join(rec.seeds),
+                    "|".join(sorted(rec.seeds)),
                     rec.taxon,
                     rec.date,
                 ]
@@ -343,7 +350,7 @@ def fetch_family_paint(
     cache_dir: Path,
     extra_uniprot: Optional[Iterable[str]] = None,
     force_download: bool = False,
-) -> Tuple[Path, Set[str]]:
+) -> Tuple[Optional[Path], Set[str]]:
     """Fetch + cache the PAINT GAFs and write a family's node-level slice.
 
     Args:
@@ -357,7 +364,8 @@ def fetch_family_paint(
 
     Returns:
         ``(tsv_path, nodes)`` where ``nodes`` is the resolved set of ``PTN``
-        nodes for the family.
+        nodes for the family. ``tsv_path`` is ``None`` when no node-level
+        annotations resolve; any obsolete prior slice is removed.
     """
     members = family_member_ids(entries_csv)
     if extra_uniprot:
@@ -424,15 +432,18 @@ def fetch_all_family_paint(
     cache_dir: Path,
     force_download: bool = False,
     skip_empty: bool = True,
-) -> Dict[str, int]:
+) -> Tuple[Dict[str, int], List[str]]:
     """Write per-family PAINT slices for every cached family in one pass.
 
     Does a single streaming pass over the (large) leaf GAF and a single load of
     ``IBD.gaf``, rather than re-reading them per family. Families whose members
-    resolve to no node-level annotations are skipped when ``skip_empty`` is True.
+    resolve to no node-level annotations are skipped when ``skip_empty`` is True,
+    and any pre-existing slice for such a family is deleted.
 
-    Returns ``family -> number of node-level annotations written`` for each
-    family that had at least one (or all families when ``skip_empty`` is False).
+    Returns ``(counts, removed)``: ``counts`` maps each written family to its
+    number of node-level annotations, and ``removed`` lists families whose stale
+    slices were deleted. When ``skip_empty`` is false, header-only slices are
+    still not emitted, so annotation-free families are absent from ``counts``.
     """
     member_to_families, family_dirs = load_all_family_members(panther_root)
 
@@ -445,6 +456,7 @@ def fetch_all_family_paint(
         ibd_index = parse_ibd_gaf(fh)
 
     counts: Dict[str, int] = {}
+    removed: List[str] = []
     for family, fdir in family_dirs.items():
         nodes = family_nodes.get(family, set())
         n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
@@ -452,10 +464,12 @@ def fetch_all_family_paint(
             stale_slice = fdir / f"{family}-paint.tsv"
             if stale_slice.exists():
                 stale_slice.unlink()
+                removed.append(family)
             continue
-        write_family_paint(family, nodes, ibd_index, fdir)
-        counts[family] = n_annotations
-    return counts
+        tsv_path = write_family_paint(family, nodes, ibd_index, fdir)
+        if tsv_path is not None:
+            counts[family] = n_annotations
+    return counts, removed
 
 
 @dataclass

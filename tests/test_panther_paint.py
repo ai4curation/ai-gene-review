@@ -168,6 +168,7 @@ def test_write_family_paint_writes_tsv_only(tmp_path: Path):
     tsv_path = write_family_paint("PTHR000", nodes, index, out_dir)
 
     assert tsv_path == out_dir / "PTHR000-paint.tsv"
+    assert tsv_path is not None
     # No GAF is written any more.
     assert not (out_dir / "PTHR000-paint.gaf").exists()
 
@@ -184,18 +185,18 @@ def test_write_family_paint_writes_tsv_only(tmp_path: Path):
     assert all(line.startswith("PTHR000\tPTN000019791") for line in tsv_lines[1:])
     assert "PTN002681965" not in tsv_path.read_text()
     assert b"\r\n" not in tsv_path.read_bytes()
+    assert "UniProtKB:P14635|UniProtKB:P20248" in tsv_path.read_text()
 
 
 def test_write_family_paint_empty_nodes(tmp_path: Path):
     index = parse_ibd_gaf(IBD_FIXTURE.splitlines())
     out_dir = tmp_path / "PTHRX"
     out_dir.mkdir()
+    stale_slice = out_dir / "PTHRX-paint.tsv"
+    stale_slice.write_text("obsolete\n")
     tsv_path = write_family_paint("PTHRX", set(), index, out_dir)
-    # still writes an (empty) file with just the header so downstream is uniform
-    assert tsv_path.exists()
-    assert tsv_path.read_text().strip().splitlines() == [
-        "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate"
-    ]
+    assert tsv_path is None
+    assert not stale_slice.exists()
 
 
 def test_fetch_family_paint_end_to_end_with_seeded_cache(tmp_path: Path):
@@ -234,6 +235,7 @@ def test_fetch_family_paint_end_to_end_with_seeded_cache(tmp_path: Path):
 
     # P14635's leaf rows cite PTN000019791, which has 2 IBD annotations.
     assert nodes == {"PTN000019791"}
+    assert tsv_path is not None
     assert not (out_dir / "PTHRX-paint.gaf").exists()
     tsv_rows = tsv_path.read_text().strip().splitlines()
     assert len(tsv_rows) == 3  # header + 2 annotations
@@ -320,8 +322,9 @@ def test_fetch_all_family_paint_bulk(tmp_path: Path):
     cache_dir = tmp_path / ".cache"
     _seed_cache(cache_dir)
 
-    counts = fetch_all_family_paint(panther, cache_dir=cache_dir)
+    counts, removed = fetch_all_family_paint(panther, cache_dir=cache_dir)
     assert counts == {"PTHR1": 2}
+    assert removed == ["EMPTY"]
     assert (panther / "PTHR1" / "PTHR1-paint.tsv").exists()
     # Empty families are skipped and any obsolete prior slice is removed.
     assert not stale_slice.exists()
