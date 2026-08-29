@@ -25,11 +25,21 @@ The exact pinned GOA traces are:
 The current PAINT table still places GO:0001228, GO:0045944, and GO:0030907 at
 PTN000917496 with the same experimentally grounded transcription-factor source
 sets. Those sources support their own transcription biology but not transfer to
-Yar1, which shares ankyrin repeats without the transcription-factor domain
-architecture. These are `PROPAGATION_BAD` calls, not weak-source or donor-count
-arguments. The SBF-complex term GO:0033309 is absent from current PAINT, so its
-pinned 2018 row is additionally `SOURCE_STALE_OR_MISSING`. PTN labels are kept
-as bare `PANTHER:PTN000917496`.
+Yar1. The APSES-domain argument applies specifically to GO:0001228. For MBF,
+SBF, and broader transcription regulation, the donor sets also contain
+Swi6/Cdc10-like ankyrin proteins that genuinely lack APSES domains; Yar1 is not
+their co-ortholog but a much smaller 200-residue protein with only two ankyrin
+repeats, and no Yar1 study reports cell-cycle or promoter-association evidence.
+These are `PROPAGATION_BAD` calls, not weak-source or donor-count arguments. The
+SBF-complex term GO:0033309 is absent from current PAINT, so its pinned 2018 row
+is additionally `SOURCE_STALE_OR_MISSING`. PTN labels are kept as bare
+`PANTHER:PTN000917496`.
+
+The current node also has positive IBD assertions for GO:0000978
+`RNA polymerase II cis-regulatory region sequence-specific DNA binding` and
+GO:0000082 `G1/S transition of mitotic cell cycle`, both dated 2026-02-24. These
+are absent from the pinned YAR1 GOA snapshot but can propagate on refresh, so the
+review raises the broad node placement itself for PAINT-curator reconsideration.
 
 ## Experimental biology
 
@@ -66,7 +76,7 @@ OpenScientist report, but the report's incorrect PTHR43828/SF10 family identifie
 is not used; the repository's PTHR24198:SF165 membership and current PAINT table
 are authoritative for provenance.
 
-Both obsolete GO:0051082 `unfolded protein binding` rows are modified to current
+Both GO:0051082 `unfolded protein binding` rows are modified to the more specific
 GO:0140597 `protein carrier chaperone`. This is not a generic holdase inference:
 Yar1 binds nascent Rps3, prevents aggregation, maintains solubility, and
 accompanies the client toward its assembly site. The protein-binding rows remain
