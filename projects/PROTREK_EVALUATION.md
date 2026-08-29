@@ -36,8 +36,8 @@ source, on two cohorts and with the assessment taxonomy of
   **[Interactive table](PROTREK_EVALUATION/protrek-eval-argo139.html)** — 139 proteins, 417 assessments.
 
 The two cohorts are **not pooled**, and the reason is the single most important control on this page:
-128 of the 139 ARGO139 queries are SwissProt entries whose own GO sentences are inside the index being
-searched, against **0 of 50** in ARGO-ProtNLM-50. Aggregate accuracy on ARGO139 is therefore partly
+127 of the 139 ARGO139 queries are SwissProt entries and ProTrek was trained on SwissProt
+protein-text pairs, against **0 of 50** in ARGO-ProtNLM-50. Aggregate accuracy on ARGO139 is therefore partly
 recall of memorised annotation, and the two numbers measure different things.
 
 ## Bottom line
@@ -256,7 +256,7 @@ GO-GPT on the same genes. Fourteen organisms: *S. pombe* (23), human (19), *C. e
 
 ### Read this cohort as recall, not prediction
 
-128 of the 139 queries (92.1%) are **SwissProt** entries
+127 of the 139 queries (91.4%) are **SwissProt** entries
 ([`argo139_swissprot_status.csv`](PROTREK_EVALUATION/argo139_swissprot_status.csv)). ProTrek's
 searched `GO_annotation` index is built from SwissProt, so for those 128 proteins the model's own GO
 sentences are inside the index it is retrieving from. An exact GOA match there is the model finding
@@ -274,14 +274,14 @@ The effect is exactly what that predicts. Top-3 calls that exactly match an exis
 |----------|------|----|-------|---|-------------------|
 | Correct novel | COR | 2 | 55 | 13.2% | 13.3% |
 | Correct not novel | CNN | 2 | 157 | 37.6% | 13.3% |
-| Less precise | LSP | 2 | 30 | 7.2% | 8.0% |
-| Uncertain | UNC | 1 | 58 | 13.9% | 16.0% |
-| Paralog incorrect | PLI | 0 | 31 | 7.4% | 15.3% |
+| Less precise | LSP | 2 | 31 | 7.4% | 8.0% |
+| Uncertain | UNC | 1 | 55 | 13.2% | 16.0% |
+| Paralog incorrect | PLI | 0 | 33 | 7.9% | 15.3% |
 | Nonparalog incorrect | NPI | 0 | 82 | 19.7% | 33.3% |
 | Repetition | REP | 0 | 4 | 1.0% | 0.7% |
 | **Total** | | | **417** | **Mean CS: 1.30/2.0** | **0.85/2.0** |
 
-**Concordant** (CS=2): 242/417 (58.0%) · **Uncertain** (CS=1): 58/417 (13.9%) · **Discordant** (CS=0): 117/417 (28.1%)
+**Concordant** (CS=2): 243/417 (58.3%) · **Uncertain** (CS=1): 55/417 (13.2%) · **Discordant** (CS=0): 119/417 (28.5%)
 
 **The whole gain is CNN.** ProTrek looks far better here — mean CS 1.30 against 0.85, concordance 58%
 against 35% — and every point of that comes from correct-but-already-annotated calls, which rise from
@@ -298,19 +298,17 @@ unassessable in this scheme; both distributions are shown with and without UNC.
 
 | | Predictions | per gene | Mean CS | Concordant | Discordant | UNC |
 |---|---|---|---|---|---|---|
-| ProTrek (top 3) | 417 | 3.0 | 1.30 | 58.0% | 28.1% | 13.9% |
-| ProTrek (top 1) | 139 | 1.0 | 1.51 | 75.4%\* | 24.6%\* | — |
-| BioReason-SFT | 10,697 | 77.0 | 1.31 | 32.4% | 1.8% | 65.8% |
-| GO-GPT (leaf) | 5,923 | 42.6 | 1.30 | 32.1% | 2.2% | 65.7% |
-
-\* excluding the 21 rank-1 calls assessed UNC.
+| ProTrek (top 3) | 417 | 3.0 | 1.30 | 58.3% | 28.5% | 13.2% |
+| ProTrek (top 1) | 139 | 1.0 | 1.44 | 64.7% | 20.9% | 14.4% |
+| BioReason-SFT | 10,697 | 77.0 | 1.31 | 32.3% | 1.5% | 66.1% |
+| GO-GPT (leaf) | 5,923 | 42.6 | 1.30 | 32.1% | 2.1% | 65.8% |
 
 All three land within 0.02 of the same mean confidence score, and the number is meaningless as a
 ranking: it is produced three different ways. BioReason-SFT and GO-GPT reach it by emitting 40–80
 terms per gene, two thirds of which are ancestors too general to adjudicate and almost none of which
 are wrong — a *precision-by-vagueness* profile. ProTrek reaches it by emitting three specific terms,
 of which roughly one is new, one is already known and one is wrong. **Discordance is the honest
-column**: 28.1% against 1.8% and 2.2%. ProTrek is the only one of the three that will put a
+column**: 28.5% against 1.5% and 2.1%. ProTrek is the only one of the three that will put a
 substantively false statement in front of a curator, and it does so on more than a quarter of its
 output. It is also the only one that names a specific enzyme reaction or complex rather than a
 superclass.
@@ -322,9 +320,9 @@ Does ProTrek retrieve the function the AIGR review calls *core*, and at what ran
 
 | Aspect | n | Exact @1 | Exact @3 | Exact @5 | Exact @25 | Any is_a/part_of relation @25 |
 |--------|---|----------|----------|----------|-----------|-------------------------------|
-| Molecular function | 136 | 15 | 32 | 37 | 65 (48%) | 79 (58%) |
+| Molecular function | 136 | 15 | 32 | 37 | 66 (49%) | 80 (59%) |
 | Biological process | 117 | 8 | 22 | 42 | 68 (58%) | 92 (79%) |
-| Cellular component | 115 | 10 | 20 | 21 | 37 (32%) | 60 (52%) |
+| Cellular component | 115 | 10 | 20 | 21 | 38 (33%) | 61 (53%) |
 
 Better than ARGO-ProtNLM-50 across the board, as memorisation predicts — but note that the curated
 core molecular function is still absent from the top 3 for 104 of 136 core functions, on genes whose
@@ -334,8 +332,8 @@ GOA records mostly already contain it.
 
 #### 1. A third of all calls are sentences the model also emits for a different gene
 
-Across the 139 genes' top-5 output there are 688 resolvable calls drawing on 540 distinct GO terms,
-and **258 of those calls (38%) use a term ProTrek also returns for at least one other gene in the
+Across the 139 genes' top-5 output there are 687 resolvable calls drawing on 540 distinct GO terms,
+and **256 of those calls (37%) use a term ProTrek also returns for at least one other gene in the
 same set**; 26 terms are emitted for three or more genes. Some of that sharing is legitimate — the three *B.
 subtilis* sporulation sigma factors *sigF*, *sigG* and *sigK* really do share sporulation terms, and
 BACSU/sigF's identical output to its paralogs reproduces the same collapse BioReason showed. Much
@@ -400,7 +398,7 @@ score, which is where most of the reviewer time went:
   1 and 2, **above** the correct high-affinity D-glucose symporter at rank 3, which they outscore by
   0.085 and 0.001 units.
 
-`PARALOG_OVERANNOTATION` is again the largest error class (56 of 117 discordant calls), followed by
+`PARALOG_OVERANNOTATION` is again the largest error class (58 of 119 discordant calls), followed by
 `FREQUENCY_BIAS` (16), `TAXON_CONSTRAINT_VIOLATION` (16), `LOCALIZATION_DEFAULT` (10) and
 `PSEUDOENZYME_OVERANNOTATION` (8).
 
@@ -455,7 +453,7 @@ cannot be entered as an annotation, and nothing in the output signals this.
 |---|---|---|---|---|---|
 | *S. pombe* | 23 | 69 | 1.16 | 50.7% | 34.8% |
 | Human | 19 | 57 | 1.18 | 47.4% | 29.8% |
-| *C. elegans* | 15 | 45 | 1.24 | 55.6% | 31.1% |
+| *C. elegans* | 15 | 45 | 1.22 | 57.8% | 35.6% |
 | *B. subtilis* | 13 | 39 | 1.28 | 56.4% | 28.2% |
 | *E. coli* | 13 | 39 | 1.44 | 66.7% | 23.1% |
 | Rat | 12 | 36 | 1.56 | 69.4% | 13.9% |
@@ -470,15 +468,33 @@ padded with ISS/ISO annotations transferred from each other, and those thin, tra
 what the retrieval reproduces — which is why rat/`Tp53` scores well while retrieving nothing that
 matters about p53.
 
-### A data-hygiene finding, not a model finding
+### A data-hygiene finding that was masking a model finding
 
-worm/`csr-1` cannot be scored. The gene folder's cached UniProt record is **Q17370, nuclear hormone
-receptor nhr-47**, not the Argonaute CSR-1 that the folder's own gene review describes — so the
-sequence submitted to ProTrek was NHR-47's. Judged against what was actually supplied the retrieval
-is respectable (rank 5 is an exact hit on nuclear receptor activity; the free-text channel returns
-"Orphan nuclear receptor" at 20.28). Judged against CSR-1 everything is wrong. All three calls are
-recorded as UNC with `WRONG_INPUT_SEQUENCE`, and the gene folder needs correcting before any
-evaluation uses it.
+worm/`csr-1` was originally unscorable. The gene folder cached UniProt **Q17370 — nuclear hormone
+receptor nhr-47** — instead of the Argonaute CSR-1 its own review describes, so the sequence
+submitted was the wrong protein's; the same was true of the BioReason-SFT and GO-GPT prediction
+sets, whose RL export embeds that 579 aa sequence verbatim. The cause was a resolver bug:
+`gene_exact:` matches gene *synonyms*, `nhr-47` carries `csr-1` as a stale synonym, and the
+prefer-reviewed rule then chose it over the real gene, which is TrEMBL-only
+([#2720](https://github.com/ai4curation/ai-gene-review/issues/2720),
+[#2721](https://github.com/ai4curation/ai-gene-review/issues/2721)).
+
+The folder has been re-fetched against **H2KZD5** and ProTrek re-run. The corrected result is worth
+having, because it reproduces the cohort's signature failure in the hardest setting available:
+*C. elegans* encodes 24 Argonautes with sharply divided jobs. Rank 1 (RNAi effector complex, 18.26)
+is the right compartment class and the parent of GOA's RISC complex, and the free-text channel
+returns what is effectively CSR-1's own description at 19.32 — an Argonaute binding
+RNA-dependent-RNA-polymerase-derived 22G endo-siRNAs. Below that the retrieval reaches for other
+family members' specialities: co-transcriptional nuclear silencing (NRDE-3/HRDE-1) at rank 2, and
+antiviral RNAi (RDE-1/DRH-1) at ranks 4 and 5. The `Subcellular_location` channel names the
+substitution outright, returning a sentence about nrde-3 at rank 2. Right family, wrong member —
+the same shape as CAT2, SIR2 and Slc5a1, on a gene family with 24 members to choose from.
+
+The BioReason-SFT and GO-GPT rows are web-app exports that cannot be regenerated here. They had been
+scored against CSR-1 — 30 of 37 SFT calls marked NPI — which penalised those models for correctly
+describing the protein they were handed; all of their csr-1 rows are now recorded as UNC with
+`WRONG_INPUT_SEQUENCE`. Reassuringly, the corrupt row never drove anything: correcting it moves
+every headline figure in this section by at most 0.005 mean CS and 0.5 percentage points.
 
 ## Reproducibility
 
@@ -527,8 +543,9 @@ ARGO-ProtNLM-50 and by gene symbol for ARGO139, following each cohort's director
   correct-novel rate, which is insensitive to memorisation, is the number to carry forward.
 - **Mixed reference maturity in ARGO139.** Of the 139 AIGR reviews used as the comparison standard,
   67 are COMPLETE, 48 DRAFT, 20 IN_PROGRESS and 4 INITIALIZED; yeast/`PDI1` has no `core_functions`
-  at all (assessed against GOA instead), and worm/`csr-1` carries the wrong cached accession and is
-  excluded from any model judgement.
+  at all (assessed against GOA instead), and worm/`csr-1` was re-fetched mid-evaluation after its
+  cached accession was found to name a different gene — its ProTrek row is current, but its
+  BioReason-SFT and GO-GPT rows still derive from the wrong sequence and are scored UNC.
 - **One reviewer, one pass.** Every assessment on both cohorts is agent-adjudicated by a single
   reviewer without a second opinion; borderline COR/CNN and NPI/UNC calls in particular would move
   under a different reviewer.

@@ -123,7 +123,7 @@ The ontology authority for this audit is the official archived 2026-03-25 `go-ba
 
 The [external-authority verification](BIOREASON_COMPARISON/verify_ontology_authority.py) independently downloads the official archive and queries both QuickGO and OLS. On 2026-07-12, the remote archive matched the pinned SHA-256, and both services returned all five disputed sentinels as obsolete; OLS additionally states that `GO:0005615` duplicates `GO:0005576`. Ontology status is reported separately from the seven biological assessment categories: obsoletion alone does not turn a correct non-novel prediction into `LSP`. `LSP` remains reserved for a supplied ID whose canonical concept is more generic than the supported annotation. This distinction restores status-only cases such as `DROME/LysB` and `BACSU/aprE` `GO:0005615` to `CNN` while retaining the obsolete-ID warning.
 
-The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. The cleaned set contains 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 129 exact rejected/over-annotated matches (`NPI`), and 3,894 unresolved terms (`UNC`). Because unresolved entries still require manual assessment, 138/139 documents are `DRAFT`; only the fully resolved `BACSU/ftsZ` document is `COMPLETE`. This is a transparent pending review, not a completed GO-GPT performance result.
+The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. The cleaned set contains 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 127 exact rejected/over-annotated matches (`NPI`), and 3,896 unresolved terms (`UNC`). (The two reclassified calls are `worm/csr-1`'s: that export was generated from the wrong sequence, so all of its terms are now `UNC` with `WRONG_INPUT_SEQUENCE` rather than scored against CSR-1 — see [#2720](https://github.com/ai4curation/ai-gene-review/issues/2720). The gene was already excluded from the model-performance denominator, so no headline figure changes.) Because unresolved entries still require manual assessment, 138/139 documents are `DRAFT`; only the fully resolved `BACSU/ftsZ` document is `COMPLETE`. This is a transparent pending review, not a completed GO-GPT performance result.
 
 ## Results (138-gene performance set; 139 collected exports)
 
@@ -239,7 +239,7 @@ and the current AIGR keeps it as non-core. The remaining confirmed incorrect cal
 same failure modes — pseudoenzyme/paralog over-annotation (LysB lysozyme≠chitinase; DnaK is not a
 redox enzyme; alo1, mlcD, rdgBbeta wrong
 paralog/substrate; comK/fliY misread domain labels), and wrong-input-sequence (**csr-1**, which
-also surfaced a real accession bug: Q21992 is deleted and maps to larp-1). Full reports live under
+also surfaced a real accession bug: Q21992 is deleted from UniProtKB. The folder has since been re-fetched against **H2KZD5**, the TrEMBL entry whose primary gene name is `csr-1`; the cached record had been `nhr-47`/Q17370, which carries `csr-1` only as a stale synonym). Full reports live under
 each gene's `*-hypotheses/` directory.
 
 ### 2. Localization defaults to cytoplasm
