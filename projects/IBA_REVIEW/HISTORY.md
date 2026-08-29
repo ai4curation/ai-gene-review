@@ -122,6 +122,54 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
     source is the tell; GO taxon constraints catch some. Always ask "does this process
     occur in this lineage / this organelle system?"
 
+13. **"Lacks the catalytic residues" needs the alignment, not the adjective.** A
+    systematic residue pass over 17 pseudo-enzyme claims found **4 with a fully intact
+    catalytic site** (CASP12, LPA, AZIN1, HSPA13). In each the protein really is
+    inactive, so the conclusion survived — which is exactly why the error is easy to
+    miss. The mechanism was truncation, a blocked activation junction, loss of substrate
+    contacts, and a different domain respectively. Either run
+    [`catalytic_residue_check.py`](msa/catalytic_residue_check.py) or describe the defect
+    you can actually support. Corollary: verify the *identity* of a catalytic positive
+    control before trusting the contrast — a mislabelled control (PGRP-LE for PGRP-LB)
+    makes real enzymes look degenerate.
+
+---
+
+## 2026-08-26 — Systematic MSA pass over the pseudo-enzyme backlog
+
+The (e) pass built the first MSAs but only for Argonautes and CRMP; every other
+`PSEUDO_OR_SUBACTIVITY_LOSS` claim in the corpus (~53 rows, ~35 genes) still rested on
+UniProt text or an LLM assertion. `catalytic_residue_check.py` generalizes the method and
+this pass ran it on all 17 targets where a catalytic reference with annotated active-site
+features exists. Full table: [msa/RESULTS.md](msa/RESULTS.md).
+
+**13 confirmed.** Notably three that were *named open items*: **PGRPLC**, excluded in pass
+(e) for want of exactly this check (H→A310, C→S429 — reproducing an OpenScientist claim
+position-for-position); **UBAC2**, whose Pattern 7 caveat said the residue loss was only
+inferred (S→L131, H→A183); and **Epe1**, the project's founding example, never before
+aligned against its own IBA donors (KDM2A/KDM2B) — Fe ligand His284→**Tyr370**, matching
+UniProt's text exactly. Also cts2 (GH18 Glu→Asn166, again matching an OpenScientist claim),
+SEPHS1 (catalytic Sec/Cys→Thr with the whole ATP/Mg site intact), CPS1 (GATase nucleophile
+Cys→Ser, which is *why* it uses ammonia), KDX1 (β3 lysine→Arg, canonical pseudokinase),
+SSZ1, wago-4, ADGB, ADPRHL1, AKTIP, and Arabidopsis CRY1.
+
+**4 not supported as stated — the new lesson.** CASP12, LPA, AZIN1 and HSPA13 all have
+**fully intact** catalytic sites. None of their conclusions is clearly wrong (truncation;
+a blocked zymogen activation junction; loss of substrate rather than catalytic contacts;
+a substrate-binding-domain defect) — but the *reason recorded* was wrong in every case.
+
+**Lesson 13, added below**: "lacks the catalytic residues" is the cheapest sentence in
+this project to write and one of the easiest to get wrong. On this sample it was wrong
+24% of the time, always in the direction of asserting a mechanism that sounded right for
+a protein that genuinely is inactive. Verify the residue, or describe the defect you can
+actually support.
+
+**Two method traps worth recording.** My first PGRP run used Q9VXN9 as the "PGRP-LB"
+positive control; it is PGRP-**LE**, itself non-catalytic, which made the controls look
+degenerate too — always verify the identity of a positive control, not just its label.
+And fetching UniProt features with `?fields=ft_act_site` silently returns **zero**
+features, which makes every reference look unannotated; use the plain `.json` endpoint.
+
 ---
 
 ## 2026-06-20 (e) — Final sweep + first actual MSAs

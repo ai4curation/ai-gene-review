@@ -1291,6 +1291,110 @@ classes:
         description: >-
           Source genes, gene products, PANTHER nodes, family nodes, or other
           source entities inspected for the propagated annotation.
+      residue_claims:
+        range: ResidueClaim
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Machine-checkable form of a residue-level argument, e.g. "this protein
+          lost the catalytic cysteine". Optional and additive: the vast majority of
+          existing reviews state such arguments only in review.reason prose, and
+          those are grandfathered, never invalidated. Supply this whenever a NEW
+          review rests on residue gain, loss, or retention, so a validator can
+          resolve the claim against the actual sequences and contradict it.
+
+          This exists because the argument is cheap to assert and hard to check. A
+          survey of 17 "lacks the catalytic residue" claims in this repo found 4
+          where the site was fully intact -- CASP12 (truncated instead), LPA
+          (activation junction), AZIN1 (lost substrate contacts, kept the catalytic
+          Cys) and HSPA13 (a different domain). Each conclusion happened to survive
+          for another reason, so nothing caught the faulty mechanism.
+      residue_claims_not_applicable:
+        range: string
+        description: >-
+          Why this annotation's argument cannot be expressed as a residue claim, for
+          cases that are genuinely not point-residue questions -- capping versus
+          severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent
+          rather than residues substituted (MEFV, RAD51C). Recording the reason keeps
+          the escape valve honest rather than silent.
+
+  ResidueClaim:
+    description: >-
+      A claim that a specific position in THIS gene's protein does or does not carry
+      the residue an anchor protein has at the corresponding position.
+
+      Both sides carry an explicit position and residue, which is what makes the claim
+      checkable without an alignment: the anchor and target residues are each resolved
+      directly against their own sequences. The alignment is only needed to confirm the
+      two positions genuinely correspond, so a claim remains partially verifiable even
+      when no alignment is pinned.
+
+      Positions are always in each protein's own native numbering, never an alignment
+      column -- columns shift when PANTHER re-releases a family, and a stale column
+      still resolves, to the wrong residue.
+    attributes:
+      claim_type:
+        range: ResidueClaimEnum
+        required: true
+        description: Whether the target lost, retained, or substituted the residue.
+      site_ref:
+        range: string
+        pattern: "^PANTHER:PTHR[0-9]{5}#[a-z0-9_]+$"
+        description: >-
+          Optional reference to a curated family-level residue site, as
+          ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the
+          validator additionally checks that the site exists in that family review and
+          that the anchor position is one the site declares -- which is what stops a
+          gene review and a family review drifting apart.
+      anchor:
+        range: ResiduePosition
+        inlined: true
+        required: true
+        description: >-
+          The comparator: a protein known to have the functional residue, and where.
+      target:
+        range: ResiduePosition
+        inlined: true
+        description: >-
+          The corresponding position in this gene's own protein. Omit only when the
+          region is unalignable, in which case say so in comment; a missing target is
+          weaker evidence than a stated substitution.
+      role:
+        range: string
+        description: Mechanistic role of the anchor residue (e.g. "metal ligand", "nucleophile").
+      method:
+        range: ResidueClaimMethodEnum
+        required: true
+        description: How the correspondence between anchor and target positions was established.
+      alignment_release:
+        range: string
+        description: >-
+          Release of the alignment resource used, when method is MSA (e.g. a PANTHER
+          version). Records what the claim was true against.
+      comment:
+        range: string
+        description: Short note, e.g. why the target position is absent rather than substituted.
+
+  ResiduePosition:
+    description: A single residue in a named protein, in that protein's own numbering.
+    attributes:
+      accession:
+        range: string
+        required: true
+        description: UniProt CURIE, e.g. UniProtKB:Q96PD5.
+      position:
+        range: integer
+        required: true
+        minimum_value: 1
+        description: 1-based position in this protein's own sequence.
+      residue:
+        range: string
+        required: true
+        pattern: "^[ACDEFGHIKLMNPQRSTVWYUO]$"
+        description: >-
+          Single-letter residue expected at that position. U and O are permitted for
+          selenocysteine and pyrrolysine -- a catalytic position can legitimately be
+          selenocysteine, as in SEPHS2.
 
   PropagationSource:
     description: >-
@@ -2473,6 +2577,40 @@ enums:
         description: Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation.
       CIRCULAR_PROPAGATION:
         description: Propagation chain depends on another propagated annotation rather than independent source evidence.
+
+  ResidueClaimEnum:
+    description: What a residue claim asserts about the target protein.
+    permissible_values:
+      LOST:
+        description: >-
+          The target does not carry the anchor's functional residue -- it is
+          substituted, or no residue aligns to that position at all.
+      RETAINED:
+        description: >-
+          The target does carry the residue. Worth recording explicitly: a retained
+          site refutes a "lacks the catalytic residue" argument, which is how the
+          CASP12 and LPA errors would have been caught.
+      SUBSTITUTED:
+        description: >-
+          The residue differs but the substitution is conservative or otherwise
+          argued not to abolish function. Distinct from LOST, which asserts the
+          function is gone.
+
+  ResidueClaimMethodEnum:
+    description: How the anchor-to-target position correspondence was established.
+    permissible_values:
+      MSA:
+        description: Multiple sequence alignment; record the alignment_release.
+      STRUCTURE:
+        description: Structural superposition or a solved complex.
+      UNIPROT_FEATURE:
+        description: >-
+          Both positions read from UniProt feature tables on their own records, with
+          no alignment step.
+      LITERATURE:
+        description: >-
+          A publication states the correspondence directly; cite it in
+          review.supported_by.
 
   PropagationSourceStatusEnum:
     description: Mechanical status of a source entity with respect to a propagated target annotation.

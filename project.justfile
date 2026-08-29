@@ -2716,3 +2716,32 @@ scan-prose-panther *args="":
 [group('QC')]
 panther-report-stats *args="":
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============== PANTHER Family Reviews ==============
+
+# Validate curated PANTHER family reviews: (1) structural schema validation
+# against FamilyReview, and (2) deterministic residue-site validation -- every
+# curated position is resolved against the anchor protein's actual UniProt
+# sequence, so a claim like "the catalytic Cys is at position N" is contradicted
+# when it is wrong. Sequences are cached under .cache/uniprot_seq.
+validate-families:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No family review YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Schema-validating $f"
+        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+            --target-class FamilyReview "$f" || rc=1
+    done <<< "$files"
+    echo "Validating curated residue sites against UniProt sequences..."
+    uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
+    echo "Cross-checking family reviews against the gene corpus..."
+    uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
+    echo "Validating gene-level residue claims..."
+    uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    exit $rc
