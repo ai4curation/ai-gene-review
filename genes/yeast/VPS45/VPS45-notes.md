@@ -49,8 +49,14 @@ compartment"].
 SNARE binding is the evidence-matched molecular function. Full-text work shows
 two binding modes and direct binding to both Tlg2 and Snc2 [PMID:16769821, "Fig.
 2 A demonstrates that His6-Vps45p interacts directly with the cytosolic domains
-of both Tlg2p and the v-SNARE Snc2p (Snc2p-PrA)."] Vps45 also stabilizes Tlg2
-and is needed for its productive assembly with Tlg1 and Vti1 [PMID:11432826,
+of both Tlg2p and the v-SNARE Snc2p (Snc2p-PrA)."] The L117R mutant abolishes
+the Tlg2 N-terminal hydrophobic-pocket interaction, binding to assembled
+Tlg2-containing complexes, and membrane association yet still rescues CPY
+sorting, showing that this mode is dispensable for trafficking. A second,
+N-terminus-independent mode is revealed by direct Snc2 binding and the
+W244R-locked conformation; the authors propose that wild-type Vps45 samples this
+conformation transiently. Vps45 also stabilizes Tlg2 and is needed for its
+productive assembly with Tlg1 and Vti1 [PMID:11432826,
 "However, the stabilized Tlg2p is non-functional and unable to bind its cognate
 SNARE binding partners, Tlg1p and Vti1p, in the absence of Vps45p."]
 
@@ -74,9 +80,11 @@ unfolded clients. No replacement holdase/folding term was invented because
 SNARE binding and SNARE-assembly regulation already express the demonstrated
 activity.
 
-All 13 generic protein-binding physical rows are retained one-for-one but marked
-over-annotated. Several are informative interaction data, yet `GO:0005515` loses
-the partner and role specificity. PMID:12553664 is especially limited: its
+All 12 generic protein-binding physical rows are retained one-for-one. The seven
+rows whose WITH/FROM partner is the syntaxin SNARE Tlg1 or Tlg2 are MODIFY to
+GO:0000149 SNARE binding; the other five remain over-annotated. Several are
+informative interaction data, yet `GO:0005515` loses the partner and role
+specificity. PMID:12553664 is especially limited: its
 cached abstract is entirely about Ivy1, Ypt7, and Vps33, not Vps45; without full
 text the row is not called wrong, but the reference is recorded as relevance
 NONE/correctness UNVERIFIED.
@@ -95,5 +103,5 @@ defective in vacuolar acidification."].
 
 ## Final action profile
 
-The 40 physical rows have 20 ACCEPT, 16 MARK_AS_OVER_ANNOTATED, 3
+The 40 physical rows have 20 ACCEPT, 9 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 3
 KEEP_AS_NON_CORE, and 1 UNDECIDED decisions. There are no PENDING or NEW rows.
