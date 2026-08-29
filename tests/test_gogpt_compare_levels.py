@@ -118,17 +118,18 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # Three upstream reviews moved these levels. The HdeB re-review retains
+        # Four upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
         # post-review (+1 post_review only), while the HdeA comprehensive review
         # adds one post-review term and two GO-valued core slots without changing
-        # either overlap count. surA's status also advanced to COMPLETE, which
-        # moves the reference-status distribution 67->68 COMPLETE in the benchmark
-        # sidecars. GOA is unaffected, distinguishing upstream review edits from a
-        # comparison regression.
-        "post_review": {"overlap": 860, "total": 2769, "pred": 8871},
-        "core": {"overlap": 350, "total": 1227, "pred": 8871},
+        # either overlap count. The Spy comprehensive review adds two post-review
+        # terms and two GO-valued core slots without changing either overlap count.
+        # surA and Spy also advanced to COMPLETE, moving the reference-status
+        # distribution 67->69 COMPLETE in the benchmark sidecars. GOA is unaffected,
+        # distinguishing upstream review edits from a comparison regression.
+        "post_review": {"overlap": 860, "total": 2771, "pred": 8871},
+        "core": {"overlap": 350, "total": 1229, "pred": 8871},
     }
 
 
