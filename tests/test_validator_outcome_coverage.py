@@ -163,24 +163,32 @@ def test_coverage_spans_every_declared_kind(outcomes):
     A kind that appears in the source but never in a run is unexercised code, which the
     failure test above cannot see -- it only inspects kinds it actually observed.
     """
+    # Two construction styles, both discovered rather than listed. Listing them would
+    # make this test unable to find a kind nobody had already written into it, which is
+    # precisely the hole it exists to close.
     declared: set[str] = set()
     for path in VALIDATOR_SOURCES:
-        declared |= set(re.findall(r'kind="([A-Z_]+)"', path.read_text()))
-    # kinds set as constructor defaults or on the CrossCheck/ClaimCheck literals
-    declared |= set(
-        re.findall(
-            r'"(SCOPE_VIOLATION|PRUNING_CONFLICT|FAMILY_GENE_DISAGREEMENT|'
-            r'ANCHOR|TARGET|TARGET_IDENTITY|CLAIM_CONSISTENCY|SITE_REF)"',
-            "\n".join(p.read_text() for p in VALIDATOR_SOURCES),
+        source = path.read_text()
+        # ResidueCheck passes kind as a keyword
+        declared |= set(re.findall(r'kind="([A-Z_]+)"', source))
+        # ClaimCheck and CrossCheck take kind as the first positional argument
+        declared |= set(
+            re.findall(r'(?:ClaimCheck|CrossCheck)\(\s*"([A-Z_]+)"', source, re.S)
         )
-    )
+        # Helpers that build a result on their caller's behalf receive the kind as a
+        # literal at the call site, so discover those too -- otherwise a new kind
+        # introduced through a pass-through would be invisible here, which is the
+        # same blind spot in a different shape.
+        declared |= set(
+            re.findall(r'_check_position\([^)]*?"([A-Z_]+)"', source, re.S)
+        )
     unreached = sorted(declared - set(outcomes))
     assert not unreached, (
         f"these check kinds exist in the validators but no test reaches them: {unreached}"
     )
 
 
-def test_kind_is_set_at_construction(outcomes):
+def test_kind_is_set_at_construction():
     """``kind`` must never be assigned after a result object is built.
 
     The instrumentation samples ``kind`` inside ``__init__``, so a kind patched on
@@ -191,7 +199,8 @@ def test_kind_is_set_at_construction(outcomes):
     offenders = []
     for path in VALIDATOR_SOURCES:
         for lineno, line in enumerate(path.read_text().split("\n"), start=1):
-            if re.search(r"\.kind\s*=\s*", line) and "self.kind" not in line:
+            # `=` but not `==`, so a comparison on .kind is not mistaken for a write
+            if re.search(r"\.kind\s*=(?!=)", line) and "self.kind" not in line:
                 offenders.append(f"{path.name}:{lineno}: {line.strip()}")
     assert not offenders, (
         "kind is assigned after construction here, which hides the check from coverage "
@@ -239,7 +248,7 @@ def test_source_guard_rejects_post_stamping(tmp_path, monkeypatch):
         "tests.test_validator_outcome_coverage.VALIDATOR_SOURCES", [offending]
     )
     with pytest.raises(AssertionError, match="assigned after construction"):
-        test_kind_is_set_at_construction({})
+        test_kind_is_set_at_construction()
 
 
 def test_source_guard_accepts_constructor_assignment(tmp_path, monkeypatch):
@@ -249,4 +258,4 @@ def test_source_guard_accepts_constructor_assignment(tmp_path, monkeypatch):
     monkeypatch.setattr(
         "tests.test_validator_outcome_coverage.VALIDATOR_SOURCES", [clean]
     )
-    test_kind_is_set_at_construction({})
+    test_kind_is_set_at_construction()

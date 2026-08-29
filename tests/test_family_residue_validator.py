@@ -565,3 +565,51 @@ def test_sf0_really_contains_both_seld_and_sps1():
     assert members["P16456"] == "PTHR10256:SF0"   # SelD, catalytic
     assert members["O18373"] == "PTHR10256:SF0"   # Sps1, arginine-substituted
     assert members["Q99611"] == "PTHR10256:SF1"   # SEPHS2, the catalytic branch
+
+
+# --- controls on a motif-only site -----------------------------------------
+
+
+def _motif_site_review(control_residue):
+    """A site defined by a motif, so it declares no per-residue expectations."""
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "residue_sites": [{
+            "site_id": "cxxc",
+            "anchor": {"id": "UniProtKB:P00001"},
+            "site_source": "UNIPROT_FEATURE",
+            "motif": {"pattern_regex": "C..C", "start": 3, "end": 6},
+            "required_for": [{"term": {"id": "GO:1"}, "strength": "CONTRIBUTES",
+                              "rationale": "t"}],
+            "positive_controls": [{
+                "id": "UniProtKB:GOOD01", "control_position": 3,
+                "control_residue": control_residue,
+            }],
+            "negative_controls": [],
+        }],
+    }
+
+
+def test_motif_site_control_with_a_correct_residue_is_unresolved_not_failed():
+    """Membership is undecidable from a pattern, so this must not be a rejection.
+
+    Regression: the guard for this originally sat above the residue comparison and
+    returned UNRESOLVED for every control of a motif-only site.
+    """
+    results = check_controls(_motif_site_review("C"), CTL_CACHE)
+    residue = [r for r in results if r.kind == "CONTROL_RESIDUE"]
+    assert [r.outcome for r in residue] == [Outcome.UNRESOLVED]
+    assert "cannot be decided" in residue[0].message
+
+
+def test_motif_site_control_with_a_wrong_residue_still_fails():
+    """The residue identity is self-contained and must be checked regardless.
+
+    This is the case the mispositioned guard silently accepted: a control could
+    declare a residue the sequence does not have and be reported UNRESOLVED without
+    the sequence ever being read.
+    """
+    results = check_controls(_motif_site_review("W"), CTL_CACHE)
+    residue = [r for r in results if r.kind == "CONTROL_RESIDUE"]
+    assert [r.outcome for r in residue] == [Outcome.FAIL]
+    assert "but the sequence has C" in residue[0].message

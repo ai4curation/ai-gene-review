@@ -89,10 +89,14 @@ class ResidueCheck:
 class SequenceCache:
     """Fetches and caches UniProt sequences.
 
-    Sequences are cached on disk so CI does not refetch, and so a validation run is
-    reproducible from a checkout. No try/except around the fetch: a network failure should
-    surface, not be silently converted into an UNRESOLVED result that looks like curation
-    uncertainty.
+    Sequences are cached on disk so repeated local runs do not refetch. The cache is
+    NOT restored in CI -- ``.cache`` is gitignored and no workflow step restores it --
+    so a CI run resolves every sequence over the network. That is why the
+    validate-families step is scoped to family-review and infra changes rather than
+    firing on every gene PR.
+
+    No try/except around the fetch: a network failure should surface, not be silently
+    converted into an UNRESOLVED result that looks like curation uncertainty.
     """
 
     cache_dir: Path
@@ -627,15 +631,6 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             f"{kind} control declares no position/residue, so its assertion is unchecked",
             kind="CONTROL_RESIDUE",
         )
-    if not expected:
-        # A motif-only site declares no per-residue expectations, so membership cannot
-        # be decided. Reporting FAIL here would reject every control of a valid site.
-        return ResidueCheck(
-            family, site_id, acc, pos, [], None, Outcome.UNRESOLVED,
-            f"{kind} control cannot be checked: the site declares a motif rather than "
-            "individual expected residues",
-            kind="CONTROL_RESIDUE",
-        )
     observed = _residue_at(cache.get(acc), pos)
     if observed is None:
         return ResidueCheck(
@@ -647,6 +642,18 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), observed, Outcome.FAIL,
             f"{kind} control claims {claimed} at {pos} but the sequence has {observed}",
+            kind="CONTROL_RESIDUE",
+        )
+    if not expected:
+        # A motif-only site declares no per-residue expectations, so *membership*
+        # cannot be decided. The residue identity above is self-contained and has
+        # already been checked, so only this half is undecidable -- guarding earlier
+        # would let a control declare a residue the sequence does not have.
+        return ResidueCheck(
+            family, site_id, acc, pos, [], observed, Outcome.UNRESOLVED,
+            f"{kind} control states {observed} at {pos} as claimed, but the site "
+            "declares a motif rather than individual expected residues, so whether "
+            "that counts as having the site cannot be decided",
             kind="CONTROL_RESIDUE",
         )
     carries = observed in expected
