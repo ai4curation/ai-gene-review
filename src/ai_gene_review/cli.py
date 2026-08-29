@@ -4056,6 +4056,32 @@ def refresh_panther_members(
         f"({len(prose)} of them appearing in prose)"
     )
 
+    # Family reviews name proteins under a declared subfamily -- representative
+    # members and the positive/negative controls that make a residue site
+    # falsifiable. Those are exactly the assertions the member index exists to
+    # check, so they must be indexed too or the check reports UNRESOLVED forever.
+    family_accessions: set[str] = set()
+    for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sub in doc.get("subfamilies") or []:
+            for member in sub.get("representative_members") or []:
+                if isinstance(member, dict) and member.get("id"):
+                    family_accessions.add(member["id"].split(":")[-1])
+        for site in doc.get("residue_sites") or []:
+            for key in ("positive_controls", "negative_controls"):
+                for ctl in site.get(key) or []:
+                    if isinstance(ctl, dict) and ctl.get("id"):
+                        family_accessions.add(ctl["id"].split(":")[-1])
+            anchor = site.get("anchor")
+            if isinstance(anchor, dict) and anchor.get("id"):
+                family_accessions.add(anchor["id"].split(":")[-1])
+    if family_accessions:
+        typer.echo(
+            f"{len(family_accessions)} accessions cited in family reviews "
+            f"({len(family_accessions - accessions)} not already covered)"
+        )
+    accessions.update(family_accessions)
+
     paths = []
     for slug in organisms:
         classification = fetch_sequence_classification(slug, cache)

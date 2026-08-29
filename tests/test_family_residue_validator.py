@@ -484,3 +484,84 @@ def test_declared_seeds_are_checked_against_paint(seeds, outcome):
     results = check_node_assessments(_seed_review(seeds), SEED_PAINT)
     seed_results = [r for r in results if "seed" in r.message]
     assert [r.outcome for r in seed_results] == [outcome]
+
+
+# --- PANTHER id / label / membership ---------------------------------------
+
+
+PANTHER_LABELS = {
+    "PANTHER:PTHR00001": "SOME FAMILY",
+    "PANTHER:PTHR00001:SF1": "A SUBFAMILY",
+}
+PANTHER_MEMBERS = {"P00001": "PTHR00001:SF1", "P00002": "PTHR00001:SF9"}
+
+
+def _panther_review(family_label="SOME FAMILY", sf_label="A SUBFAMILY",
+                    sf_id="PANTHER:PTHR00001:SF1", members=("P00001",)):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "family_name": family_label,
+        "subfamilies": [{
+            "subfamily_id": sf_id,
+            "label": sf_label,
+            "representative_members": [{"id": f"UniProtKB:{m}"} for m in members],
+        }],
+    }
+
+
+def _panther(review):
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    return check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
+
+
+def test_panther_ids_and_labels_pass_when_correct():
+    assert all(r.outcome is Outcome.PASS for r in _panther(_panther_review()))
+
+
+def test_wrong_panther_label_is_caught():
+    """A plausible label on a real id is how a wrong family stays hidden."""
+    results = _panther(_panther_review(sf_label="PLAUSIBLE BUT WRONG"))
+    bad = [r for r in results if r.outcome is Outcome.FAIL]
+    assert bad and "official name" in bad[0].message
+
+
+def test_unresolvable_panther_id_is_caught():
+    results = _panther(_panther_review(sf_id="PANTHER:PTHR00001:SF99"))
+    assert any(r.outcome is Outcome.FAIL and "does not resolve" in r.message
+               for r in results)
+
+
+def test_member_in_the_wrong_subfamily_is_caught():
+    """The check that separates a mis-grounded family from a merely mislabelled one."""
+    results = _panther(_panther_review(members=("P00002",)))
+    bad = [r for r in results if r.outcome is Outcome.FAIL]
+    assert bad and "is classified PTHR00001:SF9" in bad[0].message
+
+
+def test_unindexed_member_is_unresolved_not_failed():
+    """Coverage of panther-members.tsv is partial, so absence is not evidence."""
+    results = _panther(_panther_review(members=("P99999",)))
+    assert any(r.outcome is Outcome.UNRESOLVED for r in results)
+
+
+def test_ptn_nodes_are_not_label_checked():
+    """PTN ids are not in panther.obo; they are checked against PAINT instead."""
+    review = _panther_review()
+    review["subfamilies"][0]["clade_node_id"] = "PANTHER:PTN000123"
+    assert not [r for r in _panther(review) if "PTN" in r.accession]
+
+
+@pytest.mark.integration
+def test_sf0_really_contains_both_seld_and_sps1():
+    """The committed basis for RESIDUE_DETERMINED, checked from committed data.
+
+    PTHR10256:SF0 holding both the active E. coli SelD and the arginine-substituted
+    Drosophila Sps1 is why that term cannot be scoped by subfamily. Asserted here so
+    the justification is not prose-only.
+    """
+    from ai_gene_review.validation.family_residue_validator import load_panther_members
+
+    members = load_panther_members(Path("interpro/panther/panther-members.tsv"))
+    assert members["P16456"] == "PTHR10256:SF0"   # SelD, catalytic
+    assert members["O18373"] == "PTHR10256:SF0"   # Sps1, arginine-substituted
+    assert members["Q99611"] == "PTHR10256:SF1"   # SEPHS2, the catalytic branch

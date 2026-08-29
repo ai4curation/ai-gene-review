@@ -281,6 +281,136 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
     return results
 
 
+def load_panther_labels(obo_path: Path) -> dict[str, str]:
+    """Parse ``panther.obo`` into a CURIE -> official name map.
+
+    A deliberate line parser rather than an OBO library: this file is a flat stanza list
+    and the project has been bitten before by a parser that silently returns None for
+    PANTHER terms, which would turn every label check into a false pass.
+    """
+    labels: dict[str, str] = {}
+    current: str | None = None
+    for line in obo_path.read_text().split("\n"):
+        if line.startswith("id: "):
+            current = line[4:].strip()
+        elif line.startswith("name: ") and current:
+            labels[current] = line[6:].strip()
+            current = None
+    return labels
+
+
+def load_panther_members(members_path: Path) -> dict[str, str]:
+    """Parse ``panther-members.tsv`` into a UniProt accession -> family:SF map."""
+    members: dict[str, str] = {}
+    for line in members_path.read_text().split("\n")[1:]:
+        parts = line.split("\t")
+        if len(parts) >= 2 and parts[0]:
+            members[parts[0]] = parts[1]
+    return members
+
+
+def _iter_panther_terms(review: dict):
+    """Yield (path, id, label_or_None) for every PANTHER identifier in the review."""
+    yield "family_id", review.get("family_id"), review.get("family_name")
+    for sub in review.get("subfamilies") or []:
+        yield "subfamilies[].subfamily_id", sub.get("subfamily_id"), sub.get("label")
+        if sub.get("clade_node_id"):
+            yield "subfamilies[].clade_node_id", sub["clade_node_id"], None
+    for node in review.get("node_assessments") or []:
+        yield "node_assessments[].node_id", node.get("node_id"), None
+        for sf in node.get("affected_subfamilies") or []:
+            yield "affected_subfamilies[]", sf.get("id"), sf.get("label")
+    for ta in review.get("term_assessments") or []:
+        for sf in ta.get("applicable_subfamilies") or []:
+            yield "applicable_subfamilies[]", sf.get("id"), sf.get("label")
+
+
+def check_panther_ids(
+    review: dict, labels: dict[str, str], members: dict[str, str]
+) -> list[ResidueCheck]:
+    """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
+
+    CLAUDE.md's rule applies with full force here: a plausible-sounding label is exactly
+    how a wrong family id stays hidden, because the id is real and nothing else catches
+    it. So the label must equal PANTHER's official name character for character.
+
+    PTN node ids are skipped -- they are not in panther.obo and are checked separately
+    against PAINT.
+
+    Membership is checked where ``panther-members.tsv`` covers the protein. Coverage is
+    partial (it indexes cited proteins), so an absent accession is UNRESOLVED rather than
+    a failure, matching the convention documented in CLAUDE.md.
+    """
+    family = review.get("family_id", "?")
+    results: list[ResidueCheck] = []
+
+    for path, curie, label in _iter_panther_terms(review):
+        if not curie or curie.startswith("PANTHER:PTN"):
+            continue
+        if curie not in labels:
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.FAIL,
+                    f"{curie} does not resolve in panther.obo",
+                    kind="PANTHER_ID",
+                )
+            )
+            continue
+        official = labels[curie]
+        if label is not None and label != official:
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.FAIL,
+                    f"label {label!r} is not PANTHER's official name {official!r}; "
+                    "fix the id rather than the label if they name different things",
+                    kind="PANTHER_LABEL",
+                )
+            )
+        else:
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.PASS,
+                    f"{curie} resolves" + (" with the official label" if label else ""),
+                    kind="PANTHER_LABEL" if label else "PANTHER_ID",
+                )
+            )
+
+    # every protein named under a subfamily should belong to it
+    for sub in review.get("subfamilies") or []:
+        declared = sub.get("subfamily_id")
+        if not declared:
+            continue
+        bare = declared.split(":", 1)[1]
+        for member in sub.get("representative_members") or []:
+            acc = (member.get("id") or "").split(":")[-1]
+            if acc not in members:
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        "not in panther-members.tsv, so subfamily membership was not "
+                        "checked; run `just refresh-panther-members` to index it",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif members[acc] != bare:
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.FAIL,
+                        f"is classified {members[acc]}, not the declared {bare}",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            else:
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.PASS,
+                        f"is classified {members[acc]} as declared",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+    return results
+
+
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
     """Check every ``node_assessment`` against the family's own cached PAINT rows.
 
@@ -557,11 +687,15 @@ def validate_family_review(path: Path, cache_dir: Path) -> list[ResidueCheck]:
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(Path("interpro/panther"))
+    panther_dir = Path("interpro/panther")
+    labels = load_panther_labels(panther_dir / "panther.obo")
+    members = load_panther_members(panther_dir / "panther-members.tsv")
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
         + check_term_assessment_site_refs(review)
+        + check_panther_ids(review, labels, members)
     )
 
 
