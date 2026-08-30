@@ -109,7 +109,8 @@ def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> Non
     def reject_working_tree_goa(_path: Path) -> set[str]:
         raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
 
-    monkeypatch.setattr(module, "goa_ids", reject_working_tree_goa)
+    for helper in ("goa_ids", "latest_goa_date", "sha256"):
+        monkeypatch.setattr(module, helper, reject_working_tree_goa)
     summary = module.argo95_exact_goa_summary(
         set(module.read_rl_gene_list()), policy
     )
