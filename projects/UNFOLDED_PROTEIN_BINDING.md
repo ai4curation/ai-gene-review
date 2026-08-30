@@ -366,7 +366,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 8 | **ER quality control** | UGGT1, ERLEC1, SYVN1 (human); Uggt1 (rat); CNE1, EPS1, PDI1, EUG1, ROT1, IRE1 (yeast); IRE1 (T. reesei); CSH3 (C. albicans); Edem2 (fly) | OVER_ANNOTATED or REMOVE (sensors, not chaperones) |
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
-| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
+| 11 | **Envelope/secretion chaperone systems** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; SecB is a cytosolic secretion-coupled holdase, whereas the others act in the periplasm or envelope stress pathway. HdeA/HdeB/Spy await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
 | 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Conditional moonlighting holdase** | RidA (E. coli) | MODIFY GO:0051082 → holdase NTR for reversible N-chlorination-dependent ATP-independent holdase activity; primary function is 2-iminoacid deaminase activity |
@@ -433,12 +433,12 @@ established:
    was based on co-IP with ERdj3, misinterpreted as unfolded protein binding. SlrP disrupts
    ERdj3's chaperone function rather than acting as a chaperone itself.
 
-2. **E. coli periplasmic chaperones (SurA, Skp, Spy, HdeA/B, SecB, CpxP) and cytosolic SlyD** —
+2. **E. coli envelope/secretion chaperone systems (SurA, Skp, Spy, HdeA/B, SecB, CpxP) and cytosolic SlyD** —
    Bacterial-specific holdase/chaperone systems with no human orthologs. SurA is a holdase
    that escorts OMPs to the BAM complex; Spy and HdeA/B are acid-activated holdases; SecB
-   is a secretion-coupled holdase. SurA, SecB, and Skp are carrier-holdases that MODIFY →
+   is a cytosolic secretion-coupled holdase. SurA, SecB, and Skp are carrier-holdases that MODIFY →
    GO:0140309 because each escorts an unfolded client to a defined acceptor or location;
-   the remaining periplasmic proteins require gene-specific foldase, in-situ holdase, or
+   the remaining proteins require gene-specific foldase, in-situ holdase, or
    non-chaperone decisions. SlyD is instead a cytosolic FKBP-type PPIase and in-situ holdase
    that also participates in nickel delivery during hydrogenase maturation. CpxP is a
    non-holdase case: its characterized misfolded-client recognition
