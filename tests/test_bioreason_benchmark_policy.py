@@ -98,18 +98,27 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
-def test_argo95_exact_goa_reads_the_declared_baseline_commit() -> None:
+def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> None:
     module = _load_sidecar_module()
     policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
     baseline = policy["baseline_commit"]
 
     frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
-    current = module.goa_ids(
-        REPO_ROOT / "genes" / "ECOLI" / "SlyD" / "SlyD-goa.tsv"
-    )
-
     assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
-    assert not {"GO:0016853", "GO:0046872", "GO:0051082"} & current
+
+    def reject_working_tree_goa(_path: Path) -> set[str]:
+        raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
+
+    for helper in ("goa_ids", "latest_goa_date", "sha256"):
+        monkeypatch.setattr(module, helper, reject_working_tree_goa)
+    summary = module.argo95_exact_goa_summary(
+        set(module.read_rl_gene_list()), policy
+    )
+    assert summary == {
+        "cnn_exact_frozen_goa": 634,
+        "cnn_other_established_basis": 47,
+        "cor_exact_frozen_goa": 0,
+    }
 
     overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"][
         "goa_path_overrides"
@@ -219,7 +228,15 @@ def test_generated_quality_sidecar_has_expected_denominators() -> None:
     assert sum(row["input_quality"] != "FULL_LENGTH_MATCH" for row in rows) == 8
     assert sum(row["interpro_input_present"] == "true" for row in rows) == 136
     assert sum(row["gogpt_input_present"] == "true" for row in rows) == 139
-    assert all(row["goa_latest_annotation_date"] for row in rows)
+    assert all(row["current_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_path"] for row in rows)
+    assert all(row["current_goa_sha256"] for row in rows)
+    assert all(row["frozen_goa_sha256"] for row in rows)
+
+    slyd = next(row for row in rows if row["organism"] == "ECOLI" and row["gene"] == "SlyD")
+    assert slyd["frozen_goa_path"] == "genes/ECOLI/SlyD/SlyD-goa.tsv"
+    assert slyd["frozen_goa_sha256"] != slyd["current_goa_sha256"]
 
 
 def test_all_narrative_reviews_have_two_in_range_scores() -> None:
