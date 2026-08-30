@@ -206,6 +206,35 @@ def _compare_file_content(file_path: Path, new_content: str) -> bool:
         return True
 
 
+def _report_seed_updates(
+    file_prefix: str,
+    added_count: int,
+    refs_added: int,
+    qualifiers_backfilled: int,
+    yaml_existed: bool,
+) -> None:
+    """Report every mutation performed while seeding a gene review."""
+    if added_count > 0:
+        print(
+            f"  ✓ Seeded {added_count} GOA annotations in "
+            f"{file_prefix}-ai-review.yaml"
+        )
+    if qualifiers_backfilled > 0:
+        print(
+            f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
+            f"in {file_prefix}-ai-review.yaml"
+        )
+    if (
+        added_count == 0
+        and refs_added == 0
+        and qualifiers_backfilled == 0
+        and yaml_existed
+    ):
+        print(
+            f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+        )
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -289,6 +318,7 @@ def fetch_gene_data(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -394,26 +424,22 @@ def fetch_gene_data(
 
         # Now seed missing GOA annotations
         validator = GOAValidator()
-        added_count, _, refs_added, qualifiers_backfilled = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=fetch_titles
+        added_count, _, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=fetch_titles
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
         result["qualifiers_backfilled"] = qualifiers_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        if qualifiers_backfilled > 0:
-            print(
-                f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
-                f"in {file_prefix}-ai-review.yaml"
-            )
-        if added_count == 0 and qualifiers_backfilled == 0 and yaml_existed:
-            print(
-                f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-            )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            yaml_existed,
+        )
 
         # Add alternative_products to existing files if missing
         if yaml_existed:
@@ -1381,6 +1407,7 @@ def fetch_gene_data_ncRNA(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
         "rnacentral_updated": False,
         "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
@@ -1477,25 +1504,21 @@ def fetch_gene_data_ncRNA(
         # Now seed missing GOA annotations (same as for protein-coding genes)
         from ai_gene_review.validation.goa_validator import GOAValidator
         validator = GOAValidator()
-        added_count, _, refs_added, qualifiers_backfilled = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=True
+        added_count, _, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=True
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
         result["qualifiers_backfilled"] = qualifiers_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        if qualifiers_backfilled > 0:
-            print(
-                f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
-                f"in {file_prefix}-ai-review.yaml"
-            )
-        if added_count == 0 and qualifiers_backfilled == 0 and yaml_existed:
-            print(
-                f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-            )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            yaml_existed,
+        )
 
     return result

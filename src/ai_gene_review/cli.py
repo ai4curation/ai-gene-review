@@ -1316,7 +1316,7 @@ def seed_goa(
     try:
         added_count, output_path, refs_added, qualifiers_backfilled = (
             validator.seed_missing_annotations(
-            yaml_file, goa_file, output, fetch_titles=fetch_titles
+                yaml_file, goa_file, output, fetch_titles=fetch_titles
             )
         )
 

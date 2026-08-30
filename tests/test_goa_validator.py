@@ -711,6 +711,49 @@ def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
     assert yaml_path.read_text() == original
 
 
+def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):
+    """A no-op seed still writes a separately requested output file."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term: {id: 'GO:0001234', label: test function}\n"
+        "  evidence_type: IPI\n"
+        "  original_reference_id: PMID:12345\n"
+        "  qualifier: enables\n"
+        "references:\n"
+        "- id: PMID:12345\n"
+        "  title: Existing title\n"
+        "  findings: []\n"
+    )
+    output_path = tmp_path / "copy.yaml"
+
+    added, returned_path, references_added, qualifiers_backfilled = (
+        validator.seed_missing_annotations(
+            yaml_path, goa_path, output_file=output_path
+        )
+    )
+
+    assert (added, references_added, qualifiers_backfilled) == (0, 0, 0)
+    assert returned_path == output_path
+    assert yaml.safe_load(output_path.read_text()) == yaml.safe_load(
+        yaml_path.read_text()
+    )
+
+
 def test_backfill_qualifiers_preserves_all_goa_qualifiers():
     """Test backfilling qualifiers beyond contributes_to."""
     validator = GOAValidator()
