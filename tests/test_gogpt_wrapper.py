@@ -14,13 +14,15 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_JUSTFILE = REPO_ROOT / "project.justfile"
 
 
-def test_gogpt_wrappers_use_dependency_bridge() -> None:
-    """Every BioReason call must include repository code and dependencies."""
+def test_gogpt_inference_wrappers_use_dependency_bridge() -> None:
+    """Every GO-GPT inference call must include repository dependencies."""
+    repository_only_modes = {"--check-web-exports", "--refresh-web-exports"}
     command_lines = [
         line.strip()
         for line in PROJECT_JUSTFILE.read_text().splitlines()
         if "scripts/gogpt_predict.py" in line
         and not line.lstrip().startswith("#")
+        and not any(mode in line for mode in repository_only_modes)
     ]
 
     assert command_lines, "expected at least one BioReason GO-GPT invocation"
