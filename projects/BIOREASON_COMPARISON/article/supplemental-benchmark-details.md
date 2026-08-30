@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 72 are `COMPLETE`, 46 `DRAFT`, 17 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 73 are `COMPLETE`, 46 `DRAFT`, 16 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -125,7 +125,7 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,960 | 1,040 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,770 | 857 | 9.7 |
+| Retained/replacement/proposed-new AIGR annotations | 2,768 | 856 | 9.6 |
 | All GO-valued AIGR core-function slots | 1,231 | 350 | 3.9 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
@@ -144,10 +144,13 @@ term count and overlap were unchanged: evidence-backed ATPase activator activity
 replaced an overclaimed protein-unfolding process term in the core set.
 The subsequent DnaK comprehensive review changed annotation classifications and
 advanced the reference to `COMPLETE` without changing any of the three overlap totals.
+The GroEL comprehensive review then removed two net post-review terms and one exact
+GO-GPT overlap by narrowing broad cytoplasm to the directly supported cytosol term;
+its synthesized core-function term count and overlap were unchanged.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Five of the 11 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005737`, `GO:0005829`, and `GO:0005576`), so the 9.7% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
