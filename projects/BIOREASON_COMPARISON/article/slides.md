@@ -132,7 +132,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
 - For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **agent-adjudicated local AIGR reference**
-- References are not independent expert ground truth: 72 `COMPLETE`, 46 `DRAFT`, 17 `IN_PROGRESS`, 4 `INITIALIZED`
+- References are not independent expert ground truth: 73 `COMPLETE`, 46 `DRAFT`, 16 `IN_PROGRESS`, 4 `INITIALIZED`
 - ARGO139 is the collected cohort; performance excludes the wrong-input `csr-1` case (n=138) and flags seven 2,000-aa truncations
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
