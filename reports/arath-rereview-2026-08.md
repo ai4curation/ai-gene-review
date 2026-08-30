@@ -92,11 +92,48 @@ or dropped.
   ACCEPT rows that lacked them (PMIDs 10557364, 11574472, 11826312, 16040633,
   22072959, 29253890, 33751092); both files now validate with zero warnings.
 
+## IBA family sweep (follow-up pass)
+
+A second pass examined every IBA row flagged `missing_propagation_review` (25 rows
+across 19 reviews) against the cached PANTHER PAINT slices
+(`interpro/panther/<FAM>/<FAM>-paint.tsv`), inspecting the IBD node placement,
+its seeds, and any IRD/IKR prunings before writing structured
+`propagation_review` blocks (root cause, failure modes, per-source status).
+Findings worth noting:
+
+- **Withdrawn IBDs (SOURCE_STALE_OR_MISSING).** The `GO:0051082` (unfolded
+  protein binding) IBDs behind the HSP17.6A, HSP17.7 (PTN000163021 in PTHR11527)
+  and HSP90.1/AT5G52640 (PTN000163527 in PTHR11528) IBA rows no longer appear
+  anywhere in the current PAINT slices for those families - the upstream IBDs
+  appear to have been withdrawn, independently corroborating the reviews' MODIFY
+  verdicts.
+- **Missing plant-clade IRDs.** For CRY2 (`GO:0003904` photolyase activity,
+  PTHR11455) PAINT already carries an IRD pruning the term for the metazoan
+  cryptochrome clade (PTN000894457), and for DRB1 (`GO:0004525` RNase III
+  activity, PTHR11207) IRDs exist for two other subclades - but in both families
+  the plant clade lacks an equivalent IRD, which is exactly why the terms still
+  reach CRY2 and DRB1. An IRD for the plant clades would fix these at source.
+- **Single-divergent-seed IBDs.** The `GO:0048564` (photosystem I assembly) IBD
+  on the PsbP family node (PTN001584458, PTHR31407) is seeded solely by AT4G15510
+  (PPD1), a divergent PsbP-domain protein that genuinely is a PSI assembly
+  factor; propagating it across the node to true PSII OEC PsbP subunits is a
+  wrong-paralog transfer. Similarly, `GO:0038023` (signaling receptor activity)
+  reaches RIC7 (an intracellular ROP effector) from a node seeded solely by
+  CLV2, and `GO:0031380` (nuclear RdRP complex) reaches cytoplasmic RDR6 from a
+  node seeded solely by fission-yeast rdp1.
+- **Taxon leakage.** The `GO:0034587` (piRNA processing) IBD (PTN000483941,
+  PTHR21404) is seeded exclusively by metazoan HENMT1 orthologs but placed at a
+  Eukaryota-wide node, so a metazoan-only pathway term reaches plant HEN1.
+- **AAU94417 cleanup.** Two REMOVE rows had empty reasons; both were filled. The
+  `GO:0009535` (thylakoid membrane) REMOVE was softened to MODIFY (replacement
+  `GO:0009543` thylakoid lumen), since the IBD seed (PPL1) is itself lumenal and
+  extrinsic membrane association is real. Note that `genes/ARATH/AAU94417/` and
+  `genes/ARATH/AT1G06680/` are duplicate reviews of the same protein
+  (UniProt Q42029 / PSBP1) and could be merged.
+
 ## Known remaining warnings (deliberately not addressed)
 
-- `missing_propagation_review` on ~25 IBA rows: adding structured
-  `propagation_review` metadata requires inspecting the PAINT family trees; per the
-  guidelines, asserting phylogenetic claims without that inspection is worse than
-  leaving the warning.
 - `core_function_*_not_in_annotations` and `missing_aliases`/`no_deep_research_results`
   informational warnings: pre-existing and benign.
+- A handful of `inconsistent_review_actions` warnings reflect legitimate
+  per-reference judgments (e.g. EIN2 cytoplasm rows) and are intentional.
