@@ -819,6 +819,12 @@ fetch-gene-pmids organism gene *args:
     fi
     uv run ai-gene-review fetch-gene-pmids "$organism" "$gene" --output-dir "$output_dir" "$@"
 
+# Fetch FEBA/RB-TnSeq fitness evidence for a bacterial gene.
+# Writes genes/ORGANISM/GENE/GENE-fitness.md.
+# Example: just fetch-fitness ECOLI SlyD
+fetch-fitness organism gene:
+    uv run python scripts/fetch_fitness_data.py {{organism}} {{gene}}
+
 # Fetch PMIDs from a file
 [positional-arguments]
 fetch-pmids-from-file file *args:
