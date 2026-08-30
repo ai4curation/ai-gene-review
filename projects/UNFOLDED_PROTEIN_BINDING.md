@@ -2,7 +2,7 @@
 title: "Unfolded Protein Binding Annotation Review"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
-species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, HYPJE, ARATH, worm]
+species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, CANGA, worm]
 sidecars:
   genes: UNFOLDED_PROTEIN_BINDING/genes.csv
 ---
@@ -32,12 +32,14 @@ sidecars:
 > "to an acceptor molecule or to a specific location", and it remains a child of GO:0140597
 > "protein carrier chaperone". A relabel is not a redefinition; the carrier-specificity objection stands.
 
-> **Editor Brief (as of 2026-02-14, revised after full cross-species audit):**
-> GO:0051082 "unfolded protein binding" and GO:0031249 "denatured protein binding" are proposed
-> for obsoletion ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)).
-> We reviewed **all 148 unique genes** (33 human + 115 non-human across 17 species) carrying
-> experimental annotations to these terms — **5,529 total annotations, 0 PENDING**. Each gene's
-> GO:0051082/GO:0031249 annotation was reclassified to a mechanism-specific MF term.
+> **Editor Brief (as of 2026-02-14, status clarified 2026-08-30):**
+> GO:0051082 "unfolded protein binding" and GO:0031249 "denatured protein binding" were proposed
+> for obsoletion and are now obsolete ([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)).
+> The phase-1 audit covered **148 unique genes** (33 human + 115 non-human across 17 species) carrying
+> experimental annotations to these terms — **5,529 total annotation decisions, 0 actions left as
+> `PENDING`**. This is a frozen annotation-action snapshot, not a claim that every live gene-review
+> document has `status: COMPLETE`; later comprehensive reviews and identity corrections continue.
+> Each gene's GO:0051082/GO:0031249 annotation was reclassified to a mechanism-specific MF term.
 > The 33 human genes provide the primary evidence base with full literature review (see
 > [Human Gene Checklist](#human-gene-checklist)); the 115 non-human genes validate that the
 > same decision rules apply consistently across all species (see
@@ -54,8 +56,8 @@ sidecars:
 > **Decisions from GO editors are needed on**: (1) NTR for general holdase chaperone activity
 > (non-carrier), (2) whether "misfolded protein sensor activity" should be created for E3
 > ligases/F-box proteins, (3) how to annotate J-domain co-chaperone MF given that GO:0003767
-> "co-chaperone activity" is obsolete, and (4) whether GO:0051082 obsoletion should be blocked
-> until the holdase NTR exists. Detailed review YAMLs are in `genes/<SPECIES>/<GENE>/`.
+> "co-chaperone activity" is obsolete, and (4) how the post-obsoletion replacement gap for
+> in-situ holdases should be repaired. Detailed review YAMLs are in `genes/<SPECIES>/<GENE>/`.
 > Validate with: `just validate-all` (writes `reports/validation-all.tsv`).
 
 ## Slides
@@ -118,8 +120,8 @@ Additional non-exclusive co-annotations:
 > **Note on counts**: Some genes may need dual foldase+holdase annotation (e.g. HSP70 family)
 > depending on experimental context. J-domain co-chaperone counts use GO:0044183 as interim
 > pending editor guidance on co-chaperone MF representation. 7 holdase genes cannot be properly
-> reannotated until a general holdase NTR is created — GO:0051082 obsoletion should be blocked
-> on this.
+> reannotated until a general holdase NTR is created. Because GO:0051082 is already obsolete,
+> this is now a replacement-guidance gap rather than a pre-obsoletion blocker.
 
 ## Before/After Examples
 
@@ -183,13 +185,13 @@ Ontology changes needed to properly annotate genes in this set:
 ## What We Need from GO Editors
 
 - [ ] **Holdase NTR (BLOCKING)**: Create general "holdase chaperone activity" term for in-situ holdases. GO:0140309 is carrier-specific (created for TIM chaperones in #30552) and does not fit 7 genes in this review. See [holdase annotation gap](#holdase-annotation-gap) for proposed def and parentage
-- [ ] **Block GO:0051082 obsoletion** until holdase NTR exists — 7 holdase genes have no valid replacement term without it
-- [ ] **Preferred labels**: Add "foldase" as exact synonym for GO:0044183; "holdase" should be exact synonym on the new general holdase term (currently BROAD on GO:0140309, which is correct since GO:0140309 is carrier-specific)
+- [ ] **Repair the post-obsoletion holdase gap** — GO:0051082 is already obsolete, but 7 in-situ holdase genes still have no valid replacement term; create the general holdase NTR and update the obsoletion guidance
+- [ ] **Preferred labels**: Add "foldase" as an exact synonym for GO:0044183; reserve an unqualified "holdase" label for the new general holdase term or otherwise distinguish it from carrier-specific GO:0140309 (QuickGO now reports `holdase` as exact and uses "unfolded protein holdase activity" as GO:0140309's primary label)
 - [ ] **Co-chaperone MF gap**: How should J-domain co-chaperone function be annotated? GO:0003767 is obsolete; GO:0044183 is used as interim but obscures the co-chaperone mechanism. Affects all J-domain proteins
 - [ ] **HSP70 dual annotation**: Confirm that HSP70-family genes may need both GO:0044183 (foldase) and the holdase NTR depending on experimental context
 - [ ] **PTGES3 co-chaperone mechanism**: Clarify whether PTGES3 is an HSP90 activator, substrate adaptor, or both
 - [ ] **Misfolded protein sensor**: Decide whether "misfolded protein sensor activity" warrants a new term — affects SYVN1, SAN1, Fbxo2 and ubiquitin degradation pathways
-- [ ] Proceed with obsoletion of GO:0051082 and GO:0031249 once holdase NTR and other replacement terms are in place
+- [ ] Reconcile the completed GO:0051082/GO:0031249 obsoletion with the missing general holdase term and publish valid replacement guidance for in-situ holdases
 
 ## Scope Note: Phase-2 Sensor Batch
 
@@ -233,7 +235,8 @@ Proposed new terms (not yet in GO):
 - **"holdase chaperone activity"** — Def: "Binding to an unfolded or misfolded protein to prevent
   its aggregation without actively catalyzing refolding. The holdase maintains the client protein
   in a soluble, folding-competent state." Parent: direct child of GO:0003674. GO:0140309 (carrier-holdase)
-  would become a child of this term. **This is the primary NTR needed to unblock GO:0051082 obsoletion.**
+  would become a child of this term. **This is the primary NTR needed to repair GO:0051082's
+  incomplete replacement guidance.**
   Affects 7 human genes + HSPH1.
 - **"misfolded protein sensor activity"** — Def: Recognition of misfolded protein conformation to initiate
   quality-control degradation. Distinct from chaperone activity. Useful for ubiquitin degradation pathways.
@@ -269,8 +272,9 @@ aggregation **in situ** — they do not deliver substrates to a defined acceptor
 is likewise an in-situ holdase. These genes require a new general "holdase chaperone activity"
 term (see [Open Ontology Gaps](#open-ontology-gaps) item 1).
 
-**Until the holdase NTR is created, these 7 genes should retain GO:0051082** — the obsoletion
-of GO:0051082 should be blocked on this NTR.
+**Until the holdase NTR is created, these 7 genes retain obsolete GO:0051082 as an explicitly
+interim annotation** because neither replacement named by the obsoletion notice captures their
+in-situ holdase activity.
 
 ### Co-chaperone note
 
@@ -641,7 +645,8 @@ established:
   - T. reesei/C. glabrata: IRE1
   - Arabidopsis: HSP17.7
   - Drosophila: Hsp26
-- **5,529 total annotations reviewed, 0 PENDING remaining**
+- **5,529 annotation decisions in the frozen phase-1 audit, 0 actions left as `PENDING`**
+  (this action count is distinct from the live review documents' `status` fields)
 - Decision distribution for non-human genes: 88 MODIFY, 23 OVER_ANNOTATED, 3 ACCEPT, 2 NON_CORE, 2 REMOVE
 - Same mechanism classes apply universally across species — validates the human-derived decision rules
 - Notable findings: SlrP misannotation (T3SS effector, not UPB), CnoX redox-activated holdase, peroxiredoxin dual function
