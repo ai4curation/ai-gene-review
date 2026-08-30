@@ -182,12 +182,17 @@ def fetch_gene(
                 if (
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
+                    or result.get("qualifiers_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
                         parts.append(f"{result['annotations_added']} annotations")
                     if result.get("references_added", 0) > 0:
                         parts.append(f"{result.get('references_added', 0)} references")
+                    if result.get("qualifiers_backfilled", 0) > 0:
+                        parts.append(
+                            f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
                     )
@@ -1309,16 +1314,20 @@ def seed_goa(
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
             yaml_file, goa_file, output, fetch_titles=fetch_titles
+            )
         )
 
-        if added_count > 0 or refs_added > 0:
+        if added_count > 0 or refs_added > 0 or qualifiers_backfilled > 0:
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
             if refs_added > 0:
                 parts.append(f"{refs_added} references")
+            if qualifiers_backfilled > 0:
+                parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:

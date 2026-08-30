@@ -235,6 +235,7 @@ def fetch_gene_data(
             - yaml_existed: bool - True if ai-review.yaml already existed
             - annotations_added: int - Number of annotations added
             - references_added: int - Number of references added
+            - qualifiers_backfilled: int - Number of existing annotations enriched
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -393,21 +394,26 @@ def fetch_gene_data(
 
         # Now seed missing GOA annotations
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
+        added_count, _, refs_added, qualifiers_backfilled = validator.seed_missing_annotations(
             yaml_file, goa_file, fetch_titles=fetch_titles
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
 
         if added_count > 0:
             print(
                 f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
             )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        if qualifiers_backfilled > 0:
+            print(
+                f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
+                f"in {file_prefix}-ai-review.yaml"
+            )
+        if added_count == 0 and qualifiers_backfilled == 0 and yaml_existed:
+            print(
+                f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+            )
 
         # Add alternative_products to existing files if missing
         if yaml_existed:
@@ -1471,20 +1477,25 @@ def fetch_gene_data_ncRNA(
         # Now seed missing GOA annotations (same as for protein-coding genes)
         from ai_gene_review.validation.goa_validator import GOAValidator
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
+        added_count, _, refs_added, qualifiers_backfilled = validator.seed_missing_annotations(
             yaml_file, goa_file, fetch_titles=True
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
 
         if added_count > 0:
             print(
                 f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
             )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        if qualifiers_backfilled > 0:
+            print(
+                f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
+                f"in {file_prefix}-ai-review.yaml"
+            )
+        if added_count == 0 and qualifiers_backfilled == 0 and yaml_existed:
+            print(
+                f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+            )
 
     return result
