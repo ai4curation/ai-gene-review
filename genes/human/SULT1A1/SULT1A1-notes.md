@@ -237,20 +237,50 @@ The abstract is explicit that the object of study is the STP2 gene:
 > of these two cDNAs, STP2, as a step toward understanding molecular genetic mechanisms
 > involved in the regulation of this enzyme activity in humans."* [PMID:8661000]
 
-The paper is a genomic-structure/cloning study, and its abstract names no enzyme assay
-for either gene. `GO:0008146` happens to be true of SULT1A1 anyway (abundant
-independent experimental support), so that row survives on its merits but should be
-re-sourced. `GO:0009308 amine metabolic process` has neither support from this
-reference nor a good fit to the gene — SULT1A1 is the *phenol*-preferring form, while
-monoamine sulfation belongs to SULT1A3 — so it is treated as an over-annotation.
+**What the full text contains** (read by the project curator; the cached record here is
+abstract-only, as the article is not open access and has no PMC record):
 
-> **Full-text caveat.** PMID:8661000 is also abstract-only (not open access, no PMC
-> record per Europe PMC), so it cannot be *proved* from the cache that the full text
-> contains no enzymology. The `MISCITED` call therefore rests on the part that **is**
-> settled without the full text — the gene identity, verified directly against UniProt
-> P50226 — rather than on an inventory of the paper's experiments. The annotation is
-> marked over-annotated rather than `REMOVE` partly for this reason. Both references
-> now carry `full_text_unavailable: true`.
+- **STP2/SULT1A2 is the only gene newly characterized experimentally.** The other
+  sulfotransferase genes appear purely as comparisons: **STP1 → SULT1A1** (its protein
+  reported as 96% identical to STP2's), **STM → SULT1A3** and **STE → SULT1E1**
+  (exon–intron structure comparisons), plus rat phenol- and guinea-pig
+  estrogen-sulfotransferase genes at conserved splice junctions. None of these is
+  characterized in the paper.
+- **Exons IA and IB are alternative noncoding first exons** — alternative 5′ UTRs of
+  STP2, not additional genes.
+- **There is no new enzymology of any kind.** No recombinant enzyme assays, no
+  substrate-specificity experiments, no K_m / V_max or catalytic-rate measurements, no
+  thermostability assays, and no functional comparison of the STP1 and STP2 proteins.
+  The enzymology present is *background*: that thermostable PST sulfonates relatively
+  simple planar phenols, and that its activity varies heritably between individuals.
+  The new results are entirely molecular genetics — genomic cloning and sequencing, the
+  nine-exon structure, the alternative 5′ ends, promoter-region analysis and
+  chromosome-16 localization — explicitly framed as enabling *later* investigation of
+  how enzyme activity is regulated.
+
+So both TAS annotations are unsupported by this reference. `GO:0008146` happens to be
+true of SULT1A1 anyway (abundant independent experimental support), so that row
+survives on its merits but should be re-sourced. `GO:0009308 amine metabolic process`
+has neither support from this reference nor a good fit to the gene — SULT1A1 is the
+*phenol*-preferring form, while monoamine sulfation belongs to SULT1A3.
+
+**Where the amine annotation probably came from.** The only amine-adjacent statement in
+the paper is its opening background sentence: *"Sulfonation is an important pathway in
+the biotransformation of many drugs, xenobiotics, **neurotransmitters**, and steroid
+hormones."* [PMID:8661000] That is a claim about the SULT family in general, not about
+this gene and not a result of this paper — a textbook bad TAS.
+
+**Action taken: `MARK_AS_OVER_ANNOTATED`, though `REMOVE` is now equally defensible.**
+A TAS with no traceable statement supporting it for this gene is arguably not a valid
+TAS at all. It is kept at over-annotated only because the term is not biologically
+*false* of SULT1A1, which does act on amine-bearing molecules (dopamine,
+N-hydroxy-arylamines) — although note it sulfonates those on **oxygen**, not on
+nitrogen, so even the chemistry the term implies is not this enzyme's.
+
+> **Note on `full_text_unavailable: true`.** That flag is set on this reference and on
+> PMID:20056724. It describes the *cached record* — which is what the quote validator
+> reasons about — and not the reviewer's access. It does not mean the full text was
+> never consulted.
 
 Nomenclature confirmed via
 [Her et al. 1996 / STP1-STP2 genomic organisation, PMID:8912648](https://pubmed.ncbi.nlm.nih.gov/8912648/)
