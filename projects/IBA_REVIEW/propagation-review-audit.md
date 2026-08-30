@@ -109,14 +109,19 @@ Applying the project's own discipline to the audit itself:
   heavy chain), *not* the unconventional **myosin VI / MYO6** (`Q9UM54`) actually
   assayed — a real homonym trap that the review caught and documented.
 
-## Suggested actions (none applied)
+## Suggested actions
 
-> Finding 1 is tracked as
-> [issue #2761](https://github.com/ai4curation/ai-gene-review/issues/2761).
+> **Finding 1 is FIXED** ([issue #2761](https://github.com/ai4curation/ai-gene-review/issues/2761)).
+> All 27 rows were retyped to `SUPPORTS_TRANSFER`, each with a comment naming the
+> grounding actually found on that gene, and the AAK1 prose stating the inverted
+> reading was corrected. Re-deriving the set with **GO ancestry closure** rather than
+> exact term matching showed all 27 are grounded, not 26 — LNX1's `GO:0005737`
+> cytoplasm is grounded by its own IDA to `GO:0005829` cytosol, which is `part_of`
+> cytoplasm. The single genuinely circular source in the corpus, AFF1's
+> `UniProtKB-SubCell:SL-0191` (derived from the entry's own ECO:0000305 SUBCELLULAR
+> LOCATION line), was deliberately left as `CIRCULAR_OR_REDUNDANT`.
 
-1. Retype the 27 self-source rows to `SUPPORTS_TRANSFER` with an ADPRS-style comment,
-   and fix the AAK1-style prose that states the inverted reading. This is mechanical and
-   safe: the rule is explicit and the evidence check above confirms it case by case.
+1. ~~Retype the 27 self-source rows to `SUPPORTS_TRANSFER`~~ — done.
 2. Retype ADPRS `GO:0071451` to `TERM_SCOPING_PROBLEM` and drop `GRANULARITY_MISMATCH`.
 3. Retype LPA `GO:0004252`'s failure mode away from `PSEUDO_OR_SUBACTIVITY_LOSS`.
 4. Reconcile the 8 `MODIFY` + `NO_FAILURE_*` rows.
