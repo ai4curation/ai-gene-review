@@ -126,12 +126,14 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # either overlap count. The Spy comprehensive review adds two post-review
         # terms and two GO-valued core slots without changing either overlap count.
         # The CpxP comprehensive review adds one post-review term and two GO-valued
-        # core slots, also without changing either overlap count. surA, Spy, and CpxP
-        # DnaJ removes two net post-review terms and three predicted overlaps after
+        # core slots, also without changing either overlap count. DnaJ removes two
+        # net post-review terms and three predicted overlaps after
         # resolving miscited CAFA rows. Its core count and overlap stay unchanged:
         # evidence-backed GO:0001671 replaces overclaimed GO:0043335 in the core set.
-        # surA, Spy, CpxP, and DnaJ advanced to COMPLETE, moving the reference-status
-        # distribution 67->71 COMPLETE in the benchmark sidecars. GOA is unaffected,
+        # surA, Spy, CpxP, DnaJ, and DnaK advanced to COMPLETE, moving the
+        # reference-status distribution 67->72 COMPLETE in the benchmark sidecars.
+        # DnaK changes review classifications without changing the three overlap totals.
+        # GOA is unaffected,
         # distinguishing upstream review edits from a comparison regression.
         "post_review": {"overlap": 857, "total": 2770, "pred": 8871},
         "core": {"overlap": 350, "total": 1231, "pred": 8871},
