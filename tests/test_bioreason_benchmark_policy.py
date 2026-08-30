@@ -103,13 +103,23 @@ def test_argo95_exact_goa_reads_the_declared_baseline_commit() -> None:
     policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
     baseline = policy["baseline_commit"]
 
-    frozen = module.frozen_goa_ids("ECOLI", "SlyD", baseline)
+    frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
     current = module.goa_ids(
         REPO_ROOT / "genes" / "ECOLI" / "SlyD" / "SlyD-goa.tsv"
     )
 
     assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
     assert not {"GO:0016853", "GO:0046872", "GO:0051082"} & current
+
+    overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"][
+        "goa_path_overrides"
+    ]
+    assert overrides == {
+        "DROME/Git": "genes/DROME/git/git-goa.tsv",
+        "SCHPO/tim10": "genes/SCHPO/Tim10/Tim10-goa.tsv",
+    }
+    for relative_path in overrides.values():
+        assert module.frozen_goa_ids(relative_path, baseline)
 
 
 def test_frozen_go_checksum_and_release_sentinels() -> None:
@@ -314,8 +324,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 633
-    assert sft["cnn_other_established_basis"] == 48
+    assert sft["cnn_exact_frozen_goa"] == 634
+    assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
         "n_reviewed": 82,

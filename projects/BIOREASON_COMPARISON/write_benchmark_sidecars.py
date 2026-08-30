@@ -137,11 +137,10 @@ def goa_ids_from_text(text: str) -> set[str]:
 
 
 @lru_cache(maxsize=None)
-def frozen_goa_ids(organism: str, gene: str, baseline_commit: str) -> set[str]:
-    """Read a gene's GOA IDs from the benchmark's declared baseline commit."""
-    relative_path = Path("genes") / organism / gene / f"{gene}-goa.tsv"
+def frozen_goa_ids(relative_path: str, baseline_commit: str) -> set[str]:
+    """Read a GOA file's IDs from the benchmark's declared baseline commit."""
     result = subprocess.run(
-        ["git", "show", f"{baseline_commit}:{relative_path.as_posix()}"],
+        ["git", "show", f"{baseline_commit}:{relative_path}"],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -423,7 +422,11 @@ def argo95_exact_goa_summary(
     keys: set[tuple[str, str]],
 ) -> dict[str, int]:
     """Count exact frozen-GOA membership for final ARGO95 CNN/COR calls."""
-    baseline_commit = str(read_yaml(POLICY_PATH)["baseline_commit"])
+    policy = read_yaml(POLICY_PATH)
+    baseline_commit = str(policy["baseline_commit"])
+    path_overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"].get(
+        "goa_path_overrides", {}
+    )
     cnn_exact = 0
     cnn_other_basis = 0
     cor_in_goa = 0
@@ -431,7 +434,11 @@ def argo95_exact_goa_summary(
         organism, gene = path.parts[-3], path.parts[-2]
         if (organism, gene) not in keys:
             continue
-        exact_ids = frozen_goa_ids(organism, gene, baseline_commit)
+        key = f"{organism}/{gene}"
+        relative_path = str(
+            path_overrides.get(key, f"genes/{organism}/{gene}/{gene}-goa.tsv")
+        )
+        exact_ids = frozen_goa_ids(relative_path, baseline_commit)
         for prediction in read_yaml(path).get("predictions", []) or []:
             if prediction.get("source_version") != "wanglab/protein_catalogue":
                 continue
