@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import re
+import subprocess
 from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path
@@ -123,12 +124,36 @@ def latest_goa_date(path: Path) -> str:
 
 def goa_ids(path: Path) -> set[str]:
     """Return exact GO IDs from a committed QuickGO TSV."""
-    with path.open(newline="", encoding="utf-8") as handle:
-        return {
-            identifier
-            for row in csv.DictReader(handle, delimiter="\t")
-            if (identifier := str(row.get("GO TERM") or "")).startswith("GO:")
-        }
+    return goa_ids_from_text(path.read_text(encoding="utf-8"))
+
+
+def goa_ids_from_text(text: str) -> set[str]:
+    """Return exact GO IDs from QuickGO TSV text."""
+    return {
+        identifier
+        for row in csv.DictReader(text.splitlines(), delimiter="\t")
+        if (identifier := str(row.get("GO TERM") or "")).startswith("GO:")
+    }
+
+
+@lru_cache(maxsize=None)
+def frozen_goa_ids(organism: str, gene: str, baseline_commit: str) -> set[str]:
+    """Read a gene's GOA IDs from the benchmark's declared baseline commit."""
+    relative_path = Path("genes") / organism / gene / f"{gene}-goa.tsv"
+    result = subprocess.run(
+        ["git", "show", f"{baseline_commit}:{relative_path.as_posix()}"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        detail = result.stderr.strip() or "git show returned no diagnostic"
+        raise RuntimeError(
+            f"Cannot read frozen GOA input {relative_path} at {baseline_commit}: "
+            f"{detail}. Ensure the benchmark baseline commit is available locally."
+        )
+    return goa_ids_from_text(result.stdout)
 
 
 def rl_quality_rows(
@@ -398,6 +423,7 @@ def argo95_exact_goa_summary(
     keys: set[tuple[str, str]],
 ) -> dict[str, int]:
     """Count exact frozen-GOA membership for final ARGO95 CNN/COR calls."""
+    baseline_commit = str(read_yaml(POLICY_PATH)["baseline_commit"])
     cnn_exact = 0
     cnn_other_basis = 0
     cor_in_goa = 0
@@ -405,7 +431,7 @@ def argo95_exact_goa_summary(
         organism, gene = path.parts[-3], path.parts[-2]
         if (organism, gene) not in keys:
             continue
-        exact_ids = goa_ids(path.parent / f"{gene}-goa.tsv")
+        exact_ids = frozen_goa_ids(organism, gene, baseline_commit)
         for prediction in read_yaml(path).get("predictions", []) or []:
             if prediction.get("source_version") != "wanglab/protein_catalogue":
                 continue

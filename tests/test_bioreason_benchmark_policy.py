@@ -98,6 +98,20 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
+def test_argo95_exact_goa_reads_the_declared_baseline_commit() -> None:
+    module = _load_sidecar_module()
+    policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
+    baseline = policy["baseline_commit"]
+
+    frozen = module.frozen_goa_ids("ECOLI", "SlyD", baseline)
+    current = module.goa_ids(
+        REPO_ROOT / "genes" / "ECOLI" / "SlyD" / "SlyD-goa.tsv"
+    )
+
+    assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
+    assert not {"GO:0016853", "GO:0046872", "GO:0051082"} & current
+
+
 def test_frozen_go_checksum_and_release_sentinels() -> None:
     path = ensure_frozen_go()
     assert frozen_go_sha256(path) == GO_RELEASE_SHA256
