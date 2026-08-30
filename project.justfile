@@ -2621,11 +2621,12 @@ ui-legacy port="5123":
 
 # Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
 # Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Set BIOREASON_PYTHON to override the default ~/repos/BioReason-Pro/.venv interpreter.
 # Examples:
 #   just gogpt-predict human TP53
 #   just gogpt-predict PSEPK rpoS
 gogpt-predict organism gene:
-    PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
 
 # Run GO-GPT prediction and compare with curated review
 # Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
@@ -2633,11 +2634,11 @@ gogpt-predict organism gene:
 #   just gogpt-compare human TP53
 #   just gogpt-compare PSEPK rpoS
 gogpt-compare organism gene:
-    PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Alias for gogpt-compare
 gogpt-review organism gene:
-    PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Run GO-GPT predictions for all genes in an organism
 gogpt-predict-organism organism:
@@ -2650,7 +2651,7 @@ gogpt-predict-organism organism:
             uniprot="$gene_dir/${gene}-uniprot.txt"
             if [ -f "$uniprot" ]; then
                 echo "Processing $gene..."
-                PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
                 count=$((count + 1))
             fi
         fi
@@ -2671,7 +2672,7 @@ gogpt-compare-all:
                 uniprot="$gene_dir/${gene}-uniprot.txt"
                 if [ -f "$review" ] && [ -f "$uniprot" ]; then
                     echo "Comparing $organism/$gene..."
-                    PYTHONPATH=src${PYTHONPATH:+:$PYTHONPATH} ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
                     total=$((total + 1))
                 fi
             fi
