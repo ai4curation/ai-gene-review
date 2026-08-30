@@ -3,7 +3,7 @@ title: "MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human, yeast]
-genes: [COA4, COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
+genes: [COA4, COX17, COX19, COX23, CMC2, PET191, COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
 ---
 
 # MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome
@@ -267,12 +267,46 @@ Already reviewed here, and appearing in the paper's figures or validated interac
   genuinely unknown (metallochaperone activity is positively excluded), so `core_functions`
   asserts BP + CC only rather than inventing an MF term.
 
-Not yet in this repository, and candidates to fetch:
+- **yeast/COA4** — the mechanism actually lives here: two IMP calls, three IGI partners
+  (SHY1, CYC1, CMC1), EXP IMS proteomics. 13 ACCEPT / 2 over-annotated / 1 non-core / 1 MODIFY.
+- **The yeast copper delivery pathway** — COX17, COX19, COX23, CMC2, PET191, reviewed as a set
+  (74 annotations). Yeast rather than human because the mechanistic literature for
+  COX23/CMC2/PET191 is entirely yeast, and because the human symbols do not line up: **there is
+  no human gene named COX23**, and the paper's "PET191" is human **COA5**. Anyone mapping this
+  paper's Fig. 4b onto human gene identifiers should check that first.
 
-- **Yeast COA4** — companion review; most of the mechanistic genetics is in yeast.
-- **COX17, COX19, COX23, CMC2, PET191** — the rest of the copper delivery pathway; COX23 and CMC2
-  now carry predicted, conserved partners (COX1 and COX2 respectively) but **no** experimental
-  follow-up in this paper, so they remain hypotheses.
+Three findings from the pathway set that generalize beyond it:
+
+1. **A mis-attributed annotation on COX17.** `GO:0018343 protein farnesylation` (IDA,
+   [PMID:8078902](https://pubmed.ncbi.nlm.nih.gov/8078902/)) cites a paper that is entirely about
+   **COX10**, heme A:farnesyltransferase — one digit away. The term is wrong even for COX10, since
+   that enzyme farnesylates *heme*, not protein; and the row was assigned by MGI against a
+   *S. cerevisiae* accession. Marked REMOVE. The `GO:0005739` row from the same reference shares
+   the faulty provenance but is factually correct, so it is kept non-core with the problem recorded.
+2. **A systematic GFP-library artifact.** Nucleus and/or cytoplasm rows from the genome-wide
+   C-terminal GFP library ([PMID:14562095](https://pubmed.ncbi.nlm.nih.gov/14562095/)) appear on
+   COA4, CMC2 and COX23. C-terminal tagging of a small twin CX9C protein blocks MIA40-dependent
+   import and strands the fusion outside mitochondria. Flagged rather than deleted — the cached
+   record is abstract-only — except on COX23, where a genuine IDA independently supports a
+   cytosolic pool, so the compartment call there is sound.
+3. **Four ND molecular functions in a row.** COA4, COX23, CMC2 and PET191 all carry SGD's explicit
+   `GO:0003674` "no data" placeholder, and all four are argued to *keep* it. These are accessory
+   factors that support metallochaperone action without binding metal themselves, and GO has no
+   term for that. This is the pathway's real annotation gap, and it is exactly what a predicted
+   interaction cannot fill.
+
+Also worth recording: **COX19 is a second COX11 chaperone**, established well before this paper
+([PMID:25926683](https://pubmed.ncbi.nlm.nih.gov/25926683/)) — it binds a cysteine-containing
+sequence in COX11 via conserved tyrosine-leucine dipeptides, in a redox-regulated way. So COA4 and
+COX19 are two IMS twin CX9C proteins converging on the same target, which none of the papers
+involved appears to have noticed.
+
+Still not in this repository:
+
+- **Human COX17, COX19, CMC2, COA5** — the human arms of the same pathway.
+- **PET191's Mia40-independent import** is a genuine family-level exception
+  ([PMID:18503002](https://pubmed.ncbi.nlm.nih.gov/18503002/)) worth carrying into any
+  family-level inference about twin CX9C proteins.
 - **TCAIM**, **UQCC4** (C16orf91) — recovered blind here; primary evidence is in
   [PMID:39889707](https://pubmed.ncbi.nlm.nih.gov/39889707/) and
   [PMID:35977508](https://pubmed.ncbi.nlm.nih.gov/35977508/).
