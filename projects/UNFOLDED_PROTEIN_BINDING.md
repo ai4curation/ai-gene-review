@@ -495,7 +495,7 @@ established:
 | CnoX | *E. coli* | P77395 | 12 | MODIFY → GO:0044183 | Redox-activated holdase |
 | CpxP | *E. coli* | P0AE85 | 11 | MARK_AS_OVER_ANNOTATED; NEW GO:0140767, GO:0070298; MODIFY → GO:0030547, GO:0045862 | DegP substrate adaptor and CpxA inhibitor; weak in-vitro chaperone activity does not establish a general holdase function |
 | DnaJ | *E. coli* | P08622 | 49 | MODIFY → GO:0044183 (3 rows); MARK_AS_OVER_ANNOTATED (1 miscited CAFA row); NEW GO:0001671 | J-domain co-chaperone and DnaK ATPase activator; comprehensive review complete |
-| DnaK | *E. coli* | P0A6Y8 | 61 | MODIFY → GO:0044183 | HSP70 foldase/holdase |
+| DnaK | *E. coli* | P0A6Y8 | 61 | MODIFY → GO:0044183/GO:0140662; NEW holdase chaperone activity NTR | ATP-dependent HSP70 foldase with directly demonstrated ATP-independent holdase activity; comprehensive review complete |
 | GroEL | *E. coli* | P0A6F5 | 64 | MODIFY → GO:0044183 | Chaperonin |
 | HdeA | *E. coli* | P0AES9 | 14 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Acid-activated in-situ holdase; no defined acceptor or delivery destination; GO:0042026 for refolding process |
 | HdeB | *E. coli* | P0AET2 | 8 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Acid-activated in-situ holdase; no defined acceptor or delivery destination |
