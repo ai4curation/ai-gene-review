@@ -130,15 +130,18 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # net post-review terms and three predicted overlaps after
         # resolving miscited CAFA rows. Its core count and overlap stay unchanged:
         # evidence-backed GO:0001671 replaces overclaimed GO:0043335 in the core set.
-        # surA, Spy, CpxP, DnaJ, DnaK, and GroEL advanced to COMPLETE, moving the
-        # reference-status distribution 67->73 COMPLETE in the benchmark sidecars.
+        # surA, Spy, CpxP, DnaJ, DnaK, GroEL, and RidA advanced to COMPLETE, moving
+        # the reference-status distribution 67->74 COMPLETE in the benchmark sidecars.
         # DnaK changes review classifications without changing the three overlap totals.
         # GroEL removes two net post-review terms and one predicted overlap after
         # narrowing broad cytoplasm to the directly supported cytosol term; its core
         # count and overlap stay unchanged.
+        # RidA removes one net post-review term and one predicted overlap by narrowing
+        # broad annotations and replacing obsolete terms with the specific isoleucine
+        # process or the holdase NTR; its GO-valued core set and overlap stay unchanged.
         # GOA is unaffected,
         # distinguishing upstream review edits from a comparison regression.
-        "post_review": {"overlap": 856, "total": 2768, "pred": 8871},
+        "post_review": {"overlap": 855, "total": 2767, "pred": 8871},
         "core": {"overlap": 350, "total": 1231, "pred": 8871},
     }
 

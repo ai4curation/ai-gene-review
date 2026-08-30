@@ -195,23 +195,31 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
         set_error_type=True,
         replace_category_mentions=True,
     ),
-    # RidA repeats overgeneralized GOA records rather than reflecting bad experiments.
+    # RidA repeats GOA records whose conditionality/core status requires curation.
     ("ECOLI", "RidA", "GO:0051082"): ManualOverride(
-        error_type="CURATION_MISTAKE",
+        assessment="CNN",
+        error_type=None,
         set_error_type=True,
         summary=(
-            "Unfolded protein binding is not a constitutive property of native RidA. "
-            "RidA acquires holdase activity only after HOCl-mediated N-chlorination "
-            "(PMID:25517874), and the AIGR review therefore marks the unconditional "
-            "GO annotation as MARK_AS_OVER_ANNOTATED. The experiment itself is valid; "
-            "the error is the curation-level loss of the required stress-dependent "
-            "modification context, so CURATION_MISTAKE is more accurate than "
-            "EXPERIMENTAL_MISTAKE."
+            "The prediction exactly recapitulates an existing GOA row and is therefore "
+            "correct but not novel. RidA acquires ATP-independent holdase activity "
+            "after HOCl-mediated N-chlorination (PMID:25517874); untreated RidA does "
+            "not suppress IlvA aggregation. The AIGR review modifies obsolete, "
+            "binding-only GO:0051082 to the general holdase chaperone activity NTR, "
+            "but that proposed term does not make the existing training-derived call novel."
         ),
     ),
     ("ECOLI", "RidA", "GO:0016020"): ManualOverride(
-        error_type="CURATION_MISTAKE",
+        assessment="CNN",
+        error_type=None,
         set_error_type=True,
+        summary=(
+            "The prediction exactly recapitulates an existing HDA membrane annotation. "
+            "The AIGR review retains that observation as non-core out of curator deference "
+            "because the abstract-only cache cannot distinguish membrane association from "
+            "fractionation carryover; cytosol remains RidA's primary location. It is "
+            "therefore correct but not novel, with no model-error category."
+        ),
     ),
     # The generic transcription role is supported, but the hypoxia-specific claim is unresolved.
     ("human", "VEGFA", "GO:0061419"): ManualOverride(
