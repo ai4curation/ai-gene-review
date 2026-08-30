@@ -142,3 +142,30 @@ def test_bulk_download_rejects_html_and_invalid_headers(
     monkeypatch.setattr("urllib.request.urlopen", lambda *_args, **_kwargs: Response())
 
     assert fitness.try_bulk_download("keio", "b3349") is None
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "name\tfit\tt\nset1\t\t2.0\n",
+        "name\tfit\tt\nset1\tnot-a-number\t2.0\n",
+        "name\tfit\tt\nset1\t1.0\t\n",
+    ],
+)
+def test_bulk_download_rejects_invalid_numeric_cells(
+    content: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def read(self) -> bytes:
+            return content.encode()
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *_args, **_kwargs: Response())
+
+    assert fitness.try_bulk_download("keio", "b3349") is None
