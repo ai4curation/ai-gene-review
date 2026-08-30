@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 76 are `COMPLETE`, 46 `DRAFT`, 13 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 77 are `COMPLETE`, 46 `DRAFT`, 12 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -124,9 +124,9 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,960 | 1,040 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,765 | 853 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,231 | 350 | 3.9 |
+| Raw GOA | 2,957 | 1,037 | 11.7 |
+| Retained/replacement/proposed-new AIGR annotations | 2,762 | 850 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,230 | 349 | 3.9 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general

@@ -300,8 +300,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 634
-    assert sft["cnn_other_established_basis"] == 47
+    assert sft["cnn_exact_frozen_goa"] == 633
+    assert sft["cnn_other_established_basis"] == 48
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
         "n_reviewed": 82,

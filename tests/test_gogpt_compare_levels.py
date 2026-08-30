@@ -117,7 +117,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert committed == details
     assert len(details) == 299
     assert stats == {
-        "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
+        "goa": {"overlap": 1037, "total": 2957, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -144,10 +144,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # Skp retains experimentally supported protein folding and adds it to the
         # synthesized core process set while treating homotrimerization as non-core,
         # adding one reference term and exact overlap at both AIGR levels.
-        # GOA is unaffected,
-        # distinguishing upstream review edits from a comparison regression.
-        "post_review": {"overlap": 853, "total": 2765, "pred": 8871},
-        "core": {"overlap": 350, "total": 1231, "pred": 8871},
+        # SlyD's refreshed GOA removes three obsolete/broad terms, including
+        # GO:0051082, reducing raw and post-review totals/overlaps by three. Its
+        # term-less holdase core removes GO:0051082 from the GO-valued core set.
+        "post_review": {"overlap": 850, "total": 2762, "pred": 8871},
+        "core": {"overlap": 349, "total": 1230, "pred": 8871},
     }
 
 
