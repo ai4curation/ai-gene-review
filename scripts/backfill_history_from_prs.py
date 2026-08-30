@@ -32,9 +32,10 @@ else; without ``gh`` it exits with an error rather than pretending to work.
 
 Examples
 --------
-Dry-run over all open PRs::
+Dry-run over all merged PRs (prefer ``merged``: an open PR's new files are
+not on the checkout, so their targets are skipped as missing)::
 
-    uv run python scripts/backfill_history_from_prs.py --state open --dry-run
+    uv run python scripts/backfill_history_from_prs.py --state merged --dry-run
 
 Backfill two specific PRs::
 

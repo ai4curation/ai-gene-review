@@ -181,10 +181,14 @@ as merged or open PRs. `scripts/backfill_history_from_prs.py` winds that
 history back into `history/`:
 
 ```bash
-just backfill-history --state open --dry-run   # see what would be written
-just backfill-history --state open             # backfill all open PRs
-just backfill-history --pr 2613 --pr 2667      # backfill specific PRs
+just backfill-history --state merged --dry-run  # see what would be written
+just backfill-history --state merged            # backfill all merged PRs
+just backfill-history --pr 2613 --pr 2667       # backfill specific PRs
 ```
+
+Prefer `--state merged`. A target only counts once its file is on the
+checkout, and an open PR's new files are not, so `--state open` skips almost
+everything it enumerates.
 
 For each curated target a PR touches, it writes one record seeded from PR
 metadata (title, body, author, branch, changed files), timestamped at the
