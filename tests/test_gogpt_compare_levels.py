@@ -117,7 +117,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert committed == details
     assert len(details) == 299
     assert stats == {
-        "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
+        "goa": {"overlap": 1037, "total": 2957, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -130,8 +130,8 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # net post-review terms and three predicted overlaps after
         # resolving miscited CAFA rows. Its core count and overlap stay unchanged:
         # evidence-backed GO:0001671 replaces overclaimed GO:0043335 in the core set.
-        # surA, Spy, CpxP, DnaJ, DnaK, GroEL, RidA, and SecB advanced to COMPLETE,
-        # moving the reference-status distribution 67->75 COMPLETE in the benchmark sidecars.
+        # surA, Spy, CpxP, DnaJ, DnaK, GroEL, RidA, SecB, Skp, and SlyD advanced
+        # to COMPLETE, moving the reference-status distribution 67->77 COMPLETE.
         # DnaK changes review classifications without changing the three overlap totals.
         # GroEL removes two net post-review terms and one predicted overlap after
         # narrowing broad cytoplasm to the directly supported cytosol term; its core
@@ -143,11 +143,14 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # broad transport/localization annotations; its core set and overlap stay unchanged.
         # Skp retains experimentally supported protein folding and adds it to the
         # synthesized core process set while treating homotrimerization as non-core,
-        # adding one reference term and exact overlap at both AIGR levels.
-        # GOA is unaffected,
-        # distinguishing upstream review edits from a comparison regression.
-        "post_review": {"overlap": 853, "total": 2765, "pred": 8871},
-        "core": {"overlap": 350, "total": 1231, "pred": 8871},
+        # adding one reference term and exact overlap at both AIGR levels. GOA is
+        # unaffected, distinguishing that curation edit from a snapshot refresh.
+        # SlyD's refreshed GOA removes obsolete GO:0051082 plus the active broad
+        # parents GO:0016853 and GO:0046872, reducing raw and post-review
+        # totals/overlaps by three. Its term-less holdase core removes GO:0051082
+        # from the GO-valued core set.
+        "post_review": {"overlap": 850, "total": 2762, "pred": 8871},
+        "core": {"overlap": 349, "total": 1230, "pred": 8871},
     }
 
 
