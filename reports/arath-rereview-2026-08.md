@@ -34,13 +34,15 @@ abstract-only cache foregrounds a different gene or paralog:
   REMOVE → ACCEPT. Both caches are abstract-only; miRNA binding is a textbook core
   AGO1 function independently supported by PMID:16081530 and PMID:30181559.
 - **RPS2** `GO:0042742` (IMP) and `GO:0005886` (EXP), both PMID:22331412:
-  REMOVE → ACCEPT. The "RPS5-focused" paper in fact assayed RPS2 domains directly
-  (RPS2 CC and LRR chimeras are described in its abstract), so it is not a citation
-  mismatch, and both functions are unambiguously correct for RPS2.
+  REMOVE → ACCEPT. The "RPS5-focused" paper did assay RPS2 domains in RPS5
+  chimeras (the abstract describes swaps of the RPS2 CC and LRR domains), so it is
+  not a citation mismatch, and both functions are unambiguously correct for RPS2.
 - **RPS2** `GO:0002220` (EXP): REMOVE → MODIFY with proposed replacement
-  `GO:0002753` cytoplasmic pattern recognition receptor signaling pathway. The
-  immune-activation claim is sound; only the receptor class (cell surface vs.
-  cytoplasmic) is wrong.
+  `GO:0002218` activation of innate immune response. The immune-activation claim
+  is sound, but RPS2 is a guard rather than a ligand/PAMP-binding pattern
+  recognition receptor, so the replacement is a receptor-class-neutral term rather
+  than a different receptor class. This matches the `GO:0016045` row, which rejects
+  PRR framing for RPS2 on the same grounds.
 - **COP1** `GO:0006281` DNA repair (IMP PMID:18434413): REMOVE →
   MARK_AS_OVER_ANNOTATED. The abstract explicitly reports DNA damage in cop1
   mutants, so the IMP is not a CSN mis-attribution; but the phenotype is plausibly
@@ -130,6 +132,20 @@ Findings worth noting:
   extrinsic membrane association is real. Note that `genes/ARATH/AAU94417/` and
   `genes/ARATH/AT1G06680/` are duplicate reviews of the same protein
   (UniProt Q42029 / PSBP1) and could be merged.
+- **AAU94417 / AT1G06680 verdict split (resolved).** The two duplicate reviews had
+  opposite verdicts on the same `GO:0009535` IBA / GO_REF:0000033 row: AAU94417
+  MODIFY → `GO:0009543` with a grounded `propagation_review`, AT1G06680 ACCEPT with
+  a boilerplate reason. AT1G06680 was aligned to the AAU94417 verdict. The ACCEPT
+  also contradicted AT1G06680's own `core_functions`, which already assert
+  `GO:0009543` (chloroplast thylakoid lumen) as the location. The two experimental
+  `GO:0009535` HDA rows (PMID:15322131, PMID:14729914) were split the same way
+  (AAU94417 REMOVE vs AT1G06680 ACCEPT) and were converged on MODIFY →
+  `GO:0009543` in both files: the proteomic detection is real, so per the
+  "do not overrule curators from incomplete evidence" guideline the imprecise
+  compartment term is refined rather than removed. Merging the two
+  directories remains outstanding and is deliberately left out of scope here;
+  `inconsistent_review_actions` cannot see across directories, so this split would
+  not have been caught by validation.
 
 ## Known remaining warnings (deliberately not addressed)
 
