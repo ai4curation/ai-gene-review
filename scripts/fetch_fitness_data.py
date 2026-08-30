@@ -255,10 +255,15 @@ def try_bulk_download(org_id: str, locus_tag: str) -> dict | None:
                 return None
             fitness = []
             for row in reader:
+                try:
+                    fit_value = float(row["fit"])
+                    t_value = float(row["t"])
+                except (KeyError, TypeError, ValueError):
+                    return None
                 fitness.append({
                     "expName": row.get("name", ""),
-                    "fit": float(row.get("fit", 0)),
-                    "t": float(row.get("t", 0)),
+                    "fit": fit_value,
+                    "t": t_value,
                     "expDesc": row.get("short", row.get("desc", "")),
                     "expGroup": row.get("Group", ""),
                     "condition_1": row.get("Condition_1", ""),
