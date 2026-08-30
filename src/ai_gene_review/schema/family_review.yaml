@@ -1,0 +1,749 @@
+id: https://ai4curation.io/ai-gene-review/schema/family_review
+name: family_review
+title: PANTHER Family Review Schema
+description: >-
+  Sidecar LinkML schema for *curating a protein family as its own entry*, stored next to
+  the machine-fetched records at ``interpro/panther/<PTHR>/<PTHR>-review.yaml``. The
+  fetched files (``<PTHR>-metadata.yaml``, ``<PTHR>-entries.csv``, ``<PTHR>-paint.tsv``)
+  are never hand-edited.
+
+  This replaces the free-text ``<PTHR>-review.md`` convention with a structured record,
+  and adds the thing prose cannot support: **machine-checkable residue claims**.
+
+  Two ideas carry most of the weight.
+
+  First, **family review is where subfamily-level functional divergence belongs**. An IBA
+  is a phylogenetic assertion placed at a node, so the question "is this term safe for all
+  descendants of this node?" is a family question, not a gene question. ``subfamilies``
+  and ``node_assessments`` record that judgement once, where every member gene inherits it,
+  instead of re-deriving it in each gene review.
+
+  Second, and the reason this schema exists rather than a looser one: a claim of the form
+  "this protein lost the catalytic cysteine" is the single most common justification for
+  removing an enzymatic annotation, and it is **cheap to assert and hard to check**. A
+  survey of 17 such claims in this repo found 4 where the residue was fully intact -- the
+  conclusions happened to survive for other reasons, so nothing caught the bad reasoning.
+  ``ResidueSite`` makes the claim structured: an anchor protein, a position, and the
+  residue expected there. A validator can then resolve it against the actual sequence and
+  contradict it, in the same way ``supporting_text`` is checked as a verbatim substring of
+  a cached publication and GO ids are checked against the ontology.
+
+  Residue positions are always anchored to a **reference protein and its own native
+  numbering**, never to an alignment column. Alignment columns are not stable identifiers:
+  a PANTHER re-release re-aligns the family, and a claim keyed to column 715 would still
+  resolve afterwards -- to the wrong residue. Columns are derived at validation time from
+  a pinned release and are never stored as the anchor.
+
+  GO ids are bound to a branch-reachability enum so ``linkml-term-validator`` checks that
+  every curated term resolves and its label matches the ontology. PANTHER, UniProt and
+  M-CSA identifiers are curated id/label tuples and are not ontology-label-validated here.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  famreview: https://ai4curation.io/ai-gene-review/family_review/
+  PANTHER: http://www.pantherdb.org/panther/family.do?clsAccession=
+  UniProtKB: https://www.uniprot.org/uniprotkb/
+  GO: http://purl.obolibrary.org/obo/GO_
+  ECO: http://purl.obolibrary.org/obo/ECO_
+  EMO: http://purl.obolibrary.org/obo/EMO_
+  PMID: http://identifiers.org/pubmed/
+  MCSA: https://www.ebi.ac.uk/thornton-srv/m-csa/entry/
+  RHEA: http://rdf.rhea-db.org/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: famreview
+default_range: string
+
+# =====================================================================
+# Slots
+# =====================================================================
+slots:
+  id:
+    identifier: true
+    description: CURIE of the entity (e.g. PANTHER:PTHR11022, GO:0008745, UniProtKB:Q96PD5).
+  label:
+    slot_uri: rdfs:label
+    description: Human-readable label (validated against the ontology where enum-bound).
+
+  # --- FamilyReview top level ---
+  family_id:
+    range: string
+    required: true
+    pattern: "^PANTHER:PTHR[0-9]{5}$"
+    description: The PANTHER family this review is about (e.g. PANTHER:PTHR11022).
+  family_name:
+    range: string
+    required: true
+    description: PANTHER's official family name, verbatim. Do not paraphrase.
+  preferred_name:
+    range: string
+    description: >-
+      Free-text curator name for the family when PANTHER's official name is misleading --
+      often because it is dominated by one member. Never edit family_name to fix this.
+  summary:
+    range: string
+    description: >-
+      Standalone biological summary of the family: what its members do, how conserved that
+      is, and where the functional boundaries fall. Written for a biologist who does not
+      know this curation project.
+  functional_coherence:
+    range: FunctionalCoherenceEnum
+    required: true
+    description: >-
+      Whether the family is functionally uniform enough for a specific term to sit on the
+      whole family. HETEROGENEOUS is common and is the root cause of most IBA
+      over-propagation.
+  coherence_reason:
+    range: string
+    description: Why the family has the stated coherence -- name the divergent groups.
+  reference_protein:
+    range: ProteinRef
+    inlined: true
+    description: >-
+      The best-characterized member, used as the default anchor for residue positions.
+      Choose one with UniProt active-site or binding-site features where possible.
+  subfamilies:
+    range: Subfamily
+    inlined_as_list: true
+    multivalued: true
+    description: Functionally distinct groups within the family.
+  node_assessments:
+    range: NodeAssessment
+    inlined_as_list: true
+    multivalued: true
+    description: Per-PTN-node assessment of PAINT/IBD assertions that descend to members.
+  residue_sites:
+    range: ResidueSite
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Curated functionally important residues or motifs, with the function they support.
+      This is the family-level rule that individual gene residue claims cite.
+  term_assessments:
+    range: TermAssessment
+    inlined_as_list: true
+    multivalued: true
+    description: Family-level judgements on GO terms proposed for, or already mapped to, this family.
+  references:
+    range: Reference
+    inlined_as_list: true
+    multivalued: true
+    description: Literature supporting this review.
+  review_status:
+    range: FamilyReviewStatusEnum
+    required: true
+    description: Curation status of this family review.
+  reviewed_by:
+    range: string
+    description: Who performed the review.
+  review_date:
+    range: string
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    description: >-
+      Date of the most recent substantive review, as a quoted YYYY-MM-DD string.
+      Deliberately a string rather than a date: YAML silently parses a bare 2026-08-27
+      into a date object, which then fails validation. Quote it.
+  notes:
+    range: string
+    description: Free-text curator notes that do not belong in any structured field.
+
+  # --- Subfamily ---
+  subfamily_id:
+    range: string
+    pattern: "^PANTHER:PTHR[0-9]{5}:SF[0-9]+$"
+    description: PANTHER subfamily accession (e.g. PANTHER:PTHR11022:SF12).
+  clade_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      Optional PTN at the root of this subfamily's clade. Subfamily (SF) accessions and
+      PTN nodes are two different axes over the same tree -- SF is PANTHER's classification
+      label, PTN is a position in the phylogeny. Linking them lets a subfamily-scoped term
+      assessment be connected to the node an IBA actually descends from.
+  representative_members:
+    range: ProteinRef
+    inlined_as_list: true
+    multivalued: true
+    description: Proteins that typify this group.
+  diverged_from_family:
+    range: boolean
+    description: >-
+      True when this group's function differs from the family consensus -- the flag that
+      says "do not inherit family-level terms here".
+  divergence_description:
+    range: string
+    description: How this group's function differs, and what it does instead.
+
+  # --- NodeAssessment ---
+  node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    required: true
+    description: The PANTHER ancestral node (e.g. PANTHER:PTN000391532).
+  asserted_term:
+    range: Term
+    inlined: true
+    required: true
+    description: The GO term asserted at this node by PAINT (IBD), which descends as IBA.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  seeds:
+    range: ProteinRef
+    inlined_as_list: true
+    multivalued: true
+    description: The experimentally annotated descendants the PAINT curator used (the IBD seeds).
+  assessment:
+    range: NodeAssessmentEnum
+    required: true
+    description: Whether the node placement is sound, too deep, or otherwise wrong.
+  assessment_reason:
+    range: string
+    required: true
+    description: >-
+      Why. For TOO_DEEP or WRONG_NODE, name the clade that should not have inherited the
+      term and say what distinguishes it.
+  affected_subfamilies:
+    range: Term
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Subfamilies that wrongly inherit the term, if the assessment is negative, as
+      id/label pairs. The label must be PANTHER's official subfamily name verbatim -- a
+      plausible-sounding label is exactly how a wrong SF accession stays hidden.
+  node_taxon:
+    range: Term
+    inlined: true
+    description: >-
+      Taxon scope PAINT records for the node, as an id/label pair with a proper NCBITaxon
+      CURIE (e.g. id NCBITaxon:33213, label Bilateria). PAINT's own TSV writes a bare
+      ``taxon:33213``; expand it rather than copying it, so the label can be checked. This
+      is the clade the curator judged the function arose in, and therefore the thing a
+      TOO_DEEP assessment disputes. Roughly a quarter of PAINT rows carry no taxon at all,
+      so this slot is optional.
+  paint_snapshot:
+    range: string
+    pattern: "^[0-9]{8}$"
+    description: >-
+      The PAINT row date (YYYYMMDD) this assessment was made against, copied from the
+      family's paint.tsv. Cached PAINT slices in this repo range from 2017 to 2026, so an
+      assessment without a snapshot cannot be told apart from one made against stale data.
+
+  # --- ResidueSite ---
+  site_id:
+    range: string
+    required: true
+    pattern: "^[a-z0-9_]+$"
+    description: >-
+      Short stable identifier for this site, unique within the family (e.g. zn_triad).
+      Gene-level residue claims cite it as PANTHER:PTHR11022#zn_triad.
+  description:
+    range: string
+    description: Free-text description.
+  anchor:
+    range: ProteinRef
+    inlined: true
+    description: >-
+      Protein whose numbering the positions use. Defaults to the family reference_protein
+      when omitted; state it explicitly when a site is anchored elsewhere.
+  anchor_sequence_version:
+    range: integer
+    minimum_value: 1
+    description: >-
+      UniProt sequence version of the anchor protein that the positions in this site
+      were read against. Amino-acid sequences are not immutable -- SEPHS2 is on
+      sequence version 3 -- so an unversioned site can drift silently when a corrected
+      or re-chosen canonical sequence shifts its numbering.
+  residues:
+    range: Residue
+    inlined_as_list: true
+    multivalued: true
+    description: Individual functionally important positions, in the anchor's own numbering.
+  motif:
+    range: Motif
+    inlined: true
+    description: >-
+      A contiguous block requirement (e.g. CXXC), as an alternative to listing residues
+      individually. Use residues when the positions are separated in sequence.
+  required_for:
+    range: FunctionRequirement
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      The functions this site supports, and how strongly. This is what makes the site
+      actionable: it turns "these residues matter" into a claim a gene review can be
+      checked against.
+  site_source:
+    range: SiteSourceEnum
+    required: true
+    description: Where the site definition came from.
+  external_ref:
+    range: ExternalRef
+    inlined: true
+    description: Link to an external catalogue entry this site was derived from (e.g. M-CSA).
+  positive_controls:
+    range: ProteinRef
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Members verified to have the function AND the intact site. Required in practice:
+      without a verified positive control, a mislabelled reference makes real enzymes look
+      degenerate.
+  negative_controls:
+    range: ProteinRef
+    inlined_as_list: true
+    multivalued: true
+    description: Members verified to lack the function, showing what loss looks like in this family.
+
+  # --- Residue ---
+  position:
+    range: integer
+    required: true
+    minimum_value: 1
+    description: 1-based position in the anchor protein's own sequence.
+  expected:
+    range: string
+    required: true
+    multivalued: true
+    pattern: "^[ACDEFGHIKLMNPQRSTVWYUO]$"
+    description: >-
+      Residue(s) acceptable at this position, as single-letter codes. Multivalued because
+      a catalytic position can tolerate alternatives -- the selenophosphate synthetase
+      nucleophile is C in most members and U (selenocysteine) in SEPHS2. Includes U and O
+      for selenocysteine and pyrrolysine.
+  role:
+    range: string
+    description: Mechanistic role, free text (e.g. "nucleophile", "metal ligand", "proton donor").
+  role_term:
+    range: Term
+    inlined: true
+    description: >-
+      Optional ontology term for the role, typically EMO from M-CSA. Omit rather than
+      guess; free-text role is sufficient.
+
+  # --- Motif ---
+  pattern_regex:
+    range: string
+    required: true
+    description: Regular expression the block must match (e.g. "C..C" for CXXC).
+  start:
+    range: integer
+    required: true
+    minimum_value: 1
+    description: 1-based start position of the block in the anchor protein.
+  end:
+    range: integer
+    required: true
+    minimum_value: 1
+    description: 1-based end position of the block in the anchor protein.
+
+  # --- FunctionRequirement ---
+  term:
+    range: Term
+    inlined: true
+    required: true
+    description: The GO term this site supports.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  strength:
+    range: RequirementStrengthEnum
+    required: true
+    description: >-
+      How hard the dependency is. Only REQUIRED licenses a validator to contradict a gene
+      review, so promote to REQUIRED only with a rationale and supporting text.
+  rationale:
+    range: string
+    required: true
+    description: >-
+      Why this site is needed for this function. State the mechanism, not the correlation:
+      "catalysis runs through a zinc-activated water, so losing any ligand abolishes the
+      metal site" rather than "these residues are conserved".
+  supported_by:
+    range: SupportingText
+    inlined_as_list: true
+    multivalued: true
+    description: Verbatim quotes from cited references supporting the requirement.
+
+  # --- TermAssessment ---
+  assessed_term:
+    range: Term
+    inlined: true
+    required: true
+    description: The GO term under assessment at family level.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  scope:
+    range: TermScopeEnum
+    required: true
+    description: Which part of the family the term is safe for.
+  scope_reason:
+    range: string
+    required: true
+    description: Why the term has that scope.
+  determined_by_site:
+    range: string
+    pattern: "^[a-z0-9_]+$"
+    description: >-
+      The site_id whose residues decide applicability, when scope is
+      RESIDUE_DETERMINED. Must name a site in this same family review.
+  applicable_subfamilies:
+    range: Term
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Subfamilies the term IS safe for, when scope is SUBFAMILY_ONLY, as id/label pairs
+      with PANTHER's official subfamily name verbatim.
+
+  # --- ProteinRef / Reference / SupportingText / ExternalRef ---
+  control_position:
+    range: integer
+    minimum_value: 1
+    description: >-
+      For a control protein, the position in ITS OWN numbering corresponding to the
+      site. Supply it together with control_residue so the control assertion becomes
+      checkable; without them a control list is decorative, and a mislabelled control
+      is the failure that makes genuine enzymes look degenerate.
+  control_residue:
+    range: string
+    pattern: "^[ACDEFGHIKLMNPQRSTVWYUO]$"
+    description: >-
+      The residue that position carries. A positive control must carry one of the
+      site's expected residues; a negative control must not.
+  gene_symbol:
+    range: string
+    description: Gene symbol, where one exists.
+  organism:
+    range: string
+    description: Source organism.
+  gene_review:
+    range: string
+    description: >-
+      Path to an in-repo gene review for this protein, if one exists
+      (e.g. genes/ANOGA/PGRPLC/PGRPLC-ai-review.yaml).
+  reference_id:
+    range: string
+    required: true
+    description: "Reference CURIE (e.g. PMID:14506275) or a file: path."
+  title:
+    range: string
+    description: Publication title.
+  supporting_text:
+    range: string
+    required: true
+    description: >-
+      Verbatim quote from the reference. Must be an exact substring of the cached
+      publication -- the validator checks this, so do not paraphrase.
+  source_db:
+    range: ExternalSourceEnum
+    required: true
+    description: Which external catalogue.
+  source_url:
+    range: string
+    description: Direct URL to the external record.
+
+# =====================================================================
+# Classes
+# =====================================================================
+classes:
+  FamilyReview:
+    description: >-
+      A curated review of one PANTHER protein family. Lives at
+      interpro/panther/<PTHR>/<PTHR>-review.yaml.
+    tree_root: true
+    slots:
+      - family_id
+      - family_name
+      - preferred_name
+      - summary
+      - functional_coherence
+      - coherence_reason
+      - reference_protein
+      - subfamilies
+      - node_assessments
+      - residue_sites
+      - term_assessments
+      - references
+      - review_status
+      - reviewed_by
+      - review_date
+      - notes
+    rules:
+      - preconditions:
+          slot_conditions:
+            functional_coherence:
+              equals_string: HETEROGENEOUS
+        postconditions:
+          slot_conditions:
+            coherence_reason:
+              required: true
+        description: A family called heterogeneous must say what diverges.
+
+  Subfamily:
+    description: A functionally distinct group within the family.
+    slots:
+      - subfamily_id
+      - clade_node_id
+      - label
+      - description
+      - representative_members
+      - diverged_from_family
+      - divergence_description
+    rules:
+      - preconditions:
+          slot_conditions:
+            diverged_from_family:
+              equals_number: 1
+        postconditions:
+          slot_conditions:
+            divergence_description:
+              required: true
+        description: A subfamily flagged as diverged must describe the divergence.
+
+  NodeAssessment:
+    description: >-
+      Assessment of a PAINT/IBD assertion at one ancestral node. This is where an IBA is
+      actually adjudicated: the question is whether the node placement is right, not
+      whether the target resembles the donors.
+    slots:
+      - node_id
+      - asserted_term
+      - seeds
+      - assessment
+      - assessment_reason
+      - affected_subfamilies
+      - node_taxon
+      - paint_snapshot
+
+  ResidueSite:
+    description: >-
+      A functionally important residue set or sequence block, anchored to a reference
+      protein's own numbering. Gene-level residue claims cite a site by
+      "<family_id>#<site_id>".
+    slots:
+      - site_id
+      - label
+      - description
+      - anchor
+      - anchor_sequence_version
+      - residues
+      - motif
+      - required_for
+      - site_source
+      - external_ref
+      - positive_controls
+      - negative_controls
+
+  Residue:
+    description: One functionally important position in the anchor protein.
+    slots:
+      - position
+      - expected
+      - role
+      - role_term
+
+  Motif:
+    description: A contiguous sequence block that must match a pattern.
+    slots:
+      - pattern_regex
+      - start
+      - end
+      - role
+
+  FunctionRequirement:
+    description: A function that a residue site supports, and how hard the dependency is.
+    slots:
+      - term
+      - strength
+      - rationale
+      - supported_by
+
+  TermAssessment:
+    description: A family-level judgement on whether a GO term is safe, and for which members.
+    slots:
+      - assessed_term
+      - scope
+      - scope_reason
+      - determined_by_site
+      - applicable_subfamilies
+      - supported_by
+    rules:
+      - preconditions:
+          slot_conditions:
+            scope:
+              equals_string: SUBFAMILY_ONLY
+        postconditions:
+          slot_conditions:
+            applicable_subfamilies:
+              required: true
+        description: A subfamily-scoped term must name the subfamilies it applies to.
+      - preconditions:
+          slot_conditions:
+            scope:
+              equals_string: RESIDUE_DETERMINED
+        postconditions:
+          slot_conditions:
+            determined_by_site:
+              required: true
+        description: A residue-determined term must name the site that decides it.
+
+  ProteinRef:
+    description: >-
+      A protein referred to by this review. When used as a positive or negative
+      control, it may also state the position and residue that make the control
+      assertion checkable.
+    slots:
+      - id
+      - label
+      - gene_symbol
+      - organism
+      - gene_review
+      - control_position
+      - control_residue
+
+  Term:
+    description: An ontology term as an id/label tuple.
+    slots:
+      - id
+      - label
+
+  ExternalRef:
+    description: A record in an external catalogue that a site was derived from.
+    slots:
+      - id
+      - source_db
+      - source_url
+
+  SupportingText:
+    description: A verbatim quote from a reference.
+    slots:
+      - reference_id
+      - supporting_text
+
+  Reference:
+    description: A publication cited by this review.
+    slots:
+      - id
+      - title
+
+# =====================================================================
+# Enums
+# =====================================================================
+enums:
+  FunctionalCoherenceEnum:
+    permissible_values:
+      COHERENT:
+        description: All members share the function; a specific term is safe family-wide.
+      MOSTLY_COHERENT:
+        description: Members share the function except for identified exceptions.
+      HETEROGENEOUS:
+        description: >-
+          The family lumps functionally distinct groups; no specific term is safe at family
+          level. The usual cause of IBA over-propagation.
+      UNKNOWN:
+        description: Not enough evidence to judge.
+
+  NodeAssessmentEnum:
+    permissible_values:
+      SOUND:
+        description: The term is correctly placed; all descendants plausibly inherit the function.
+      TOO_DEEP:
+        description: >-
+          The function arose later than the node it is placed at, so clades that never had
+          it inherit the term.
+      WRONG_NODE:
+        description: The seeds do not support placement at this node at all.
+      NEEDS_PRUNING:
+        description: >-
+          Placement is defensible but one identified branch has lost the function and needs
+          an IRD/NOT to stop the term descending.
+      UNRESOLVED:
+        description: Investigated but not confidently classifiable.
+
+  RequirementStrengthEnum:
+    permissible_values:
+      REQUIRED:
+        description: >-
+          The function is not possible without this site. Only this level licenses a
+          validator to contradict a gene review that claims the function anyway.
+      CONTRIBUTES:
+        description: The site materially supports the function but loss may not abolish it.
+      ASSOCIATED:
+        description: Observed correlation with the function; no mechanistic claim.
+
+  TermScopeEnum:
+    permissible_values:
+      FAMILY_WIDE:
+        description: Safe for all members.
+      SUBFAMILY_ONLY:
+        description: Safe only for named subfamilies; must not descend family-wide.
+      RESIDUE_DETERMINED:
+        description: >-
+          Applicability is decided per member by a curated residue site, not by
+          subfamily membership. Use this when a PANTHER subfamily is functionally
+          mixed, which happens: PTHR10256:SF0 contains both the active E. coli SelD
+          and the arginine-substituted Drosophila Sps1, so any subfamily-level grant
+          or denial is wrong for half its members. Requires determined_by_site.
+      NOT_APPLICABLE:
+        description: Not safe for any member; the family is misnamed or the mapping is wrong.
+      UNRESOLVED:
+        description: Investigated but undecided.
+
+  SiteSourceEnum:
+    permissible_values:
+      UNIPROT_FEATURE:
+        description: >-
+          From the reference protein's UniProt Active site / Binding site feature table.
+          The default and broadest source.
+      MCSA:
+        description: >-
+          From M-CSA. Richer than UniProt where available (mechanistic roles, PDB
+          projection) but covers only ~1000 enzymes, so it supplements rather than replaces
+          UNIPROT_FEATURE.
+      LITERATURE:
+        description: From a publication, with supporting_text quoting the relevant statement.
+      ALIGNMENT_INFERENCE:
+        description: >-
+          Inferred from conservation in the family alignment with no external annotation.
+          The weakest source; do not pair with strength REQUIRED.
+
+  ExternalSourceEnum:
+    permissible_values:
+      MCSA:
+        description: Mechanism and Catalytic Site Atlas.
+      UNIPROT:
+        description: UniProtKB feature table.
+      PROSITE:
+        description: PROSITE pattern.
+      INTERPRO:
+        description: InterPro conserved-site entry.
+
+  FamilyReviewStatusEnum:
+    permissible_values:
+      DRAFT:
+        description: Started; not yet coherent.
+      IN_PROGRESS:
+        description: Under active review.
+      NEEDS_REVIEW:
+        description: Complete enough to be checked by another reviewer.
+      COMPLETE:
+        description: Reviewed and considered settled.
+
+  GOTermEnum:
+    description: Any term in the Gene Ontology (MF, BP, or CC branch).
+    reachable_from:
+      source_nodes:
+        - GO:0003674
+        - GO:0008150
+        - GO:0005575
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf

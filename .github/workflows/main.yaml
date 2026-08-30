@@ -78,6 +78,8 @@ jobs:
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
+            families:
+              - 'interpro/panther/**/*-review.yaml'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
@@ -126,6 +128,18 @@ jobs:
           restore-keys: |
             oaklib-${{ runner.os }}-
 
+      # Residue validation resolves UniProt sequences. Caching them keeps
+      # validate-families from depending on UniProt being reachable on every run,
+      # which is what lets it stay scoped to gene changes as well as family ones.
+      # Same weekly rotation as above; sequences change far less often than that.
+      - name: Cache UniProt sequences
+        uses: actions/cache@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            uniprot-seq-${{ runner.os }}-
+
       # Scope validation to what changed: a change to schema/validators/config could
       # affect every gene (-> full validate-all); otherwise validate only changed genes.
       - name: Validate gene reviews (scoped)
@@ -155,6 +169,23 @@ jobs:
           steps.changes.outputs.infra == 'true' ||
           steps.changes.outputs.modules == 'true'
         run: just validate-modules
+
+      # Family reviews carry residue sites and node assessments that gene reviews
+      # cite, so a change to either side can break the join.
+      #
+      # Also fires on gene changes, because a gene residue_claim can cite a family
+      # site and the join breaks from either side. The UniProt cache restored above is
+      # what makes that affordable: without it every run would resolve each sequence
+      # over the network, and an upstream outage would block curation that cannot have
+      # broken these checks.
+      - name: Validate family reviews (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.families == 'true' ||
+          steps.changes.outputs.genes == 'true'
+        run: just validate-families
 
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI

@@ -20,13 +20,20 @@ import json
 import os
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any, Callable
 
 import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.sft_prediction_evidence import (
+    NEGATED_ACTION_PREFIX,
+    NEGATIVE_ACTIONS,
+    POSITIVE_ACTIONS,
+    PROVENANCE_LIMITED_NEGATIVE,
+    load_aigr_term_actions,
+)
 
 
 BIOREASON_REF = "doi:10.64898/2026.03.19.712954"
@@ -79,9 +86,6 @@ BIOREASON_ASPECTS = {
     "Cellular Component": "CC",
 }
 
-POSITIVE_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
-NEGATIVE_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
-NEGATED_ACTION_PREFIX = "NOT:"
 CONFIDENCE_BY_ASSESSMENT = {
     "COR": 2,
     "CNN": 2,
@@ -154,19 +158,7 @@ def extract_accession(uniprot_file: Path) -> str:
 
 def load_review_decisions(review_file: Path) -> dict[str, set[str]]:
     """Load exact GO ID to AIGR action mappings from existing annotations."""
-    review = yaml.safe_load(review_file.read_text()) or {}
-    decisions: dict[str, set[str]] = defaultdict(set)
-    for annotation in review.get("existing_annotations", []) or []:
-        go_id = (annotation.get("term") or {}).get("id", "")
-        action = (annotation.get("review") or {}).get("action")
-        if GO_ID_RE.fullmatch(go_id) and action:
-            decision = (
-                f"{NEGATED_ACTION_PREFIX}{action}"
-                if annotation.get("negated")
-                else action
-            )
-            decisions[go_id].add(decision)
-    return dict(decisions)
+    return dict(load_aigr_term_actions(review_file, preserve_negated=True))
 
 
 def load_review_terms(review_file: Path) -> dict[str, set[str]]:
@@ -304,11 +296,12 @@ def deterministic_assessment(
 ) -> tuple[str, str]:
     """Classify only exact, unambiguous current AIGR action matches."""
     actions = set((review_decisions or {}).get(go_id, set()))
-    action_text = ", ".join(sorted(actions))
+    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
+    action_text = ", ".join(sorted(biological_actions))
 
     # A retained annotation is sufficient evidence that the exact prediction is
     # correct-not-novel, even if another evidence line has a different action.
-    positive = sorted(actions & POSITIVE_ACTIONS)
+    positive = sorted(biological_actions & POSITIVE_ACTIONS)
     if positive:
         return (
             "CNN",
@@ -319,7 +312,7 @@ def deterministic_assessment(
 
     accepted_negations = sorted(
         action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in actions
+        for action in biological_actions
         if action.startswith(NEGATED_ACTION_PREFIX)
         and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
     )
@@ -335,12 +328,21 @@ def deterministic_assessment(
     # Only a pure negative decision set is auto-classified. Mixed REMOVE/PENDING,
     # MODIFY, and UNDECIDED cases remain unresolved. REP is never inferred from a
     # generic REMOVE because frequency bias requires separate evidence.
-    if actions and actions <= NEGATIVE_ACTIONS:
+    if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return (
             "NPI",
             "Deterministic exact-match comparison: current AIGR action(s) "
             f"{action_text} reject or flag this exact GO term as over-annotated; "
             "classified as nonparalog incorrect.",
+        )
+
+    if not biological_actions and PROVENANCE_LIMITED_NEGATIVE in actions:
+        return (
+            "UNC",
+            "The exact AIGR annotation has a negative action tied to a reference "
+            "adjudicated as miscited or wrongly identified. That provenance decision "
+            "does not by itself validate or refute this prediction. "
+            f"{MANUAL_ASSESSMENT_MARKER}.",
         )
 
     return (

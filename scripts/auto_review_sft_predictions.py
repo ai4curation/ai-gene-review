@@ -17,7 +17,7 @@ import argparse
 import copy
 import csv
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, MutableMapping
@@ -26,6 +26,12 @@ import yaml as pyyaml
 from ruamel.yaml import YAML
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.sft_prediction_evidence import (
+    NEGATIVE_ACTIONS,
+    POSITIVE_ACTIONS,
+    PROVENANCE_LIMITED_NEGATIVE,
+    load_aigr_term_actions,
+)
 
 
 DEFAULT_COHORT = Path("projects/BIOREASON_COMPARISON/genes.csv")
@@ -38,8 +44,6 @@ ONTOLOGY_PAIR_AUDIT = (
     / "argo95-ontology-pair-adjudication.tsv"
 )
 
-POSITIVE_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
-NEGATIVE_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
 INCORRECT_ASSESSMENTS = {"NPI", "PLI", "REP"}
 EXPECTED_CONFIDENCE = {
     "COR": 2,
@@ -191,23 +195,31 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
         set_error_type=True,
         replace_category_mentions=True,
     ),
-    # RidA repeats overgeneralized GOA records rather than reflecting bad experiments.
+    # RidA repeats GOA records whose conditionality/core status requires curation.
     ("ECOLI", "RidA", "GO:0051082"): ManualOverride(
-        error_type="CURATION_MISTAKE",
+        assessment="CNN",
+        error_type=None,
         set_error_type=True,
         summary=(
-            "Unfolded protein binding is not a constitutive property of native RidA. "
-            "RidA acquires holdase activity only after HOCl-mediated N-chlorination "
-            "(PMID:25517874), and the AIGR review therefore marks the unconditional "
-            "GO annotation as MARK_AS_OVER_ANNOTATED. The experiment itself is valid; "
-            "the error is the curation-level loss of the required stress-dependent "
-            "modification context, so CURATION_MISTAKE is more accurate than "
-            "EXPERIMENTAL_MISTAKE."
+            "The prediction exactly recapitulates an existing GOA row and is therefore "
+            "correct but not novel. RidA acquires ATP-independent holdase activity "
+            "after HOCl-mediated N-chlorination (PMID:25517874); untreated RidA does "
+            "not suppress IlvA aggregation. The AIGR review modifies obsolete, "
+            "binding-only GO:0051082 to the general holdase chaperone activity NTR, "
+            "but that proposed term does not make the existing training-derived call novel."
         ),
     ),
     ("ECOLI", "RidA", "GO:0016020"): ManualOverride(
-        error_type="CURATION_MISTAKE",
+        assessment="CNN",
+        error_type=None,
         set_error_type=True,
+        summary=(
+            "The prediction exactly recapitulates an existing HDA membrane annotation. "
+            "The AIGR review retains that observation as non-core out of curator deference "
+            "because the abstract-only cache cannot distinguish membrane association from "
+            "fractionation carryover; cytosol remains RidA's primary location. It is "
+            "therefore correct but not novel, with no model-error category."
+        ),
     ),
     # The generic transcription role is supported, but the hypoxia-specific claim is unresolved.
     ("human", "VEGFA", "GO:0061419"): ManualOverride(
@@ -535,23 +547,6 @@ def load_goa_terms(goa_file: Path) -> set[str]:
     return terms
 
 
-def load_aigr_term_actions(review_file: Path) -> dict[str, set[str]]:
-    """Return every AIGR action for each GO ID without flattening mixed decisions."""
-    actions: dict[str, set[str]] = defaultdict(set)
-    if not review_file.exists():
-        return actions
-
-    yaml = YAML(typ="safe")
-    with review_file.open() as handle:
-        doc = yaml.load(handle) or {}
-    for annotation in doc.get("existing_annotations", []):
-        go_id = annotation.get("term", {}).get("id", "")
-        action = annotation.get("review", {}).get("action", "")
-        if go_id.startswith("GO:") and action:
-            actions[go_id].add(action)
-    return actions
-
-
 def load_aigr_core_terms(review_file: Path) -> set[str]:
     """Return GO IDs used in AIGR core functions."""
     terms: set[str] = set()
@@ -588,24 +583,34 @@ def auto_assess(
 ) -> tuple[str, int, str]:
     """Create a schema-valid initial assessment from exact local evidence."""
     actions = aigr_actions.get(go_id, set())
+    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
 
-    if actions and actions <= NEGATIVE_ACTIONS:
+    if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return (
             "NPI",
             0,
             "The exact AIGR actions are "
-            f"{', '.join(sorted(actions))}; the prediction reproduces an annotation "
+            f"{', '.join(sorted(biological_actions))}; the prediction reproduces an annotation "
             "that the current review rejects or marks as over-annotated.",
         )
-    if actions & POSITIVE_ACTIONS:
+    if biological_actions & POSITIVE_ACTIONS:
         return (
             "CNN",
             2,
             "The exact term is already present in AIGR with a positive action "
-            f"({', '.join(sorted(actions & POSITIVE_ACTIONS))}). Correct but not novel.",
+            f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))}). Correct but not novel.",
+        )
+    if not biological_actions and PROVENANCE_LIMITED_NEGATIVE in actions:
+        return (
+            "UNC",
+            1,
+            "The exact AIGR annotation has a negative action tied to a reference "
+            "adjudicated as miscited or wrongly identified. That decision rejects "
+            "the cited evidence but does not by itself validate or refute the "
+            "biological prediction.",
         )
     if go_id in goa_terms:
-        if actions == {"MODIFY"}:
+        if biological_actions == {"MODIFY"}:
             return (
                 "LSP",
                 2,
@@ -635,7 +640,8 @@ def deterministic_reclassification(
     actions: set[str],
 ) -> tuple[str, str] | None:
     """Return a correction only for an exact, unambiguous contradiction."""
-    if actions and actions <= NEGATIVE_ACTIONS:
+    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
+    if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         if current_assessment in {"PLI", "REP"}:
             return None
         if go_id == "GO:0005515":
@@ -647,15 +653,15 @@ def deterministic_reclassification(
             return (
                 "NPI",
                 "all exact AIGR actions are negative "
-                f"({', '.join(sorted(actions))})",
+                f"({', '.join(sorted(biological_actions))})",
             )
         return None
 
-    if actions & POSITIVE_ACTIONS and current_assessment in {"NPI", "UNC"}:
+    if biological_actions & POSITIVE_ACTIONS and current_assessment in {"NPI", "UNC"}:
         return (
             "CNN",
             "the current AIGR contains a positive exact action "
-            f"({', '.join(sorted(actions & POSITIVE_ACTIONS))})",
+            f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))})",
         )
 
     if go_id in goa_terms and current_assessment == "COR":
@@ -896,6 +902,7 @@ def remaining_conflicts(
     actions: set[str],
 ) -> Iterable[str]:
     assessment = review.get("assessment", "")
+    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
     confidence = review.get("confidence_score")
     if EXPECTED_CONFIDENCE.get(assessment) != confidence:
         yield "assessment_confidence"
@@ -915,9 +922,9 @@ def remaining_conflicts(
         )
         if not any(marker in rationale for marker in non_novel_markers):
             yield "CNN_without_GOA_or_non_novel_basis"
-    if actions and actions <= NEGATIVE_ACTIONS and assessment in {"COR", "CNN", "LSP", "UNC"}:
+    if biological_actions and biological_actions <= NEGATIVE_ACTIONS and assessment in {"COR", "CNN", "LSP", "UNC"}:
         yield "nonnegative_assessment_vs_negative_AIGR"
-    if actions & POSITIVE_ACTIONS and assessment in {"NPI", "UNC"}:
+    if biological_actions & POSITIVE_ACTIONS and assessment in {"NPI", "UNC"}:
         yield "NPI_or_UNC_vs_positive_AIGR"
     error_type = review.get("error_type")
     if error_type and assessment not in INCORRECT_ASSESSMENTS:
