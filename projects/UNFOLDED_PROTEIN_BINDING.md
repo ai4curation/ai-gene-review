@@ -366,12 +366,12 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 8 | **ER quality control** | UGGT1, ERLEC1, SYVN1 (human); Uggt1 (rat); CNE1, EPS1, PDI1, EUG1, ROT1, IRE1 (yeast); IRE1 (T. reesei); CSH3 (C. albicans); Edem2 (fly) | OVER_ANNOTATED or REMOVE (sensors, not chaperones) |
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
-| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, SlyD, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy/SlyD await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
+| 11 | **Periplasmic/envelope chaperones** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; HdeA/HdeB/Spy await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
 | 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Conditional moonlighting holdase** | RidA (E. coli) | MODIFY GO:0051082 → holdase NTR for reversible N-chlorination-dependent ATP-independent holdase activity; primary function is 2-iminoacid deaminase activity |
 | 15 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
-| 16 | **Other** | NPM1, TMEM67 (human); NAP1, GET3 (yeast); St13, Serpinh1 (mouse/rat); Nmnat (fly); nud-1, hsp-12.3, hsp-12.6 (worm); tigA (A. niger); GIP1 (Arabidopsis) | Gene-specific decisions |
+| 16 | **Other** | NPM1, TMEM67 (human); NAP1, GET3 (yeast); SlyD (E. coli, cytosolic FKBP PPIase/holdase); St13, Serpinh1 (mouse/rat); Nmnat (fly); nud-1, hsp-12.3, hsp-12.6 (worm); tigA (A. niger); GIP1 (Arabidopsis) | Gene-specific decisions |
 
 ## Cross-Species Completeness Audit
 
@@ -433,13 +433,15 @@ established:
    was based on co-IP with ERdj3, misinterpreted as unfolded protein binding. SlrP disrupts
    ERdj3's chaperone function rather than acting as a chaperone itself.
 
-2. **E. coli periplasmic chaperones (SurA, Skp, Spy, HdeA/B, SecB, CpxP, SlyD)** —
-   Bacterial-specific holdase/chaperone category with no human orthologs. SurA is a holdase
+2. **E. coli periplasmic chaperones (SurA, Skp, Spy, HdeA/B, SecB, CpxP) and cytosolic SlyD** —
+   Bacterial-specific holdase/chaperone systems with no human orthologs. SurA is a holdase
    that escorts OMPs to the BAM complex; Spy and HdeA/B are acid-activated holdases; SecB
    is a secretion-coupled holdase. SurA, SecB, and Skp are carrier-holdases that MODIFY →
    GO:0140309 because each escorts an unfolded client to a defined acceptor or location;
-   the remaining proteins require gene-specific foldase, in-situ holdase, or non-chaperone
-   decisions. CpxP is a non-holdase case: its characterized misfolded-client recognition
+   the remaining periplasmic proteins require gene-specific foldase, in-situ holdase, or
+   non-chaperone decisions. SlyD is instead a cytosolic FKBP-type PPIase and in-situ holdase
+   that also participates in nickel delivery during hydrogenase maturation. CpxP is a
+   non-holdase case: its characterized misfolded-client recognition
    supports DegP substrate-adaptor activity (GO:0140767) and positive regulation of
    proteolysis (GO:0045862), while its CpxA interaction supports signaling-receptor
    inhibition (GO:0030547) and negative regulation of phosphorelay signaling (GO:0070298).
@@ -508,7 +510,7 @@ established:
 | RidA | *E. coli* | P0AF93 | 22 | MODIFY GO:0051082 → holdase chaperone activity NTR; MODIFY → GO:0120241/GO:0009082/GO:1901705/GO:0005829; membrane HDA KEEP_AS_NON_CORE | 2-iminoacid deaminase with reversible N-chlorination-dependent ATP-independent holdase activity; comprehensive review complete |
 | SecB | *E. coli* | P0AG86 | 27 | MODIFY GO:0051082 → GO:0140309 (4 rows); MODIFY broad cytoplasm/transport/localization → GO:0005829/GO:0043952/GO:0006605; REMOVE protein-folding IEA | ATP-independent SecA-directed carrier-holdase; comprehensive review complete |
 | Skp | *E. coli* | P0AEU7 | 34 | MODIFY GO:0051082 → GO:0140309 (8 rows); MODIFY GO:0005515 → GO:0140309 (2); MODIFY GO:0042597 → GO:0030288 (1); MODIFY GO:0051604 → GO:0043165 (1); ACCEPT 18; KEEP_AS_NON_CORE GO:0042802 (3); UNDECIDED GO:0005829 (1) | Periplasmic OMP carrier-holdase; protein-folding BP retained from IBA/IDA/IMP as pathway participation, not foldase activity; cytosol row remains unresolved pending full complexomics evidence; comprehensive review complete |
-| SlyD | *E. coli* | P0A9K9 | 35 | GO:0051082 absent from refreshed GOA after obsoletion; NEW holdase chaperone activity NTR; MODIFY GO:0005515 → GO:0170061 for HycE interactions (3 rows); NEW GO:0170061 (IMP) | Cytosolic FKBP-type PPIase and in-situ holdase; nickel is acquired from HypB and delivered toward HycE during hydrogenase maturation; comprehensive review complete ([#2790](https://github.com/ai4curation/ai-gene-review/pull/2790)) |
+| SlyD | *E. coli* | P0A9K9 | 35 | ACCEPT 17; KEEP_AS_NON_CORE 11; GO:0051082 absent from refreshed GOA after obsoletion; proposed NTR: holdase chaperone activity (no GOA row to modify); MODIFY GO:0005515 → GO:0170061 for HycE interactions (3 rows); UNDECIDED high-throughput GO:0005515 IPI (4 rows); NEW GO:0170061 (IMP) | Cytosolic FKBP-type PPIase and in-situ holdase; nickel is acquired from HypB and delivered toward HycE during hydrogenase maturation; comprehensive review complete with four interaction-atlas rows intentionally unresolved ([#2790](https://github.com/ai4curation/ai-gene-review/pull/2790)) |
 | Spy | *E. coli* | P77754 | 11 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Periplasmic in-situ holdase; no defined acceptor or delivery destination; GO:0042026 for refolding process |
 | surA | *E. coli* | P0ABZ6 | 31 | Project decision: MODIFY → GO:0140309; gene-review alignment tracked in [#2732](https://github.com/ai4curation/ai-gene-review/pull/2732) | Periplasmic OMP carrier-holdase; delivery to BAM/YaeT |
 | Dnaja3 | *M. musculus* | Q99M87 | 81 | MODIFY → GO:0044183 | Mitochondrial J-domain co-chaperone |
