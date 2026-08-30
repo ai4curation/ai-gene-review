@@ -47,6 +47,10 @@ Final action tally: 11 ACCEPT, 8 MODIFY, 7 KEEP_AS_NON_CORE, 1 REMOVE.
   protein binding is simply uninformative. The high-throughput CpxR observations are
   retained conservatively because the cited method-level text does not independently
   establish their functional significance.
+- The six GO:0005515 rows were changed from `MARK_AS_OVER_ANNOTATED` to
+  `KEEP_AS_NON_CORE`: the partner-resolved interactions are valid observations even
+  though the generic term is uninformative. This action change explains the associated
+  post-review overlap sidecar delta.
 
 ## 2026-08-29: PAINT provenance
 
