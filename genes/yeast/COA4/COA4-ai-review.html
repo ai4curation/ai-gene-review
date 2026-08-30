@@ -1,0 +1,3785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COA4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COA4</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q05809" target="_blank" class="term-link">
+                        Q05809
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COA4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q05809" data-a="DESCRIPTION: Coa4 (originally Cmc3; YLR218C) is a 96-residue tw..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Coa4 (originally Cmc3; YLR218C) is a 96-residue twin CX9C protein of the yeast mitochondrial intermembrane space, peripherally associated with the inner membrane. Its CHCH fold is stabilized by two intramolecular disulfides and its import depends on the Mia40-Erv1 disulfide relay. Coa4 acts in the mitochondrial copper delivery pathway to cytochrome c oxidase, functioning downstream of Cox1 synthesis and hemylation and upstream of the copper metallochaperone Cox11, with which it physically interacts. Cells lacking Coa4 have reduced cytochrome c oxidase activity and abundance, reduced mitochondrial and cellular copper, and increased reactive oxygen species from partially assembled complex IV intermediates; the respiratory growth defect is suppressed by overexpression of COX11 in a manner requiring the copper-coordinating cysteines of Cox11, and separately by overexpression of CYC1. Coa4 is not itself a copper metallochaperone - it lacks the copper-coordinating cysteine motif of Cox17 - and no molecular function has been demonstrated for it. The role is conserved: human COA4 complements the yeast null mutant.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic propagation of the complex IV assembly role within the narrow COA4 family, seeded in part from this very gene&#39;s own experimental annotations (SGD:S000004208).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sound node placement, and the target carries direct IMP and IGI evidence for the same term. The appearance of SGD:S000004208 in the WITH/FROM is expected and correct: the yeast experimental annotations are among the descendant evidences the PAINT curator used to place the IBD, and the IBA then adds the further claim that the function is inherited rather than lineage-specific. This is the core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic propagation of intermembrane space localization, matching the direct experimental localization of this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Corroborated on the target itself by EXP, two IDA rows and TAS. The is_active_in qualifier is right: Coa4 acts in the IMS, contacting the IMS-facing domain of Cox11.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coa4 is a twin CX 9 C motif mitochondrial protein localized in the intermembrane space and associated with the inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inner-membrane localization from UniProt subcellular location. Coa4 is peripherally associated with the inner membrane rather than integral.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt and with the reported inner-membrane association, but in slight tension with the Bax-release IMS proteomics that recovers Coa4 as a releasable intermembrane space protein. Best read as peripheral association; the IMS term is the primary and more informative compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coa4 is a twin CX 9 C motif mitochondrial protein localized in the intermembrane space and associated with the inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based localization from the Coa4-like family signature IPR039870, consistent with the direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Coa4-like family is narrow and functionally homogeneous, so the InterPro2GO mapping is reliable here, and the target has independent EXP and IDA support for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coa4 is a twin CX 9 C motif mitochondrial protein localized in the intermembrane space and associated with the inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based process assignment from IPR039870, duplicating the IBA and IMP calls.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and redundant rather than erroneous. The family signature genuinely predicts this process for this family, and the target has direct IMP evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22984289" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22984289
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intermembrane space proteome of yeast mitochondria.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="PMID:22984289" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental placement in the intermembrane space by Bax-release proteomic profiling of isolated mitochondria.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A targeted IMS proteomics method with high coverage of the known soluble IMS proteome, and the strongest single piece of localization evidence for this protein. Coa4 is not named in the cached body text - the assignment is in the study&#39;s protein tables - so the curator call is accepted rather than second-guessed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22984289" target="_blank" class="term-link">
+                                        PMID:22984289
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">From the known 31 soluble IMS proteins, 29 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005634" data-r="PMID:14562095" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization from the genome-wide C-terminal GFP fusion library. Contradicted by every other line of localization evidence for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Coa4 is a 96 aa twin CX9C protein whose import requires the Mia40 relay and oxidative trapping of two disulfides; a C-terminal GFP fusion on a substrate this small is a recognised cause of failed intermembrane space import, leaving the fusion outside mitochondria. The nuclear call conflicts with EXP IMS proteomics, two IDA rows, IBA, IEA, TAS and UniProt, and there is no known route by which a Mia40 substrate would reach the nucleus. REMOVE would be defensible, but the cached record for this reference is abstract-only and does not name Coa4, so the underlying images cannot be inspected; flagged for curator attention rather than deleted unilaterally.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Global analysis of protein localization in budding yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005737" data-r="PMID:14562095" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization from the same genome-wide GFP fusion library. Most likely the same tagging artifact, though a cytosolic signal has an innocent explanation for this protein class.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same C-terminal GFP caveat as the nucleus row. Unlike the nuclear call, a cytosolic signal is not biologically absurd: Mia40 substrates genuinely dwell in the cytosol for minutes before import, so a transient cytosolic pool exists. But that transit pool is not what located_in cytoplasm is meant to record for a protein whose steady-state compartment is the intermembrane space, and the evidence here cannot distinguish transit from a failed-import artifact.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Global analysis of protein localization in budding yeast</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-SCE-1252260
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="Reactome:R-SCE-1252260" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing Coa4 in the intermembrane space, agreeing with the direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Adds no independent evidence but is consistent with the EXP and IDA rows. Harmless and correct.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGD&#39;s explicit &#39;no data&#39; placeholder for molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and worth preserving. No catalytic or binding activity has ever been demonstrated for Coa4, and metallochaperone activity is positively excluded because it lacks the copper-coordinating cysteine motif of Cox17. This ND row is an accurate statement of the state of knowledge, and it independently corroborates the decision in the human COA4 review not to assert a molecular function term. It should be retired only when a real molecular function is demonstrated, not replaced with a generic binding term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35666203" target="_blank" class="term-link">
+                                        PMID:35666203
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Importantly, Coa4 lacks the copper-binding cysteine motif that is found in Cox17, further negating its metallochaperone role</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19703468" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19703468
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic analysis of the twin cx(9)c protein family.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="PMID:19703468" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay localization to the intermembrane space from the systematic twin Cx9C family survey, which also established Mia40-dependent import for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with all other localization evidence, and mechanistically grounded: the twin Cx9C motif and Mia40 dependence are the signature of this compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19703468" target="_blank" class="term-link">
+                                        PMID:19703468
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which we demonstrated to be dependent for import</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20624914
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of Leigh syndrome mutations in the yeast SURF1 homo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0005758" data-r="PMID:20624914" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay localization to the intermembrane space in the study that characterized and renamed this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary characterization of Coa4, which explicitly reports intermembrane space localization with inner membrane association.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coa4 is a twin CX 9 C motif mitochondrial protein localized in the intermembrane space and associated with the inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033108" target="_blank" class="term-link">
+                                    GO:0033108
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19703468" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19703468
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic analysis of the twin cx(9)c protein family.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033108" data-r="PMID:19703468" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype evidence for a role in respiratory chain complex assembly, from the family-wide survey that tested deletion mutants for general respiratory chain function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Faithful to the cited study, which assayed respiratory chain complexes generally rather than complex IV specifically, so this is not a curation error. But the gene&#39;s role is now known to be complex IV specific, established by focused IMP evidence in two later studies, and the repository prefers the specific term. Replace with GO:0033617, which is already independently annotated on this gene.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    mitochondrial respiratory chain complex IV assembly
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20624914
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of Leigh syndrome mutations in the yeast SURF1 homo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="PMID:20624914" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype evidence that cells lacking Coa4 have depressed cytochrome c oxidase activity, with normal Cox1 maturation and a normal Shy1-stabilized Cox1 assembly intermediate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary experimental basis for the core annotation. It also localizes Coa4&#39;s action downstream of Cox1 synthesis and hemylation, which is what later placed it at the copper insertion step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20624914
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of Leigh syndrome mutations in the yeast SURF1 homo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="PMID:20624914" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic interaction evidence: COA4 was isolated as an allele-specific suppressor of the Shy1 G137E mutant, and high-copy CYC1 restores respiratory function to coa4-null cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Two genuine genetic interactions (SHY1, SGD:S000003344; CYC1, SGD:S000003809) from a focused suppressor screen, supporting a role in complex IV assembly. The CYC1 interaction remains mechanistically unexplained and was called a major clue by the authors; it has not been followed up since.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                        PMID:20624914
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Respiratory function of coa4 Δ cells was restored by the overexpression of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23198688
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inaccurately assembled cytochrome c oxidase can lead to oxid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="PMID:23198688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant phenotype evidence that deletion of COA4 causes cytochrome c oxidase assembly defects, specifically loss of Cox1 and rapid degradation of Cox2 and Cox3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent IMP confirmation of the core annotation in a different experimental setting. Note the study&#39;s own caveat, which matters for reading any later rescue experiment: reductants restore respiratory growth of the mutant without restoring complex IV assembly, so growth rescue alone is not evidence of restored assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link">
+                                        PMID:23198688
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link">
+                                        PMID:23198688
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the presence of the reductants does not suppress these assembly defects and the levels of cytochrome c oxidase remain reduced</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23198688
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inaccurately assembled cytochrome c oxidase can lead to oxid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05809" data-a="GO:0033617" data-r="PMID:23198688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic interaction with CMC1: both twin CX9C mutants were recovered together as reductant-suppressed respiratory mutants with cytochrome c oxidase assembly defects.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A real shared-phenotype genetic interaction (CMC1, SGD:S000001620) supporting the complex IV assembly role. It reflects convergent phenotype rather than a demonstrated pathway relationship between the two proteins.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link">
+                                        PMID:23198688
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Accessory factor of the mitochondrial copper delivery pathway to cytochrome c oxidase. Coa4 acts in the intermembrane space downstream of Cox1 synthesis and hemylation and upstream of the copper metallochaperone Cox11, with which it physically interacts, and is required for normal cytochrome c oxidase abundance and activity. It is not itself a copper metallochaperone. Loss of Coa4 reduces mitochondrial and cellular copper and causes accumulation of partially assembled complex IV intermediates that generate hydrogen peroxide.</h3>
+                <span class="vote-buttons" data-g="Q05809" data-a="FUNCTION: Accessory factor of the mitochondrial copper deliv..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex IV assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                mitochondrial intermembrane space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                PMID:20624914
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                                PMID:20624914
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Cells lacking Coa4 resemble shy1 Δ cells in exhibiting a reduced mitochondrial copper content</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35666203" target="_blank" class="term-link">
+                                PMID:35666203
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">suggests that Coa4 acts upstream of Cox11 in the copper delivery pathway</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35666203" target="_blank" class="term-link">
+                                PMID:35666203
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Importantly, Coa4 lacks the copper-binding cysteine motif that is found in Cox17, further negating its metallochaperone role</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            DOI:10.1038/s41467-026-77112-z
+
+                        </span>
+
+                        <div class="finding-text">immunoprecipitation (Co-IP) of yeast Coa4-V5 from chemically</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide C-terminal GFP fusion localization library. Source of the nucleus and cytoplasm HDA rows for Coa4, both of which conflict with all targeted localization evidence for this protein.</div>
+
+                        <div class="finding-text">"Global analysis of protein localization in budding yeast"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19703468" target="_blank" class="term-link">
+                            PMID:19703468
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic analysis of the twin cx(9)c protein family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic survey of the 14 yeast twin Cx9C proteins. Coa4 was identified here as Cmc3, its import shown to depend on the Mia40-Erv1 disulfide relay, and most family deletions found to impair respiratory chain assembly or stability.</div>
+
+                        <div class="finding-text">"which we demonstrated to be dependent for import"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20624914" target="_blank" class="term-link">
+                            PMID:20624914
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of Leigh syndrome mutations in the yeast SURF1 homolog reveals a new member of the cytochrome oxidase assembly factor family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Coa4 is a twin CX9C intermembrane space protein associated with the inner membrane; cells lacking it have depressed cytochrome c oxidase activity but normal Cox1 maturation and a normal Shy1-stabilized Cox1 assembly intermediate, placing Coa4 downstream of Cox1 synthesis and hemylation.</div>
+
+                        <div class="finding-text">"Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">coa4-null cells have reduced mitochondrial copper content, prompting the proposal that Coa4 participates in copper routing.</div>
+
+                        <div class="finding-text">"Cells lacking Coa4 resemble shy1 Δ cells in exhibiting a reduced mitochondrial copper content"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-copy CYC1 restores respiratory function to coa4-null cells; COA4 was itself isolated as an allele-specific suppressor of the Shy1 G137E mutant. Source of the SHY1 and CYC1 genetic interactions.</div>
+
+                        <div class="finding-text">"Respiratory function of coa4 Δ cells was restored by the overexpression of"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22984289" target="_blank" class="term-link">
+                            PMID:22984289
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intermembrane space proteome of yeast mitochondria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Bax-release profiling of isotope-labelled yeast mitochondria recovered 29 of the 31 known soluble intermembrane space proteins and identified 20 further IMS proteins, one of which is Coa4. Source of the EXP localization row.</div>
+
+                        <div class="finding-text">"From the known 31 soluble IMS proteins, 29 proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23198688" target="_blank" class="term-link">
+                            PMID:23198688
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inaccurately assembled cytochrome c oxidase can lead to oxidative stress-induced growth arrest.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of COA4 (like CMC1) causes cytochrome c oxidase assembly defects, with loss of Cox1 and rapid degradation of Cox2 and Cox3. Source of the CMC1 genetic interaction.</div>
+
+                        <div class="finding-text">"Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reductants restore respiratory growth of coa4-null cells without restoring cytochrome c oxidase assembly - the growth defect is driven by hydrogen peroxide from partially assembled complex IV intermediates. A necessary caveat when reading any respiratory-growth rescue as evidence of restored assembly.</div>
+
+                        <div class="finding-text">"the presence of the reductants does not suppress these assembly defects and the levels of cytochrome c oxidase remain reduced"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-SCE-1252260
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MIA40:ERV1 oxidizes cysteine residues to cystine disulfide bonds</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35666203" target="_blank" class="term-link">
+                            PMID:35666203
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A yeast suppressor screen links Coa4 to the mitochondrial copper delivery pathway for cytochrome c oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">COX11 overexpression restores Cox1 abundance, cytochrome c oxidase assembly and respiration in coa4-null cells, and the rescue requires the copper-coordinating cysteines of Cox11 - establishing restored copper delivery rather than suppression of reactive oxygen species.</div>
+
+                        <div class="finding-text">"cysteine mutants of Cox11 that are incapable of binding copper, failed to rescue the respiratory defect"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The rescue is unidirectional, placing Coa4 upstream of Cox11 in the copper delivery pathway to the CuB site of Cox1.</div>
+
+                        <div class="finding-text">"suggests that Coa4 acts upstream of Cox11 in the copper delivery pathway"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Coa4 is not a copper metallochaperone: it lacks the copper-coordinating cysteine motif of Cox17 and its deletion phenotype is far milder than that of the bona fide chaperones. This is the direct justification for retaining the ND molecular_function annotation.</div>
+
+                        <div class="finding-text">"Importantly, Coa4 lacks the copper-binding cysteine motif that is found in Cox17, further negating its metallochaperone role"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human COA4 complements the yeast coa4-null mutant, establishing that the function is evolutionarily conserved and licensing transfer of this yeast mechanism to the human ortholog.</div>
+
+                        <div class="finding-text">"we demonstrate that human COA4 can replace the function of yeast Coa4 indicating its evolutionarily conserved role"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The authors explicitly could not detect a physical Coa4-Cox11 interaction by co-immunoprecipitation/mass spectrometry, leaving the genetic interaction unexplained biochemically until the 2026 crosslinking study.</div>
+
+                        <div class="finding-text">"Our initial attempts to detect protein:protein interaction between Cox11 and Coa4 via coimmunoprecipitation/mass spectrometry experiments were not successful"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        DOI:10.1038/s41467-026-77112-z
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The predicted interactome of the human mitochondrial proteome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Co-immunoprecipitation of yeast Coa4-V5 from DSSO-crosslinked mitochondria recovered Cox11, supplying the direct physical interaction that the 2022 study could not detect - plausibly because crosslinking captures a transient contact.</div>
+
+                        <div class="finding-text">"immunoprecipitation (Co-IP) of yeast Coa4-V5 from chemically"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The same co-IP enriched the IMS-localized phosphatase Ptc5, suggesting that reversible phosphorylation of Coa4 may regulate copper delivery to cytochrome c oxidase. This is suggestive only - no functional follow-up was performed - and is recorded as a hypothesis, not as annotation evidence.</div>
+
+                        <div class="finding-text">"the IMS-localized Ptc5 phosphatase, which suggests a role for this"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the nucleus (GO:0005634) and cytoplasm (GO:0005737) HDA rows from the genome-wide GFP library be retired? Coa4 is a small twin CX9C Mia40 substrate where C-terminal GFP fusion is a known cause of failed intermembrane space import, and the calls conflict with EXP proteomics, two IDA rows, IBA, IEA, TAS and UniProt.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: SGD curators, GO cellular component curation group</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="Q: Should the nucleus (GO:0005634) and cytoplasm (GO:..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is Coa4&#39;s molecular function? The SGD ND placeholder on GO:0003674 is currently the honest answer: no activity has been demonstrated and metallochaperone activity is excluded. Is Coa4 stabilizing Cox11, loading it with copper, or gating handoff to Cox1?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO molecular function curation group, Gohil lab</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="Q: What is Coa4&#39;s molecular function? The SGD ND plac..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why does high-copy CYC1 suppress the coa4-null respiratory defect? Bestwick et al. called this a major clue to Coa4 function and it has not been followed up in fifteen years.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Winge lab, Khalimonchuk lab</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="Q: Why does high-copy CYC1 suppress the coa4-null res..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the IMS phosphatase Ptc5 regulate Coa4 by dephosphorylation, as suggested by its enrichment in the 2026 Coa4-V5 co-IP? Only co-IP enrichment supports this.</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Gohil lab</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="Q: Does the IMS phosphatase Ptc5 regulate Coa4 by dep..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare subcellular localization of N-terminally tagged, C-terminally tagged and untagged Coa4 by fractionation and immunoblot, and test import of each into isolated mitochondria in vitro.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The nuclear and cytoplasmic GFP signals for Coa4 are C-terminal tagging artifacts caused by blocked Mia40-dependent import.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="EXPERIMENT: Compare subcellular localization of N-terminally t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure copper occupancy of immunopurified Cox11 from wild-type and coa4-null mitochondria by ICP-MS, normalized to recovered Cox11 protein so that metallation is separated from abundance.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Coa4 is required for copper loading of Cox11 rather than for Cox11 stability per se.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="EXPERIMENT: Measure copper occupancy of immunopurified Cox11 f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map Coa4 phosphosites, test phospho-null and phospho-mimetic alleles for respiratory growth and cytochrome c oxidase assembly, and assay whether the Coa4-Cox11 co-IP is phosphorylation dependent in a ptc5-null background.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Ptc5-mediated dephosphorylation regulates the Coa4-Cox11 interaction.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05809" data-a="EXPERIMENT: Map Coa4 phosphosites, test phospho-null and phosp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COA4-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q05809" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coa4-cmc3-ylr218c-q05809-research-notes">COA4 / CMC3 / YLR218C (Q05809) — research notes</h1>
+<p><em>Saccharomyces cerevisiae</em> cytochrome oxidase assembly factor 4. 96 aa.<br />
+Companion to <code>genes/human/COA4/</code>. Most of the mechanistic genetics for this family is in yeast;<br />
+the human review depends on it via cross-species complementation.</p>
+<h2 id="identity-and-structure">Identity and structure</h2>
+<ul>
+<li>Twin CX9C protein: CHCH domain 36–77, Cx9C motifs at 39–49 and 59–69, disulfides 39↔69 and<br />
+  49↔59 (UniProt Q05809, PROSITE-ProRule inference).</li>
+<li>UniProt <code>FUNCTION: Involved in cytochrome c oxidase assembly or stability.</code><br />
+<code>SUBCELLULAR LOCATION: Mitochondrion inner membrane.</code> Abundance ~907 molecules/cell.</li>
+<li>Named Cmc3 on discovery in the twin Cx9C family survey, renamed Coa4 on functional<br />
+  characterization.</li>
+</ul>
+<h2 id="evidence-chain">Evidence chain</h2>
+<p><strong>2009 — family survey, as Cmc3</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19703468">PMID:19703468</a>. Identified among 14 yeast twin Cx9C proteins;<br />
+import shown to depend on the Mia40–Erv1 disulfide relay ["which we demonstrated to be dependent<br />
+for import"]. Deletion mutants of most family members impair respiratory chain assembly or<br />
+stability — the basis of the general <code>GO:0033108</code> IMP row.</p>
+<p><strong>2010 — renaming and characterization</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/20624914">PMID:20624914</a>. Isolated as an allele-specific<br />
+suppressor of the Shy1 G137E Leigh-syndrome mutant.<br />
+- "Coa4 is a twin CX 9 C motif mitochondrial protein localized in the intermembrane space and<br />
+  associated with the inner membrane"<br />
+- "Cells lacking Coa4 are depressed in CcO activity but show no impairment in Cox1 maturation or<br />
+  formation of the Shy1-stabilized Cox1 assembly intermediate" — places Coa4 downstream of Cox1<br />
+  synthesis and hemylation.<br />
+- "Cells lacking Coa4 resemble shy1 Δ cells in exhibiting a reduced mitochondrial copper content"<br />
+- CYC1 (cytochrome c) overexpression restores respiratory function.<br />
+- Source of both IGI rows: SGD:S000003344 = <strong>SHY1</strong>, SGD:S000003809 = <strong>CYC1</strong>.</p>
+<p><strong>2013 — ROS, not assembly, limits growth</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/23198688">PMID:23198688</a>. "Deletion of CMC1 or COA4 leads to<br />
+assembly defects of cytochrome c oxidase"; DTT/GSH/ascorbate rescue respiratory growth but<br />
+"the presence of the reductants does not suppress these assembly defects and the levels of<br />
+cytochrome c oxidase remain reduced". Source of the IGI row with SGD:S000001620 = <strong>CMC1</strong>.<br />
+Methodological caveat: respiratory-growth rescue is not evidence of restored assembly.</p>
+<p><strong>2012 — IMS proteome</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/22984289">PMID:22984289</a>. Bax-release profiling of isolated mitochondria;<br />
+"From the known 31 soluble IMS proteins, 29 proteins" were recovered and "we found 20 novel<br />
+intermembrane space proteins". Source of the <code>EXP GO:0005758</code> row. Coa4 is not named in the<br />
+cached body text (the assignment is in the study's protein tables), so the SGD curator call is<br />
+accepted rather than second-guessed.</p>
+<p><strong>2022 — genetic placement in the copper pathway</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/35666203">PMID:35666203</a>. Cox11 overexpression restores<br />
+Cox1 abundance, CcO assembly and respiration in coa4Δ; the rescue requires Cox11's<br />
+copper-coordinating cysteines; Coa4 and Cox11 abundance are reciprocally regulated; coa4Δ has<br />
+reduced cellular copper; human COA4 complements coa4Δ. Coa4 is <strong>not</strong> a metallochaperone —<br />
+"Importantly, Coa4 lacks the copper-binding cysteine motif that is found in Cox17, further<br />
+negating its metallochaperone role". The authors explicitly could not detect a Coa4–Cox11<br />
+physical interaction by co-IP/MS.</p>
+<p><strong>2026 — the physical interaction</strong> [DOI:10.1038/s41467-026-77112-z]. Co-IP of yeast Coa4-V5 from<br />
+DSSO-crosslinked mitochondria recovered Cox11, closing the gap left in 2022 — plausibly because<br />
+crosslinking captures a transient contact. Also enriched: "the IMS-localized Ptc5 phosphatase,<br />
+which suggests a role for this protein in regulating copper delivery to CcO through reversible<br />
+phosphorylation of Coa4 in yeast" — suggestive only, no follow-up.</p>
+<h2 id="annotation-assessment">Annotation assessment</h2>
+<p><strong>Core.</strong> <code>GO:0033617 mitochondrial respiratory chain complex IV assembly</code> carries IMP evidence<br />
+from two independent studies plus three IGI rows (SHY1, CYC1, CMC1). <code>GO:0005758 mitochondrial
+intermembrane space</code> carries EXP, two IDA rows, IBA, IEA and TAS. Both are exceptionally<br />
+well-supported here — considerably better than in human, which is why the yeast review is the<br />
+anchor for the family.</p>
+<p><strong><code>GO:0003674 molecular_function</code> ND.</strong> SGD's explicit "no data" placeholder. This is <em>correct<br />
+and worth preserving</em>: no catalytic or binding activity has ever been demonstrated for Coa4, and<br />
+metallochaperone activity is positively excluded. It independently corroborates the decision in<br />
+the human review not to assert a molecular function term.</p>
+<p><strong><code>GO:0033108 mitochondrial respiratory chain complex assembly</code> (IMP, PMID:19703468).</strong> Faithful<br />
+to that paper, which assayed respiratory chain function generally, but superseded by the<br />
+complex IV–specific IMP rows from focused studies. MODIFY → <code>GO:0033617</code>.</p>
+<p><strong><code>GO:0005634 nucleus</code> and <code>GO:0005737 cytoplasm</code> (HDA, PMID:14562095).</strong> Both from the<br />
+genome-wide C-terminal GFP localization library. These conflict with everything else known:<br />
+- Coa4 is a 96 aa twin CX9C protein whose import requires the Mia40 relay and the trapping of<br />
+  its two disulfides. A C-terminal GFP fusion on a substrate this small is a well-known cause of<br />
+  failed IMS import, leaving the fusion in the cytosol.<br />
+- Directly contradicted by EXP IMS proteomics, two IDA IMS rows, IBA, IEA, TAS and UniProt.<br />
+- The cytoplasm signal additionally has an innocent explanation: Mia40 substrates genuinely<br />
+  dwell in the cytosol before import — "substrates of Mia40 remain in the cytosol for several<br />
+  minutes" [PMID:23676665, human study of the same pathway].</p>
+<p>Marked <code>MARK_AS_OVER_ANNOTATED</code> rather than <code>REMOVE</code>. <code>REMOVE</code> would be defensible for the<br />
+nucleus row in particular, but the cached record for PMID:14562095 is abstract-only and does not<br />
+name Coa4, so the specific imaging evidence cannot be inspected. Flagged for a curator rather<br />
+than deleted unilaterally.</p>
+<p><strong><code>GO:0005743 mitochondrial inner membrane</code> (IEA).</strong> Consistent with UniProt and with Bestwick's<br />
+"associated with the inner membrane", but in slight tension with the Bax-release IMS proteomics<br />
+that treats Coa4 as soluble-releasable. Best read as peripheral association; kept non-core.</p>
+<h2 id="open-questions">Open questions</h2>
+<ul>
+<li>Same as human: is Coa4 stabilizing Cox11, loading it with copper, or gating handoff to Cox1?</li>
+<li>Does Ptc5 dephosphorylate Coa4, and does that regulate copper delivery? Only co-IP enrichment.</li>
+<li>Why does high-copy CYC1 suppress coa4Δ? Bestwick called this "a major clue" and it has never<br />
+  been followed up.</li>
+<li>Would a <strong>N</strong>-terminally tagged or untagged Coa4 GFP construct abolish the nuclear/cytoplasmic<br />
+  signal? That is the experiment that would settle the HDA rows.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q05809
+gene_symbol: COA4
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &#39;Coa4 (originally Cmc3; YLR218C) is a 96-residue twin CX9C protein of the yeast
+  mitochondrial intermembrane space, peripherally associated with the inner membrane. Its
+  CHCH fold is stabilized by two intramolecular disulfides and its import depends on the Mia40-Erv1
+  disulfide relay. Coa4 acts in the mitochondrial copper delivery pathway to cytochrome c
+  oxidase, functioning downstream of Cox1 synthesis and hemylation and upstream of the copper
+  metallochaperone Cox11, with which it physically interacts. Cells lacking Coa4 have reduced
+  cytochrome c oxidase activity and abundance, reduced mitochondrial and cellular copper,
+  and increased reactive oxygen species from partially assembled complex IV intermediates;
+  the respiratory growth defect is suppressed by overexpression of COX11 in a manner requiring
+  the copper-coordinating cysteines of Cox11, and separately by overexpression of CYC1. Coa4
+  is not itself a copper metallochaperone - it lacks the copper-coordinating cysteine motif
+  of Cox17 - and no molecular function has been demonstrated for it. The role is conserved:
+  human COA4 complements the yeast null mutant.&#39;
+existing_annotations:
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic propagation of the complex IV assembly role within the narrow COA4
+      family, seeded in part from this very gene&#39;s own experimental annotations (SGD:S000004208).
+    action: ACCEPT
+    reason: &#39;Sound node placement, and the target carries direct IMP and IGI evidence for
+      the same term. The appearance of SGD:S000004208 in the WITH/FROM is expected and correct:
+      the yeast experimental annotations are among the descendant evidences the PAINT curator
+      used to place the IBD, and the IBA then adds the further claim that the function is
+      inherited rather than lineage-specific. This is the core biological process.&#39;
+    supported_by: &amp;id002
+    - reference_id: PMID:20624914
+      supporting_text: Cells lacking Coa4 are depressed in CcO activity but show no impairment
+        in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic propagation of intermembrane space localization, matching the direct
+      experimental localization of this protein.
+    action: ACCEPT
+    reason: &#39;Corroborated on the target itself by EXP, two IDA rows and TAS. The is_active_in
+      qualifier is right: Coa4 acts in the IMS, contacting the IMS-facing domain of Cox11.&#39;
+    supported_by: &amp;id001
+    - reference_id: PMID:20624914
+      supporting_text: Coa4 is a twin CX 9 C motif mitochondrial protein localized in the
+        intermembrane space and associated with the inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated inner-membrane localization from UniProt subcellular location. Coa4
+      is peripherally associated with the inner membrane rather than integral.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with UniProt and with the reported inner-membrane association, but
+      in slight tension with the Bax-release IMS proteomics that recovers Coa4 as a releasable
+      intermembrane space protein. Best read as peripheral association; the IMS term is the
+      primary and more informative compartment.
+    supported_by: *id001
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: InterPro-based localization from the Coa4-like family signature IPR039870, consistent
+      with the direct experimental evidence.
+    action: ACCEPT
+    reason: The Coa4-like family is narrow and functionally homogeneous, so the InterPro2GO
+      mapping is reliable here, and the target has independent EXP and IDA support for the
+      same term.
+    supported_by: *id001
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro-based process assignment from IPR039870, duplicating the IBA and IMP
+      calls.
+    action: ACCEPT
+    reason: Correct and redundant rather than erroneous. The family signature genuinely predicts
+      this process for this family, and the target has direct IMP evidence.
+    supported_by: *id002
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: EXP
+  original_reference_id: PMID:22984289
+  qualifier: located_in
+  review:
+    summary: Direct experimental placement in the intermembrane space by Bax-release proteomic
+      profiling of isolated mitochondria.
+    action: ACCEPT
+    reason: A targeted IMS proteomics method with high coverage of the known soluble IMS proteome,
+      and the strongest single piece of localization evidence for this protein. Coa4 is not
+      named in the cached body text - the assignment is in the study&#39;s protein tables - so
+      the curator call is accepted rather than second-guessed.
+    supported_by:
+    - reference_id: PMID:22984289
+      supporting_text: From the known 31 soluble IMS proteins, 29 proteins
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  qualifier: located_in
+  review:
+    summary: Nuclear localization from the genome-wide C-terminal GFP fusion library. Contradicted
+      by every other line of localization evidence for this protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Coa4 is a 96 aa twin CX9C protein whose import requires the Mia40 relay and oxidative
+      trapping of two disulfides; a C-terminal GFP fusion on a substrate this small is a recognised
+      cause of failed intermembrane space import, leaving the fusion outside mitochondria.
+      The nuclear call conflicts with EXP IMS proteomics, two IDA rows, IBA, IEA, TAS and
+      UniProt, and there is no known route by which a Mia40 substrate would reach the nucleus.
+      REMOVE would be defensible, but the cached record for this reference is abstract-only
+      and does not name Coa4, so the underlying images cannot be inspected; flagged for curator
+      attention rather than deleted unilaterally.
+    supported_by:
+    - reference_id: PMID:14562095
+      supporting_text: Global analysis of protein localization in budding yeast
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization from the same genome-wide GFP fusion library. Most likely
+      the same tagging artifact, though a cytosolic signal has an innocent explanation for
+      this protein class.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#39;Same C-terminal GFP caveat as the nucleus row. Unlike the nuclear call, a cytosolic
+      signal is not biologically absurd: Mia40 substrates genuinely dwell in the cytosol for
+      minutes before import, so a transient cytosolic pool exists. But that transit pool is
+      not what located_in cytoplasm is meant to record for a protein whose steady-state compartment
+      is the intermembrane space, and the evidence here cannot distinguish transit from a
+      failed-import artifact.&#39;
+    supported_by:
+    - reference_id: PMID:14562095
+      supporting_text: Global analysis of protein localization in budding yeast
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: TAS
+  original_reference_id: Reactome:R-SCE-1252260
+  qualifier: located_in
+  review:
+    summary: Reactome traceable-author-statement placing Coa4 in the intermembrane space,
+      agreeing with the direct experimental evidence.
+    action: ACCEPT
+    reason: Adds no independent evidence but is consistent with the EXP and IDA rows. Harmless
+      and correct.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: SGD&#39;s explicit &#39;no data&#39; placeholder for molecular function.
+    action: ACCEPT
+    reason: Correct and worth preserving. No catalytic or binding activity has ever been demonstrated
+      for Coa4, and metallochaperone activity is positively excluded because it lacks the
+      copper-coordinating cysteine motif of Cox17. This ND row is an accurate statement of
+      the state of knowledge, and it independently corroborates the decision in the human
+      COA4 review not to assert a molecular function term. It should be retired only when
+      a real molecular function is demonstrated, not replaced with a generic binding term.
+    supported_by:
+    - reference_id: PMID:35666203
+      supporting_text: Importantly, Coa4 lacks the copper-binding cysteine motif that is found
+        in Cox17, further negating its metallochaperone role
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IDA
+  original_reference_id: PMID:19703468
+  qualifier: located_in
+  review:
+    summary: Direct assay localization to the intermembrane space from the systematic twin
+      Cx9C family survey, which also established Mia40-dependent import for this protein.
+    action: ACCEPT
+    reason: &#39;Consistent with all other localization evidence, and mechanistically grounded:
+      the twin Cx9C motif and Mia40 dependence are the signature of this compartment.&#39;
+    supported_by:
+    - reference_id: PMID:19703468
+      supporting_text: which we demonstrated to be dependent for import
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IDA
+  original_reference_id: PMID:20624914
+  qualifier: located_in
+  review:
+    summary: Direct assay localization to the intermembrane space in the study that characterized
+      and renamed this protein.
+    action: ACCEPT
+    reason: The primary characterization of Coa4, which explicitly reports intermembrane space
+      localization with inner membrane association.
+    supported_by: *id001
+- term:
+    id: GO:0033108
+    label: mitochondrial respiratory chain complex assembly
+  evidence_type: IMP
+  original_reference_id: PMID:19703468
+  qualifier: involved_in
+  review:
+    summary: Mutant phenotype evidence for a role in respiratory chain complex assembly, from
+      the family-wide survey that tested deletion mutants for general respiratory chain function.
+    action: MODIFY
+    reason: Faithful to the cited study, which assayed respiratory chain complexes generally
+      rather than complex IV specifically, so this is not a curation error. But the gene&#39;s
+      role is now known to be complex IV specific, established by focused IMP evidence in
+      two later studies, and the repository prefers the specific term. Replace with GO:0033617,
+      which is already independently annotated on this gene.
+    supported_by:
+    - reference_id: PMID:20624914
+      supporting_text: Cells lacking Coa4 are depressed in CcO activity but show no impairment
+        in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate
+    proposed_replacement_terms:
+    - id: GO:0033617
+      label: mitochondrial respiratory chain complex IV assembly
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IMP
+  original_reference_id: PMID:20624914
+  qualifier: involved_in
+  review:
+    summary: Mutant phenotype evidence that cells lacking Coa4 have depressed cytochrome c
+      oxidase activity, with normal Cox1 maturation and a normal Shy1-stabilized Cox1 assembly
+      intermediate.
+    action: ACCEPT
+    reason: The primary experimental basis for the core annotation. It also localizes Coa4&#39;s
+      action downstream of Cox1 synthesis and hemylation, which is what later placed it at
+      the copper insertion step.
+    supported_by: *id002
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IGI
+  original_reference_id: PMID:20624914
+  qualifier: involved_in
+  review:
+    summary: &#39;Genetic interaction evidence: COA4 was isolated as an allele-specific suppressor
+      of the Shy1 G137E mutant, and high-copy CYC1 restores respiratory function to coa4-null
+      cells.&#39;
+    action: ACCEPT
+    reason: Two genuine genetic interactions (SHY1, SGD:S000003344; CYC1, SGD:S000003809)
+      from a focused suppressor screen, supporting a role in complex IV assembly. The CYC1
+      interaction remains mechanistically unexplained and was called a major clue by the authors;
+      it has not been followed up since.
+    supported_by:
+    - reference_id: PMID:20624914
+      supporting_text: Respiratory function of coa4 Δ cells was restored by the overexpression
+        of
+  supporting_entities:
+  - SGD:S000003344
+  - SGD:S000003809
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IMP
+  original_reference_id: PMID:23198688
+  qualifier: involved_in
+  review:
+    summary: Mutant phenotype evidence that deletion of COA4 causes cytochrome c oxidase assembly
+      defects, specifically loss of Cox1 and rapid degradation of Cox2 and Cox3.
+    action: ACCEPT
+    reason: &#39;Independent IMP confirmation of the core annotation in a different experimental
+      setting. Note the study&#39;&#39;s own caveat, which matters for reading any later rescue experiment:
+      reductants restore respiratory growth of the mutant without restoring complex IV assembly,
+      so growth rescue alone is not evidence of restored assembly.&#39;
+    supported_by:
+    - reference_id: PMID:23198688
+      supporting_text: Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c
+    - reference_id: PMID:23198688
+      supporting_text: the presence of the reductants does not suppress these assembly defects
+        and the levels of cytochrome c oxidase remain reduced
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IGI
+  original_reference_id: PMID:23198688
+  qualifier: involved_in
+  review:
+    summary: &#39;Genetic interaction with CMC1: both twin CX9C mutants were recovered together
+      as reductant-suppressed respiratory mutants with cytochrome c oxidase assembly defects.&#39;
+    action: ACCEPT
+    reason: A real shared-phenotype genetic interaction (CMC1, SGD:S000001620) supporting
+      the complex IV assembly role. It reflects convergent phenotype rather than a demonstrated
+      pathway relationship between the two proteins.
+    supported_by:
+    - reference_id: PMID:23198688
+      supporting_text: Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c
+  supporting_entities:
+  - SGD:S000001620
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings:
+  - statement: Genome-wide C-terminal GFP fusion localization library. Source of the nucleus
+      and cytoplasm HDA rows for Coa4, both of which conflict with all targeted localization
+      evidence for this protein.
+    supporting_text: Global analysis of protein localization in budding yeast
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: PubMed-verified identifier and title. Abstract only in the cache and Coa4
+      is not named, so the specific images behind the nucleus and cytoplasm calls cannot be
+      inspected. Marked UNVERIFIED because the assignment could not be checked, not because
+      the paper is doubted; the localization calls it supports are nonetheless inconsistent
+      with all targeted evidence for this protein.
+  full_text_unavailable: true
+- id: PMID:19703468
+  title: Systematic analysis of the twin cx(9)c protein family.
+  findings:
+  - statement: Systematic survey of the 14 yeast twin Cx9C proteins. Coa4 was identified here
+      as Cmc3, its import shown to depend on the Mia40-Erv1 disulfide relay, and most family
+      deletions found to impair respiratory chain assembly or stability.
+    supporting_text: which we demonstrated to be dependent for import
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Abstract only in the cache. Establishes the twin Cx9C family,
+      Mia40-dependent import, and the general respiratory-chain assembly role behind the GO:0033108
+      row.
+  full_text_unavailable: true
+- id: PMID:20624914
+  title: Analysis of Leigh syndrome mutations in the yeast SURF1 homolog reveals a new member
+    of the cytochrome oxidase assembly factor family.
+  findings:
+  - statement: Coa4 is a twin CX9C intermembrane space protein associated with the inner membrane;
+      cells lacking it have depressed cytochrome c oxidase activity but normal Cox1 maturation
+      and a normal Shy1-stabilized Cox1 assembly intermediate, placing Coa4 downstream of
+      Cox1 synthesis and hemylation.
+    supporting_text: Cells lacking Coa4 are depressed in CcO activity but show no impairment
+      in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate
+  - statement: coa4-null cells have reduced mitochondrial copper content, prompting the proposal
+      that Coa4 participates in copper routing.
+    supporting_text: Cells lacking Coa4 resemble shy1 Δ cells in exhibiting a reduced mitochondrial
+      copper content
+  - statement: High-copy CYC1 restores respiratory function to coa4-null cells; COA4 was itself
+      isolated as an allele-specific suppressor of the Shy1 G137E mutant. Source of the SHY1
+      and CYC1 genetic interactions.
+    supporting_text: Respiratory function of coa4 Δ cells was restored by the overexpression
+      of
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified, full text cached. The primary characterization of Coa4
+      and the source of both IGI rows. The title foregrounds SURF1/Shy1, a clear case where
+      the title does not reflect the full content.
+- id: PMID:22984289
+  title: Intermembrane space proteome of yeast mitochondria.
+  findings:
+  - statement: Bax-release profiling of isotope-labelled yeast mitochondria recovered 29 of
+      the 31 known soluble intermembrane space proteins and identified 20 further IMS proteins,
+      one of which is Coa4. Source of the EXP localization row.
+    supporting_text: From the known 31 soluble IMS proteins, 29 proteins
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified, full text cached. Targeted Bax-release IMS proteomics with
+      &gt;90% coverage of the known soluble IMS proteome; the strongest single localization evidence.
+      Coa4 appears in the protein tables rather than the body text.
+- id: PMID:23198688
+  title: Inaccurately assembled cytochrome c oxidase can lead to oxidative stress-induced
+    growth arrest.
+  findings:
+  - statement: Deletion of COA4 (like CMC1) causes cytochrome c oxidase assembly defects,
+      with loss of Cox1 and rapid degradation of Cox2 and Cox3. Source of the CMC1 genetic
+      interaction.
+    supporting_text: Deletion of CMC1 or COA4 leads to assembly defects of cytochrome c
+  - statement: Reductants restore respiratory growth of coa4-null cells without restoring
+      cytochrome c oxidase assembly - the growth defect is driven by hydrogen peroxide from
+      partially assembled complex IV intermediates. A necessary caveat when reading any respiratory-growth
+      rescue as evidence of restored assembly.
+    supporting_text: the presence of the reductants does not suppress these assembly defects
+      and the levels of cytochrome c oxidase remain reduced
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified, full text cached. Supplies an independent IMP for complex
+      IV assembly, the CMC1 genetic interaction, and the important caveat that reductant rescue
+      of respiratory growth does not restore assembly.
+- id: Reactome:R-SCE-1252260
+  title: MIA40:ERV1 oxidizes cysteine residues to cystine disulfide bonds
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Reactome traceable author statement. Consistent with the direct evidence
+      but adds nothing independent.
+- id: PMID:35666203
+  title: A yeast suppressor screen links Coa4 to the mitochondrial copper delivery pathway
+    for cytochrome c oxidase.
+  findings:
+  - statement: COX11 overexpression restores Cox1 abundance, cytochrome c oxidase assembly
+      and respiration in coa4-null cells, and the rescue requires the copper-coordinating
+      cysteines of Cox11 - establishing restored copper delivery rather than suppression of
+      reactive oxygen species.
+    supporting_text: cysteine mutants of Cox11 that are incapable of binding copper, failed
+      to rescue the respiratory defect
+  - statement: The rescue is unidirectional, placing Coa4 upstream of Cox11 in the copper
+      delivery pathway to the CuB site of Cox1.
+    supporting_text: suggests that Coa4 acts upstream of Cox11 in the copper delivery pathway
+  - statement: &#39;Coa4 is not a copper metallochaperone: it lacks the copper-coordinating cysteine
+      motif of Cox17 and its deletion phenotype is far milder than that of the bona fide chaperones.
+      This is the direct justification for retaining the ND molecular_function annotation.&#39;
+    supporting_text: Importantly, Coa4 lacks the copper-binding cysteine motif that is found
+      in Cox17, further negating its metallochaperone role
+  - statement: Human COA4 complements the yeast coa4-null mutant, establishing that the function
+      is evolutionarily conserved and licensing transfer of this yeast mechanism to the human
+      ortholog.
+    supporting_text: we demonstrate that human COA4 can replace the function of yeast Coa4
+      indicating its evolutionarily conserved role
+  - statement: The authors explicitly could not detect a physical Coa4-Cox11 interaction by
+      co-immunoprecipitation/mass spectrometry, leaving the genetic interaction unexplained
+      biochemically until the 2026 crosslinking study.
+    supporting_text: Our initial attempts to detect protein:protein interaction between Cox11
+      and Coa4 via coimmunoprecipitation/mass spectrometry experiments were not successful
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified, full text cached. The strongest functional evidence for
+      Coa4 and the direct antecedent of the 2026 interaction work. Not currently cited by
+      any GOA row for this gene, which is a gap worth reporting to SGD.
+- id: DOI:10.1038/s41467-026-77112-z
+  title: The predicted interactome of the human mitochondrial proteome.
+  findings:
+  - statement: Co-immunoprecipitation of yeast Coa4-V5 from DSSO-crosslinked mitochondria
+      recovered Cox11, supplying the direct physical interaction that the 2022 study could
+      not detect - plausibly because crosslinking captures a transient contact.
+    supporting_text: immunoprecipitation (Co-IP) of yeast Coa4-V5 from chemically
+  - statement: The same co-IP enriched the IMS-localized phosphatase Ptc5, suggesting that
+      reversible phosphorylation of Coa4 may regulate copper delivery to cytochrome c oxidase.
+      This is suggestive only - no functional follow-up was performed - and is recorded as
+      a hypothesis, not as annotation evidence.
+    supporting_text: the IMS-localized Ptc5 phosphatase, which suggests a role for this
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Nature Communications 2026, Article in Press, accepted 2026-08-17. No PMID
+      assigned yet; cited and cached by DOI (publications/DOI_10.1038_s41467-026-77112-z.md,
+      full text via OpenAlex under CC-BY), so supporting quotes are machine-verifiable. Only
+      the paper&#39;s own experiments are recorded here; its AlphaFold predictions are hypotheses,
+      not evidence.
+core_functions:
+- description: Accessory factor of the mitochondrial copper delivery pathway to cytochrome
+    c oxidase. Coa4 acts in the intermembrane space downstream of Cox1 synthesis and hemylation
+    and upstream of the copper metallochaperone Cox11, with which it physically interacts,
+    and is required for normal cytochrome c oxidase abundance and activity. It is not itself
+    a copper metallochaperone. Loss of Coa4 reduces mitochondrial and cellular copper and
+    causes accumulation of partially assembled complex IV intermediates that generate hydrogen
+    peroxide.
+  directly_involved_in:
+  - id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  locations:
+  - id: GO:0005758
+    label: mitochondrial intermembrane space
+  supported_by:
+  - reference_id: PMID:20624914
+    supporting_text: Cells lacking Coa4 are depressed in CcO activity but show no impairment
+      in Cox1 maturation or formation of the Shy1-stabilized Cox1 assembly intermediate
+  - reference_id: PMID:20624914
+    supporting_text: Cells lacking Coa4 resemble shy1 Δ cells in exhibiting a reduced mitochondrial
+      copper content
+  - reference_id: PMID:35666203
+    supporting_text: suggests that Coa4 acts upstream of Cox11 in the copper delivery pathway
+  - reference_id: PMID:35666203
+    supporting_text: Importantly, Coa4 lacks the copper-binding cysteine motif that is found
+      in Cox17, further negating its metallochaperone role
+  - reference_id: DOI:10.1038/s41467-026-77112-z
+    supporting_text: immunoprecipitation (Co-IP) of yeast Coa4-V5 from chemically
+suggested_questions:
+- question: Should the nucleus (GO:0005634) and cytoplasm (GO:0005737) HDA rows from the genome-wide
+    GFP library be retired? Coa4 is a small twin CX9C Mia40 substrate where C-terminal GFP
+    fusion is a known cause of failed intermembrane space import, and the calls conflict with
+    EXP proteomics, two IDA rows, IBA, IEA, TAS and UniProt.
+  experts:
+  - SGD curators
+  - GO cellular component curation group
+- question: &#39;What is Coa4&#39;&#39;s molecular function? The SGD ND placeholder on GO:0003674 is currently
+    the honest answer: no activity has been demonstrated and metallochaperone activity is
+    excluded. Is Coa4 stabilizing Cox11, loading it with copper, or gating handoff to Cox1?&#39;
+  experts:
+  - GO molecular function curation group
+  - Gohil lab
+- question: Why does high-copy CYC1 suppress the coa4-null respiratory defect? Bestwick et
+    al. called this a major clue to Coa4 function and it has not been followed up in fifteen
+    years.
+  experts:
+  - Winge lab
+  - Khalimonchuk lab
+- question: Does the IMS phosphatase Ptc5 regulate Coa4 by dephosphorylation, as suggested
+    by its enrichment in the 2026 Coa4-V5 co-IP? Only co-IP enrichment supports this.
+  experts:
+  - Gohil lab
+suggested_experiments:
+- hypothesis: The nuclear and cytoplasmic GFP signals for Coa4 are C-terminal tagging artifacts
+    caused by blocked Mia40-dependent import.
+  description: Compare subcellular localization of N-terminally tagged, C-terminally tagged
+    and untagged Coa4 by fractionation and immunoblot, and test import of each into isolated
+    mitochondria in vitro.
+  experiment_type: cell biology
+- hypothesis: Coa4 is required for copper loading of Cox11 rather than for Cox11 stability
+    per se.
+  description: Measure copper occupancy of immunopurified Cox11 from wild-type and coa4-null
+    mitochondria by ICP-MS, normalized to recovered Cox11 protein so that metallation is separated
+    from abundance.
+  experiment_type: biochemical
+- hypothesis: Ptc5-mediated dephosphorylation regulates the Coa4-Cox11 interaction.
+  description: Map Coa4 phosphosites, test phospho-null and phospho-mimetic alleles for respiratory
+    growth and cytochrome c oxidase assembly, and assay whether the Coa4-Cox11 co-IP is phosphorylation
+    dependent in a ptc5-null background.
+  experiment_type: genetic
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
