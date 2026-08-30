@@ -1481,6 +1481,22 @@ render-bioreason-eval:
 refresh-bioreason-benchmark-sidecars:
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
 
+# Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
+check-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py
+
+# Refresh SFT prediction reviews against the current GOA/AIGR snapshot
+refresh-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py --apply
+
+# Check committed GO-GPT leaf reviews against their raw BioReason web exports
+check-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --check-web-exports
+
+# Refresh committed GO-GPT leaf reviews from their raw BioReason web exports
+refresh-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --refresh-web-exports
+
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
     uv run ai-gene-review render-projects --all
