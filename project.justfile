@@ -2720,3 +2720,41 @@ scan-prose-panther *args="":
 [group('QC')]
 panther-report-stats *args="":
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============== PANTHER Family Reviews ==============
+
+# Validate curated PANTHER family reviews, in four stages:
+#   1. structural schema validation against FamilyReview;
+#   2. GO term id/label validation via linkml-term-validator;
+#   3. residue-site validation -- every curated position resolved against the
+#      anchor's actual UniProt sequence, plus controls, PAINT node assertions and
+#      PANTHER id/label/membership;
+#   4. cross-checks against the gene corpus, and gene-level residue claims.
+# Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
+validate-families:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No family review YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Schema-validating $f"
+        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+            --target-class FamilyReview "$f" || rc=1
+    done <<< "$files"
+    echo "Validating GO term ids and labels..."
+    while IFS= read -r f; do
+        uv run linkml-term-validator validate-data "$f" \
+            -s src/ai_gene_review/schema/family_review.yaml \
+            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+    done <<< "$files"
+    echo "Validating curated residue sites against UniProt sequences..."
+    uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
+    echo "Cross-checking family reviews against the gene corpus..."
+    uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
+    echo "Validating gene-level residue claims..."
+    uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    exit $rc
