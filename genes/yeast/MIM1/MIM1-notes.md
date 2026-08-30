@@ -593,3 +593,91 @@ gene" prompts hit the 7200s ceiling). Run with `max_iterations=3`, `timeout=7200
 Per the skill, no local `*-bioinformatics/RESULTS.md` was fed to either job (there is none for
 this gene yet); verdicts must be compared against held-out evidence after the run, and a
 refuted *proposal* is deleted rather than set to `REMOVE`.
+
+---
+
+## 15. Addendum 6 — GO issues #31711 and #32108
+
+Two GO ontology tickets change how this gene should be annotated.
+
+**Access caveat.** `geneontology/go-ontology` is outside this session's GitHub scope. Anonymous
+git read is available but the GitHub API is not (403 for unattached repos), there is no `gh`
+CLI, and the sanctioned `add_repo --access push` route was blocked. WebFetch retrieves issue
+*bodies* but GitHub now renders comment timelines client-side, so
+**`#32108`'s comment 4449178932 was not read**. Everything below comes from the two issue
+bodies plus the live ontology, which was checked directly.
+
+### #31711 — mitochondrial import reorganization (CLOSED, largely landed)
+
+ValWood's GO-CAM-driven restructuring. The new terms are live in OLS/the GO API:
+
+| Term | Label |
+|---|---|
+| GO:7770058 | mitochondrial protein import pathway |
+| **GO:7770059** | **alpha helical protein insertion into mitochondrial outer membrane** |
+| GO:7770060 | TOM-TIM23-SORT-mediated protein insertion into the inner membrane |
+| GO:7770061 | TOM-TIM22-mediated inner membrane protein insertion |
+| GO:7770063 | beta barrel protein insertion into mitochondrial outer membrane |
+
+`GO:0045040` now has exactly two children: GO:7770059 (alpha-helical) and GO:7770063
+(beta-barrel). The proposed *obsoletions* have not landed — GO:0070585, GO:0051204,
+GO:0072656 and the GO:19036xx/19037xx regulation terms are all still live.
+
+### #32108 — obsolete GO:0070096 (OPEN)
+
+Opened May 2026, 21 EXP annotations affected. Rationale, quoted from #31711:
+
+> "Assembly of TOM isn't a separate assembly process, assembly is only affected by import
+> pathways so the correct way to annotate this would be to add TOM subunits as targets of the
+> appropriate import pathways."
+
+**This is the same argument this review reached independently** from the primary literature —
+that the TOM-assembly phenotype is a downstream consequence of the insertase acting on Tom20
+and Tom70, with the Tom40 arm indirect besides. PMID:17974559 is the neatest illustration: its
+substrate-resolved result (Tom20 and Tom70 yes, Tom22 no) names exactly the "TOM subunits as
+targets" that #31711 wants annotated instead.
+
+### Changes made
+
+1. **Three `GO:0045040` rows → MODIFY**, `proposed_replacement_terms: GO:7770059`. MIM1 is
+   unambiguously alpha-helical; picking the child *encodes* the Tom40-is-indirect conclusion
+   rather than obscuring it — MIM1 belongs on GO:7770059 and explicitly not on GO:7770063.
+   The IBA row also carries a `propagation_review` (`TERM_SCOPING_PROBLEM` /
+   `GRANULARITY_MISMATCH`) recording that the node placement is sound and the re-term should
+   move with the node, since the whole fungal clade is alpha-helical-specific.
+2. **Two `GO:0070096` rows → KEEP_AS_NON_CORE.** Deliberately not REMOVE or MODIFY: the term
+   is still live and non-obsolete, the loss-of-function evidence is sound, and the obsoletion
+   request is *open*, not decided. Pre-empting a GO decision that has not been taken would be
+   worse than recording the position.
+3. **New annotation proposed for `GO:7770059`** (IDA, PMID:32348752), recording a plain GOA
+   gap: Q08176 has no GO:7770059 annotation although the term's definition is written around
+   the Mim1–Mim2 complex. Of ~286 annotations to the term only seven are manual — PomBase IMPs
+   on *S. pombe* mim1 (Q9C1W7) and mim2 (G2TRP0) from PMID:33138913, and FlyBase IMPs on
+   Drosophila Mtch and human MTCH1/MTCH2 — the rest Ensembl orthology IEA. The budding-yeast
+   protein the definition describes is the conspicuous absence.
+4. **`core_functions.directly_involved_in`**: GO:0070096 dropped (demoted to non-core).
+
+### The one unresolved item, and why
+
+`core_functions.directly_involved_in` still holds **GO:0045040**, not GO:7770059. This is a
+tooling limit, not a judgement:
+
+- `core_functions` term ids are hard-validated (branch reachability + label resolution).
+- GO:7770059 is live in OLS and the GO API but **absent from the semantic-sql GO build** that
+  `linkml-term-validator` resolves labels against. Verified by deleting the local 1.7 GB
+  `go.db` and re-downloading a fresh one — the new build lacks it too, so the lag is
+  **upstream**, not a stale local cache.
+- A hand-patch adding the five terms to `cache/enums/gobiologicalprocessenum_*.csv` cleared
+  the reachability check but not the label check, and was reverted: forcing a term the pinned
+  ontology genuinely lacks into a committed derived artifact is the wrong fix.
+
+Consequence: one standing validation warning ("Process term GO:0045040 not reflected in
+existing_annotations"), which is *accurate* — core_functions and existing_annotations do
+disagree, precisely because of the upstream lag. It is left visible rather than suppressed,
+and `status` is therefore **DRAFT**, not COMPLETE. Swap GO:7770059 into that slot and restore
+COMPLETE once semantic-sql catches up.
+
+### Flagged for GO, unrelated to this gene
+
+`ComplexPortal:CPX-336` ("clb3-cdc28_yeast-1", a cyclin–CDK complex) carries an IDA to
+GO:7770059 from PMID:25378463. That looks like a data error rather than curation.
