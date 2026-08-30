@@ -233,7 +233,9 @@ def warm_publication(
 
         # LRV's blessed download/sniff/extract path. `_materialize` is the same
         # routine `ReferenceFetcher.fetch` uses internally; it is not yet public
-        # API, so revisit on LRV upgrades.
+        # API — public-API request tracked in
+        # https://github.com/ai4curation/ai-gene-review/issues/2789 (to be
+        # transferred to linkml-reference-validator).
         text, fmt, _pdf_bytes, error = fetcher._materialize(location)
         if error:
             had_error = True
