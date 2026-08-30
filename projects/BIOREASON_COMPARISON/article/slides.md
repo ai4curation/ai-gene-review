@@ -132,7 +132,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
 - For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **agent-adjudicated local AIGR reference**
-- References are not independent expert ground truth: 75 `COMPLETE`, 46 `DRAFT`, 14 `IN_PROGRESS`, 4 `INITIALIZED`
+- References are not independent expert ground truth: 76 `COMPLETE`, 46 `DRAFT`, 13 `IN_PROGRESS`, 4 `INITIALIZED`
 - ARGO139 is the collected cohort; performance excludes the wrong-input `csr-1` case (n=138) and flags seven 2,000-aa truncations
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
@@ -227,7 +227,7 @@ The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.5% COR** · 4.6% LSP · 6.0% UNC
+**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.5% COR** · 4.5% LSP · 6.1% UNC
 
 The 2.5% COR are known-literature gaps, not discoveries of previously unknown biology.
 

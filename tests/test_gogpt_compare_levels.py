@@ -118,7 +118,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # Six upstream reviews moved these levels. The HdeB re-review retains
+        # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
         # post-review (+1 post_review only), while the HdeA comprehensive review
@@ -141,6 +141,9 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # process or the holdase NTR; its GO-valued core set and overlap stay unchanged.
         # SecB removes two net post-review terms and two predicted overlaps by narrowing
         # broad transport/localization annotations; its core set and overlap stay unchanged.
+        # Skp retains experimentally supported protein folding and adds it to the
+        # synthesized core process set while treating homotrimerization as non-core,
+        # adding one reference term and exact overlap at both AIGR levels.
         # GOA is unaffected,
         # distinguishing upstream review edits from a comparison regression.
         "post_review": {"overlap": 853, "total": 2765, "pred": 8871},

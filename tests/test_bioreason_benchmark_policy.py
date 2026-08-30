@@ -370,7 +370,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
     n_propagated = sum(
         row["closure_intersects_goa_all"] == "True" for row in incorrect_hf
     )
-    assert (n_incorrect, n_exact, n_propagated) == (152, 53, 124)
+    assert (n_incorrect, n_exact, n_propagated) == (149, 50, 121)
     assert f"{n_exact}/{n_incorrect} HF terms labelled NPI, PLI, or REP" in manuscript_flat
     assert (
         f"{n_propagated}/{n_incorrect} had propagated overlap with current GOA"
