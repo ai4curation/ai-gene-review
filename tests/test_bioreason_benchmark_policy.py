@@ -301,7 +301,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
         )
     )
     assert sft["cnn_exact_frozen_goa"] == 634
-    assert sft["cnn_other_established_basis"] == 47
+    assert sft["cnn_other_established_basis"] == 46
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
         "n_reviewed": 82,
@@ -354,8 +354,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | {core_percent:.1f} |"
     ) in supplement
-    assert "**71.3% CNN**" in slides
-    assert "**15.6% NPI/PLI/REP**" in slides
+    assert "**71.2% CNN**" in slides
+    assert "**15.7% NPI/PLI/REP**" in slides
     assert "**2.5% COR**" in slides
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:

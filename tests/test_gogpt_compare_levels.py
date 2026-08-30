@@ -118,7 +118,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert len(details) == 299
     assert stats == {
         "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        # Six upstream reviews moved these levels. The HdeB re-review retains
+        # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
         # post-review (+1 post_review only), while the HdeA comprehensive review
@@ -141,10 +141,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # process or the holdase NTR; its GO-valued core set and overlap stay unchanged.
         # SecB removes two net post-review terms and two predicted overlaps by narrowing
         # broad transport/localization annotations; its core set and overlap stay unchanged.
+        # Skp removes one post-review/core term and one predicted overlap by replacing
+        # generic folding with outer membrane assembly and treating homotrimerization
+        # as non-core.
         # GOA is unaffected,
         # distinguishing upstream review edits from a comparison regression.
-        "post_review": {"overlap": 853, "total": 2765, "pred": 8871},
-        "core": {"overlap": 350, "total": 1231, "pred": 8871},
+        "post_review": {"overlap": 852, "total": 2764, "pred": 8871},
+        "core": {"overlap": 349, "total": 1230, "pred": 8871},
     }
 
 
