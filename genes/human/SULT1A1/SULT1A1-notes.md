@@ -125,9 +125,19 @@ the toxification role in vivo for 4-aminobiphenyl and methyleugenol
 the **3'-O**-sulfate (B-ring). The GO term currently used, `GO:0047894 flavonol
 3-sulfotransferase activity`, is defined as *"3'-phospho-5'-adenylyl sulfate +
 quercetin = adenosine 3',5'-diphosphate + H+ + quercetin 3-sulfate"* — a different
-substrate class (flavonol) and a different position (3, C-ring). Quercetin was not
-assayed in PMID:20056724. `GO:1990135 flavonoid sulfotransferase activity` is the
+substrate class (flavonol) and a different position (3, C-ring). Since hesperetin has
+no C-ring 3-hydroxyl at all, **no assay on hesperetin can demonstrate flavonol
+3-sulfotransferase activity**, which is why the argument holds without needing to know
+what else the paper tested. `GO:1990135 flavonoid sulfotransferase activity` is the
 correct term. (Note these two are *siblings* under GO:0008146, not parent/child.)
+
+> **Full-text caveat.** PMID:20056724 is abstract-only in the cache — the article is
+> not open access and Europe PMC reports no PMC record (`isOpenAccess: N`, `inPMC: N`),
+> and its text-mined annotations cover only the title and abstract. So it could not be
+> checked whether quercetin appears anywhere in the full methods. The `MODIFY` above
+> rests on hesperetin's structure and on the product the abstract itself names, not on
+> a claim about what was or was not assayed; a curator with the full text should
+> confirm before the term is changed.
 
 ### 2.5 Gut-microbial 4-ethylphenol → 4-EPS
 > *"We observed sulfation of 4EP to 4EPS by the sulfotransferase SULT1A1 and others
@@ -227,12 +237,20 @@ The abstract is explicit that the object of study is the STP2 gene:
 > of these two cDNAs, STP2, as a step toward understanding molecular genetic mechanisms
 > involved in the regulation of this enzyme activity in humans."* [PMID:8661000]
 
-The paper is a genomic-structure/cloning study; it contains no amine-metabolism assay
+The paper is a genomic-structure/cloning study, and its abstract names no enzyme assay
 for either gene. `GO:0008146` happens to be true of SULT1A1 anyway (abundant
 independent experimental support), so that row survives on its merits but should be
 re-sourced. `GO:0009308 amine metabolic process` has neither support from this
 reference nor a good fit to the gene — SULT1A1 is the *phenol*-preferring form, while
 monoamine sulfation belongs to SULT1A3 — so it is treated as an over-annotation.
+
+> **Full-text caveat.** PMID:8661000 is also abstract-only (not open access, no PMC
+> record per Europe PMC), so it cannot be *proved* from the cache that the full text
+> contains no enzymology. The `MISCITED` call therefore rests on the part that **is**
+> settled without the full text — the gene identity, verified directly against UniProt
+> P50226 — rather than on an inventory of the paper's experiments. The annotation is
+> marked over-annotated rather than `REMOVE` partly for this reason. Both references
+> now carry `full_text_unavailable: true`.
 
 Nomenclature confirmed via
 [Her et al. 1996 / STP1-STP2 genomic organisation, PMID:8912648](https://pubmed.ncbi.nlm.nih.gov/8912648/)
