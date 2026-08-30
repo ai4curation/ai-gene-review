@@ -3,7 +3,7 @@ title: "MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human, yeast]
-genes: [COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
+genes: [COA4, COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
 ---
 
 # MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome
@@ -21,8 +21,10 @@ reports 2895 predicted interactions and supplies at least one interacting partne
 > Swaminathan AB, Zulkifli M, Guerra RM, Calabrese SM, Kalafatis DT, Pagliarini DJ, Gohil VM.
 > *The predicted interactome of the human mitochondrial proteome.* Nature Communications (2026),
 > Article in Press. [doi:10.1038/s41467-026-77112-z](https://doi.org/10.1038/s41467-026-77112-z).
-> **No PMID is assigned yet** (accepted 2026-08-17); cite by DOI until one issues, and do not
-> create a `publications/PMID_*.md` stub for it.
+> **No PMID is assigned yet** (accepted 2026-08-17), so cite it by DOI. It caches cleanly as
+> `publications/DOI_10.1038_s41467-026-77112-z.md` (full text via OpenAlex, CC-BY), so its
+> `supporting_text` quotes are machine-verifiable like any PMID reference — do not create a
+> `publications/PMID_*.md` stub.
 
 For this repository the paper matters in two distinct ways, which should not be conflated:
 
@@ -251,11 +253,23 @@ Already reviewed here, and appearing in the paper's figures or validated interac
 | PMPCA, PMPCB | Predicted mitochondrial processing peptidase complex structure |
 | HSPA9 | Predicted TCAIM–HSPA9 interaction |
 
+**Reviewed from this paper (done):**
+
+- **COA4** — review complete (working notes in `genes/human/COA4/COA4-notes.md`).
+  The paper's one fully validated orphan
+  assignment. Review accepts the previously IBA/IEA-only `GO:0033617` as core on the strength
+  of the new human knockout data, and marks the BioPlex `protein binding` row over-annotated
+  while preserving COX11 as the partner. Two findings worth noting: the COA4–COX11 interaction
+  already had affinity-purification support in BioPlex/IntAct
+  ([PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/)) predating this paper, and the
+  2022 *Genetics* study explicitly **failed** to detect the interaction by co-IP/MS — the 2026
+  work closes that gap, plausibly because it crosslinks. COA4's molecular function remains
+  genuinely unknown (metallochaperone activity is positively excluded), so `core_functions`
+  asserts BP + CC only rather than inventing an MF term.
+
 Not yet in this repository, and candidates to fetch:
 
-- **COA4** (human) — the strongest case. Newly assigned experimental function; the paper alone
-  supports IMP/IDA-grade claims about cytochrome c oxidase assembly and mitochondrial copper
-  homeostasis. Yeast *COA4* is the companion review.
+- **Yeast COA4** — companion review; most of the mechanistic genetics is in yeast.
 - **COX17, COX19, COX23, CMC2, PET191** — the rest of the copper delivery pathway; COX23 and CMC2
   now carry predicted, conserved partners (COX1 and COX2 respectively) but **no** experimental
   follow-up in this paper, so they remain hypotheses.
@@ -265,10 +279,6 @@ Not yet in this repository, and candidates to fetch:
 - **COQ3**, **COQ10A**, **COQ10B** — complete the complex Q roster; Coq6–Coq10 is a novel
   prediction bearing on COQ10A/B function.
 
-```bash
-just fetch-gene human COA4
-just validate human COA4
-```
 
 ## Relationship to other projects here
 
