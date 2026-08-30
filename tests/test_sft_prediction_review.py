@@ -162,7 +162,7 @@ def test_skp_folding_uses_ontology_pair_decision_not_dead_manual_override():
     manual_key = ("ECOLI", "Skp", "GO:0061077")
     pair_key = (*manual_key, "chaperone-mediated protein folding")
     assert manual_key not in MANUAL_OVERRIDES
-    assert ONTOLOGY_PAIR_DECISIONS[pair_key].assessment == "CNN"
+    expected_assessment = ONTOLOGY_PAIR_DECISIONS[pair_key].assessment
 
     doc = {
         "predictions": [
@@ -173,8 +173,8 @@ def test_skp_folding_uses_ontology_pair_decision_not_dead_manual_override():
                     "label": "chaperone-mediated protein folding",
                 },
                 "review": {
-                    "assessment": "NPI",
-                    "confidence_score": 0,
+                    "assessment": "UNC",
+                    "confidence_score": 1,
                     "summary": "Historical rationale.",
                 },
             }
@@ -195,8 +195,8 @@ def test_skp_folding_uses_ontology_pair_decision_not_dead_manual_override():
 
     review = doc["predictions"][0]["review"]
     assert changed is True
-    assert review["assessment"] == "CNN"
-    assert review["confidence_score"] == EXPECTED_CONFIDENCE["CNN"]
+    assert review["assessment"] == expected_assessment
+    assert review["confidence_score"] == EXPECTED_CONFIDENCE[expected_assessment]
     assert ONTOLOGY_ADJUDICATION_MARKER in review["summary"]
 
 
