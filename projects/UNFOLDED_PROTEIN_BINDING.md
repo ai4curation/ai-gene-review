@@ -506,7 +506,7 @@ established:
 | HdeA | *E. coli* | P0AES9 | 14 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Acid-activated in-situ holdase; no defined acceptor or delivery destination; GO:0042026 for refolding process |
 | HdeB | *E. coli* | P0AET2 | 8 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Acid-activated in-situ holdase; no defined acceptor or delivery destination |
 | RidA | *E. coli* | P0AF93 | 22 | MODIFY GO:0051082 → holdase chaperone activity NTR; MODIFY → GO:0120241/GO:0009082/GO:1901705/GO:0005829; membrane HDA KEEP_AS_NON_CORE | 2-iminoacid deaminase with reversible N-chlorination-dependent ATP-independent holdase activity; comprehensive review complete |
-| SecB | *E. coli* | P0AG86 | 27 | MODIFY → GO:0140309 | Secretion carrier-holdase |
+| SecB | *E. coli* | P0AG86 | 27 | MODIFY GO:0051082 → GO:0140309 (4 rows); MODIFY broad cytoplasm/transport/localization → GO:0005829/GO:0043952/GO:0006605; REMOVE protein-folding IEA | ATP-independent SecA-directed carrier-holdase; comprehensive review complete |
 | Skp | *E. coli* | P0AEU7 | 34 | MODIFY → GO:0140309 | Periplasmic OMP carrier-holdase |
 | SlyD | *E. coli* | P0A9K9 | 35 | MODIFY → holdase NTR; retain GO:0051082 interim | FKBP-type PPIase/holdase; GO:0170061 for nickel chaperoning |
 | Spy | *E. coli* | P77754 | 11 | MODIFY → holdase NTR; retain GO:0051082 interim; NEW GO:0050821 | Periplasmic in-situ holdase; no defined acceptor or delivery destination; GO:0042026 for refolding process |
