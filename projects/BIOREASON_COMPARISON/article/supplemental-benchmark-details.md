@@ -177,7 +177,7 @@ GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene)
 - `../argo139-curation-context-counts.csv`: ARGO139 curation-context summary.
 - `../benchmark-cohorts.csv`: cohort-level provenance and sizes.
 - `../benchmark-genes.csv`: gene-level benchmark/source provenance.
-- `../benchmark-quality.csv`: per-gene source presence, dates, and checksums.
+- `../benchmark-quality.csv`: per-gene source presence plus separately named current-GOA and frozen-baseline paths, dates, and checksums.
 - `../benchmark-metrics.json`: generated authoritative aggregate metrics.
 - `../argo95-ontology-pair-adjudication.tsv`: independent adjudication of every ARGO95 ID-label mismatch that was nonnegative either at the audit baseline or after manual biological reclassification.
 - `../cafa_style_argo139.py`: retrospective CAFA-style SFT scorer; ARGO95 is the primary HF-catalogue row.

@@ -116,10 +116,16 @@ def extract_review_status(path: Path) -> str:
     return match.group(1)
 
 
-def latest_goa_date(path: Path) -> str:
-    with path.open(newline="", encoding="utf-8") as handle:
-        dates = [row.get("DATE", "") for row in csv.DictReader(handle, delimiter="\t")]
+def latest_goa_date_from_text(text: str) -> str:
+    dates = [
+        row.get("DATE", "")
+        for row in csv.DictReader(text.splitlines(), delimiter="\t")
+    ]
     return max((date for date in dates if date), default="")
+
+
+def latest_goa_date(path: Path) -> str:
+    return latest_goa_date_from_text(path.read_text(encoding="utf-8"))
 
 
 def goa_ids(path: Path) -> set[str]:
@@ -137,22 +143,40 @@ def goa_ids_from_text(text: str) -> set[str]:
 
 
 @lru_cache(maxsize=None)
-def frozen_goa_ids(relative_path: str, baseline_commit: str) -> set[str]:
-    """Read a GOA file's IDs from the benchmark's declared baseline commit."""
+def frozen_goa_blob(relative_path: str, baseline_commit: str) -> bytes:
+    """Read a GOA file's bytes from the benchmark's declared baseline commit."""
     result = subprocess.run(
         ["git", "show", f"{baseline_commit}:{relative_path}"],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
-        text=True,
     )
     if result.returncode:
-        detail = result.stderr.strip() or "git show returned no diagnostic"
+        detail = result.stderr.decode("utf-8", errors="replace").strip()
+        detail = detail or "git show returned no diagnostic"
         raise RuntimeError(
             f"Cannot read frozen GOA input {relative_path} at {baseline_commit}: "
             f"{detail}. Ensure the benchmark baseline commit is available locally."
         )
-    return goa_ids_from_text(result.stdout)
+    return result.stdout
+
+
+@lru_cache(maxsize=None)
+def frozen_goa_ids(relative_path: str, baseline_commit: str) -> frozenset[str]:
+    """Return immutable GO IDs from a frozen GOA input."""
+    blob = frozen_goa_blob(relative_path, baseline_commit)
+    return frozenset(goa_ids_from_text(blob.decode("utf-8")))
+
+
+def frozen_goa_path(organism: str, gene: str, policy: dict[str, Any]) -> str:
+    """Resolve a current cohort key to its path at the benchmark baseline."""
+    frozen_inputs = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"]
+    key = f"{organism}/{gene}"
+    return str(
+        frozen_inputs.get("goa_path_overrides", {}).get(
+            key, f"genes/{organism}/{gene}/{gene}-goa.tsv"
+        )
+    )
 
 
 def rl_quality_rows(
@@ -164,6 +188,7 @@ def rl_quality_rows(
         for item in cohort_policy.get("performance_exclusions", [])
     }
     sequence_limit = int(cohort_policy["input_quality"]["model_sequence_limit"])
+    baseline_commit = str(policy["baseline_commit"])
     rows: list[dict[str, Any]] = []
 
     for (organism, gene), source_row in sorted(rl_genes.items()):
@@ -173,6 +198,9 @@ def rl_quality_rows(
         reference_path = gene_dir / f"{gene}-ai-review.yaml"
         uniprot_path = gene_dir / f"{gene}-uniprot.txt"
         goa_path = gene_dir / f"{gene}-goa.tsv"
+        baseline_goa_path = frozen_goa_path(organism, gene, policy)
+        baseline_goa_blob = frozen_goa_blob(baseline_goa_path, baseline_commit)
+        baseline_goa_text = baseline_goa_blob.decode("utf-8")
         input_sequence = extract_bioreason_sequence(prediction_path)
         interpro_input = extract_markdown_section(prediction_path, "InterPro Domains")
         gogpt_input = extract_markdown_section(prediction_path, "GO Terms")
@@ -206,7 +234,11 @@ def rl_quality_rows(
                 "reference_sequence_length": len(reference_sequence),
                 "model_version": cohort_policy["model_version"],
                 "export_timestamp": extract_export_date(prediction_path),
-                "goa_latest_annotation_date": latest_goa_date(goa_path),
+                "current_goa_latest_annotation_date": latest_goa_date(goa_path),
+                "frozen_goa_latest_annotation_date": latest_goa_date_from_text(
+                    baseline_goa_text
+                ),
+                "frozen_goa_path": baseline_goa_path,
                 "prediction_sha256": sha256(prediction_path),
                 "interpro_input_present": str(interpro_input is not None).lower(),
                 "interpro_input_count": len(
@@ -225,7 +257,8 @@ def rl_quality_rows(
                 "review_sha256": sha256(review_path),
                 "reference_sha256": sha256(reference_path),
                 "uniprot_sha256": sha256(uniprot_path),
-                "goa_sha256": sha256(goa_path),
+                "current_goa_sha256": sha256(goa_path),
+                "frozen_goa_sha256": hashlib.sha256(baseline_goa_blob).hexdigest(),
             }
         )
     return rows
@@ -420,13 +453,10 @@ def gogpt_overlap_summary() -> dict[str, Any]:
 
 def argo95_exact_goa_summary(
     keys: set[tuple[str, str]],
+    policy: dict[str, Any],
 ) -> dict[str, int]:
     """Count exact frozen-GOA membership for final ARGO95 CNN/COR calls."""
-    policy = read_yaml(POLICY_PATH)
     baseline_commit = str(policy["baseline_commit"])
-    path_overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"].get(
-        "goa_path_overrides", {}
-    )
     cnn_exact = 0
     cnn_other_basis = 0
     cor_in_goa = 0
@@ -434,10 +464,7 @@ def argo95_exact_goa_summary(
         organism, gene = path.parts[-3], path.parts[-2]
         if (organism, gene) not in keys:
             continue
-        key = f"{organism}/{gene}"
-        relative_path = str(
-            path_overrides.get(key, f"genes/{organism}/{gene}/{gene}-goa.tsv")
-        )
+        relative_path = frozen_goa_path(organism, gene, policy)
         exact_ids = frozen_goa_ids(relative_path, baseline_commit)
         for prediction in read_yaml(path).get("predictions", []) or []:
             if prediction.get("source_version") != "wanglab/protein_catalogue":
@@ -471,6 +498,7 @@ def ontology_pair_audit_summary() -> dict[str, int]:
 def build_metrics(
     rl_genes: dict[tuple[str, str], dict[str, str]],
     quality_rows: list[dict[str, Any]],
+    policy: dict[str, Any],
 ) -> dict[str, Any]:
     quality_by_key = {
         (row["organism"], row["gene"]): row for row in quality_rows
@@ -532,7 +560,7 @@ def build_metrics(
         keys=set(rl_genes),
         source_version="wanglab/protein_catalogue",
     )
-    argo95_summary.update(argo95_exact_goa_summary(set(rl_genes)))
+    argo95_summary.update(argo95_exact_goa_summary(set(rl_genes), policy))
     argo95_summary["ontology_pair_adjudication"] = ontology_pair_audit_summary()
 
     return {
@@ -773,7 +801,9 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "reference_sequence_length",
             "model_version",
             "export_timestamp",
-            "goa_latest_annotation_date",
+            "current_goa_latest_annotation_date",
+            "frozen_goa_latest_annotation_date",
+            "frozen_goa_path",
             "prediction_sha256",
             "interpro_input_present",
             "interpro_input_count",
@@ -784,11 +814,12 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
             "review_sha256",
             "reference_sha256",
             "uniprot_sha256",
-            "goa_sha256",
+            "current_goa_sha256",
+            "frozen_goa_sha256",
         ],
     )
 
-    metrics = build_metrics(rl_genes, quality_rows)
+    metrics = build_metrics(rl_genes, quality_rows, policy)
     (output_dir / "benchmark-metrics.json").write_text(
         json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
