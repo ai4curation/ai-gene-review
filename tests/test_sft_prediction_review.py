@@ -156,6 +156,14 @@ def test_drome_git_override_uses_canonical_symbol():
     assert ("DROME", "git", "GO:0005515") not in MANUAL_OVERRIDES
 
 
+def test_skp_folding_override_matches_holdase_curation():
+    override = MANUAL_OVERRIDES[("ECOLI", "Skp", "GO:0061077")]
+
+    assert override.assessment == "NPI"
+    assert "holds OMP beta-barrels unfolded" in override.summary
+    assert "AIGR accepts it" not in override.summary
+
+
 def test_auto_assess_emits_only_schema_categories():
     negative = {"GO:0000001": {"REMOVE"}}
     assert auto_assess("GO:0000001", {"GO:0000001"}, negative, set())[:2] == (
