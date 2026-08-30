@@ -9,6 +9,8 @@ import yaml
 from scripts.auto_review_sft_predictions import (
     EXPECTED_CONFIDENCE,
     MANUAL_OVERRIDES,
+    ONTOLOGY_ADJUDICATION_MARKER,
+    ONTOLOGY_PAIR_DECISIONS,
     LabelCheck,
     RepairStats,
     apply_label_note,
@@ -156,12 +158,46 @@ def test_drome_git_override_uses_canonical_symbol():
     assert ("DROME", "git", "GO:0005515") not in MANUAL_OVERRIDES
 
 
-def test_skp_folding_override_matches_holdase_curation():
-    override = MANUAL_OVERRIDES[("ECOLI", "Skp", "GO:0061077")]
+def test_skp_folding_uses_ontology_pair_decision_not_dead_manual_override():
+    manual_key = ("ECOLI", "Skp", "GO:0061077")
+    pair_key = (*manual_key, "chaperone-mediated protein folding")
+    assert manual_key not in MANUAL_OVERRIDES
+    assert ONTOLOGY_PAIR_DECISIONS[pair_key].assessment == "CNN"
 
-    assert override.assessment == "NPI"
-    assert "holds OMP beta-barrels unfolded" in override.summary
-    assert "AIGR accepts it" not in override.summary
+    doc = {
+        "predictions": [
+            {
+                "source_version": "wanglab/protein_catalogue",
+                "predicted_term": {
+                    "id": "GO:0061077",
+                    "label": "chaperone-mediated protein folding",
+                },
+                "review": {
+                    "assessment": "NPI",
+                    "confidence_score": 0,
+                    "summary": "Historical rationale.",
+                },
+            }
+        ]
+    }
+
+    changed = repair_document(
+        doc,
+        "ECOLI",
+        "Skp",
+        {"GO:0006457"},
+        {"GO:0006457": {"ACCEPT"}},
+        set(),
+        "wanglab/protein_catalogue",
+        None,
+        RepairStats(),
+    )
+
+    review = doc["predictions"][0]["review"]
+    assert changed is True
+    assert review["assessment"] == "CNN"
+    assert review["confidence_score"] == EXPECTED_CONFIDENCE["CNN"]
+    assert ONTOLOGY_ADJUDICATION_MARKER in review["summary"]
 
 
 def test_auto_assess_emits_only_schema_categories():

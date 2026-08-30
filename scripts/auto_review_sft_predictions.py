@@ -348,18 +348,6 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
             "refolding role."
         ),
     ),
-    ("ECOLI", "Skp", "GO:0061077"): ManualOverride(
-        assessment="NPI",
-        error_type=None,
-        set_error_type=True,
-        summary=(
-            "The predicted chaperone-mediated folding role is not supported for Skp. "
-            "Current curation modifies the broader GO:0006457 rows to outer-membrane "
-            "assembly because Skp holds OMP beta-barrels unfolded and delivers them "
-            "toward BAM rather than catalyzing their folding. The supplied GO:0061077 "
-            "ID is also obsolete; the raw source pair remains unchanged for provenance."
-        ),
-    ),
     ("ECOLI", "Spy", "GO:0014070"): ManualOverride(
         assessment="COR",
         error_type=None,
