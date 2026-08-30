@@ -348,18 +348,6 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
             "refolding role."
         ),
     ),
-    ("ECOLI", "Skp", "GO:0061077"): ManualOverride(
-        assessment="CNN",
-        error_type=None,
-        set_error_type=True,
-        summary=(
-            "Correct but not novel under the curated reference. The replacement protein "
-            "folding term (GO:0006457) has IBA, IDA, and IMP annotations in current GOA, "
-            "and the AIGR accepts it. Skp acts as a holdase/carrier before OMP folding, "
-            "but that mechanistic qualification does not justify overruling the positive "
-            "experimental curation."
-        ),
-    ),
     ("ECOLI", "Spy", "GO:0014070"): ManualOverride(
         assessment="COR",
         error_type=None,
