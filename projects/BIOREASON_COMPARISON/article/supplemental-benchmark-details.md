@@ -131,13 +131,16 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
 holdase chaperone activity NTR; it is not treated as the preferred long-term term.
+SlyD instead leaves its holdase molecular-function slot term-less while the same NTR
+is pending. This is an explicitly temporary cross-review difference: HdeB's obsolete
+term is retained only as an interim benchmark representation and should migrate to the
+general holdase term once that term is available.
 The subsequent HdeA comprehensive review increased the post-review denominator by
 one term and the core-function denominator by two terms without changing either
 exact-overlap count. The Spy comprehensive review likewise added two terms to each
 denominator without changing either exact-overlap count. The CpxP comprehensive
 review added one post-review term and two core-function terms, again without changing
-either exact-overlap count. These denominator changes reflect upstream reference
-curation rather than a change in the prediction set. The DnaJ comprehensive review
+either exact-overlap count. The DnaJ comprehensive review
 then removed two net post-review terms and three exact GO-GPT overlaps after identifying
 five CAFA rows miscited to a GrpE-DnaK structure paper. Its synthesized core-function
 term count and overlap were unchanged: evidence-backed ATPase activator activity
@@ -154,7 +157,14 @@ count and overlap were unchanged.
 The Skp comprehensive review retained the experimentally supported protein-folding
 process term, added it to the synthesized core process set, and treated
 homotrimerization as non-core. These changes added one reference term and one exact
-GO-GPT overlap at both the post-review and core-function levels.
+GO-GPT overlap at both the post-review and core-function levels; raw GOA was unaffected
+by these curation-only updates. SlyD is the exception: its committed GOA snapshot was
+refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
+`GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
+overlaps by three, while its term-less holdase core reduced the GO-valued core total and
+overlap by one. Thus the recorded denominator changes combine upstream reference
+curation with one explicit committed-snapshot refresh; the GO-GPT prediction set itself
+did not change.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
