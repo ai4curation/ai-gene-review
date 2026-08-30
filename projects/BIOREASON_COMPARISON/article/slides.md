@@ -227,7 +227,7 @@ The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**71.2% CNN** (correct/non-novel; 634 exact GOA) · **15.7% NPI/PLI/REP** · **2.5% COR** · 4.5% LSP · 6.1% UNC
+**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.5% COR** · 4.5% LSP · 6.1% UNC
 
 The 2.5% COR are known-literature gaps, not discoveries of previously unknown biology.
 
