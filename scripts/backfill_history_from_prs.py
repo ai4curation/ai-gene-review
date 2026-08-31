@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Retrospectively backfill history/ records from GitHub pull requests.
 
-Walks pull requests (open ones by default) and, for each curated target a PR
-touches (gene review, module, GO-CAM review, project page, schema), scaffolds
+Walks the pull requests named with ``--pr`` or enumerated with ``--state``
+(one of the two is required; prefer ``--state merged``) and, for each curated
+target a PR touches (gene review, module, GO-CAM review, project page, schema), scaffolds
 an append-only history record under ``history/`` seeded from the PR's
 metadata: title, body, author, branch, changed files, and timestamps. See
 ``docs/history.md`` for the record format and layout rules.

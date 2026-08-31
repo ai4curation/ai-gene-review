@@ -2732,9 +2732,14 @@ panther-report-stats *args="":
 #   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
 #     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
 #     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
 [group('QC')]
+[positional-arguments]
 new-history *ARGS:
-    uv run python scripts/new_history.py {{ARGS}}
+    uv run python scripts/new_history.py "$@"
 
 # Validate a single history record
 [group('QC')]
@@ -2764,5 +2769,6 @@ validate-history-all:
 # Retrospectively backfill history records from PR metadata (needs `gh`).
 # Example: just backfill-history --state open --dry-run
 [group('QC')]
+[positional-arguments]
 backfill-history *ARGS:
-    uv run python scripts/backfill_history_from_prs.py {{ARGS}}
+    uv run python scripts/backfill_history_from_prs.py "$@"

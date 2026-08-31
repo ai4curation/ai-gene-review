@@ -5,6 +5,8 @@ ported from dismech; see ``docs/history.md``.
 """
 
 import importlib.util
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -485,3 +487,83 @@ def test_new_history_scaffolder_warns_on_missing_target():
     module = _load_new_history_module()
     assert module.target_missing_warning("genes/human/NO_SUCH/NO_SUCH-ai-review.yaml")
     assert module.target_missing_warning("src/ai_gene_review/schema/history.yaml") is None
+
+
+def test_new_history_writes_multiword_summary_and_details(tmp_path, monkeypatch):
+    """A multi-word --summary/--details must survive the CLI into the record.
+
+    Every documented invocation quotes both flags, so this is the round trip
+    that the `just` seam (below) has to preserve.
+    """
+    module = _load_new_history_module()
+    monkeypatch.chdir(tmp_path)
+
+    summary = "Create review: CFAP300"
+    details = "One-paragraph summary of what the session did."
+    module.main(
+        [
+            "--kind", "module",
+            "--slug", "biotin_biosynthesis",
+            "--summary", summary,
+            "--details", details,
+        ]
+    )
+
+    written = sorted((tmp_path / "history" / "modules" / "biotin_biosynthesis").glob("*.yaml"))
+    assert len(written) == 1, written
+    record = _safe_load(written[0])
+    assert record["events"][0]["summary"] == summary
+    assert record["events"][0]["details"].strip() == details
+
+
+@pytest.mark.parametrize("recipe", ["new-history", "backfill-history"])
+def test_history_justfile_recipes_preserve_argument_quoting(recipe):
+    """The `just` seam must not flatten quoted arguments.
+
+    `just` joins a variadic ``*ARGS`` into a single space-separated string, so a
+    recipe body that interpolates ``{{ARGS}}`` loses shell quoting: the
+    documented ``--summary "Create review: CFAP300"`` reaches argparse as four
+    separate tokens and dies with "unrecognized arguments". The repo-wide fix
+    idiom is ``[positional-arguments]`` plus ``"$@"``.
+    """
+    justfile = (ROOT_DIR / "project.justfile").read_text(encoding="utf-8")
+    lines = justfile.splitlines()
+    starts = [i for i, line in enumerate(lines) if line.startswith(f"{recipe} *ARGS:")]
+    assert len(starts) == 1, f"expected exactly one {recipe} recipe, found {len(starts)}"
+    start = starts[0]
+
+    attributes = set()
+    i = start - 1
+    while i >= 0 and lines[i].startswith("["):
+        attributes.add(lines[i].strip())
+        i -= 1
+    assert "[positional-arguments]" in attributes, (
+        f"{recipe} must declare [positional-arguments] (attributes must sit "
+        f"directly above the recipe, with no comment in between)"
+    )
+
+    body = lines[start + 1]
+    assert '"$@"' in body, f"{recipe} body must forward arguments with \"$@\": {body}"
+    assert "{{ARGS}}" not in body, f"{recipe} body must not interpolate {{{{ARGS}}}}: {body}"
+
+
+@pytest.mark.parametrize("recipe", ["new-history", "backfill-history"])
+def test_history_justfile_recipes_do_not_flatten_quoted_args(recipe):
+    """Same invariant as above, but asserted against real `just` expansion."""
+    just = shutil.which("just")
+    if just is None:
+        pytest.skip("just is not installed")
+
+    result = subprocess.run(
+        [just, "--dry-run", recipe, "--summary", "Create review: CFAP300"],
+        cwd=ROOT_DIR,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    expanded = result.stdout + result.stderr
+    assert "Create review: CFAP300" not in expanded, (
+        f"{recipe} expanded the quoted argument into the command line, so the "
+        f"quoting is lost: {expanded.strip()}"
+    )
+    assert '"$@"' in expanded, expanded.strip()
