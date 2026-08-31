@@ -26,7 +26,8 @@ autolink_gene_symbols: false
 - [x] Complete the independent annotation-reviewer audit.
 - [x] Reconcile the module and reviews against completed research.
 - [x] Validate and render all affected artifacts.
-- [ ] Open one focused draft PR and shepherd it through review and CI.
+- [x] Open one focused draft PR.
+- [ ] Shepherd the PR through review and CI.
 
 ## Pathway Shape
 
