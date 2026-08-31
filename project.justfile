@@ -754,7 +754,7 @@ term-deep-research-cyberian concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
 
 term-deep-research-codex concept *args="":
-    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" codex {{args}}
 
 # Module deep research (targets module YAMLs and writes beside the YAML by default)
 # Examples:
