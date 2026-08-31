@@ -151,11 +151,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # from the GO-valued core set.
         # CnoX's refreshed GOA removes obsolete GO:0051082 and two stale process
         # rows, reducing raw totals by three and predicted overlaps by two. Its
-        # completed review removes two net post-review terms and one overlap,
-        # while the newly evidence-backed GO:0051087 core activity adds one core
-        # term and one predicted overlap.
-        "post_review": {"overlap": 849, "total": 2760, "pred": 8871},
-        "core": {"overlap": 350, "total": 1231, "pred": 8871},
+        # completed review plus follow-up adds evidence-backed GO:0009408 to the
+        # post-review set while removing general redox homeostasis from the core;
+        # GO:0051087 remains an evidence-backed core activity and predicted overlap.
+        "post_review": {"overlap": 849, "total": 2761, "pred": 8871},
+        "core": {"overlap": 350, "total": 1230, "pred": 8871},
     }
 
 

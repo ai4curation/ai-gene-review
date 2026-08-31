@@ -125,8 +125,8 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,760 | 849 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,231 | 350 | 3.9 |
+| Retained/replacement/proposed-new AIGR annotations | 2,761 | 849 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,230 | 350 | 3.9 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
