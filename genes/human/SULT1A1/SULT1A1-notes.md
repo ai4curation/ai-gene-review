@@ -354,9 +354,84 @@ demonstrate a reaction GO defines as requiring a phenol. The file is therefore `
 rather than `COMPLETE`.
 
 ### Proposed new terms
-1. **thyroid hormone sulfotransferase activity** — no GO term exists for the
-   iodothyronine sulfation reaction, despite it being SULT1A1's highest-affinity
-   chemistry and having five RHEA reactions (RHEA:67876, 67888, 67892, 83575) in UniProt.
+1. **iodothyronine sulfotransferase activity** (with *thyroid hormone sulfotransferase
+   activity* as an exact synonym) — no GO term exists for the iodothyronine sulfation
+   reaction, despite it being SULT1A1's highest-affinity chemistry and having four RHEA
+   reactions (RHEA:67876, 67888, 67892, 83575) in UniProt. The substrate-class label is
+   preferred because the highest-affinity acceptors (3,3′-T2, rT3) are inactive
+   *metabolites*, not the active hormones.
+
+---
+
+## 9. OpenScientist hypothesis runs
+
+Three runs against `genes/human/SULT1A1/SULT1A1-hypotheses/`, each scoped to a single
+computable question (3 iterations, 7200s job timeout). All three produced real
+computation with provenance artifacts, not just literature summaries.
+
+| Slug | Verdict |
+|---|---|
+| `gap-endogenous-acceptor-constraint` | **Refuted** the "dedicated endogenous acceptor" framing |
+| `gap-iodothyronine-specificity` | **Partially supported** — measured claim yes, mechanism only a correlate |
+| `proposed-term` | **Supported** the new term, with two refinements |
+
+### 9.1 The endogenous-acceptor gap was mis-framed
+
+The strongest result. Three independent analyses — cross-species orthologs, cross-paralog
+comparison, and human population genetics — all trend against the hypothesis that the
+acceptor pocket is tuned to a dedicated endogenous acceptor:
+
+- Pocket **less** conserved than scaffold across 10 mammalian orthologs (0.836 vs 0.868).
+- Pocket is the **most divergent** region across 8 human SULT1 paralogs (0.511 vs 0.629)
+  — a specificity-determining-position signature.
+- **Phe247** ortholog identity 0.20 and carries a *common* human missense variant;
+  **Ile89** identity 0.50. gnomAD shows no pocket-specific missense depletion.
+- The classic low-activity allele **Arg213His** lies *outside* the pocket.
+
+Reading: the pocket is a promiscuity-optimised, specificity-**diversifying** module.
+Dedicated specificity in this subfamily lives in the paralog — SULT1A3, via Glu146.
+
+> **Honest caveat.** The individual pocket-vs-scaffold tests are non-significant
+> (n = 11 pocket residues; MWU p = 0.499, 0.10, 0.444; permutation p = 0.102). This is
+> *absence of evidence for focused constraint*, with three lines trending the same way,
+> not positive proof of promiscuity. The hard anchors are the specific poorly-conserved
+> residues and the common Phe247 variant, not the p-values. The gap is recorded as
+> `status: NARROWING`, not resolved.
+
+### 9.2 Two references the runs surfaced
+
+Both were absent from my review; both are now cached, and **both quotes were checked
+verbatim against the freshly fetched abstracts rather than trusted from the reports**:
+
+- **[PMID:9855620]** *"The change of a single amino acid, E146A, was sufficient to
+  transform the catalytic properties and substrate preference of SULT1A3, such that they
+  closely resembled those of SULT1A1."* The residue that makes an enzyme a dopamine
+  sulfotransferase is exactly the one SULT1A1 lacks (Ala146). This is far stronger
+  support for the dopamine over-annotation call than the Km comparison alone.
+- **[PMID:20417180]** Lu et al. 2010 — the Phe247 selectivity switch, and the third
+  UniProt homodimer reference, which I had cited only in prose.
+
+### 9.3 An error the runs caught in my own proposal
+
+My first draft justified the new term partly by saying it "would also apply to SULT1A3,
+SULT1B1 and **SULT1E1**, all of which sulfate iodothyronines." The SULT1E1 claim was
+asserted without checking and is **wrong**. Verified directly against UniProt P49888: its
+five curated reactions are estrone, 24S-hydroxycholesterol, 17β-estradiol, DHEA and
+4-ethylphenol — **no iodothyronine at all**. SULT1A3 (four curated iodothyronine
+reactions) and SULT1B1 (three) do hold. Corrected in the review.
+
+### 9.4 What the iodothyronine mechanism run does and does not license
+
+The measured claim (~240-fold Km advantage over SULT1A3) is confirmed. The pocket
+mechanism — SULT1A1/1A2 pockets hydrophobic and acid-free, SULT1A3 carrying Glu89/Glu146
+for a net −1.9 charge — is a coherent *correlate* only: there is no iodothyronine-bound
+structure and no iodothyronine-specific mutagenesis, and the signature is shared with
+SULT1A2 (1 of 22 pocket positions differ). Recorded in the review as a hypothesis-level
+lead with a discriminating test, not as a curated fact.
+
+Operational note: the first launch of run 1 exited 0 after ~2 min with an upstream
+**HTTP 502** and an empty output directory — a third failure signature beyond the two the
+skill catalogues. Cleaned up and retried once; the retry succeeded.
 
 ### Gaps in GOA worth filling
 - `GO:0042803 protein homodimerization activity` — the enzyme is an obligate homodimer
