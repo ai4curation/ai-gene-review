@@ -117,7 +117,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert committed == details
     assert len(details) == 299
     assert stats == {
-        "goa": {"overlap": 1037, "total": 2957, "pred": 8871},
+        "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -149,8 +149,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # parents GO:0016853 and GO:0046872, reducing raw and post-review
         # totals/overlaps by three. Its term-less holdase core removes GO:0051082
         # from the GO-valued core set.
-        "post_review": {"overlap": 850, "total": 2762, "pred": 8871},
-        "core": {"overlap": 349, "total": 1230, "pred": 8871},
+        # CnoX's refreshed GOA removes obsolete GO:0051082 and two stale process
+        # rows, reducing raw totals by three and predicted overlaps by two. Its
+        # completed review removes two net post-review terms and one overlap,
+        # while the newly evidence-backed GO:0051087 core activity adds one core
+        # term and one predicted overlap.
+        "post_review": {"overlap": 849, "total": 2760, "pred": 8871},
+        "core": {"overlap": 350, "total": 1231, "pred": 8871},
     }
 
 
