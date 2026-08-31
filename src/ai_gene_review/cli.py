@@ -26,6 +26,10 @@ from ai_gene_review.etl.publication_refresh import (
     get_refresh_summary,
     find_active_review_pmids,
 )
+from ai_gene_review.evaluation.cafa import (
+    evaluate_cafa_predictions,
+    format_cafa_rows_tsv,
+)
 from ai_gene_review.validation import (
     BatchValidationReport,
     ValidationReport,
@@ -751,6 +755,102 @@ def _validate_multiple_files_cli(
             )
 
     return batch_report
+
+
+@app.command("cafa-evaluate")
+def cafa_evaluate(
+    prediction_file: Annotated[
+        Path,
+        typer.Argument(
+            help="Prediction TSV with columns: gene_id, go_id, label, aspect, score, rank. .gz is supported."
+        ),
+    ],
+    training_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--training",
+            "-t",
+            help="Pre-cutoff experimental annotations TSV.",
+        ),
+    ],
+    new_annotations: Annotated[
+        Path,
+        typer.Option(
+            "--new",
+            "-n",
+            help="Post-cutoff experimental annotations TSV used as the proxy test set.",
+        ),
+    ],
+    curated_genes: Annotated[
+        Path,
+        typer.Option(
+            "--genes",
+            "-g",
+            help="Curatable gene list with PAN-GO-style long IDs.",
+        ),
+    ],
+    go_parents: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--parents",
+            "-p",
+            help="Optional GO all-parents lookup used to expand the training exclusion set.",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write metrics TSV to this path."),
+    ] = None,
+    max_rank: Annotated[
+        int,
+        typer.Option(
+            "--max-rank",
+            help="Evaluate threshold pools 1..MAX_RANK. PAN-GO uses 10 deciles.",
+        ),
+    ] = 10,
+    no_header: Annotated[
+        bool,
+        typer.Option("--no-header", help="Omit the TSV header row."),
+    ] = False,
+):
+    """Evaluate GO predictions with the PAN-GO CAFA-style metric.
+
+    This reimplements the Human Functionome supplementary evaluation on prepared
+    files: training annotations are excluded, post-cutoff experimental
+    annotations are used as the proxy test set, and precision/recall are
+    macro-averaged per protein.
+    """
+
+    if max_rank < 1:
+        typer.echo("Error: --max-rank must be at least 1", err=True)
+        raise typer.Exit(code=1)
+
+    for path in [prediction_file, training_annotations, new_annotations, curated_genes]:
+        if not path.exists():
+            typer.echo(f"Error: file not found: {path}", err=True)
+            raise typer.Exit(code=1)
+    if go_parents is not None and not go_parents.exists():
+        typer.echo(f"Error: file not found: {go_parents}", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        rows = evaluate_cafa_predictions(
+            prediction_file,
+            training_annotations,
+            new_annotations,
+            curated_genes,
+            go_parents,
+            thresholds=tuple(range(1, max_rank + 1)),
+        )
+        tsv = format_cafa_rows_tsv(rows, include_header=not no_header)
+        if output:
+            output.write_text(tsv)
+            typer.echo(f"CAFA metrics written to: {output}")
+        else:
+            typer.echo(tsv, nl=False)
+    except ValueError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
 
 
 @app.command()
