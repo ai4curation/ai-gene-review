@@ -2,7 +2,7 @@
 title: "Unfolded Protein Binding Annotation Review"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
-species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, CANGA, worm]
+species: [human, mouse, rat, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, HYPJE, worm]
 sidecars:
   genes: UNFOLDED_PROTEIN_BINDING/genes.csv
 ---
@@ -184,7 +184,7 @@ Ontology changes needed to properly annotate genes in this set:
 
 ## What We Need from GO Editors
 
-- [ ] **Holdase NTR (BLOCKING)**: Create general "holdase chaperone activity" term for in-situ holdases. GO:0140309 is carrier-specific (created for TIM chaperones in #30552) and does not fit 7 genes in this review. See [holdase annotation gap](#holdase-annotation-gap) for proposed def and parentage
+- [ ] **Holdase NTR (UNRESOLVED)**: Create general "holdase chaperone activity" term for in-situ holdases. GO:0140309 is carrier-specific (created for TIM chaperones in #30552) and does not fit 7 genes in this review. See [holdase annotation gap](#holdase-annotation-gap) for proposed def and parentage
 - [ ] **Repair the post-obsoletion holdase gap** — GO:0051082 is already obsolete, but 7 in-situ holdase genes still have no valid replacement term; create the general holdase NTR and update the obsoletion guidance
 - [ ] **Preferred labels**: Add "foldase" as an exact synonym for GO:0044183; reserve an unqualified "holdase" label for the new general holdase term or otherwise distinguish it from carrier-specific GO:0140309 (QuickGO now reports `holdase` as exact and uses "unfolded protein holdase activity" as GO:0140309's primary label)
 - [ ] **Co-chaperone MF gap**: How should J-domain co-chaperone function be annotated? GO:0003767 is obsolete; GO:0044183 is used as interim but obscures the co-chaperone mechanism. Affects all J-domain proteins
@@ -642,7 +642,7 @@ established:
   - N. crassa: cia30
   - A. niger: tigA
   - Salmonella: slrP (misannotation — REMOVED)
-  - T. reesei/C. glabrata: IRE1
+  - T. reesei: IRE1
   - Arabidopsis: HSP17.7
   - Drosophila: Hsp26
 - **5,529 annotation decisions in the frozen phase-1 audit, 0 actions left as `PENDING`**
