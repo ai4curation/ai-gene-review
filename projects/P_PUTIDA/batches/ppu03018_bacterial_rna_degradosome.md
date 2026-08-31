@@ -11,35 +11,44 @@ autolink_gene_symbols: false
 
 - Module: `bacterial_rna_degradosome`
 - Source bucket: KEGG `ppu03018` (RNA degradation)
-- Focused genes: four canonical core components
-- Satisfiability: complete
-- OpenScientist module and gene research: running
+- Focused reviews: RNase E, RhlB, and PNPase; enolase assessed and excluded
+- Satisfiability: RNase E covered; accessory-partner realization unresolved
+- OpenScientist module/pathway/taxon and gene research: running
 
 ## Boundary
 
-This module covers the RNase E-centered degradosome core and the coupled
-endonucleolytic, helicase, and phosphorolytic activities. PAP I, RppH, Hfq,
-RNase R, other DEAD-box helicases, polyphosphate enzymes, chaperones, RecQ, and
-Rho are related RNA-decay or stress proteins but are not assigned to the core
-complex from KEGG membership alone.
+This module covers the RNase E-centered degradosome scaffold and the coupled
+endonucleolytic, helicase-assisted, and 3'-to-5' exonucleolytic activities. PAP
+I, RppH, Hfq, polyphosphate enzymes, chaperones, RecQ, and Rho are related
+RNA-decay or stress proteins but are not assigned to the core complex from KEGG
+membership alone. The reusable module is scoped to Gammaproteobacteria and
+allows lineage-variable helicase and exonuclease partners.
 
 ## Functional Parts
 
 | Part | PSEPK realization | Assessment |
 |---|---|---|
-| Core assembly | RNase E Q88LM4 and enolase Q88MF9 | Covered |
+| Core scaffold | RNase E Q88LM4 | Covered |
 | Endonucleolytic initiation | RNase E Q88LM4 | Covered |
-| RNA unwinding | RhlB Q88NB7 | Covered |
-| Phosphorolytic exonucleolysis | PNPase Q88DW0 | Covered |
+| RNA unwinding | RhlB Q88NB7; RhlE-family alternatives Q88D48/Q88DQ7 | Candidate uncertain |
+| 3'-to-5' exonucleolysis | PNPase Q88DW0; RNase R Q88DE6 alternative | Candidate uncertain |
 
 ## Curation Findings
 
-Enolase is included as a structural degradosome participant, but its glycolytic
-molecular function is not misrepresented as RNA catalysis. Molecular functions
-are attached only to the RNase E, RhlB, and PNPase activity leaves. The broad
-KEGG RNA-degradation bucket is retained only as discovery context.
+Enolase Q88MF9 remains in the KEGG source bucket but is not used to satisfy the
+module: its existing KT2440 review states that degradosome membership has not
+been demonstrated, and pathway membership alone is not complex-membership
+evidence. Molecular functions are attached only to the RNase E, RhlB, and
+PNPase activity leaves. The broad KEGG RNA-degradation bucket is retained only
+as discovery context.
+
+The completed OpenScientist module report found direct KT2440 evidence for
+RNase E and PNPase function but not the exact complex composition. It therefore
+prompted two reusable variant axes: RhlB versus RhlE-family helicases and
+phosphorolytic PNPase versus hydrolytic RNase R. These alternatives are grounded
+in same-genus and close-relative evidence and remain unresolved in KT2440.
 
 ## Evidence
 
-- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial-rna-degradosome__ppu03018-deep-research-openscientist.md)
+- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial_rna_degradosome__ppu03018-deep-research-openscientist.md)
 - `modules/bacterial_rna_degradosome.yaml`
