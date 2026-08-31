@@ -277,6 +277,27 @@ def test_function_support_free_text_hypothesis(tmp_path: Path) -> None:
     assert record.source_selector == "free-text"
 
 
+def test_template_vars_use_explicit_placeholders_for_missing_source(
+    tmp_path: Path,
+) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.make_record(
+        organism="human",
+        gene="IBAT",
+        gene_symbol="IBAT",
+        taxon_id="NCBITaxon:9606",
+        taxon_label="Homo sapiens",
+        focus_type="core_function",
+        slug="free-text-hypothesis",
+        hypothesis_text="IBAT has a test function",
+    )
+
+    variables = ghr.template_vars(record, genes_root=genes_root)
+
+    assert variables["source_file"] == ghr.UNSPECIFIED_SOURCE
+    assert variables["source_selector"] == ghr.UNSPECIFIED_SOURCE
+
+
 def test_function_support_from_term_id(tmp_path: Path) -> None:
     genes_root = make_iba_workspace(tmp_path)
     args = ghr.parse_args(
