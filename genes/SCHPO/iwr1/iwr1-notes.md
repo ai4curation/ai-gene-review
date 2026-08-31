@@ -64,17 +64,27 @@ The pombe annotations transfer from experimentally characterized S. cerevisiae I
 - Whether the Pol II import mechanism is conserved in pombe. PomBase records a viable vegetative deletion population, but viability does not establish the molecular route.
 - Whether pombe iwr1 physically binds pombe Pol II (Rpb1/Rpb2 cleft) — no pombe IPI.
 - Targeted mechanistic deletion analysis in pombe. PomBase does record a viable deletion plus
-  high-throughput decreased mating efficiency, loss of stationary-phase viability, multiseptate
-  cells, and hydroxyurea resistance, but these do not establish the import mechanism.
+  high-throughput decreased mating efficiency and multiseptate cells [PMID:28410370,
+  "a systematic screen for morphological abnormalities of the mating process in fission yeast"],
+  loss of stationary-phase viability [PMID:34250083, "to screen for mutants showing altered
+  lifespan during stationary phase"], and hydroxyurea/MMS resistance [PMID:37787768,
+  "We assayed colony-growth phenotypes to measure the fitness of deletion mutants for 3509
+  non-essential genes in 131 conditions with different nutrients, drugs, and stresses."].
+  PomBase's current SPAC23H4.08 API record links these exact FYPO calls to the
+  cited high-throughput studies; none establishes the import mechanism.
 - Whether it has any Pol I/Pol III-related or transcription-elongation roles in pombe.
-- Precise molecular-function curation remains absent (MF ND). GO:0000993 RNA polymerase II
-  complex binding and GO:0030674 protein-macromolecule adaptor activity are available, but the
-  current review does not add either over PomBase's explicit ND call without direct pombe data.
+- Precise molecular-function curation remains absent (MF ND). This review proposes GO:0000993
+  RNA polymerase II complex binding by ISS. GO:0030674 protein-macromolecule adaptor activity
+  was considered but not proposed because cargo-to-karyopherin bridging has not been directly
+  shown in S. pombe and GO:0000993 more directly captures the ortholog-supported interaction.
+- PMID:16823372 was checked as a possible direct S. pombe localization source. Its cached
+  abstract does not identify iwr1, and the current iwr1 GOA has no HDA annotation citing it;
+  therefore it is not treated as gene-specific localization evidence.
 
 ## Curation reasoning for actions
 - BP `GO:0006606 protein import into nucleus`: well-supported by orthology + family; the IBA (best phylogenetic evidence) is the core representative; ISO and InterPro-IEA are corroborating duplicates — KEEP core one, mark the duplicate lower-evidence ones as non-core/over-annotated as appropriate (do not REMOVE, all consistent).
 - CC `GO:0005634 nucleus` + `GO:0005737 cytoplasm`: consistent with shuttling; IBA is_active_in reflects site of action. Keep; SubCell IEA duplicates are redundant but not wrong.
-- MF `GO:0003674` root with ND: keep as-is and do not add the previously proposed NEW
-  `GO:0000993` row. The inferred Pol II-binding model belongs in `core_functions` and knowledge
-  gaps, not as a new experimental-looking GOA assertion.
+- MF `GO:0003674` root with ND: keep the imported GOA row as reviewed, but recognize ND as a
+  no-data placeholder rather than a negative assertion. Propose `GO:0000993` as NEW with ISS,
+  consistent with the orthology evidence and without implying direct S. pombe experimentation.
 - Never REMOVE the ISO/IBA import annotation: it is a defensible orthology transfer from an experimentally solid budding-yeast function; the family signature (Pfam Iwr1) directly supports it.
