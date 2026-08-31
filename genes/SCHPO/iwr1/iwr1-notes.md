@@ -24,7 +24,9 @@ No experimental (IDA/IMP/IGI/IPI/IEP) annotation exists for **pombe** iwr1. Evid
 - **IEA** (GO_REF:0000002, InterPro IPR040150): protein import into nucleus (involved_in).
 - **ND** (GO_REF:0000015, PomBase): molecular_function root GO:0003674 — i.e. PomBase records **no experimentally-supported MF**.
 
-=> This is a genuinely **dark / understudied** gene in pombe: all functional inference is by orthology to the well-characterized budding-yeast IWR1, plus family signatures.
+=> This is a genuinely **MF-dark / mechanistically understudied** gene in pombe: its curated
+function is inferred by orthology and family signatures, although high-throughput deletion
+phenotypes exist.
 
 ## Ortholog literature (S. cerevisiae IWR1 = SGD:S000002273; the source of the ISO transfers)
 The pombe annotations transfer from experimentally characterized S. cerevisiae IWR1.
@@ -40,23 +42,39 @@ The pombe annotations transfer from experimentally characterized S. cerevisiae I
   - Originally identified via physical interaction with Pol II: "Iwr1, a protein conserved throughout eukaryotes, was originally identified by its physical interaction with RNA polymerase (Pol) II." [PMID:21695216 "Iwr1, a protein conserved throughout eukaryotes, was originally identified by its physical interaction with RNA polymerase (Pol) II."]
   - Broader PIC role: "Iwr1 plays an important role in preinitiation complex formation by all three nuclear RNA polymerases." [PMID:21695216 "Thus, Iwr1 plays an important role in preinitiation complex formation by all three nuclear RNA polymerases."]
   - iwr1 mutant defects: "an iwr1 mutant strain shows reduced association of TBP and Pol III at Pol III promoters, a decreased rate of Pol III transcription, and lower steady-state levels of Pol III transcripts." [PMID:21695216]
-  - Note: the Pol I/III effects are interpreted (in the field / Cramer lab) as downstream/indirect consequences of impaired Pol II import; the *direct, Pol II-specific* import function is the defining molecular role (Czeko 2011).
+  - The paper explicitly argues that the Pol III defect is not merely an indirect consequence
+    of reduced Pol II transcription and reports a weak or indirect Pol III association. These
+    are additional budding-yeast roles; conservation in pombe is untested.
+
+- **Gómez-Navarro & Estruch 2015** [PMID:26455955] — *S. cerevisiae*:
+  - IWR1 is non-essential and Iwr1-independent import routes exist; Pol II subunits can enter as
+    partial assemblies or individually. Iwr1 is therefore a facilitating, not obligate, importer.
+
+- **Gómez-Navarro et al. 2017** [PMID:28258010] — *S. cerevisiae*:
+  - Iwr1 interacts with elongating Pol II and contributes to polymerase disassembly from
+    chromatin, especially after DNA damage. Import is not its only demonstrated direct role.
 
 ## KNOWN (by orthology + family signature, not pombe experiment)
-- Molecular role: dedicated **RNA polymerase II assembly/import chaperone** — binds the assembled 12-subunit Pol II in its active-center cleft; not a general karyopherin but an adaptor that presents its own bipartite NLS to karyopherin-α.
+- Molecular role: facilitating **RNA polymerase II assembly/import chaperone** — binds the assembled 12-subunit Pol II in its active-center cleft; not a general karyopherin but an adaptor that presents its own bipartite NLS to karyopherin-α. Alternative import routes exist in budding yeast.
 - Biological role: **protein import into nucleus** (of Pol II specifically), enabling nuclear transcription; cyclic loading/unloading and recycling.
 - Localization: nucleocytoplasmic shuttling (cytoplasm + nucleus).
 
 ## NOT known for pombe iwr1 (knowledge gaps — primary deliverable)
 - No direct S. pombe experimental evidence for ANY molecular function (PomBase MF = ND).
-- Whether the Pol II import role is conserved and essential/non-essential in pombe (S. cerevisiae iwr1Δ is viable but growth-impaired; not tested here for pombe).
+- Whether the Pol II import mechanism is conserved in pombe. PomBase records a viable vegetative deletion population, but viability does not establish the molecular route.
 - Whether pombe iwr1 physically binds pombe Pol II (Rpb1/Rpb2 cleft) — no pombe IPI.
-- Deletion/mutant phenotype in pombe (no pombe phenotype annotation captured in GOA).
+- Targeted mechanistic deletion analysis in pombe. PomBase does record a viable deletion plus
+  high-throughput decreased mating efficiency, loss of stationary-phase viability, multiseptate
+  cells, and hydroxyurea resistance, but these do not establish the import mechanism.
 - Whether it has any Pol I/Pol III-related or transcription-elongation roles in pombe.
-- Precise molecular-function GO term: there is no dedicated "Pol II import chaperone" MF term; role is currently captured only at the BP level (protein import into nucleus) — genuine MF gap.
+- Precise molecular-function curation remains absent (MF ND). GO:0000993 RNA polymerase II
+  complex binding and GO:0030674 protein-macromolecule adaptor activity are available, but the
+  current review does not add either over PomBase's explicit ND call without direct pombe data.
 
 ## Curation reasoning for actions
 - BP `GO:0006606 protein import into nucleus`: well-supported by orthology + family; the IBA (best phylogenetic evidence) is the core representative; ISO and InterPro-IEA are corroborating duplicates — KEEP core one, mark the duplicate lower-evidence ones as non-core/over-annotated as appropriate (do not REMOVE, all consistent).
 - CC `GO:0005634 nucleus` + `GO:0005737 cytoplasm`: consistent with shuttling; IBA is_active_in reflects site of action. Keep; SubCell IEA duplicates are redundant but not wrong.
-- MF `GO:0003674` root with ND: this is a placeholder meaning "no MF determined"; keep as-is (standard), acknowledge the MF gap.
+- MF `GO:0003674` root with ND: keep as-is and do not add the previously proposed NEW
+  `GO:0000993` row. The inferred Pol II-binding model belongs in `core_functions` and knowledge
+  gaps, not as a new experimental-looking GOA assertion.
 - Never REMOVE the ISO/IBA import annotation: it is a defensible orthology transfer from an experimentally solid budding-yeast function; the family signature (Pfam Iwr1) directly supports it.
