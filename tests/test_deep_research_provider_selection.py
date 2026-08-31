@@ -67,6 +67,53 @@ def test_select_provider_rejects_conflicting_values() -> None:
         wrapper.select_provider("falcon", "perplexity")
 
 
+def test_supported_providers_cover_public_gene_recipes() -> None:
+    wrapper = load_wrapper()
+
+    assert set(wrapper.PROVIDERS) == {
+        "openai",
+        "perplexity",
+        "perplexity-lite",
+        "falcon",
+        "cyberian",
+        "codex",
+        "asta",
+        "openscientist",
+    }
+
+
+def test_select_provider_rejects_unknown_value() -> None:
+    wrapper = load_wrapper()
+
+    with pytest.raises(ValueError, match="Unsupported provider 'perplexty'"):
+        wrapper.select_provider(None, "perplexty")
+
+
+@pytest.mark.parametrize(
+    "provider_args",
+    [
+        ["--provider", "perplexty"],
+        ["perplexty"],
+        ["--provider", "openai", "--fallback", "perplexty"],
+    ],
+)
+def test_main_rejects_unknown_primary_and_fallback_providers(
+    monkeypatch: pytest.MonkeyPatch,
+    provider_args: list[str],
+) -> None:
+    wrapper = load_wrapper()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["deep_research_wrapper.py", "human", "TP53", *provider_args],
+    )
+
+    with pytest.raises(SystemExit) as error:
+        wrapper.main()
+
+    assert error.value.code == 2
+
+
 def test_generic_just_recipe_forwards_arguments(tmp_path: Path) -> None:
     fake_bin = tmp_path / "fake bin"
     fake_bin.mkdir()
