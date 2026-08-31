@@ -41,7 +41,7 @@ are strong comparative/synteny inferences, not direct KT2440 experiments.
 - [x] Define a reusable two-reaction module with exact KT2440 exemplars.
 - [x] Curate the four KT2440 gene reviews.
 - [x] Complete module + pathway + taxon OpenScientist research.
-- [ ] Complete remaining gene and generic-module OpenScientist jobs.
+- [x] Complete the generic-module OpenScientist job and link its report from the module.
 - [x] Obtain annotation-reviewer subagent sign-off.
 - [x] Validate and render all artifacts.
 - [x] Open one draft PR (PR #2533).
