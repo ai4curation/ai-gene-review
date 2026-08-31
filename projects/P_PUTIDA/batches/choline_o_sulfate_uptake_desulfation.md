@@ -38,7 +38,8 @@ in the tested mutant background.
 - [x] Integrate and adjudicate all five completed OpenScientist reports.
 - [x] Curate every GOA row and synthesize core functions.
 - [x] Validate and render all artifacts.
-- [ ] Open a single module PR and complete `/review` follow-up.
+- [x] Open single module PR [#2804](https://github.com/ai4curation/ai-gene-review/pull/2804).
+- [ ] Complete `/review` follow-up.
 
 ## Focused Genes
 
