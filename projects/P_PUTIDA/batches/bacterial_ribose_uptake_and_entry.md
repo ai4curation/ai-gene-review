@@ -72,8 +72,16 @@ beta-D-ribofuranose or universally essential.
 The Q88K36 UniProt record still carries legacy transporter EC `3.6.3.17` and an
 embedded `GO:0016787` hydrolase mapping. The latter is not present in the
 current fetched GOA table, so it is documented here rather than fabricated as
-an `existing_annotations` row. The same legacy EC occurs on Q88K37. These are
-UniProt metadata follow-ups and do not alter the current GOA-row decisions.
+an `existing_annotations` row. The same legacy EC occurs on Q88K37.
+
+Two additional UniProt-only GO cross-references are absent from the fetched
+GOA tables. Q88K37/RbsA-I carries the broad ARBA mapping `GO:0015749`
+monosaccharide transmembrane transport; the review proposes its child
+`GO:0015752` D-ribose transmembrane transport from the complete locus context.
+Q88K34/RbsK carries the keyword-derived `GO:0046872` metal ion binding mapping;
+the review records monovalent-cation dependence as an explicit follow-up
+question rather than fabricating a GOA row. These are metadata follow-ups and
+do not alter the current GOA-row decisions.
 
 ## Partition Lesson
 
