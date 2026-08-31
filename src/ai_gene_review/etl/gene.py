@@ -296,9 +296,20 @@ def fetch_gene_data(
     gene_dir = base_path / "genes" / organism / dir_name
     gene_dir.mkdir(parents=True, exist_ok=True)
 
-    # Resolve UniProt ID if not provided
+    # Existing reviews already record the accession that owns their machine-derived
+    # UniProt and GOA snapshots. Reuse it before querying by symbol: MOD-standard
+    # symbols are not always present in UniProt's gene_exact index (for example,
+    # S. pombe dca7 is stored under systematic locus SPBC17D11.08).
     if uniprot_id is None:
-        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        yaml_file = gene_dir / f"{file_prefix}-ai-review.yaml"
+        uniprot_id = _existing_review_uniprot_id(yaml_file)
+        if uniprot_id:
+            print(
+                f"  - Reusing UniProt ID {uniprot_id} from "
+                f"{file_prefix}-ai-review.yaml"
+            )
+        else:
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
 
     # Determine file paths
     uniprot_file = gene_dir / f"{file_prefix}-uniprot.txt"
@@ -484,6 +495,32 @@ def fetch_gene_data(
         result["panther_family_id"] = None
 
     return result
+
+
+def _existing_review_uniprot_id(review_file: Path) -> Optional[str]:
+    """Return the accession recorded by an existing gene review, if present.
+
+    The review ID is the repository's grounding for an already-seeded gene. It is
+    preferable to a fresh symbol lookup when a model-organism database symbol is
+    absent from UniProt's gene_exact index. The fetched UniProt request still
+    validates that the accession resolves.
+    """
+    if not review_file.exists():
+        return None
+
+    try:
+        review = yaml.safe_load(review_file.read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return None
+
+    accession = review.get("id")
+    if not isinstance(accession, str) or not accession.strip():
+        return None
+
+    accession = accession.strip()
+    if accession.startswith("UniProtKB:"):
+        accession = accession.split(":", 1)[1]
+    return accession or None
 
 
 def expand_organism_name(organism: str) -> str:
