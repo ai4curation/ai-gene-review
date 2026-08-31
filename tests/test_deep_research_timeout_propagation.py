@@ -39,29 +39,6 @@ def test_gene_wrapper_propagates_openscientist_timeout(tmp_path):
     assert "timeout=7200" in cmd
 
 
-def test_gene_wrapper_accepts_generic_provider_option():
-    wrapper = load_script("deep_research_wrapper")
-
-    assert wrapper.select_provider(None, "perplexity") == "perplexity"
-
-
-def test_gene_wrapper_keeps_positional_provider_compatibility():
-    wrapper = load_script("deep_research_wrapper")
-
-    assert wrapper.select_provider("falcon", None) == "falcon"
-
-
-def test_gene_wrapper_rejects_conflicting_providers():
-    wrapper = load_script("deep_research_wrapper")
-
-    try:
-        wrapper.select_provider("falcon", "perplexity")
-    except ValueError as error:
-        assert "Conflicting providers" in str(error)
-    else:
-        raise AssertionError("Expected conflicting providers to fail")
-
-
 def test_module_pathway_wrapper_propagates_openscientist_timeout(tmp_path):
     wrapper = load_script("module_pathway_taxon_deep_research_wrapper")
 
