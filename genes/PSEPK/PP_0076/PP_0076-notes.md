@@ -12,17 +12,21 @@ The adjacent KT2440 `betC` region was implicated in choline-O-sulfate
 utilization, but the available paper does not individually assay PP_0076 and
 shows that intact choline-O-sulfate still accumulates when `betC` is deleted
 [PMID:17116241, "This mutant still accumulated intact COS but failed to use
-this compound as carbon or nitrogen source."]. The current partner PP_0075 is
+this compound as carbon or nitrogen source."]. The adjacent partner PP_0075 is
 an SLC26A/SulP-STAS protein rather than a canonical ABC permease plus
-nucleotide-binding subunit.
+nucleotide-binding subunit. A syntenic Pseudomonas BetD homolog is nevertheless
+described by in-silico analysis as a "substrate-binding ABC transporter protein"
+[PMID:21369825]. Because orphan periplasmic binding proteins can use transporter
+components encoded elsewhere, ABC-complex membership cannot currently be
+confirmed or excluded.
 
 ## Curation position
 
 - Retain periplasmic localization.
 - Keep transport participation and exact choline binding unresolved pending
   direct substrate-binding or genetics for PP_0076.
-- Reject a stand-alone transporter MF and an asserted ABC-complex membership;
-  these conflict with the target architecture and current partner annotation.
+- Reject a stand-alone transporter MF, but leave ABC-complex membership
+  undecided pending identification of a cognate permease and ATPase.
 
 ## OpenScientist adjudication
 
