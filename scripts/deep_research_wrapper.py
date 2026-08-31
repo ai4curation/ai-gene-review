@@ -255,6 +255,13 @@ def _build_cmd(
     return cmd
 
 
+def _fallback_output_path(output_path: Path, provider: str) -> Path:
+    """Return the canonical gene research path for a fallback provider."""
+    return output_path.parent / (
+        f"{output_path.parent.name}-deep-research-{provider}{output_path.suffix}"
+    )
+
+
 def run_deep_research(
     organism: str,
     gene_id: str,
@@ -292,7 +299,7 @@ def run_deep_research(
 
         # Adjust output path for fallback providers
         if is_fallback:
-            prov_output = output_path.parent / f"{output_path.stem.rsplit('-', 1)[0]}-{prov}{output_path.suffix}"
+            prov_output = _fallback_output_path(output_path, prov)
         else:
             prov_output = output_path
 
