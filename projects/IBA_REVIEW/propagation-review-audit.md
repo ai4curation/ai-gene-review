@@ -43,18 +43,23 @@ curator used to place the IBD — and that such a source must **never** be marke
 AAK1: *"The IBA includes the human target itself among its sources, so that item is
 self-supporting and adds no independent propagation evidence."*
 
-The data refutes the inverted reading in **26 of 27** cases: the target does carry its
-own experimental annotation for the same term, which is precisely why it seeded the IBD.
+The data refutes the inverted reading in **all 27** cases: the target does carry its
+own experimental annotation for the term, which is precisely why it seeded the IBD.
 
 | Grounding on the target | rows |
 |---|---|
 | own experimental annotation at the **same** term (IDA/IMP/EXP/TAS) | 20 |
-| own experimental annotation at a **descendant** term | 6 |
-| no experimental annotation found in the cached set | 1 (LNX1, GO:0005737) |
+| own experimental annotation at a **descendant** term | 7 |
+| no experimental annotation found | 0 |
 
-The six descendant cases: LMTK2 `GO:0004672` → IDA `GO:0004674`; LMTK3 `GO:0004672` →
-EXP `GO:0106310`; AFF1 `GO:0006355` → IMP `GO:0032968`; LPGAT1 `GO:0005783` → IMP
-`GO:0005789`, `GO:0016746` → IDA `GO:0071617`, `GO:0012505` → the same ER evidence.
+The seven descendant cases: LMTK2 `GO:0004672` → IDA `GO:0004674`; LMTK3 `GO:0004672`
+→ EXP `GO:0106310`; AFF1 `GO:0006355` → IMP `GO:0032786`; LNX1 `GO:0005737` → IDA
+`GO:0005829`; LPGAT1 `GO:0005783` → IMP `GO:0005789`, `GO:0012505` → the same ER
+evidence, `GO:0016746` → IDA/IMP `GO:0071617`.
+
+> An earlier version of this table said "26 of 27" with LNX1 `GO:0005737` ungrounded.
+> That was an artifact of comparing GO ids literally; under ancestry closure LNX1 is
+> grounded by its own IDA to `GO:0005829` cytosol, which is `part_of` cytoplasm.
 
 Affected genes (all human): A4GNT, AADAC, AAK1, AASDHPPT, ADAMTSL5, AFF1, LMTK2,
 LMTK3, LNX1, LPAR6, LPCAT4, LPGAT1, LPIN2, LRBA, LRCH1, LRCH3.
