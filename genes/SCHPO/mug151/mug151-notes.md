@@ -128,8 +128,12 @@ NOT KNOWN (genuine gaps):
   block but NOT in the GOA TSV snapshot — noted; consistent with the SAP30/Sin3-HDAC family
   hypothesis. (Not present as a row in `mug151-goa.tsv`, so not added as an existing_annotation
   row; discussed in notes only.)
-- GO:0003674 ND / GO:0005575 ND / GO:0008150 ND (PomBase GO_REF:0000015): these are the honest
-  "not yet annotated" placeholders — ACCEPT as accurate reflections of the current knowledge
-  state for a dark gene (do not invent MF/BP/CC to replace them).
-- Meiosis: no separate GOA row for GO:0051321 in the TSV (it is the UniProt KW→GO). Treat the
-  meiotic role as expression-driven and unproven; capture in knowledge_gaps.
+- GO:0003674 MF ND and GO:0005575 CC ND (PomBase GO_REF:0000015): ACCEPT as accurate
+  "not yet annotated" placeholders; do not invent a molecular activity or experimentally
+  established active site/component to replace them.
+- GO:0008150 BP ND (PomBase GO_REF:0000015): UNDECIDED because UniProt separately asserts an
+  experimentally supported role in meiosis from PMID:16303567, whose gene-specific evidence
+  cannot be checked in the abstract-only cache.
+- Meiosis: no separate GOA row for GO:0051321 in the TSV (it is the UniProt KW→GO mapping).
+  Defer to UniProt's ECO:0000269 full-text curation while asking what mug151-specific result
+  supports the claim and whether GO:0051321 or a more specific process term is warranted.
