@@ -40,7 +40,8 @@ precursor-supply module.
 - [x] Define and research the reusable two-reaction module after paralog and boundary adjudication.
 - [x] Curate or revise all four focused gene reviews.
 - [x] Validate and render all artifacts.
-- [ ] Open one module PR and complete `/review` follow-up.
+- [x] Open one module PR: [#2808](https://github.com/ai4curation/ai-gene-review/pull/2808).
+- [ ] Complete `/review` follow-up.
 
 ## Focused Genes
 
