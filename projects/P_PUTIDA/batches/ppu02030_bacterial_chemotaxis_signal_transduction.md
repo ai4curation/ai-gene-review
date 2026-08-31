@@ -34,7 +34,7 @@ coupling function. The adjacent CheW-domain protein Q88EW9 remains unresolved.
 | Response output | CheY Q88EW2 | Covered |
 | Signal reset | CheZ Q88EW3 | Covered separately from CheY |
 | Motor switch | FliM Q88EU5, FliN Q88EU6, and FliG Q88ET5 | Covered as the C-ring complex |
-| Proton-driven output | MotAB Q88DC2/Q88DC3 and MotCD Q88EW6/Q88EW7 | Covered as two non-redundant stator complexes |
+| Proton-driven output | MotAB Q88DC2/Q88DC3 and MotCD Q88EW6/Q88EW7 | Covered as conditionally specialized stator complexes |
 
 ## Curation Findings
 
