@@ -11,17 +11,18 @@ autolink_gene_symbols: false
 
 - Module: `bacterial_chromosomal_dna_replication`
 - Source bucket: KEGG `ppu03030` (DNA replication)
-- Focused genes: nine proteins spanning seven mechanistic parts
+- Focused reviews: nine proteins spanning seven mechanistic parts
+- Additional loader exemplars: HolA, HolB, and HolC
 - Satisfiability: complete at the conserved replisome level
-- OpenScientist module and gene research: running
+- OpenScientist module + pathway + taxon research: complete
 
 ## Boundary
 
 This module covers DnaA initiation, DnaB/SSB fork opening and protection, DnaG
 priming, DNA polymerase III synthesis and proofreading, DnaN processivity,
-DnaX clamp loading, and LigA nick sealing. DNA polymerase I, RNase H, repair
-exonucleases, and LigB are adjacent replication/repair activities outside this
-focused replisome realization.
+DnaX/HolA/HolB/HolC clamp loading, and LigA nick sealing. DNA polymerase I,
+RNase H, repair exonucleases, and LigB are adjacent replication/repair
+activities outside this focused replisome realization.
 
 ## Functional Parts
 
@@ -32,7 +33,7 @@ focused replisome realization.
 | Primer synthesis | DnaG P0A118 | Covered |
 | Polymerase core and proofreading | DnaE Q88MG5 and DnaQ Q88FF6 | Covered |
 | Sliding-clamp processivity | DnaN P0A120 | Covered |
-| Clamp loading | DnaX Q88F30 | Covered |
+| Clamp loading | DnaX Q88F30, HolA Q88DM9, HolB Q88LG7, HolC Q88P74 | Covered; psi/theta assignment unresolved |
 | Nick sealing | LigA Q88F25 | Covered |
 
 ## Curation Findings
@@ -50,6 +51,11 @@ out-of-boundary DNA polymerase I, RNase H, repair-exonuclease, auxiliary clamp-
 loader, and LigB entries as unreviewed. DnaA is included in the focused module
 from its origin-initiation role but is primarily partitioned to `ppu02020`, so
 it is not a `ppu03030` TSV member.
+
+The completed OpenScientist report independently recovers all seven parts. It
+also flags PP_0353, PP_4768, and PP_3893 as non-core candidates requiring
+separate gene review; none is used to satisfy the module because DnaQ and DnaB
+already cover the corresponding proofreading and helicase roles.
 
 ## Evidence
 
