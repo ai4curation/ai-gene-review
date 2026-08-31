@@ -94,8 +94,9 @@ NOT KNOWN (genuine gaps):
   demonstrated in fission yeast.
 - Whether mug151 has a genuine, specific meiotic role, or whether its "mug" status simply
   reflects meiotic transcriptional induction of a broadly-acting nuclear regulator, is
-  unresolved. The cached abstract of the 2005 screen does not mention mug151, so its
-  gene-specific assay result cannot be determined without the full text.
+  unresolved. UniProt asserts an experimentally supported meiotic role from PMID:16303567,
+  but the cached abstract of that screen does not mention mug151, so its gene-specific
+  assay result cannot be verified without the full text.
 - No characterized phenotype tying loss of mug151 to a defined biological process.
 
 ## 2026-08-31 research refresh
