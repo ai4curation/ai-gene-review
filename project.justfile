@@ -271,6 +271,11 @@ litscan-module-member *args="":
 #   just deep-research-openai METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
 #   just deep-research-openai human TP53 --fallback perplexity-lite  # fallback on failure/timeout
 #   just deep-research-openai human CFAP300 --extra-args --param "model=gpt-4o"
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
+
 deep-research-openai organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
 
