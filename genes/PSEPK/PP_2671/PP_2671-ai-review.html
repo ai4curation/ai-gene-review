@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2671 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2671</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JH8" target="_blank" class="term-link">
+                        Q88JH8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">pedS2</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2671";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JH8" data-a="DESCRIPTION: PedS2 is a membrane sensor histidine kinase in the..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PedS2 is a membrane sensor histidine kinase in the PedS2/PedR2 two-component system. Without usable lanthanides it phosphorylates PedR2, promoting pedE transcription and contributing to pedH repression. Lanthanum lowers PedS2 kinase output by a direct or indirect mechanism, shifting periplasmic PQQ-dependent alcohol oxidation toward lanthanide-dependent PedH.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                                    GO:0000155
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay sensor kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0000155" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and experimentally supported for PedS2.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30158283" target="_blank" class="term-link">
+                                        PMID:30158283
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response regulator PedR2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct; PedS2 and PedR2 form the phosphorelay controlling the lanthanide switch.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004673" target="_blank" class="term-link">
+                                    GO:0004673
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0004673" data-r="GO_REF:0000003" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less informative than phosphorelay sensor kinase activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad parent of the PedS2/PedR2 phosphorelay.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct for this transmembrane sensor, but localization is supporting context.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0016301" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but excessively broad relative to phosphorelay sensor kinase activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0016740" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but excessively broad relative to phosphorelay sensor kinase activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JH8" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible for the histidine-kinase architecture but not the defining PedS2 function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Membrane sensor histidine kinase that phosphorylates PedR2 and controls the lanthanide-responsive choice between PedE and PedH alcohol oxidation.</h3>
+                <span class="vote-buttons" data-g="Q88JH8" data-a="FUNCTION: Membrane sensor histidine kinase that phosphorylat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                            phosphorelay sensor kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30158283" target="_blank" class="term-link">
+                                PMID:30158283
+                            </a>
+
+                        </span>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2671/PP_2671-uniprot.txt
+
+                        </span>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30158283" target="_blank" class="term-link">
+                            PMID:30158283
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The PedS2/PedR2 Two-Component System Is Crucial for the Rare Earth Element Switch in Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PedS2 phosphorylates PedR2 in the absence of lanthanum.</div>
+
+                        <div class="finding-text">"the sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response regulator PedR2"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2671/PP_2671-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 PP_2671</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PP_2671 / PedS2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does a lanthanide bind PedS2 directly, or is kinase output controlled through an unidentified periplasmic partner?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JH8" data-a="Q: Does a lanthanide bind PedS2 directly, or is kinas..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute PedS2 autophosphorylation and PedR2 phosphotransfer with defined lanthanides and candidate periplasmic partners.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: phosphorelay assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88JH8" data-a="EXPERIMENT: Reconstitute PedS2 autophosphorylation and PedR2 p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2671-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JH8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_2671 / PedS2 (UniProt Q88JH8)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T06:27:08.628496</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2671-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2671-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_2671-peds2-uniprot-q88jh8">Functional Annotation Report: PP_2671 / PedS2 (UniProt Q88JH8)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> (strain KT2440 / ATCC 47054 / DSM 6125), PSEPK<br />
+<strong>Locus tag:</strong> PP_2671 | <strong>Gene name:</strong> <em>pedS2</em> | <strong>UniProt:</strong> Q88JH8<br />
+<strong>EC:</strong> 2.7.13.3 (histidine kinase) | <strong>Length:</strong> 424 aa | <strong>KEGG:</strong> ppu:PP_2671</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>PP_2671 encodes <strong>PedS2</strong>, the <strong>sensor histidine kinase</strong> of the <strong>PedS2/PedR2 two‑component signal‑transduction system</strong> of <em>Pseudomonas putida</em> KT2440. Its primary function is to <strong>sense the environmental availability of rare‑earth elements (lanthanides, Ln³⁺)</strong> and to transduce this signal, by ATP‑dependent autophosphorylation on a conserved histidine and subsequent phosphotransfer to its cognate LuxR‑type response regulator <strong>PedR2 (PP_2672)</strong>, into a transcriptional output. This system operates the so‑called <strong>"REE‑switch"</strong> that inversely regulates the two functionally redundant periplasmic pyrroloquinoline‑quinone (PQQ)‑dependent ethanol dehydrogenases — the Ca²⁺‑dependent <strong>PedE</strong> and the lanthanide‑dependent <strong>PedH</strong> — allowing the bacterium to match its periplasmic alcohol/aldehyde (volatile organic compound) oxidation machinery to metal availability. PedS2 is an <strong>inner‑membrane protein</strong> that perceives its signal in the <strong>periplasm</strong> and executes catalysis (autokinase activity) in the <strong>cytoplasm</strong>.</p>
+<p>The gene identity is unambiguous: Wehrmann et al. (2018) explicitly map the locus pair <strong>PP_2671/PP_2672 to PedS2/PedR2</strong>, matching the UniProt annotation (histidine kinase, EC 2.7.13.3, membrane, HAMP + HATPase domains).</p>
+<hr />
+<h2 id="2-gene-protein-identity-verification">2. Gene / Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Symbol matches description</td>
+<td>✔ PP_2671 = <em>pedS2</em>; UniProt "histidine kinase" matches the characterized sensor kinase PedS2</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✔ <em>P. putida</em> KT2440 (PSEPK)</td>
+</tr>
+<tr>
+<td>Domains align with literature</td>
+<td>✔ HAMP domain + HATPase_C/His‑kinase catalytic domain = canonical two‑component sensor kinase</td>
+</tr>
+<tr>
+<td>Literature specificity</td>
+<td>✔ Direct primary‑literature characterization of PP_2671 as PedS2 (Wehrmann et al., 2018)</td>
+</tr>
+</tbody>
+</table>
+<p>There is <strong>no ambiguity</strong>: this locus is directly and specifically characterized in the primary literature.</p>
+<hr />
+<h2 id="3-primary-molecular-function">3. Primary Molecular Function</h2>
+<h3 id="31-enzymatic-reaction-ec-27133">3.1 Enzymatic reaction (EC 2.7.13.3)</h3>
+<p>PedS2 is a <strong>protein‑histidine kinase</strong>. As a two‑component sensor kinase it catalyzes:</p>
+<ol>
+<li><strong>Autophosphorylation:</strong> ATP + protein L‑histidine → ADP + protein N‑phospho‑L‑histidine (on the conserved His of the DHp/H‑box), catalyzed by the C‑terminal HATPase (GHKL‑family) ATP‑binding domain.</li>
+<li><strong>Phosphotransfer:</strong> the high‑energy phospho‑His donates the phosphoryl group to a conserved <strong>aspartate</strong> on the receiver domain of the response regulator <strong>PedR2</strong>.</li>
+</ol>
+<p>The "substrate" of the sensor kinase in the signaling sense is therefore its <strong>cognate response regulator PedR2 (PP_2672)</strong>; the chemical substrate/cofactor of the catalytic reaction is <strong>ATP</strong> (UniProt GO:0005524 ATP binding; GO:0000155 phosphorelay sensor kinase activity).</p>
+<h3 id="32-input-signal-ligand-specificity">3.2 Input signal / ligand specificity</h3>
+<p>The physiological <strong>input signal is the availability of lanthanide (Ln³⁺) rare‑earth elements</strong> (experimentally probed with La³⁺). Evidence (Wehrmann et al., 2018):<br />
+- In the <strong>absence of La³⁺</strong>, PedS2 is kinase‑active → phosphorylates PedR2.<br />
+- In the <strong>presence of La³⁺</strong>, PedS2 kinase activity is <strong>lowered</strong>, proposed to occur through <strong>direct binding of the metal ion to the periplasmic region of PedS2</strong> (or an indirect interaction), reducing phospho‑PedR2 levels.</p>
+<p>PedS2 is described as a <strong>putative La³⁺‑binding protein</strong>; high iron can cause <strong>mismetallation</strong> of PedS2 and other La³⁺‑binding proteins, shifting the Ln³⁺ concentration required for switching (Wehrmann et al., 2019).</p>
+<hr />
+<h2 id="4-signaling-pathway-and-downstream-output-the-reeswitch">4. Signaling Pathway and Downstream Output ("the REE‑switch")</h2>
+<div class="codehilite"><pre><span></span><code><span class="nx">Ln3</span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nx">periplasm</span><span class="p">)</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="nx">binds</span><span class="w"> </span><span class="nx">periplasmic</span><span class="w"> </span><span class="nx">sensor</span><span class="w"> </span><span class="nx">region</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">PedS2</span><span class="p">)</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">  </span><span class="nx">PedS2</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_2671</span><span class="p">)</span><span class="w">  </span><span class="err">──</span><span class="w"> </span><span class="nx">ATP</span><span class="w"> </span><span class="err">──►</span><span class="w">  </span><span class="nx">His</span><span class="o">~</span><span class="nx">P</span><span class="w">   </span><span class="p">(</span><span class="nx">kinase</span><span class="w"> </span><span class="nx">activity</span><span class="w"> </span><span class="nx">HIGH</span><span class="w"> </span><span class="nx">when</span><span class="w"> </span><span class="nx">Ln3</span><span class="o">+</span><span class="w"> </span><span class="nx">LOW</span><span class="p">)</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="nx">phosphotransfer</span>
+<span class="w">      </span><span class="err">▼</span>
+<span class="w">  </span><span class="nx">PedR2</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_2672</span><span class="p">,</span><span class="w"> </span><span class="nx">LuxR</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">RR</span><span class="p">)</span><span class="w"> </span><span class="err">──</span><span class="w"> </span><span class="nx">Asp</span><span class="o">~</span><span class="nx">P</span>
+<span class="w">      </span><span class="err">│</span>
+<span class="w">      </span><span class="err">├──►</span><span class="w">  </span><span class="nx">ACTIVATES</span><span class="w">  </span><span class="nx">pedE</span><span class="w">  </span><span class="p">(</span><span class="nx">Ca2</span><span class="o">+-</span><span class="nx">dependent</span><span class="w"> </span><span class="nx">PQQ</span><span class="o">-</span><span class="nx">EDH</span><span class="p">)</span>
+<span class="w">      </span><span class="err">└──►</span><span class="w">  </span><span class="nx">REPRESSES</span><span class="w">  </span><span class="nx">pedH</span><span class="w">  </span><span class="p">(</span><span class="nx">Ln3</span><span class="o">+-</span><span class="nx">dependent</span><span class="w"> </span><span class="nx">PQQ</span><span class="o">-</span><span class="nx">EDH</span><span class="p">)</span>
+</code></pre></div>
+
+<ul>
+<li><strong>Low/no lanthanide:</strong> active PedS2 → phospho‑PedR2 → <strong>pedE ON, pedH OFF</strong> → alcohol oxidation via the Ca²⁺ enzyme PedE.</li>
+<li><strong>Lanthanide present:</strong> reduced PedS2 activity → less phospho‑PedR2 → <strong>pedE OFF</strong>, <strong>pedH de‑repressed</strong> (and additionally activated by a still‑unknown regulatory module) → oxidation via the Ln³⁺ enzyme PedH.</li>
+</ul>
+<p>This is the <strong>first detailed molecular characterization of a rare‑earth‑element switch in a non‑methylotrophic bacterium</strong> (Wehrmann et al., 2018). PedR2 has a <strong>dual regulatory role</strong> (activator of <em>pedE</em>, repressor of <em>pedH</em>).</p>
+<p><strong>Broader pathway context:</strong> PedE and PedH are the terminal sensing/redundant enzymes of a <strong>periplasmic oxidation system</strong> that oxidizes a broad range of alcohols and aldehydes (volatile organic compounds such as ethanol and 2‑phenylethanol), important for detoxification and catabolism (Wehrmann et al., 2017). Cytoplasmic uptake of lanthanides (which tunes the switch and enables PedH‑dependent growth at low REE concentrations) is mediated by the <strong>ABC transporter PedA1A2BC</strong>, encoded in the same <em>ped</em> gene cluster (Wehrmann et al., 2019). Thus PedS2 is the regulatory sensor at the head of an integrated periplasmic C1/alcohol‑oxidation and REE‑adaptation module.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<ul>
+<li><strong>UniProt:</strong> Membrane.</li>
+<li><strong>Bioinformatic topology (this work, Kyte‑Doolittle hydropathy, window 19 on the 424‑aa sequence):</strong> an N‑terminal transmembrane helix (~residues 17–30) and a second hydrophobic/TM segment (~residues 147–160) flank a ~117‑residue <strong>periplasmic sensor loop (~30–147)</strong>; these are followed by the cytoplasmic <strong>HAMP linker (161–213)</strong> and the cytoplasmic <strong>histidine‑kinase catalytic domain (236–424)</strong>.</li>
+<li><strong>Interpretation:</strong> PedS2 is an <strong>integral inner‑membrane</strong> sensor kinase. It <strong>perceives the Ln³⁺ signal in the periplasm</strong> and <strong>carries out autophosphorylation/phosphotransfer in the cytoplasm</strong>, with the HAMP domain transmitting the conformational signal across the membrane. This topology is fully consistent with the experimental proposal that La³⁺ binds the periplasmic region.</li>
+</ul>
+<hr />
+<h2 id="6-domain-architecture-evidence-from-structuresequence">6. Domain Architecture (evidence from structure/sequence)</h2>
+<table>
+<thead>
+<tr>
+<th>Region (aa)</th>
+<th>Feature</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~17–30</td>
+<td>TM helix 1</td>
+<td>Membrane anchoring</td>
+</tr>
+<tr>
+<td>~30–147</td>
+<td>Periplasmic loop</td>
+<td>Putative lanthanide (Ln³⁺) sensing / ligand binding</td>
+</tr>
+<tr>
+<td>~147–160</td>
+<td>TM helix 2</td>
+<td>Membrane anchoring</td>
+</tr>
+<tr>
+<td>161–213</td>
+<td><strong>HAMP</strong> domain (IPR003660)</td>
+<td>Transmembrane signal relay to the kinase core</td>
+</tr>
+<tr>
+<td>236–424</td>
+<td><strong>Histidine‑kinase</strong> catalytic core: DHp (His phosphoacceptor) + HATPase_C/GHKL ATP‑binding (IPR003594, IPR036890, IPR005467)</td>
+<td>Autokinase + phosphotransfer; ATP binding; dimerization (GO:0046983)</td>
+</tr>
+</tbody>
+</table>
+<p>Family classification (InterPro IPR050482): <strong>Sensor histidine kinase of two‑component systems</strong>.</p>
+<h3 id="61-conserved-catalytic-residues-bioinformatic-evidence-this-work">6.1 Conserved catalytic residues (bioinformatic evidence, this work)</h3>
+<p>Sequence analysis of the cytoplasmic kinase core confirms all motifs required for a catalytically competent HisKA/GHKL kinase:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Position</th>
+<th>Sequence context</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>H‑box</strong> (phosphoacceptor His)</td>
+<td><strong>His238</strong></td>
+<td>L‑A‑Q‑T‑L‑<strong>H</strong>‑D‑D‑L‑G</td>
+<td>Site of ATP‑dependent autophosphorylation</td>
+</tr>
+<tr>
+<td>N‑box</td>
+<td>~res 300–330</td>
+<td>—</td>
+<td>Coordinates Mg²⁺/ATP</td>
+</tr>
+<tr>
+<td><strong>G1 / D‑box</strong> (DxGxG)</td>
+<td><strong>375–379</strong></td>
+<td><strong>DNGCG</strong></td>
+<td>ATP phosphate binding (Bergerat fold)</td>
+</tr>
+<tr>
+<td><strong>G2 / G‑box</strong></td>
+<td><strong>411–413</strong></td>
+<td><strong>GGG</strong></td>
+<td>ATP‑lid / nucleotide binding</td>
+</tr>
+</tbody>
+</table>
+<p>The intact H‑box His238 and GHKL ATP‑binding boxes provide independent structural evidence that PedS2 autophosphorylates on <strong>His238</strong> and then transfers phosphate to the Asp of PedR2 — consistent with the experimentally demonstrated PedR2 phosphorylation.</p>
+<h2 id="62-genomic-context-the-ped-cluster-uniprot-survey-pp_2662pp_2683">6.2 Genomic context (the <em>ped</em> cluster; UniProt survey PP_2662–PP_2683)</h2>
+<p>PedS2 (PP_2671) sits within a self‑contained periplasmic PQQ‑dependent oxidation cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Product</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_2671</strong></td>
+<td><strong>PedS2</strong> (this protein) — sensor histidine kinase</td>
+<td>Lanthanide sensing / signal input</td>
+</tr>
+<tr>
+<td><strong>PP_2672</strong></td>
+<td><strong>PedR2 / ExaE</strong> — LuxR‑type response regulator (212 aa)</td>
+<td>Cognate partner; activates <em>pedE</em>, represses <em>pedH</em></td>
+</tr>
+<tr>
+<td>PP_2674</td>
+<td><strong>PedE</strong> — Ca²⁺‑dependent PQQ‑ADH (EC 1.1.2.8, 631 aa)</td>
+<td>Effector enzyme (low‑REE)</td>
+</tr>
+<tr>
+<td>PP_2679</td>
+<td><strong>PedH</strong> — lanthanide‑dependent PQQ‑ADH (595 aa)</td>
+<td>Effector enzyme (high‑REE)</td>
+</tr>
+<tr>
+<td>PP_2680</td>
+<td>AldB‑II aldehyde dehydrogenase</td>
+<td>Downstream aldehyde oxidation</td>
+</tr>
+<tr>
+<td>PP_2681</td>
+<td>PqqD2 (PQQ biosynthesis)</td>
+<td>Cofactor supply</td>
+</tr>
+<tr>
+<td>PP_2675 / PP_2676</td>
+<td>Cytochrome c / periplasmic binding protein</td>
+<td>Electron transfer / periplasmic function</td>
+</tr>
+<tr>
+<td>PP_2662 / PP_2669 / PP_2667–2668</td>
+<td>Porin / OMP / ABC transporter</td>
+<td>Substrate/metal traffic</td>
+</tr>
+<tr>
+<td><strong>PP_2664 / PP_2665 (AgmR)</strong></td>
+<td>Second sensor kinase / DNA‑binding response regulator</td>
+<td>Candidate for the additional, still‑unidentified <em>pedH</em>‑activating module</td>
+</tr>
+</tbody>
+</table>
+<p>This co‑localization with the cognate response regulator, both effector dehydrogenases, PQQ‑biosynthesis and electron‑transfer genes pinpoints PedS2 as the dedicated regulatory sensor gating this periplasmic alcohol/aldehyde‑oxidation pathway. (Note: UniProt labels PP_2672 "ExaE"; Wehrmann et al. 2018 name the same protein PedR2 — they are identical.)</p>
+<hr />
+<h2 id="7-supported-vs-refuted-hypotheses">7. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- PP_2671 = PedS2, a two‑component <strong>sensor histidine kinase</strong> (EC 2.7.13.3). <em>(UniProt; Wehrmann 2018)</em><br />
+- PedS2 phosphorylates the LuxR‑type response regulator <strong>PedR2 (PP_2672)</strong>. <em>(Wehrmann 2018)</em><br />
+- PedS2 activity responds <strong>inversely to lanthanide availability</strong>; it is a putative La³⁺‑binding sensor. <em>(Wehrmann 2018, 2019)</em><br />
+- Output is the <strong>REE‑switch</strong> inversely regulating <em>pedE</em> (Ca²⁺‑PQQ‑EDH) and <em>pedH</em> (Ln³⁺‑PQQ‑EDH). <em>(Wehrmann 2018)</em><br />
+- PedS2 is an <strong>inner‑membrane protein with a periplasmic sensing region</strong>. <em>(UniProt; topology analysis; Wehrmann 2018)</em><br />
+- PedS2 retains all catalytic motifs (H‑box His238, GHKL ATP‑binding boxes) of a functional autokinase. <em>(sequence analysis, this work)</em><br />
+- PedS2 is co‑clustered with PedR2/ExaE, PedE, PedH, PQQ‑biosynthesis and a second TCS (PP_2664/AgmR). <em>(UniProt genomic survey)</em></p>
+<p><strong>Refuted / ruled out</strong><br />
+- PP_2671 is <strong>not</strong> a metabolic/biosynthetic enzyme acting on a small‑molecule substrate; it is a signal‑transduction protein‑kinase.<br />
+- The gene symbol is <strong>not</strong> ambiguous in this organism — it is specifically the <em>ped</em> cluster sensor kinase, not a generic/orthologous histidine kinase from another species.</p>
+<hr />
+<h2 id="8-evidence-quality-and-limitations">8. Evidence Quality and Limitations</h2>
+<ul>
+<li><strong>Direct experimental evidence</strong> (adaptive evolution, site‑directed mutagenesis, transcriptional reporter fusions, complementation) supports the physiological role of PedS2 in the REE‑switch (Wehrmann et al., 2018; genetic/physiological data 2019).</li>
+<li>The <strong>exact molecular mechanism of lanthanide sensing</strong> (direct La³⁺ binding to the periplasmic domain vs. indirect interaction) is <strong>not yet definitively established</strong> — the authors present it as a supported hypothesis. No purified‑protein biochemistry or structure of PedS2 with bound Ln³⁺ has been reported here.</li>
+<li>Membrane topology and the conserved His/Asp phosphotransfer chemistry are inferred from <strong>sequence/domain (bioinformatic) analysis</strong> consistent with the two‑component‑kinase family, not from an experimental PedS2 structure.</li>
+<li>The additional activating module for <em>pedH</em> remains unidentified.</li>
+</ul>
+<p><strong>Future directions:</strong> purified‑protein autokinase/phosphotransfer assays; identification of the La³⁺‑coordinating residues in the periplasmic domain (site‑directed mutagenesis); structural determination; identification of the additional <em>pedH</em>‑activating regulator.</p>
+<hr />
+<h2 id="8b-physiological-evolutionary-significance-context">8b. Physiological &amp; Evolutionary Significance (context)</h2>
+<ul>
+<li><strong>A conserved regulatory paradigm — the "lanthanide switch."</strong> The inverse, REE‑dependent regulation of Ca²⁺‑ vs Ln³⁺‑utilizing PQQ dehydrogenases that PedS2 operates is a recurring theme across bacteria; it was first described in methylotrophs and is the subject of multiple authoritative reviews (Skovran et al. 2019, PMID 31166187; Featherston &amp; Cotruvo 2021, PMID 32979423; Daumann et al. 2022, PMID 36167440). A mechanistic model for the switch in <em>Paracoccus denitrificans</em> was recently proposed (Parekh &amp; Spiro 2025, PMID 40846390). The <em>P. putida</em> PedS2/PedR2 study represents the <strong>first detailed characterization of this switch in a non‑methylotroph</strong> (Wehrmann et al. 2018).</li>
+<li><strong>Effector‑enzyme substrate range (what the pathway ultimately does).</strong> The PQQ‑ADHs gated by PedS2 are broad‑substrate periplasmic enzymes oxidizing volatile alcohols/aldehydes — e.g. ethanol and 2‑phenylethanol (Wehrmann et al. 2017, PMID 28655819) — and are of biotechnological interest (soluble, direct electron transfer, REE cofactor; PedE engineering: Wehrmann &amp; Klebensberger 2018, PMID 29239114). Orthologues <strong>IsPedE/IsPedH</strong> in <em>Ideonella sakaiensis</em> participate in <strong>ethylene‑glycol</strong> metabolism, underscoring evolutionary conservation of the module (Hachisuka et al. 2022, PMID 36289066).</li>
+<li><strong>Note on the kinase's "substrate specificity."</strong> PedS2 itself has <strong>no small‑molecule catalytic substrate</strong>. Its specificity is (i) <strong>ATP</strong> for autophosphorylation and (ii) the <strong>response regulator PedR2</strong> for phosphotransfer, with <strong>lanthanide ions acting as the modulatory input ligand</strong>. The cellular La³⁺ response in <em>P. putida</em> is substrate‑specific and also intersects glycerol metabolism (Wehrmann et al. 2020, PMID 32345644).</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ol>
+<li>Wehrmann M, Berthelot C, Billard P, Klebensberger J. <strong>The PedS2/PedR2 Two‑Component System Is Crucial for the Rare Earth Element Switch in <em>Pseudomonas putida</em> KT2440.</strong> <em>mSphere</em> 3(4):e00376‑18 (2018). PMID: 30158283. — <em>Direct identification of PP_2671/PP_2672 as PedS2/PedR2 and the sensing/phosphorylation mechanism.</em></li>
+<li>Wehrmann M, Berthelot C, Billard P, Klebensberger J. <strong>Rare Earth Element (REE)‑Dependent Growth of <em>Pseudomonas putida</em> KT2440 Relies on the ABC‑Transporter PedA1A2BC and Is Influenced by Iron Availability.</strong> <em>Front Microbiol</em> 10:2494 (2019). PMID: 31736923. — <em>PedS2 as a putative La³⁺‑binding protein; iron mismetallation; lanthanide uptake.</em></li>
+<li>Wehrmann M, Billard P, Martin‑Meriadec A, Zegeye A, Klebensberger J. <strong>Functional Role of Lanthanides in Enzymatic Activity and Transcriptional Regulation of PQQ‑Dependent Alcohol Dehydrogenases in <em>Pseudomonas putida</em> KT2440.</strong> <em>mBio</em> 8(3):e00570‑17 (2017). PMID: 28655819. — <em>Discovery/characterization of PedE and PedH and the periplasmic PQQ‑ADH oxidation system.</em></li>
+<li>Wehrmann M, Klebensberger J. <strong>Engineering thermal stability and solvent tolerance of the soluble quinoprotein PedE from <em>Pseudomonas putida</em> KT2440.</strong> (2018). PMID: 29239114. — <em>Confirms PedE = PP_2674, periplasmic PQQ‑ADH; biotechnological relevance.</em></li>
+<li>Wehrmann M, Toussaint M, Pfannstiel J, Billard P, Klebensberger J. <strong>The Cellular Response to Lanthanum Is Substrate Specific and Reveals a Novel Route for Glycerol Metabolism in <em>Pseudomonas putida</em> KT2440.</strong> (2020). PMID: 32345644. — <em>Substrate‑specific La³⁺ response.</em></li>
+<li>Hachisuka S, et al. <strong>Ethylene glycol metabolism in the PET‑degrading bacterium <em>Ideonella sakaiensis</em>.</strong> (2022). PMID: 36289066. — <em>Conserved PedE/PedH orthologues (IsPedE/IsPedH) in ethylene‑glycol metabolism.</em></li>
+<li>Reviews on the lanthanide switch / lanthanome: Skovran et al. 2019 (PMID 31166187); Featherston &amp; Cotruvo 2021 (PMID 32979423); Daumann et al. 2022 (PMID 36167440); Parekh &amp; Spiro 2025 (PMID 40846390).</li>
+<li>UniProt Q88JH8; InterPro IPR050482, IPR003660 (HAMP), IPR003594/IPR036890 (HATPase), IPR005467 (His‑kinase).</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2671-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2671-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:30158283</li>
+<li>PMID:31736923</li>
+<li>PMID:28655819</li>
+<li>PMID:29239114</li>
+<li>PMID:32345644</li>
+<li>PMID:36289066</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2671-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JH8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_2671-peds2-curation-notes">PP_2671 / PedS2 curation notes</h1>
+<p>PP_2671 is PedS2, the membrane sensor histidine kinase of the PedS2/PedR2<br />
+lanthanide switch. The full-text study directly identifies PP_2671 as PedS2 and<br />
+shows that PedS2 phosphorylates PedR2 without lanthanum [PMID:30158283, "the<br />
+sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response<br />
+regulator PedR2"].</p>
+<p>The direct input remains unresolved. Lanthanum lowers PedS2 kinase output, but<br />
+the study leaves open direct metal binding versus an indirect periplasmic<br />
+interaction. No lanthanide-binding MF is therefore assigned.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JH8
+gene_symbol: PP_2671
+aliases: [pedS2]
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: &gt;-
+  PedS2 is a membrane sensor histidine kinase in the PedS2/PedR2 two-component
+  system. Without usable lanthanides it phosphorylates PedR2, promoting pedE
+  transcription and contributing to pedH repression. Lanthanum lowers PedS2
+  kinase output by a direct or indirect mechanism, shifting periplasmic
+  PQQ-dependent alcohol oxidation toward lanthanide-dependent PedH.
+existing_annotations:
+  - term: {id: &#34;GO:0000155&#34;, label: phosphorelay sensor kinase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct and experimentally supported for PedS2.
+      action: ACCEPT
+      supported_by:
+        - reference_id: PMID:30158283
+          supporting_text: the sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response regulator PedR2
+        - reference_id: file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+  - term: {id: &#34;GO:0000160&#34;, label: phosphorelay signal transduction system}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Correct; PedS2 and PedR2 form the phosphorelay controlling the lanthanide switch.
+      action: ACCEPT
+  - term: {id: &#34;GO:0004673&#34;, label: protein histidine kinase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000003
+    qualifier: enables
+    review:
+      summary: Correct but less informative than phosphorelay sensor kinase activity.
+      action: KEEP_AS_NON_CORE
+  - term: {id: &#34;GO:0007165&#34;, label: signal transduction}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Correct broad parent of the PedS2/PedR2 phosphorelay.
+      action: KEEP_AS_NON_CORE
+  - term: {id: &#34;GO:0016020&#34;, label: membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review:
+      summary: Correct for this transmembrane sensor, but localization is supporting context.
+      action: KEEP_AS_NON_CORE
+  - term: {id: &#34;GO:0016301&#34;, label: kinase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: True but excessively broad relative to phosphorelay sensor kinase activity.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0016740&#34;, label: transferase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: True but excessively broad relative to phosphorelay sensor kinase activity.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0046983&#34;, label: protein dimerization activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Plausible for the histidine-kinase architecture but not the defining PedS2 function.
+      action: KEEP_AS_NON_CORE
+references:
+  - id: PMID:30158283
+    title: The PedS2/PedR2 Two-Component System Is Crucial for the Rare Earth Element Switch in Pseudomonas putida KT2440.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Full text directly assays PP_2671/PedS2 mutants, signaling, and promoter output.
+    findings:
+      - statement: PedS2 phosphorylates PedR2 in the absence of lanthanum.
+        supporting_text: the sensor histidine kinase PedS2 phosphorylates its cognate LuxR-type response regulator PedR2
+  - id: file:PSEPK/PP_2671/PP_2671-uniprot.txt
+    title: UniProtKB entry for Pseudomonas putida KT2440 PP_2671
+    findings: []
+  - id: file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+    title: OpenScientist research report for PP_2671 / PedS2
+    findings: []
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000003
+    title: Gene Ontology annotation based on Enzyme Commission mapping
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+core_functions:
+  - description: &gt;-
+      Membrane sensor histidine kinase that phosphorylates PedR2 and controls
+      the lanthanide-responsive choice between PedE and PedH alcohol oxidation.
+    molecular_function: {id: &#34;GO:0000155&#34;, label: phosphorelay sensor kinase activity}
+    directly_involved_in:
+      - {id: &#34;GO:0000160&#34;, label: phosphorelay signal transduction system}
+    supported_by:
+      - reference_id: PMID:30158283
+      - reference_id: file:PSEPK/PP_2671/PP_2671-uniprot.txt
+      - reference_id: file:PSEPK/PP_2671/PP_2671-deep-research-openscientist.md
+proposed_new_terms: []
+suggested_questions:
+  - question: Does a lanthanide bind PedS2 directly, or is kinase output controlled through an unidentified periplasmic partner?
+suggested_experiments:
+  - description: Reconstitute PedS2 autophosphorylation and PedR2 phosphotransfer with defined lanthanides and candidate periplasmic partners.
+    experiment_type: phosphorelay assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
