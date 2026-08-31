@@ -1469,6 +1469,7 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
     elif predictions_path.exists():
         metadata = load_yaml(predictions_path)
     gene_symbol, taxon_id, taxon_label = gene_metadata(metadata, args.gene)
+    source_file = review_path if review_path.exists() else None
 
     term_context_lines = []
     if args.term_id or args.term_label:
@@ -1488,6 +1489,8 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
         hypothesis_text=args.hypothesis,
         term_context="\n".join(term_context_lines),
         reference_ids=args.reference_id,
+        source_file=source_file,
+        source_selector="free-text",
         source_context={
             "hypothesis": args.hypothesis,
             "focus_type": normalize_focus_type(args.focus_type),
