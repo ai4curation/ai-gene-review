@@ -28,10 +28,11 @@ N5-monooxygenase PvdA. PP_2800 is a distant locus paralog of the dedicated
 cluster enzyme PvdH and is not accepted as a pyoverdine component from its EC
 mapping alone. PvdY is included as an ortholog-supported hydroxyornithine
 acetylation enzyme: PMID:16585778 characterizes the type II Pseudomonas
-aeruginosa PvdYII enzyme, but leaves the free-versus-NRPS-bound acceptor state
-open, while the precise PP_4245 reaction remains untested in KT2440. It is
-curated as an adjacent tailoring gene, outside the strict two-reaction
-precursor-supply module.
+aeruginosa PvdYII enzyme, but the characterized KT2440 pyoverdine contains
+cyclic hydroxyornithine rather than an identified N5-acylated hydroxyornithine
+residue. Whether any KT2440 product depends on PP_4245 is therefore unresolved.
+PvdY is curated as an adjacent tailoring gene, outside the strict two-reaction
+precursor-supply module, rather than as a precursor-forming step.
 
 ## Status
 
