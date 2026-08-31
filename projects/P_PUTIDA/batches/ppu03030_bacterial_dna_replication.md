@@ -37,11 +37,19 @@ focused replisome realization.
 
 ## Curation Findings
 
-Catalytic molecular functions are attached only to DnaB, DnaG, DnaE, DnaQ,
-and LigA leaves. Structural replisome components are represented by their roles
-rather than being assigned the molecular function of the complete complex. The
-obsolete DNA primase term is not authored; DnaG uses current RNA-polymerase and
+Molecular functions are attached only to leaf annotons, including DnaA origin
+binding, SSB single-stranded DNA binding, DnaN processivity-factor activity,
+and DnaX contribution to the multisubunit clamp-loader activity. DnaB and DnaE
+use the specific activities selected by their gene reviews. The obsolete DNA
+primase term is not authored; DnaG uses current RNA-polymerase and
 primer-synthesis terms.
+
+The regenerated KEGG batch contains all 18 current `ppu03030` members. It marks
+the eight pathway-bucket genes curated here as complete while retaining the
+out-of-boundary DNA polymerase I, RNase H, repair-exonuclease, auxiliary clamp-
+loader, and LigB entries as unreviewed. DnaA is included in the focused module
+from its origin-initiation role but is primarily partitioned to `ppu02020`, so
+it is not a `ppu03030` TSV member.
 
 ## Evidence
 
