@@ -163,3 +163,44 @@ def test_build_record_general_for_ancillary_only_changes(backfill):
     (target,) = backfill.collect_targets(files)
     record, _ = backfill.build_record(_fake_pr(), target)
     assert record["events"][0]["type"] == "GENERAL"
+    # The primary file was never in the PR, so there is no evidence it changed.
+    assert record["events"][0]["outcome"] == "no_change"
+
+
+def test_build_record_edit_claims_changed(backfill):
+    """Guards the GENERAL outcome above from being over-applied: when the
+    primary file really was modified, `changed` is still the right claim."""
+    files = [
+        {
+            "filename": "genes/human/CFAP300/CFAP300-ai-review.yaml",
+            "status": "modified",
+        }
+    ]
+    (target,) = backfill.collect_targets(files)
+    record, _ = backfill.build_record(_fake_pr(), target)
+    assert record["events"][0]["type"] == "EDIT"
+    assert record["events"][0]["outcome"] == "changed"
+
+
+def test_classify_project_subpages_map_to_their_project(backfill):
+    """`projects/FOO/` supporting material belongs to project FOO -- the
+    convention CLAUDE.md documents. Previously these returned None, so a PR
+    touching only sub-pages silently wrote no record at all."""
+    target = backfill.classify_file("projects/PROTEOSTASIS/batch7_selection_notes.md")
+    assert target is not None
+    assert (target.kind, target.slug) == ("project", "PROTEOSTASIS")
+    assert target.path == "projects/PROTEOSTASIS.md"
+
+    # The page and its folder are one target, not two.
+    files = [
+        {"filename": "projects/PROTEOSTASIS.md", "status": "modified"},
+        {"filename": "projects/PROTEOSTASIS/batch7_selection_notes.md", "status": "added"},
+    ]
+    assert len(backfill.collect_targets(files)) == 1
+
+
+def test_classify_nested_module_yaml(backfill):
+    target = backfill.classify_file("modules/experimental/gapmind-mining/foo.yaml")
+    assert target is not None
+    assert (target.kind, target.slug) == ("module", "foo")
+    assert target.path == "modules/experimental/gapmind-mining/foo.yaml"

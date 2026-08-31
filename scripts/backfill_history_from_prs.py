@@ -132,18 +132,28 @@ def classify_file(path: str) -> Target | None:
             organism=organism,
             path=f"genes/{organism}/{gene}/{gene}-ai-review.yaml",
         )
-    m = re.match(r"modules/([^/]+)\.ya?ml$", path)
+    # Nested module YAMLs (e.g. modules/experimental/gapmind-mining/*.yaml) are
+    # real repo content; keying on the stem keeps one target per module file.
+    m = re.match(r"modules/(?:.+/)?([^/]+)\.ya?ml$", path)
     if m:
         return Target(kind="module", slug=m.group(1), path=path)
     m = re.match(r"gocams/([^/]+)/", path)
-    if m and m.group(1) != "index.tsv":
+    if m:
         model = m.group(1)
         return Target(
             kind="gocam", slug=model, path=f"gocams/{model}/{model}-review.yaml"
         )
+    # A project is `projects/FOO.md` plus an optional `projects/FOO/` folder of
+    # supporting material (the convention in CLAUDE.md). Both map to project FOO,
+    # mirroring the generous gene rule above -- otherwise a PR touching only
+    # sub-pages reported "no curated targets touched" and silently wrote nothing.
     m = re.match(r"projects/([^/]+)\.md$", path)
     if m:
         return Target(kind="project", slug=m.group(1), path=path)
+    m = re.match(r"projects/([^/]+)/", path)
+    if m:
+        slug = m.group(1)
+        return Target(kind="project", slug=slug, path=f"projects/{slug}.md")
     if path.startswith("src/ai_gene_review/schema/"):
         return Target(kind="schema", slug=Path(path).stem, path=path)
     return None
@@ -257,7 +267,11 @@ def build_record(pr: dict, target: Target) -> tuple[dict, Path]:
         "events": [
             {
                 "type": event_type,
-                "outcome": "changed",
+                # In the GENERAL case the primary file was not in the PR at all
+                # -- the target was inferred from ancillary files -- so we have
+                # no evidence it changed. Claiming "changed" there overstates
+                # what the PR metadata actually shows.
+                "outcome": "changed" if event_type != "GENERAL" else "no_change",
                 "summary": pr["title"].strip()[:200],
                 "details": _LiteralStr(details),
             }
@@ -287,7 +301,17 @@ def pr_numbers_for_state(state: str, limit: int) -> list[int]:
             "number",
         ]
     )
-    return [row["number"] for row in json.loads(out)]
+    numbers = [row["number"] for row in json.loads(out)]
+    # `gh pr list` returns exactly `limit` rows both when that is all there is
+    # and when it truncated, so say so rather than letting "Done: N written"
+    # imply the whole state was covered.
+    if len(numbers) == limit:
+        print(
+            f"warning: --limit {limit} reached enumerating --state {state}; "
+            "there may be more PRs. Re-run with a higher --limit to cover them.",
+            file=sys.stderr,
+        )
+    return numbers
 
 
 def fetch_pr(number: int) -> dict:

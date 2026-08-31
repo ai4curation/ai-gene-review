@@ -20,12 +20,16 @@ ROOT_DIR = Path(__file__).parent.parent
 HISTORY_SCHEMA_PATH = ROOT_DIR / "src" / "ai_gene_review" / "schema" / "history.yaml"
 HISTORY_DIR = ROOT_DIR / "history"
 NEW_HISTORY_SCRIPT = ROOT_DIR / "scripts" / "new_history.py"
+# Must stay in step with new_history.KIND_DIRS: any kind the generator can write
+# is a kind whose placement the layout check has to enforce, or records land in
+# an unchecked directory. test_kind_dirs_cover_every_generator_kind pins that.
 KIND_DIRS = {
     "gene": "genes",
     "module": "modules",
     "gocam": "gocams",
     "project": "projects",
     "schema": "schema",
+    "other": "other",
 }
 
 
@@ -195,6 +199,15 @@ def _layout_errors(record: dict, path: Path) -> list[str]:
     superseded_by = target.get("superseded_by")
     errors = []
 
+    # Both generators mint the filename from session.id, and CLAUDE.md tells
+    # agents never to hand-write either -- but nothing enforced it, so a
+    # hand-edited record could drift the two apart undetected.
+    session_id = record.get("session", {}).get("id")
+    if session_id is not None and session_id != path.stem:
+        errors.append(
+            f"{rel} session.id '{session_id}' does not match the filename stem '{path.stem}'"
+        )
+
     if superseded_by:
         successor_slug = superseded_by.get("slug")
         successor_rel = superseded_by.get("path")
@@ -237,6 +250,14 @@ def _layout_errors(record: dict, path: Path) -> list[str]:
     return errors
 
 
+def test_kind_dirs_cover_every_generator_kind():
+    """A kind `new_history.py` can write but the layout check does not know is a
+    directory nothing enforces. `other` was exactly that: supported by the
+    generator and documented in docs/history.md, absent from KIND_DIRS."""
+    module = _load_new_history_module()
+    assert KIND_DIRS == module.KIND_SUBDIRS
+
+
 def test_committed_history_records_follow_layout():
     history_files = sorted(HISTORY_DIR.glob("**/*.yaml"))
     assert history_files
@@ -269,6 +290,50 @@ def _existing_module_slug() -> str:
     yamls = sorted((ROOT_DIR / "modules").glob("*.yaml"))
     assert yamls, "expected at least one module YAML for layout tests"
     return yamls[0].stem
+
+
+def test_layout_rejects_session_id_that_drifts_from_the_filename():
+    slug = _existing_module_slug()
+    record = {
+        "target": {"kind": "module", "slug": slug, "path": f"modules/{slug}.yaml"},
+        "session": {"id": "2026-08-02T020640Z-codex-abc123"},
+    }
+    good = HISTORY_DIR / "modules" / slug / "2026-08-02T020640Z-codex-abc123.yaml"
+    bad = HISTORY_DIR / "modules" / slug / "2026-08-02T020640Z-codex-999999.yaml"
+
+    assert _layout_errors(record, good) == []
+    (error,) = _layout_errors(record, bad)
+    assert "does not match the filename stem" in error
+
+
+@pytest.mark.parametrize("missing", ["slug", "path"])
+def test_target_slug_and_path_are_required(validator, missing):
+    """`_layout_errors` and `history_dir_for` both index these unconditionally,
+    so a record without them must fail validation rather than KeyError later."""
+    record = {
+        "history_version": 1,
+        "target": {"kind": "module", "slug": "x", "path": "modules/x.yaml"},
+        "session": {
+            "id": "2026-08-02T020640Z-codex-abc123",
+            "timestamp": "2026-08-02T02:06:40Z",
+            "actors": [{"type": "ai_agent", "name": "codex"}],
+        },
+        "events": [
+            {"type": "EDIT", "outcome": "changed", "summary": "s", "details": "d"}
+        ],
+    }
+    assert not [
+        r
+        for r in validator.validate(record, target_class="HistoryRecord").results
+        if r.severity.name == "ERROR"
+    ]
+
+    del record["target"][missing]
+    assert [
+        r
+        for r in validator.validate(record, target_class="HistoryRecord").results
+        if r.severity.name == "ERROR"
+    ]
 
 
 def test_layout_accepts_renamed_target_with_superseded_by():
