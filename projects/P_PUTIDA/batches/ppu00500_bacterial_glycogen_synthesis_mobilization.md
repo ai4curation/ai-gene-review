@@ -23,15 +23,17 @@ autolink_gene_symbols: false
   glycogen synthesis and later glycogen mobilization.
 - Canonical glycogen synthesis uses GlgC/ADP-glucose-dependent GlgA followed by
   GlgB branch formation. The Pseudomonas GalU/UDP-glucose-dependent GlgA branch
-  forms linear alpha-glucan but is not connected directly to GlgB here.
+  forms linear alpha-glucan and has an unverified capability connection to
+  GlgB; most physiological GlgA flux is routed through trehalose or maltose.
 - Mobilization requires GlgP phosphorolysis and GlgX branch removal; glucose
   1-phosphate is the module output, so `pgm` is downstream context.
 - Exact KT2440 exemplars are `galU` (Q88GA4), `glgA` (Q88FN9), `glgB`
   (Q88FN1), `glgP` (Q88CY8), and `glgX` (Q88FN4).
 - No `glgC`/EC 2.7.7.27 candidate is present in the current KT2440 UniProt
   metadata. Experimental work in PAO1 supports UDP-glucose-dependent GlgA, but
-  GalU is only a candidate source of that shared metabolite pool and Q88FN9
-  donor specificity remains open.
+  GalU is only a candidate source of that shared metabolite pool. UDP-glucose
+  specificity is transferred to Q88FN9 from the assayed same-subfamily PAO1
+  ortholog; direct KT2440 kinetics remain open.
 - TreY-TreZ trehalose synthesis and TreS-Mak-GlgE alpha-glucan synthesis remain
   separate neighboring modules. Cellulose synthesis, glucose isomerization,
   and broad KEGG ppu00500 membership do not define this module.
@@ -83,6 +85,8 @@ validation remain authoritative.
 fetched genes, the reusable module, and module + ppu00500 + PSEPK
 satisfiability. They are allowed to run for the documented provider timeout.
 
-2026-08-12: Annotation review corrected the Pseudomonas pathway boundary. The
-module no longer asserts a GalU-GlgA-GlgB shortcut; GlgA-derived linear glucan
-is treated as input to the neighboring TreY/TreZ and TreS-Mak-GlgE network.
+2026-08-31: Re-review reconciled donor specificity and pathway flux. The
+UDP-specific function is accepted by ortholog-level transfer, the incompatible
+ADP-specific prediction is removed, and GlgA-to-GlgB branching is represented
+only as an unverified capability. GlgA-derived linear glucan is normally routed
+through the neighboring TreY/TreZ and TreS-Mak-GlgE network.
