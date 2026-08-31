@@ -262,6 +262,12 @@ descriptions-status organism *args="":
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
 
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
+
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
 # Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS

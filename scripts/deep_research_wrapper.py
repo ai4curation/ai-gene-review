@@ -24,6 +24,21 @@ DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
 
 
+def select_provider(positional: str | None, option: str | None) -> str:
+    """Resolve the provider accepted by old and generic wrapper interfaces."""
+    if positional and option and positional != option:
+        raise ValueError(
+            f"Conflicting providers: positional '{positional}' and --provider '{option}'"
+        )
+    provider = option or positional
+    if not provider:
+        raise ValueError(
+            "A provider is required; pass --provider PROVIDER or use a "
+            "provider-specific just recipe"
+        )
+    return provider
+
+
 def deep_research_client_command() -> list[str]:
     """Return the command prefix for invoking deep-research-client.
 
@@ -299,7 +314,13 @@ def main():
     parser.add_argument("organism", help="Organism name")
     parser.add_argument("gene_id", help="Gene identifier (UniProt ID, locus tag, or gene symbol)")
     parser.add_argument(
-        "provider",
+        "provider_positional",
+        nargs="?",
+        help="Provider used by the legacy provider-specific just recipes",
+    )
+    parser.add_argument(
+        "--provider",
+        dest="provider_option",
         help="Provider (for example: openai, perplexity, perplexity-lite, falcon, cyberian, openscientist)",
     )
     parser.add_argument("--alias", help="Gene symbol alias (if not provided, will lookup from UniProt)")
@@ -321,6 +342,10 @@ def main():
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, help="Extra args to pass to deep-research-client")
 
     args = parser.parse_args()
+    try:
+        provider = select_provider(args.provider_positional, args.provider_option)
+    except ValueError as error:
+        parser.error(str(error))
 
     # Determine gene symbol and parse UniProt context
     uniprot_context = None
@@ -365,11 +390,11 @@ def main():
         base_dir = Path(f"genes/{args.organism}/{args.gene_id}")
 
     # Construct output path
-    if args.provider == "perplexity-lite":
+    if provider == "perplexity-lite":
         output_file = base_dir / f"{base_dir.name}-deep-research-perplexity-lite.md"
         use_template = False
     else:
-        output_file = base_dir / f"{base_dir.name}-deep-research-{args.provider}.md"
+        output_file = base_dir / f"{base_dir.name}-deep-research-{provider}.md"
         use_template = True
 
     # Create directory if it doesn't exist
@@ -379,7 +404,7 @@ def main():
     if effective_timeout is None:
         effective_timeout = (
             DEFAULT_OPENSCIENTIST_TIMEOUT
-            if args.provider == "openscientist"
+            if provider == "openscientist"
             else DEFAULT_TIMEOUT
         )
 
@@ -387,7 +412,7 @@ def main():
     return run_deep_research(
         organism=args.organism,
         gene_id=args.gene_id,
-        provider=args.provider,
+        provider=provider,
         gene_symbol=gene_symbol,
         output_path=output_file,
         uniprot_context=uniprot_context,
