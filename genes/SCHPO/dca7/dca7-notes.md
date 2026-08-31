@@ -67,9 +67,10 @@ family roles are described in the literature:
 - GOA records **MF = GO:0003674 (ND)** and **BP = GO:0008150 (ND)** for this gene: PomBase has
   formally declared molecular function and biological process **unknown**.
 - Ppk15 is a Yak/DYRK-family kinase: PomBase records the CDD PKc_YAK1 domain and orthology to
-  human DYRK1A/DYRK1B and budding-yeast Yak1. The dca7–ppk15 Y2H hit therefore supports
-  `GO:0019901 protein kinase binding`, while native-complex and functional-scaffold claims still
-  require pair-specific validation.
+  human DYRK1A/DYRK1B and budding-yeast Yak1. The dca7–ppk15 Y2H hit therefore motivates
+  `GO:0019901 protein kinase binding` as a candidate for targeted validation, but it does not
+  justify overruling PomBase's retained MF ND annotation; native-complex and functional-scaffold
+  claims still require pair-specific validation.
 - Whether dca7 acts in a CUL4/DDB1 complex in fission yeast is **not experimentally shown**; the
   known S. pombe DCAFs are Cdt2 (canonical CRL4) and Raf1/Dos1 (CLRC heterochromatin) — dca7 is a
   *distinct* DCAF7-like protein, so the `GO:0080008` complex membership is an ISS inference from
@@ -90,9 +91,9 @@ family roles are described in the literature:
    single high-throughput GFP localization; a WD40 scaffold is not an obvious Golgi resident and
    this may be a minor/secondary pool. KEEP as non-core but flag as weakly supported /
    over-interpretable.
-4. `GO:0003674 molecular_function` — **ND** (GO_REF:0000015). The root placeholder is superseded
-   by the curated dca7–ppk15 Y2H edge: MODIFY to `GO:0019901 protein kinase binding`, while making
-   clear that a scaffold/regulator activity is not established.
+4. `GO:0003674 molecular_function` — **ND** (GO_REF:0000015). ACCEPT. PomBase curated the
+   dca7–ppk15 Y2H edge but retained MF as ND; one unvalidated high-throughput edge is a hypothesis
+   lead, not sufficient reason to overrule that curator decision with `GO:0019901`.
 5. `GO:0008150 biological_process` — **ND** (GO_REF:0000015). Same: "BP unknown" placeholder.
 6. `GO:0080008 Cul4-RING E3 ubiquitin ligase complex` — **ISS** from human DCAF7 P61962
    (GO_REF:0000024). MARK_AS_OVER_ANNOTATED, not REMOVE: orthology is sound, but the primary DCAF7
