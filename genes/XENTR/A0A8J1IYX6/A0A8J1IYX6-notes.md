@@ -63,3 +63,72 @@ appears to be an automated naming artifact.
 - gene_symbol LOC101732819 (no HGNC-style symbol exists for this locus).
 - No new annotations proposed: with zero gene-specific literature, anything beyond
   the PAINT/IEA inferences would be speculation.
+
+## Second IBA-curation pass (family/PTN framework) 2026-08-31
+
+### Family review created
+
+`interpro/panther/PTHR24351/PTHR24351-review.yaml` (FamilyReview schema, DRAFT),
+deliberately scoped to the PAINT nodes backing this gene's three IBA rows:
+
+- **PTN008614469 / GO:0004674** (paint snapshot 20241120): assessed **SOUND**.
+  Ser/Thr kinase activity is the defining function of the whole AGC/S6-kinase
+  clade; the node is seeded by many experimentally characterized active kinases
+  (human S6K1/S6K2/RSK1/MSK1/MSK2, rodent, fly, fungal, Dictyostelium,
+  Plasmodium, plant). No pseudokinase among the seeds, nothing to prune.
+- **PTN008614470 / GO:0005737** (snapshot 20260828, taxon Eukaryota): **SOUND**.
+  Cytoplasm is the default compartment for these soluble kinases; target has no
+  targeting features that contradict it.
+- **PTN008614470 / GO:0005634** (snapshot 20260828): **UNRESOLVED** — nuclear
+  activity is genuine for shuttling members (RSK/MSK) and the fungal seeds, but
+  it is the least conserved of the propagated properties and there is no
+  target-specific confirmation; retained for lack of counter-evidence, not
+  positively established. This does not change the gene-level ACCEPT.
+
+### Residue verification (all positions checked against real sequences)
+
+Family residue site `PANTHER:PTHR24351#catalytic_core`, anchored on human S6K1
+(UniProtKB:P23443, sequence version 2), from its live UniProt feature table:
+VAIK beta-3 Lys **K123** (BINDING 123, ATP) and HRD catalytic Asp **D218**
+(ACT_SITE 218, proton acceptor). Positive controls: S6K1 K123; RSK1 (Q15418)
+N-terminal-domain HRD Asp D187 (ACT_SITE 187). No negative controls exist —
+no documented pseudokinase in this family — so the site's `required_for`
+strength is recorded as CONTRIBUTES (the validator requires a negative control
+for REQUIRED, and inventing one would be fabrication).
+
+Target A0A8J1IYX6 (sequence version 1) **retains the full catalytic
+machinery**: Gly-rich loop GEGTGGKV at 120-127; VAIK **K142** (its own UniProt
+BINDING 142 ATP feature; motif VAIKIV at 139); HRD catalytic Asp **D235**
+(IHRDLKPDN at 232); DFG Asp **D253** (ICDFG at 251). The DFG position is not
+part of the machine-checked site (not an explicit UniProt feature on the S6K1
+anchor) but is recorded here and in the family-review notes.
+
+### Gene review changes
+
+- Added structured `review.propagation_review` to all three IBA rows:
+  - GO:0004674: `root_cause: NO_FAILURE_CORE`; sources = node PTN008614469 +
+    inspected seeds P23443/Q15418/O75582/Q8I4W3, all SUPPORTS_TRANSFER; two
+    RETAINED `residue_claims` citing `PANTHER:PTHR24351#catalytic_core`
+    (K123→K142 via UNIPROT_FEATURE on both records; D218→D235 via
+    motif-anchored MSA). The target is not in its own WITH/FROM (it is
+    uncharacterized), so no self-source question arises.
+  - GO:0005634, GO:0005737: `root_cause: NO_FAILURE_NON_CORE`; node + seed
+    sources SUPPORTS_TRANSFER; `residue_claims_not_applicable` (localization is
+    not a point-residue question).
+- Actions unchanged (all three IBAs remain ACCEPT); the GO:0004674 reason now
+  cites the family-level inspection and retained catalytic residues.
+- Seed identities verified against live UniProt: Q582V7 = T. brucei putative
+  Ser/Thr kinase; Q8I4W3 = P. falciparum "RAC-beta" (Akt-like) kinase;
+  G9BWQ1 = pig AKT1 (appears in the GOA WITH/FROM for the two CC rows but not
+  in the cached paint.tsv seed lists, which postdate it; family review copies
+  seeds from paint.tsv as the source of record).
+
+### Omitted as unestablishable
+
+- No PANTHER subfamily (:SF) placement for the target — its UniProt record
+  carries only the family-level xref (`DR PANTHER; PTHR24351; ...; 1.` with no
+  SF line), so the family review asserts no subfamilies rather than guessing.
+- GO:0005634 could not be scoped to named subfamilies for the same reason
+  (term_assessment scope UNRESOLVED).
+- `interpro/panther/panther-members.tsv` not refreshed (shared file; orchestrator
+  runs it once) — a missing-member warning for P23443/Q15418 is expected.
