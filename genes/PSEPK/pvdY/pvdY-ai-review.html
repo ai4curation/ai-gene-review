@@ -1,0 +1,2426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pvdY - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pvdY</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F54" target="_blank" class="term-link">
+                        Q88F54
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pvdY";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F54" data-a="DESCRIPTION: PvdY is an MbtK/IucB-like acyltransferase associat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PvdY is an MbtK/IucB-like acyltransferase associated with pyoverdine biosynthesis. The characterized Pseudomonas aeruginosa PvdYII ortholog acetylates hydroxyornithine and is required for type II pyoverdine synthesis. KT2440 PP_4245 is therefore best interpreted as a cytoplasmic pyoverdine precursor-tailoring enzyme, although its substrate specificity and reaction have not been tested directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F54" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is consistent with PvdY acting before cytoplasmic NRPS assembly and periplasmic pyoverdine maturation, but PP_4245 has not been localized experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the conservative localization inference while keeping the direct acyltransferase reaction and pyoverdine pathway role as the core claims.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pvdY/pvdY-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Subcellular localization is inferred.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F54" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad acyltransferase term is supported by the MbtK/IucB-like domain architecture and by the hydroxyornithine-acetylating activity of the characterized PvdYII ortholog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO does not provide a verified substrate-specific PvdY term here, so the broad catalytic parent is retained and the inferred reaction is recorded in prose.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pvdY/pvdY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link">
+                                        PMID:16585778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019290" target="_blank" class="term-link">
+                                    GO:0019290
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F54" data-a="GO:0019290" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PvdYII loss prevents pyoverdine synthesis in the experimentally studied Pseudomonas aeruginosa system, and PP_4245 has the corresponding gene name, acyltransferase fold, and KT2440 pyoverdine-locus context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is biologically correct but GO:0002049 pyoverdine biosynthetic process is the more informative direct process term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                    pyoverdine biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pvdY/pvdY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GN   Name=pvdY</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link">
+                                        PMID:16585778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A mutation in pvdY(II) prevented pyoverdine synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                    GO:0002049
+                                </a>
+                            </span>
+                            <span class="term-label">pyoverdine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16585778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of a gene encoding an acetylase required fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F54" data-a="GO:0002049" data-r="PMID:16585778" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed specific pathway annotation based on the characterized PvdYII ortholog and the matching KT2440 pvdY locus and protein-family context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PvdY-family hydroxyornithine acetylation supplies a tailored precursor for pyoverdine synthesis; the evidence for PP_4245 is orthology based rather than direct KT2440 genetics or enzymology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link">
+                                        PMID:16585778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A mutation in pvdY(II) prevented pyoverdine synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MbtK/IucB-like acyltransferase inferred to acetylate hydroxyornithine during KT2440 pyoverdine precursor synthesis; the exact PP_4245 reaction remains untested.</h3>
+                <span class="vote-buttons" data-g="Q88F54" data-a="FUNCTION: MbtK/IucB-like acyltransferase inferred to acetyla..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                            acyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002049" target="_blank" class="term-link">
+                                pyoverdine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pvdY/pvdY-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link">
+                                PMID:16585778
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pvdY/pvdY-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for pvdY</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GN   Name=pvdY"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GN   OrderedLocusNames=PP_4245"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" target="_blank" class="term-link">
+                            PMID:16585778
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of a gene encoding an acetylase required for pyoverdine synthesis in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdYII is required for pyoverdine synthesis.</div>
+
+                        <div class="finding-text">"A mutation in pvdY(II) prevented pyoverdine synthesis."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdYII catalyzes hydroxyornithine acetylation.</div>
+
+                        <div class="finding-text">"Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" target="_blank" class="term-link">
+                            PMID:19459056
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 produces a characterized pyoverdine.</div>
+
+                        <div class="finding-text">"Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pvdY/pvdY-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for pvdY in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"No direct enzymology of PP_4245."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Subcellular localization is inferred."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 PvdY acetylate free or NRPS-bound hydroxyornithine, which acyl donor does it use, and which KT2440 pyoverdine residue depends on the step?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F54" data-a="Q: Does KT2440 PvdY acetylate free or NRPS-bound hydr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_4245 and assay candidate acyl donors against free and carrier-protein-bound hydroxyornithine substrates, then compare pyoverdine production and LC-MS/MS structures in wild type, a clean pvdY deletion, and a complemented strain.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_4245 supplies an acetylated hydroxyornithine precursor required for KT2440 pyoverdine assembly.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymology and targeted metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F54" data-a="EXPERIMENT: Purify PP_4245 and assay candidate acyl donors aga..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdY-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F54" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *pvdY* (PP_4245, UniProt Q88F54) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T08:34:05.900502</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="pvdY-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="pvdY-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pvdy-pp_4245-uniprot-q88f54-in-pseudomonas-putida-kt2440">Functional Annotation of <em>pvdY</em> (PP_4245, UniProt Q88F54) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>pvdY</strong> (ordered locus <strong>PP_4245</strong>, UniProt accession <strong>Q88F54</strong>) of <em>Pseudomonas putida</em> KT2440 encodes a <strong>cytoplasmic, acetyl-CoA–dependent N-acyltransferase</strong> of the MbtK/IucB-like acyltransferase superfamily (Pfam PF13523 <em>Acetyltransf_8</em>; InterPro IPR019432 and IPR016181; EC 2.3.1.–). Its primary biochemical function is to <strong>acetylate N5-hydroxy-L-ornithine</strong>, producing N5-acetyl-N5-hydroxy-L-ornithine, the <strong>iron-chelating hydroxamate building block</strong> of the fluorescent siderophore <strong>pyoverdine</strong>. This reaction places PvdY immediately downstream of the ornithine N5-oxygenase PvdA in the cytoplasmic <strong>hydroxamate-precursor branch</strong> of pyoverdine biosynthesis, and PvdY activity is required for pyoverdine production.</p>
+<p>A central conclusion of this investigation concerns a <strong>misannotation</strong>. The UniProt "SubName" for Q88F54 reads <em>"Hydroxyproline acetylase"</em> (EC 2.3.1.–), a label derived automatically from an EMBL genome-annotation record (ECO:0000313|EMBL:AAN69825.2). This label is <strong>not supported by any experimental evidence</strong> and is inconsistent with both the gene name (<em>pvdY</em>) and the domain architecture of the protein. The biochemically demonstrated substrate for PvdY orthologs is <strong>N5-hydroxy-L-ornithine</strong>, not hydroxyproline. The corrected functional assignment is grounded in the direct characterization of the <em>P. aeruginosa</em> ortholog PvdY (Lamont et al. 2006, <a href="https://pubmed.ncbi.nlm.nih.gov/16585778/">PMID: 16585778</a>), which used bioinformatic, genetic, and biochemical approaches to show that PvdY acetylates hydroxyornithine, is repressed by iron, and is essential for pyoverdine synthesis.</p>
+<p>Structural evidence from <em>P. putida</em> KT2440 itself corroborates that this strain operates an active ornithine→N5-hydroxyornithine hydroxamate branch: mass-spectrometric elucidation of KT2440 pyoverdine reveals a heptapeptide backbone containing both an ornithine residue and a C-terminal cyclic N5-hydroxyornithine (a hydroxamate), confirming that the pathway in which PvdY acts is complete and functional in this organism. Taken together, the evidence supports assigning PvdY/PP_4245 as an <strong>N5-hydroxyornithine acetyltransferase functioning in the cytoplasmic precursor-supply phase of pyoverdine biosynthesis</strong>.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity check required by this research task was completed:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88F54</td>
+<td>Target confirmed</td>
+</tr>
+<tr>
+<td>Gene name</td>
+<td><em>pvdY</em> (ECO:0000313|EMBL:AAN69825.2)</td>
+<td>Matches pyoverdine-biosynthesis nomenclature</td>
+</tr>
+<tr>
+<td>Ordered locus</td>
+<td>PP_4245</td>
+<td><em>P. putida</em> KT2440 locus tag</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>UniProt SubName</td>
+<td>"Hydroxyproline acetylase," EC 2.3.1.–</td>
+<td><strong>Automated misannotation — not experimentally supported</strong></td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>Acyl_CoA_acyltransferase (IPR016181); Acyltransferase MbtK/IucB-like (IPR019432); Acetyltransf_8 (PF13523)</td>
+<td>Consistent with siderophore-precursor N-acyltransferases</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verdict:</strong> The gene symbol <em>pvdY</em> is <strong>not</strong> ambiguous in the confusing sense. It is a <em>bona fide</em> pyoverdine-biosynthesis gene, and the domain architecture (MbtK/IucB-like acyl-CoA acyltransferase) is exactly the family that acylates hydroxylated amino-acid amines during siderophore assembly. The only ambiguity is the incorrect substrate label ("hydroxyproline") inherited from an automated EMBL record; the correct substrate is N5-hydroxy-L-ornithine. Direct literature exists for the <em>P. aeruginosa</em> ortholog, and structural literature exists for KT2440 pyoverdine, so research proceeded on the correct target.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pvdy-is-an-n5-hydroxyornithine-acetyltransferase-not-a-hydroxyproline-acetylase">Finding 1 — PvdY is an N5-hydroxyornithine acetyltransferase, not a "hydroxyproline acetylase"</h3>
+<p>The most direct evidence for PvdY function comes from characterization of the <em>Pseudomonas aeruginosa</em> ortholog. Lamont and colleagues (2006, <a href="https://pubmed.ncbi.nlm.nih.gov/16585778/">PMID: 16585778</a>) applied <strong>bioinformatic, genetic, and biochemical approaches</strong> and reported that <em>"the PvdYII enzyme catalyzes acetylation of hydroxyornithine."</em> This is a direct assignment of the enzymatic activity: PvdY transfers an acetyl group onto the N5-hydroxylamine of hydroxyornithine, generating the hydroxamate N5-acetyl-N5-hydroxy-L-ornithine.</p>
+<p>The same study established the <strong>genetic requirement</strong> of <em>pvdY</em> for siderophore production: <em>"A mutation in pvdY(II) prevented pyoverdine synthesis."</em> This links the acetyltransferase activity causally to the biosynthetic output. Furthermore, the gene displayed the <strong>iron-responsive regulation</strong> that is a hallmark of siderophore-biosynthesis genes: <em>"Expression of pvdY(II) is repressed by the presence of iron and upregulated by the presence of type II pyoverdine."</em> Iron repression is mediated in <em>Pseudomonas</em> by the ferric uptake regulator (Fur), and its presence is a strong signature of a gene dedicated to iron acquisition.</p>
+<p>The <em>P. putida</em> KT2440 gene PP_4245 carries the gene name <em>pvdY</em> and belongs to the <strong>MbtK/IucB-like acyltransferase family</strong> (Pfam PF13523 <em>Acetyltransf_8</em>; InterPro IPR019432 and IPR016181; EC 2.3.1.–). This is the same acyl-CoA–dependent N-acyltransferase family responsible for acylating hydroxylated amino-acid amines in other siderophore systems — most notably <strong>IucB</strong>, which N-acetylates N6-hydroxylysine during aerobactin assembly. The convergence of (i) the <em>pvdY</em> gene name, (ii) the MbtK/IucB-like domain architecture, and (iii) the characterized activity of the ortholog provides a coherent, mutually reinforcing case that PP_4245 is an N5-hydroxyornithine acetyltransferase. The UniProt "hydroxyproline acetylase" SubName is an automated EMBL-derived misannotation; the biochemically supported substrate is <strong>N5-hydroxy-L-ornithine</strong>.</p>
+<h3 id="finding-2-pvdy-acts-downstream-of-the-ornithine-n5-oxygenase-pvda-in-the-hydroxamate-branch">Finding 2 — PvdY acts downstream of the ornithine N5-oxygenase PvdA in the hydroxamate branch</h3>
+<p>Pyoverdine's iron-chelating hydroxamate groups are built in two enzymatic steps from L-ornithine. The <strong>first committed step</strong> is catalyzed by <strong>PvdA</strong>, an FAD/NADPH-dependent L-ornithine N5-oxygenase that hydroxylates the side-chain amine of ornithine to yield <strong>N5-hydroxy-L-ornithine</strong>. Olucha et al. (2011, <a href="https://pubmed.ncbi.nlm.nih.gov/21757711/">PMID: 21757711</a>) describe PvdA as an enzyme that <em>"catalyzes the FAD-dependent hydroxylation of the side chain amine of ornithine, which is subsequently formylated to generate the iron-chelating hydroxamates of the siderophore pyoverdin."</em> Ge &amp; Seah (2006, <a href="https://pubmed.ncbi.nlm.nih.gov/17015659/">PMID: 17015659</a>) similarly state that <em>"formation of the iron-chelating hydroxamate functional group in pyoverdine requires the enzyme PvdA, a flavin-dependent monooxygenase that catalyzes the N(5) hydroxylation of l-ornithine."</em></p>
+<p>Once N5-hydroxy-L-ornithine is generated, the hydroxylamine must be <strong>acylated</strong> to complete the hydroxamate. Two alternative acyl groups are used across the pyoverdine structural types: <strong>formylation by PvdF</strong> (characteristic of type I pyoverdine) or <strong>acetylation by PvdY</strong> (type II). PvdY thus occupies the <strong>acylation node</strong> immediately downstream of PvdA, providing the acetyl-transfer alternative to PvdF's formyl transfer. The biochemical characterization of PvdA as a soluble monomer most active at pH 8.0 (Meneely &amp; Lamb 2007, <a href="https://pubmed.ncbi.nlm.nih.gov/17900176/">PMID: 17900176</a>) and the demonstration that PvdA orthologs are expressed under iron limitation across fluorescent pseudomonads including <em>P. putida</em> (Putignani et al. 2004, <a href="https://pubmed.ncbi.nlm.nih.gov/14684153/">PMID: 14684153</a>) place the entire ornithine-hydroxamate module firmly within the iron-starvation response.</p>
+<p>The logical ordering — PvdA hydroxylates, then PvdY acetylates — defines a two-enzyme sub-pathway that converts a proteinogenic-like amino acid (ornithine) into a metal-binding hydroxamate that is subsequently incorporated by nonribosomal peptide synthetases (NRPS) into the pyoverdine peptide backbone.</p>
+<h3 id="finding-3-pvdy-functions-in-the-cytoplasm-during-the-precursor-supplyassembly-phase">Finding 3 — PvdY functions in the cytoplasm during the precursor-supply/assembly phase</h3>
+<p>Pyoverdine biosynthesis is <strong>spatially compartmentalized</strong> between cytoplasm and periplasm. Schalk &amp; Guillon (2013, <a href="https://pubmed.ncbi.nlm.nih.gov/23126435/">PMID: 23126435</a>) describe it as <em>"a complex process involving at least 12 different proteins, starting in the cytoplasm and ending in the periplasm,"</em> and note that <em>"in the cytoplasm, pyoverdine appears to be assembled at the inner membrane and particularly at the old cell pole."</em> The early biosynthetic steps — including generation and acylation of the hydroxamate precursors — occur in the <strong>cytoplasm</strong>.</p>
+<p>The non-fluorescent precursor <strong>ferribactin</strong> is synthesized in the cytoplasm and then exported for maturation. Sugue et al. (2022, <a href="https://pubmed.ncbi.nlm.nih.gov/35764171/">PMID: 35764171</a>) state that <em>"after its synthesis in the cytoplasm, the nonfluorescent pyoverdine precursor ferribactin is exported into the periplasm, where the enzymes PvdQ, PvdP, PvdO, PvdN, and PtaA are responsible for fluorophore maturation."</em> Because PvdA is a soluble cytoplasmic monomer (<a href="https://pubmed.ncbi.nlm.nih.gov/17900176/">PMID: 17900176</a>) and PvdY acetylates the N5-hydroxyornithine that is then incorporated by cytoplasmic NRPS modules into ferribactin, <strong>PvdY performs its acetyl-transfer reaction in the cytoplasm, upstream of the periplasmic maturation machinery</strong>. Its subcellular location is therefore the cytoplasm (or cytoplasmic face of the inner membrane where the NRPS assembly line is organized), not the periplasm or extracellular space where the mature siderophore ultimately functions.</p>
+<h3 id="finding-4-kt2440-pyoverdine-contains-hydroxyornithine-derived-hydroxamate-residues-confirming-an-active-pvdapvdy-branch">Finding 4 — KT2440 pyoverdine contains hydroxyornithine-derived hydroxamate residues, confirming an active PvdA/PvdY branch</h3>
+<p>The strongest organism-specific evidence that the PvdY branch is active in KT2440 is the <strong>structure of KT2440 pyoverdine itself</strong>. MS/MS structural elucidation (Wei &amp; Aristilde 2015, <a href="https://pubmed.ncbi.nlm.nih.gov/25895945/">PMID: 25895945</a>) shows that <em>"the three PVDs of P. putida possess the same peptide chain of seven amino acids, Asp-Orn-OHAsp-Dab-Gly-Ser-cOHOrn, with a cyclicized portion present in two of the PVDs."</em> The presence of an <strong>ornithine (Orn)</strong> residue and a <strong>C-terminal cyclic N5-hydroxyornithine (cOHOrn, a hydroxamate)</strong> in the backbone demonstrates directly that KT2440 operates the ornithine→N5-hydroxyornithine hydroxamate branch — the branch in which PvdA and its downstream acyltransferase (PvdY) act.</p>
+<p>Baune et al. (2017, <a href="https://pubmed.ncbi.nlm.nih.gov/28631237/">PMID: 28631237</a>) independently confirmed the previously characterized KT2440 pyoverdines "G4R and G4R A," which differ only in their acyl side chains. Matthijs et al. (2009, <a href="https://pubmed.ncbi.nlm.nih.gov/19459056/">PMID: 19459056</a>) reported that <em>"structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine,"</em> and that KT2440 produces a single, strain-specific pyoverdine and can utilize its own pyoverdine plus that of <em>P. syringae</em> LMG 1247. Collectively, these structural studies establish that KT2440 makes a defined, functional pyoverdine containing hydroxamate residues, consistent with a complete biosynthetic pathway that includes PvdY.</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<h3 id="the-two-step-hydroxamate-precursor-module">The two-step hydroxamate-precursor module</h3>
+<p>The core of the mechanistic model is a <strong>two-enzyme conversion of L-ornithine into a hydroxamate building block</strong>, followed by NRPS incorporation and periplasmic maturation:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">         </span><span class="nx">CYTOPLASM</span>
+<span class="w">  </span><span class="nx">L</span><span class="o">-</span><span class="nx">ornithine</span>
+<span class="w">      </span><span class="o">|</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">PvdA</span><span class="w">  </span><span class="p">(</span><span class="nx">L</span><span class="o">-</span><span class="nx">ornithine</span><span class="w"> </span><span class="nx">N5</span><span class="o">-</span><span class="nx">oxygenase</span><span class="p">;</span><span class="w"> </span><span class="nx">FAD</span><span class="o">/</span><span class="nx">NADPH</span><span class="p">)</span>
+<span class="w">      </span><span class="o">|</span><span class="w">         </span><span class="s">&quot;N5 hydroxylation of L-ornithine&quot;</span>
+<span class="w">      </span><span class="nx">v</span>
+<span class="w">  </span><span class="nx">N5</span><span class="o">-</span><span class="nx">hydroxy</span><span class="o">-</span><span class="nx">L</span><span class="o">-</span><span class="nx">ornithine</span>
+<span class="w">      </span><span class="o">|</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">ACYLATION</span><span class="w"> </span><span class="nx">NODE</span><span class="w">  </span><span class="err">──</span><span class="w"> </span><span class="nx">branch</span><span class="w"> </span><span class="nx">point</span><span class="w"> </span><span class="err">──┐</span>
+<span class="w">      </span><span class="o">|</span><span class="w">                                     </span><span class="err">│</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">PvdY</span><span class="w"> </span><span class="p">(</span><span class="nx">acetyl</span><span class="o">-</span><span class="nx">CoA</span><span class="p">)</span><span class="w">          </span><span class="nx">PvdF</span><span class="w"> </span><span class="p">(</span><span class="nx">formyl</span><span class="w"> </span><span class="nx">donor</span><span class="p">)</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="s">&quot;acetylation of                &quot;</span><span class="nx">formylation</span><span class="s">&quot;</span>
+<span class="s">      |    hydroxyornithine&quot;</span><span class="w">                </span><span class="err">│</span>
+<span class="w">      </span><span class="nx">v</span><span class="w">                                     </span><span class="nx">v</span>
+<span class="w">  </span><span class="nx">N5</span><span class="o">-</span><span class="nx">acetyl</span><span class="o">-</span><span class="nx">N5</span><span class="o">-</span><span class="nx">hydroxy</span><span class="o">-</span><span class="nx">Orn</span><span class="w">         </span><span class="nx">N5</span><span class="o">-</span><span class="nx">formyl</span><span class="o">-</span><span class="nx">N5</span><span class="o">-</span><span class="nx">hydroxy</span><span class="o">-</span><span class="nx">Orn</span>
+<span class="w">  </span><span class="p">(</span><span class="k">type</span><span class="w"> </span><span class="nx">II</span><span class="w"> </span><span class="nx">hydroxamate</span><span class="p">)</span><span class="w">            </span><span class="p">(</span><span class="k">type</span><span class="w"> </span><span class="nx">I</span><span class="w"> </span><span class="nx">hydroxamate</span><span class="p">)</span>
+<span class="w">      </span><span class="o">|</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">NRPS</span><span class="w"> </span><span class="nx">assembly</span><span class="w"> </span><span class="nx">line</span><span class="w"> </span><span class="p">(</span><span class="nx">incorporates</span><span class="w"> </span><span class="nx">hydroxamate</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">other</span><span class="w"> </span><span class="nx">residues</span><span class="p">)</span>
+<span class="w">      </span><span class="nx">v</span>
+<span class="w">  </span><span class="nx">Ferribactin</span><span class="w"> </span><span class="p">(</span><span class="nx">non</span><span class="o">-</span><span class="nx">fluorescent</span><span class="w"> </span><span class="nx">precursor</span><span class="p">)</span><span class="w">   </span><span class="p">[</span><span class="nx">assembled</span><span class="w"> </span><span class="nx">at</span><span class="w"> </span><span class="nx">inner</span><span class="w"> </span><span class="nx">membrane</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">old</span><span class="w"> </span><span class="nx">cell</span><span class="w"> </span><span class="nx">pole</span><span class="p">]</span>
+<span class="w">      </span><span class="o">|</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">EXPORT</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">periplasm</span>
+<span class="w">      </span><span class="nx">v</span>
+<span class="w">         </span><span class="nx">PERIPLASM</span>
+<span class="w">  </span><span class="nx">Ferribactin</span><span class="w"> </span><span class="o">--</span><span class="nx">PvdQ</span><span class="o">/</span><span class="nx">PvdP</span><span class="o">/</span><span class="nx">PvdM</span><span class="o">/</span><span class="nx">PvdO</span><span class="o">/</span><span class="nx">PvdN</span><span class="o">/</span><span class="nx">PtaA</span><span class="o">--</span><span class="p">&gt;</span><span class="w"> </span><span class="nx">mature</span><span class="w"> </span><span class="nx">fluorescent</span><span class="w"> </span><span class="nx">PYOVERDINE</span>
+<span class="w">      </span><span class="o">|</span>
+<span class="w">      </span><span class="o">|</span><span class="w">   </span><span class="nx">SECRETION</span>
+<span class="w">      </span><span class="nx">v</span>
+<span class="w">         </span><span class="nx">EXTRACELLULAR</span>
+<span class="w">  </span><span class="nx">Pyoverdine</span><span class="w"> </span><span class="nx">chelates</span><span class="w"> </span><span class="nx">Fe</span><span class="p">(</span><span class="nx">III</span><span class="p">);</span><span class="w"> </span><span class="nx">ferri</span><span class="o">-</span><span class="nx">pyoverdine</span><span class="w"> </span><span class="nx">re</span><span class="o">-</span><span class="nx">imported</span><span class="w"> </span><span class="nx">via</span><span class="w"> </span><span class="nx">FpvA</span><span class="w"> </span><span class="nx">receptor</span>
+</code></pre></div>
+
+<p><strong>PvdY sits at the acylation node inside the cytoplasm.</strong> It is the acetyl-transfer alternative to the formyl-transfer enzyme PvdF. The acetyl group it installs, together with the N5-hydroxyl installed by PvdA, forms the <strong>hydroxamate</strong> (–N(OH)–C(=O)–CH3) functional group that is one of the two principal iron(III)-coordinating moieties of pyoverdine (the other being the catecholate-like groups of the chromophore and the β-hydroxyaspartate residues).</p>
+<h3 id="why-the-hydroxyproline-acetylase-label-is-wrong">Why the "hydroxyproline acetylase" label is wrong</h3>
+<p>The UniProt SubName "hydroxyproline acetylase" is an automated annotation (evidence code ECO:0000313, meaning imported from a sequence database record without curator review). Three independent lines of reasoning contradict it and support "N5-hydroxyornithine acetyltransferase":</p>
+<ol>
+<li><strong>Gene name.</strong> The locus is named <em>pvdY</em> — the "pvd" prefix is the standard nomenclature for <strong>p</strong>yo<strong>v</strong>er<strong>d</strong>ine biosynthesis genes. There is no plausible role for a hydroxyproline acetylase in this pathway.</li>
+<li><strong>Domain architecture.</strong> The MbtK/IucB-like acyl-CoA acyltransferase fold (PF13523) is dedicated in characterized systems to acylating <strong>N-hydroxylated amino-acid side chains</strong> (N6-hydroxylysine in aerobactin by IucB; N5-hydroxyornithine in pyoverdine). It is not a proline-modifying fold.</li>
+<li><strong>Ortholog biochemistry.</strong> The <em>P. aeruginosa</em> PvdY ortholog was directly shown to acetylate <strong>hydroxyornithine</strong> and to be essential for pyoverdine synthesis (<a href="https://pubmed.ncbi.nlm.nih.gov/16585778/">PMID: 16585778</a>).</li>
+</ol>
+<p>The likely origin of the erroneous label is a spurious substrate assignment during automated genome annotation of AAN69825, propagated into UniProt as a SubName. The corrected reaction is:</p>
+<blockquote>
+<p><strong>N5-hydroxy-L-ornithine + acetyl-CoA → N5-acetyl-N5-hydroxy-L-ornithine + CoA</strong> (EC 2.3.1.–, acetyltransferase)</p>
+</blockquote>
+<h3 id="localization-summary">Localization summary</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Compartment</th>
+<th>Enzymes</th>
+<th>PvdY role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Precursor supply</td>
+<td>Cytoplasm</td>
+<td>PvdA, <strong>PvdY</strong>/PvdF</td>
+<td><strong>Acetylates N5-OH-ornithine</strong></td>
+</tr>
+<tr>
+<td>Peptide assembly</td>
+<td>Cytoplasm / inner membrane, old cell pole</td>
+<td>NRPS (PvdL, PvdI, PvdJ, PvdD, etc.)</td>
+<td>Provides hydroxamate substrate</td>
+</tr>
+<tr>
+<td>Precursor export</td>
+<td>Inner membrane → periplasm</td>
+<td>Transporter (e.g., PvdE)</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Fluorophore maturation</td>
+<td>Periplasm</td>
+<td>PvdQ, PvdP, PvdM, PvdO, PvdN, PtaA</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Iron capture</td>
+<td>Extracellular</td>
+<td>Secreted pyoverdine</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Re-import</td>
+<td>Outer membrane</td>
+<td>FpvA receptor</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>PvdY's site of action is therefore <strong>cytoplasmic</strong>, even though the ultimate product functions extracellularly.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (short title)</th>
+<th>Relevance to PvdY function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16585778/">16585778</a></td>
+<td><em>Characterization of a gene encoding an acetylase required for pyoverdine synthesis in P. aeruginosa</em> (Lamont et al. 2006)</td>
+<td><strong>Primary evidence.</strong> Direct assignment: PvdY acetylates hydroxyornithine; <em>pvdY</em> mutation prevents pyoverdine synthesis; iron-repressed, pyoverdine-inducible expression.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21757711/">21757711</a></td>
+<td><em>Two structures of an N-hydroxylating flavoprotein monooxygenase (PvdA)</em> (Olucha et al. 2011)</td>
+<td>Defines the upstream PvdA step producing N5-hydroxyornithine, which is subsequently acylated to form hydroxamates — the node where PvdY acts.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17015659/">17015659</a></td>
+<td><em>Heterologous expression of L-ornithine N5-hydroxylase (PvdA)</em> (Ge &amp; Seah 2006)</td>
+<td>Establishes PvdA as generator of the N5-hydroxyornithine substrate that PvdY acetylates.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17900176/">17900176</a></td>
+<td><em>Biochemical characterization of ornithine hydroxylase (PvdA)</em> (Meneely &amp; Lamb 2007)</td>
+<td>Shows PvdA is a soluble cytoplasmic monomer, anchoring the hydroxamate module in the cytoplasm.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14684153/">14684153</a></td>
+<td><em>Expression of PvdA in fluorescent Pseudomonas species</em> (Putignani et al. 2004)</td>
+<td>Demonstrates PvdA-type oxygenases are iron-regulated and conserved across <em>P. putida</em> and relatives.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23126435/">23126435</a></td>
+<td><em>Pyoverdine biosynthesis and secretion in P. aeruginosa</em> (Schalk &amp; Guillon 2013)</td>
+<td>Establishes cytoplasm-to-periplasm compartmentalization; early precursor steps (incl. PvdY) are cytoplasmic.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35764171/">35764171</a></td>
+<td><em>PvdM required for oxidation of ferribactin by PvdP</em> (Sugue et al. 2022)</td>
+<td>Confirms ferribactin is cytoplasmically synthesized, then exported for periplasmic maturation — locating PvdY upstream in the cytoplasm.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25895945/">25895945</a></td>
+<td><em>Structural characterization of P. putida KT2440 pyoverdines</em> (Wei &amp; Aristilde 2015)</td>
+<td>KT2440 pyoverdine backbone Asp-Orn-OHAsp-Dab-Gly-Ser-cOHOrn contains hydroxyornithine hydroxamate — the PvdY branch is active.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28631237/">28631237</a></td>
+<td><em>Pyoverdines of KT2440 and P. taiwanensis</em> (Baune et al. 2017)</td>
+<td>Confirms known KT2440 pyoverdines G4R/G4R A differing only in acyl side chains.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19459056/">19459056</a></td>
+<td><em>Siderophore-mediated iron acquisition in P. entomophila and KT2440</em> (Matthijs et al. 2009)</td>
+<td>Confirms KT2440 produces a defined, functional pyoverdine — consistent with a complete pathway including PvdY.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15743962/">15743962</a></td>
+<td><em>Diversifying selection at the pyoverdine locus</em> (Smith et al. 2005)</td>
+<td>Notes <em>pvdY</em> is genetically linked (linkage disequilibrium) to the pyoverdine structural locus though physically separated — evolutionary evidence <em>pvdY</em> belongs to the pyoverdine system.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23766117/">23766117</a></td>
+<td><em>The acylase PvdQ conserved among fluorescent Pseudomonas</em> (Bokhove et al. 2013)</td>
+<td>Shows pyoverdine maturation machinery (incl. PvdQ) conserved in KT2440 — supports pathway conservation.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-the-evidence-converges">How the evidence converges</h3>
+<p>No paper reports the <em>in vitro</em> enzymology of the <em>P. putida</em> KT2440 protein PP_4245 specifically. The functional assignment therefore rests on a <strong>strong chain of orthology and pathway logic</strong>:</p>
+<ul>
+<li>The <strong>ortholog</strong> (<em>P. aeruginosa</em> PvdY) is directly characterized as a hydroxyornithine acetylase essential for pyoverdine (<a href="https://pubmed.ncbi.nlm.nih.gov/16585778/">PMID: 16585778</a>).</li>
+<li>The <strong>upstream substrate-supply enzyme</strong> (PvdA) is well characterized in multiple studies, and its product (N5-hydroxyornithine) is exactly the substrate PvdY requires.</li>
+<li>The <strong>KT2440 pyoverdine product</strong> contains hydroxyornithine hydroxamate residues (<a href="https://pubmed.ncbi.nlm.nih.gov/25895945/">PMID: 25895945</a>), proving the branch is active <em>in vivo</em>.</li>
+<li>The <strong>domain architecture</strong> (MbtK/IucB-like) matches the enzyme class that performs exactly this acylation chemistry.</li>
+<li><strong>Evolutionary genetics</strong> independently ties <em>pvdY</em> to the pyoverdine locus (<a href="https://pubmed.ncbi.nlm.nih.gov/15743962/">PMID: 15743962</a>).</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology of PP_4245.</strong> The functional assignment is by orthology to <em>P. aeruginosa</em> PvdY and by pathway/product logic. The KT2440 protein itself has not, to our knowledge, been purified and assayed for hydroxyornithine acetyltransferase activity. Kinetic parameters (Km for N5-hydroxyornithine and acetyl-CoA, kcat, substrate specificity vs. hydroxylysine) are unknown for the KT2440 enzyme.</p>
+</li>
+<li>
+<p><strong>Acyl-donor identity assumed.</strong> Acetyl-CoA is the presumed acetyl donor based on family membership (acyl-CoA acyltransferase, IPR016181) and the "acetylation" chemistry reported for the ortholog. Direct demonstration of the cofactor for PP_4245 is lacking.</p>
+</li>
+<li>
+<p><strong>Type II vs. KT2440 side-chain nuance.</strong> The direct PvdY characterization was on the "type II" pyoverdine system of <em>P. aeruginosa</em>. KT2440's pyoverdine differs in peptide sequence and acyl side chains; whether PP_4245 acetylates the same N5-hydroxyornithine node with identical specificity is inferred, not directly shown. The KT2440 backbone contains a <em>cyclic</em> N5-hydroxyornithine (cOHOrn) at the C-terminus and a non-cyclized Orn internally; the precise residue(s) acetylated in KT2440 would benefit from confirmation.</p>
+</li>
+<li>
+<p><strong>Genetic knockout in KT2440 not reported here.</strong> A clean <em>pvdY</em>/PP_4245 deletion in KT2440 with a pyoverdine-negative phenotype and precursor-feeding rescue (as done historically for <em>pvdA</em>) would provide organism-specific causal proof. Such a mutant was not identified in the reviewed literature.</p>
+</li>
+<li>
+<p><strong>Subcellular localization is inferred.</strong> PvdY's cytoplasmic location is deduced from the compartmentalization of pyoverdine biosynthesis and from PvdA's demonstrated cytoplasmic solubility, not from direct localization of the PvdY protein (e.g., fluorescent fusion, fractionation).</p>
+</li>
+<li>
+<p><strong>Residual annotation error in databases.</strong> The "hydroxyproline acetylase" label remains in UniProt and could continue to propagate; downstream users should treat it as erroneous.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>In vitro enzyme assay of purified PP_4245.</strong> Heterologously express and purify Q88F54; assay acetyl-CoA–dependent acetylation of chemically synthesized N5-hydroxy-L-ornithine (monitor CoA release or product by LC-MS). Determine Km, kcat, and test alternative substrates (N6-hydroxylysine, hydroxyproline as a negative control) to formally exclude the "hydroxyproline" annotation and quantify specificity.</p>
+</li>
+<li>
+<p><strong>Acyl-donor specificity.</strong> Test acetyl-CoA vs. other short-chain acyl-CoAs and vs. a formyl donor to confirm PvdY installs an acetyl (not formyl) group in KT2440, distinguishing it functionally from PvdF.</p>
+</li>
+<li>
+<p><strong>Targeted KT2440 knockout and complementation.</strong> Construct an in-frame ΔPP_4245 mutant; assess pyoverdine production by CAS assay / fluorescence and LC-MS. Confirm loss of the hydroxamate-containing pyoverdine and rescue by feeding N5-acetyl-N5-hydroxyornithine or by genetic complementation, mirroring classic <em>pvdA</em> precursor-feeding experiments.</p>
+</li>
+<li>
+<p><strong>Product structural confirmation.</strong> In a Δ<em>pvdY</em> background, use LC-MS/MS to determine whether the pyoverdine hydroxamate residues lose their acetyl modification or the siderophore fails to assemble, pinpointing which residue(s) PvdY acetylates.</p>
+</li>
+<li>
+<p><strong>Subcellular localization.</strong> Build a functional PvdY–fluorescent-protein fusion and/or perform cell fractionation to directly confirm cytoplasmic (or inner-membrane–associated, old-cell-pole) localization.</p>
+</li>
+<li>
+<p><strong>Structural biology.</strong> Solve or model the PP_4245 structure (AlphaFold + experimental) to confirm the MbtK/IucB-like fold, identify the acetyl-CoA and hydroxyornithine binding pockets, and rationalize substrate specificity. This would also provide residue-level evidence against a proline-binding site.</p>
+</li>
+<li>
+<p><strong>Database curation.</strong> Submit a correction to UniProt recommending re-annotation of Q88F54 from "Hydroxyproline acetylase" to "N5-hydroxy-L-ornithine acetyltransferase (pyoverdine biosynthesis), EC 2.3.1.–."</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The weight of evidence — direct biochemical/genetic characterization of the <em>P. aeruginosa</em> ortholog, the conserved MbtK/IucB-like acyltransferase domain architecture, the demonstrated presence of hydroxyornithine-derived hydroxamate residues in KT2440 pyoverdine, and the established cytoplasm-to-periplasm compartmentalization of pyoverdine biosynthesis — supports assigning <strong>pvdY / PP_4245 / Q88F54 as a cytoplasmic, acetyl-CoA–dependent N5-hydroxy-L-ornithine acetyltransferase</strong> that supplies the iron-chelating hydroxamate building block of pyoverdine. It functions immediately downstream of the ornithine N5-oxygenase PvdA in the cytoplasmic precursor-supply branch of pyoverdine biosynthesis and is required for siderophore production. The UniProt "hydroxyproline acetylase" designation is an automated misannotation and should be corrected. Direct enzymology and a targeted knockout in KT2440 remain the key outstanding experiments to convert this well-supported inference into organism-specific proof.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pvdY-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="pvdY-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:16585778</li>
+<li>PMID:21757711</li>
+<li>PMID:17015659</li>
+<li>PMID:17900176</li>
+<li>PMID:14684153</li>
+<li>PMID:23126435</li>
+<li>PMID:35764171</li>
+<li>PMID:25895945</li>
+<li>PMID:28631237</li>
+<li>PMID:19459056</li>
+<li>PMID:15743962</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdY-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F54" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pvdy-curation-notes">pvdY curation notes</h1>
+<p>PvdY (<code>Q88F54</code>, PP_4245) lies next to <code>pvdS</code> and <code>pvdL</code> in the KT2440<br />
+pyoverdine region. UniProt carries the submitted name <code>Hydroxyproline
+acetylase</code>, but the record has only genome-sequence references and no direct<br />
+functional study [file:PSEPK/pvdY/pvdY-uniprot.txt, "SubName:<br />
+Full=Hydroxyproline acetylase"].</p>
+<p>The sequence supports an MbtK/IucB-like acyltransferase fold<br />
+(<code>IPR019432</code>, <code>PTHR31438:SF1</code>). The current cytoplasm, acyltransferase, and<br />
+siderophore-biosynthesis GOA rows are all electronic. The family architecture<br />
+and locus support a precursor-tailoring role, but they do not establish<br />
+hydroxyproline as the physiological acceptor, the transferred acyl group, or<br />
+the product in KT2440.</p>
+<h2 id="curation-boundary">Curation boundary</h2>
+<ul>
+<li>Retain broad acyltransferase and siderophore-pathway participation only to the<br />
+  extent supported after literature adjudication.</li>
+<li>Do not create a substrate-specific MF or module reaction from the submitted<br />
+  product name alone.</li>
+<li>Keep the exact physiological reaction as a knowledge gap unless direct or<br />
+  strong pathway-specific homolog evidence resolves it.</li>
+</ul>
+<h2 id="literature-adjudication">Literature adjudication</h2>
+<p>PMID:16585778 directly establishes that the type II <em>P. aeruginosa</em> PvdYII<br />
+ortholog is required for pyoverdine synthesis and that combined bioinformatic,<br />
+genetic, and biochemical evidence indicates hydroxyornithine acetylation. This<br />
+supports the same role for PP_4245 by orthology and pathway context, but it is<br />
+not direct KT2440 enzymology. The module and review therefore retain the<br />
+specific reaction as an explicit inference and keep donor specificity and the<br />
+exact modified KT2440 residue as knowledge gaps. <a href="https://pubmed.ncbi.nlm.nih.gov/16585778" title="Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.">PMID:16585778</a></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F54
+gene_symbol: pvdY
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PvdY is an MbtK/IucB-like acyltransferase associated with pyoverdine
+  biosynthesis. The characterized Pseudomonas aeruginosa PvdYII ortholog
+  acetylates hydroxyornithine and is required for type II pyoverdine synthesis.
+  KT2440 PP_4245 is therefore best interpreted as a cytoplasmic pyoverdine
+  precursor-tailoring enzyme, although its substrate specificity and reaction
+  have not been tested directly.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm is consistent with PvdY acting before cytoplasmic NRPS assembly
+      and periplasmic pyoverdine maturation, but PP_4245 has not been localized
+      experimentally.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain the conservative localization inference while keeping the direct
+      acyltransferase reaction and pyoverdine pathway role as the core claims.
+    supported_by:
+    - reference_id: file:PSEPK/pvdY/pvdY-deep-research-openscientist.md
+      supporting_text: &#34;Subcellular localization is inferred.&#34;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The broad acyltransferase term is supported by the MbtK/IucB-like domain
+      architecture and by the hydroxyornithine-acetylating activity of the
+      characterized PvdYII ortholog.
+    action: ACCEPT
+    reason: &gt;-
+      GO does not provide a verified substrate-specific PvdY term here, so the
+      broad catalytic parent is retained and the inferred reaction is recorded
+      in prose.
+    additional_reference_ids:
+    - PMID:16585778
+    supported_by:
+    - reference_id: file:PSEPK/pvdY/pvdY-uniprot.txt
+      supporting_text: &#34;DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like.&#34;
+    - reference_id: PMID:16585778
+      supporting_text: &#34;Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.&#34;
+- term:
+    id: GO:0019290
+    label: siderophore biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PvdYII loss prevents pyoverdine synthesis in the experimentally studied
+      Pseudomonas aeruginosa system, and PP_4245 has the corresponding gene name,
+      acyltransferase fold, and KT2440 pyoverdine-locus context.
+    action: MODIFY
+    reason: &gt;-
+      The annotation is biologically correct but GO:0002049 pyoverdine
+      biosynthetic process is the more informative direct process term.
+    proposed_replacement_terms:
+    - id: GO:0002049
+      label: pyoverdine biosynthetic process
+    additional_reference_ids:
+    - PMID:16585778
+    - PMID:19459056
+    supported_by:
+    - reference_id: file:PSEPK/pvdY/pvdY-uniprot.txt
+      supporting_text: &#34;GN   Name=pvdY&#34;
+    - reference_id: PMID:16585778
+      supporting_text: &#34;A mutation in pvdY(II) prevented pyoverdine synthesis.&#34;
+- term:
+    id: GO:0002049
+    label: pyoverdine biosynthetic process
+  evidence_type: ISS
+  original_reference_id: PMID:16585778
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed specific pathway annotation based on the characterized PvdYII
+      ortholog and the matching KT2440 pvdY locus and protein-family context.
+    action: NEW
+    reason: &gt;-
+      PvdY-family hydroxyornithine acetylation supplies a tailored precursor for
+      pyoverdine synthesis; the evidence for PP_4245 is orthology based rather
+      than direct KT2440 genetics or enzymology.
+    supported_by:
+    - reference_id: PMID:16585778
+      supporting_text: &#34;A mutation in pvdY(II) prevented pyoverdine synthesis.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: file:PSEPK/pvdY/pvdY-uniprot.txt
+  title: UniProtKB entry for pvdY
+  findings:
+  - supporting_text: &#34;GN   Name=pvdY&#34;
+  - supporting_text: &#34;GN   OrderedLocusNames=PP_4245&#34;
+  - supporting_text: &#34;DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like.&#34;
+- id: PMID:16585778
+  title: Characterization of a gene encoding an acetylase required for pyoverdine synthesis in Pseudomonas aeruginosa.
+  full_text_unavailable: true
+  findings:
+  - statement: PvdYII is required for pyoverdine synthesis.
+    supporting_text: &#34;A mutation in pvdY(II) prevented pyoverdine synthesis.&#34;
+    reference_section_type: ABSTRACT
+  - statement: PvdYII catalyzes hydroxyornithine acetylation.
+    supporting_text: &#34;Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.&#34;
+    reference_section_type: ABSTRACT
+- id: PMID:19459056
+  title: Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440.
+  full_text_unavailable: true
+  findings:
+  - statement: KT2440 produces a characterized pyoverdine.
+    supporting_text: &#34;Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine&#34;
+    reference_section_type: ABSTRACT
+- id: file:PSEPK/pvdY/pvdY-deep-research-openscientist.md
+  title: OpenScientist deep research report for pvdY in Pseudomonas putida KT2440
+  findings:
+  - supporting_text: &#34;No direct enzymology of PP_4245.&#34;
+  - supporting_text: &#34;Subcellular localization is inferred.&#34;
+core_functions:
+- description: &gt;-
+    MbtK/IucB-like acyltransferase inferred to acetylate hydroxyornithine during
+    KT2440 pyoverdine precursor synthesis; the exact PP_4245 reaction remains
+    untested.
+  molecular_function:
+    id: GO:0016746
+    label: acyltransferase activity
+  directly_involved_in:
+  - id: GO:0002049
+    label: pyoverdine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/pvdY/pvdY-uniprot.txt
+    supporting_text: &#34;DR   InterPro; IPR019432; Acyltransferase_MbtK/IucB-like.&#34;
+  - reference_id: PMID:16585778
+    supporting_text: &#34;Bioinformatic, genetic, and biochemical approaches indicate that the PvdYII enzyme catalyzes acetylation of hydroxyornithine.&#34;
+suggested_questions:
+- question: &gt;-
+    Does KT2440 PvdY acetylate free or NRPS-bound hydroxyornithine, which acyl
+    donor does it use, and which KT2440 pyoverdine residue depends on the step?
+suggested_experiments:
+- hypothesis: &gt;-
+    PP_4245 supplies an acetylated hydroxyornithine precursor required for
+    KT2440 pyoverdine assembly.
+  description: &gt;-
+    Purify PP_4245 and assay candidate acyl donors against free and
+    carrier-protein-bound hydroxyornithine substrates, then compare pyoverdine
+    production and LC-MS/MS structures in wild type, a clean pvdY deletion, and
+    a complemented strain.
+  experiment_type: enzymology and targeted metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
