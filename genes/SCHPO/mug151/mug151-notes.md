@@ -43,11 +43,10 @@ non-mutually-exclusive functional threads in the family:
 2. **Splicing cofactor for RBM17/SPF45 on short introns.** SAP30BP interacts with RBM17/SPF45
    and is essential for splicing of a subset of human short introns with truncated
    polypyrimidine tracts; a UHM in RBM17 binds a UHM-ligand motif in SAP30BP, recruiting
-   RBM17 to phosphorylated SF3B1 [Fukumura et al., Cell Reports 2023, PMID:38065098; the
-   fly homologs of SAP30BP and RBM17 were detected on a short (62 nt) but not long (147 nt)
-   intron, and yeast two-hybrid showed RBM17–SAP30BP interaction — i.e. the interaction is
-   conserved beyond mammals]. This is a MORE RECENTLY characterized function of the family
-   and is arguably the better-supported biochemical role for the domain.
+   RBM17 to phosphorylated SF3B1 [PMID:38065098, "a U2AF-homology motif (UHM) in RBM17 binds
+   directly to a newly identified UHM-ligand motif in SAP30BP"]. This is a recently
+   characterized human function of the family, but the accessible abstract does not
+   establish that the interaction is conserved in fungi.
 
 IMPORTANT CAVEAT: both threads are established for the *human/animal* ortholog. For S. pombe
 mug151 there is NO published biochemical demonstration of either a SAP30/Sin3 interaction or
@@ -59,15 +58,13 @@ plausible molecular hypothesis but must NOT be asserted as established S. pombe 
 - **Meiotically up-regulated**: transcript is induced in meiosis (basis of the "mug" name and
   the UniProt `KW Meiosis` / GO:0051321 keyword). Up-regulation of expression during meiosis
   does NOT by itself establish a meiotic *function*.
-- **PMID:16303567** (Martín-Castellanos et al., Curr Biol 2005): a screen deleting 175
-  meiotically-upregulated genes. It reports **seven** genes as critical for meiotic events
-  (rec24, rec25, rec27, tht2, bqt1, bqt2, moa1). **mug151 is NOT among the seven.** mug151 was
-  one of the 175 deletions assayed but showed no reported critical meiotic phenotype in that
-  screen. The UniProt `FUNCTION: Has a role in meiosis {ECO:0000269|PubMed:16303567}` and the
-  `mug` name therefore rest on membership in the meiotically-upregulated set + the deletion
-  screen, not on a demonstrated specific meiotic mechanism. (Abstract-only in cache;
-  full_text_available: false. Do not overrule the curator — but the annotation is
-  expression-driven, and the screen positively excluded mug151 from its "critical" list.)
+- **PMID:16303567** (Martín-Castellanos et al., Curr Biol 2005): the cached abstract says
+  "we have deleted 175 meiotically upregulated genes and found seven genes not previously
+  reported to be critical for meiotic events." It names rec24, rec25, rec27, tht2, bqt1,
+  bqt2, and moa1, but **does not mention mug151 or its assay result**. UniProt cites the
+  full paper for `FUNCTION: Has a role in meiosis {ECO:0000269|PubMed:16303567}`. Because
+  the cache is abstract-only (`full_text_available: false`), the gene-specific evidence
+  cannot be verified and the curator's full-text assessment must not be overruled.
 - **Deletion viable / non-essential**: PomBase phenotype FYPO:0002060 "viable vegetative cell
   population" and FYPO:0002177 "viable vegetative cell with normal cell morphology" (fetched
   via PomBase API 2026-07-06). Mild growth phenotypes reported: FYPO:0009007 "decreased
@@ -82,7 +79,8 @@ plausible molecular hypothesis but must NOT be asserted as established S. pombe 
 ## KNOWN vs NOT-KNOWN summary
 
 KNOWN:
-- Small nuclear protein of the SAP30BP/HCNGP (Pfam PF07818) family; human ortholog SAP30BP.
+- Small SAP30BP/HCNGP-family protein (Pfam PF07818), predicted nuclear by similarity; human
+  ortholog SAP30BP.
 - Transcript is meiotically up-regulated.
 - Deletion is viable (non-essential), normal cell morphology; only mild/HT-screen phenotypes.
 - Predicted nuclear localization (by similarity).
@@ -96,12 +94,30 @@ NOT KNOWN (genuine gaps):
   demonstrated in fission yeast.
 - Whether mug151 has a genuine, specific meiotic role, or whether its "mug" status simply
   reflects meiotic transcriptional induction of a broadly-acting nuclear regulator, is
-  unresolved. The 2005 screen did NOT place it among the meiotically-critical genes.
+  unresolved. The cached abstract of the 2005 screen does not mention mug151, so its
+  gene-specific assay result cannot be determined without the full text.
 - No characterized phenotype tying loss of mug151 to a defined biological process.
+
+## 2026-08-31 research refresh
+
+- `just deep-research SCHPO mug151 --provider perplexity` reached the provider but failed
+  with an `insufficient_quota` 401; no Perplexity artifact was produced.
+- `just deep-research SCHPO mug151 --provider falcon` completed and wrote
+  `mug151-deep-research-falcon.md` plus its Edison artifact. The report found no direct
+  mug151-focused functional study and independently recommended retaining molecular
+  function, biological process, and experimental localization as unknown. Its cautious
+  synthesis supports leaving the family-based transcription/splicing ideas as hypotheses.
+- A focused OpenScientist job was launched through `just gene-hypothesis-research` to test
+  whether RBM17/SPF45-associated splicing is the ancestral SAP30BP-family function and to
+  compare splicing-partner versus SAP30/Sin3/Clr6 evidence in S. pombe. The provider ended
+  with `ConnectError: [Errno 8] nodename nor servname provided, or not known`; it wrote no
+  result or citations, so it contributed no evidence to the review.
+- Repository-wide searches found no existing project, module, or GO-CAM reference to
+  mug151/SPAC3H1.03/Q10069, so no linked project/module update is warranted in this gene PR.
 
 ## Annotation decisions (rationale)
 
-- GO:0005634 nucleus (IEA, GO_REF:0000044, SubCell): ACCEPT/KEEP_AS_NON_CORE — consistent with
+- GO:0005634 nucleus (IEA, GO_REF:0000044, SubCell): KEEP_AS_NON_CORE — consistent with
   UniProt ECO:0000250 nuclear location and family (nuclear transcriptional/splicing regulator).
   Localization, not the core "function".
 - GO:0006355 regulation of DNA-templated transcription (IEA, InterPro IPR012479): the
