@@ -108,6 +108,40 @@ def test_build_command_maps_codex_to_cyberian_agent_type(tmp_path: Path) -> None
     assert "agent_type=codex" in cmd
 
 
+def test_fallback_after_hyphenated_provider_uses_canonical_output_path(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    wrapper = load_wrapper()
+    gene_dir = tmp_path / "TP53"
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, returncode=1 if len(calls) == 1 else 0)
+
+    monkeypatch.setattr(wrapper.subprocess, "run", fake_run)
+
+    result = wrapper.run_deep_research(
+        organism="human",
+        gene_id="TP53",
+        provider="perplexity-lite",
+        gene_symbol="TP53",
+        output_path=gene_dir / "TP53-deep-research-perplexity-lite.md",
+        use_template=False,
+        fallback_providers=["falcon"],
+    )
+
+    assert result == 0
+    assert len(calls) == 2
+    assert calls[0][calls[0].index("--output") + 1] == str(
+        gene_dir / "TP53-deep-research-perplexity-lite.md"
+    )
+    assert calls[1][calls[1].index("--output") + 1] == str(
+        gene_dir / "TP53-deep-research-falcon.md"
+    )
+
+
 @pytest.mark.parametrize(
     "provider_args",
     [
