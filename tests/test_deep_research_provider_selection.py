@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -69,17 +70,20 @@ def test_select_provider_rejects_conflicting_values() -> None:
 
 def test_supported_providers_cover_public_gene_recipes() -> None:
     wrapper = load_wrapper()
+    recipe_text = (ROOT / "project.justfile").read_text()
+    recipe_providers = dict(
+        re.findall(
+            r"^deep-research-([a-z-]+)[^\n]*:\n"
+            r"\s+uv run python scripts/deep_research_wrapper\.py "
+            r"\{\{organism\}\} \{\{gene_id\}\} ([a-z-]+)",
+            recipe_text,
+            flags=re.MULTILINE,
+        )
+    )
 
-    assert set(wrapper.PROVIDERS) == {
-        "openai",
-        "perplexity",
-        "perplexity-lite",
-        "falcon",
-        "cyberian",
-        "codex",
-        "asta",
-        "openscientist",
-    }
+    assert recipe_providers
+    assert set(recipe_providers.values()) <= set(wrapper.PROVIDERS)
+    assert all(recipe == provider for recipe, provider in recipe_providers.items())
 
 
 def test_select_provider_rejects_unknown_value() -> None:
@@ -87,6 +91,21 @@ def test_select_provider_rejects_unknown_value() -> None:
 
     with pytest.raises(ValueError, match="Unsupported provider 'perplexty'"):
         wrapper.select_provider(None, "perplexty")
+
+
+def test_build_command_maps_codex_to_cyberian_agent_type(tmp_path: Path) -> None:
+    wrapper = load_wrapper()
+
+    cmd = wrapper._build_cmd(
+        organism="human",
+        gene_id="TP53",
+        provider="codex",
+        gene_symbol="TP53",
+        output_path=tmp_path / "TP53-deep-research-codex.md",
+    )
+
+    assert cmd[cmd.index("--provider") + 1] == "cyberian"
+    assert "agent_type=codex" in cmd
 
 
 @pytest.mark.parametrize(

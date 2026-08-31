@@ -96,7 +96,7 @@ def parse_uniprot_gene_name(uniprot_file: Path) -> str:
     raise ValueError(f"Could not find gene name in {uniprot_file}")
 
 
-def parse_uniprot_context(uniprot_file: Path) -> dict:
+def parse_uniprot_context(uniprot_file: Path) -> dict[str, Any]:
     """Extract comprehensive context from UniProt file for gene identification.
 
     Args:
@@ -194,7 +194,12 @@ def _build_cmd(
     provider_timeout: int | None = None,
 ) -> list[str]:
     """Build the deep-research-client command list."""
-    actual_provider = "perplexity" if provider == "perplexity-lite" else provider
+    if provider == "perplexity-lite":
+        actual_provider = "perplexity"
+    elif provider == "codex":
+        actual_provider = "cyberian"
+    else:
+        actual_provider = provider
 
     if use_template:
         cmd = [
@@ -240,6 +245,9 @@ def _build_cmd(
 
     if actual_provider == "openscientist" and provider_timeout is not None:
         cmd.extend(["--param", f"timeout={provider_timeout}"])
+
+    if provider == "codex":
+        cmd.extend(["--param", "agent_type=codex"])
 
     if extra_args:
         cmd.extend(extra_args)
