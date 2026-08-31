@@ -91,6 +91,7 @@ sync-codex-skills:
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
+# Accession precedence: --uniprot-id, existing review id, then symbol resolution
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
 [positional-arguments]
