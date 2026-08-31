@@ -10,6 +10,7 @@ autolink_gene_symbols: false
 # PSEPK lanthanide-switch PQQ alcohol oxidation
 
 - Module: `pseudomonad_lanthanide_switch_pqq_alcohol_oxidation`
+- Pull request: [#2805](https://github.com/ai4curation/ai-gene-review/pull/2805)
 - Source bucket: `ppu00625` (chloroalkane and chloroalkene degradation)
 - Focused genes: 4
 - Source GOA rows: 32
@@ -38,7 +39,8 @@ adjacent systems rather than extra parts of this module.
 - [x] Remove unsupported direct transcription-regulatory roles from PedH.
 - [x] Complete and adjudicate all six OpenScientist reports.
 - [x] Validate and render all artifacts.
-- [ ] Open one module PR and complete `/review` follow-up.
+- [x] Open one module PR.
+- [ ] Complete `/review` follow-up.
 
 ## Focused Genes
 
