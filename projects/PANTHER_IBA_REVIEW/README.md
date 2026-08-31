@@ -62,10 +62,13 @@ propagation — rather than re-judging gene by gene.
 Regenerate:
 
 ```bash
-uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+just refresh-panther-iba-project
 ```
+
+The three tables can also be refreshed independently with
+`just refresh-panther-iba-propagation`,
+`just refresh-panther-iba-node-annotations`, and
+`just refresh-panther-iba-function-losses`.
 
 The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
 a gitignored `.cache/panther/` and are not committed. Per-family node slices can
