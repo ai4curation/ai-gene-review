@@ -22,7 +22,9 @@ import yaml
 import re
 
 
-# Official UniProtKB accession syntax (6 or 10 characters).
+# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
+# whether a value is an accession or a gene symbol, so that all-uppercase gene
+# symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47) are not misclassified.
 # https://www.uniprot.org/help/accession_numbers
 _UNIPROT_ACCESSION_RE = re.compile(
     r"^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$"
@@ -30,7 +32,18 @@ _UNIPROT_ACCESSION_RE = re.compile(
 
 
 def is_uniprot_accession(value: str) -> bool:
-    """Return whether ``value`` has the shape of a UniProtKB accession."""
+    """Return whether ``value`` has the shape of a UniProtKB accession.
+
+    Examples:
+        >>> is_uniprot_accession("Q9H2V7")
+        True
+        >>> is_uniprot_accession("A0A024R161")
+        True
+        >>> is_uniprot_accession("ATP6AP1")
+        False
+        >>> is_uniprot_accession("SPNS1")
+        False
+    """
     return bool(_UNIPROT_ACCESSION_RE.fullmatch(value))
 
 
@@ -332,26 +345,38 @@ def fetch_gene_data(
 
     # Fetch UniProt data first so a reused secondary/demerged accession cannot be
     # sent to QuickGO, which returns a header-only response for such accessions.
-    uniprot_data = fetch_uniprot_data(uniprot_id)
+    try:
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+    except ValueError:
+        if not reused_review_accession:
+            raise
+        print(
+            f"  ⚠ Review accession {reused_review_accession} no longer resolves; "
+            f"resolving {gene_name} again"
+        )
+        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+
     primary_accession = _primary_uniprot_accession(uniprot_data)
     if reused_review_accession and primary_accession != reused_review_accession:
         if primary_accession:
             print(
                 f"  ⚠ Review accession {reused_review_accession} resolves to UniProt "
-                f"primary accession {primary_accession}; resolving {gene_name} again "
-                "before fetching GOA"
+                f"primary accession {primary_accession}; using the primary accession "
+                "for GOA"
             )
+            uniprot_id = primary_accession
         else:
             print(
                 f"  ⚠ Could not confirm review accession {reused_review_accession} "
                 f"against the fetched UniProt entry; resolving {gene_name} again "
                 "before fetching GOA"
             )
-        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
-        uniprot_data = fetch_uniprot_data(uniprot_id)
-        resolved_primary = _primary_uniprot_accession(uniprot_data)
-        if resolved_primary:
-            uniprot_id = resolved_primary
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+            uniprot_data = fetch_uniprot_data(uniprot_id)
+            resolved_primary = _primary_uniprot_accession(uniprot_data)
+            if resolved_primary:
+                uniprot_id = resolved_primary
 
     goa_data = fetch_goa_data(uniprot_id)
 

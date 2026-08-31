@@ -239,10 +239,36 @@ def test_stale_review_accession_is_resolved_before_fetching_goa(
     (gene_dir / "dca7-ai-review.yaml").write_text(
         "id: O74763\ngene_symbol: dca7\n"
     )
+    mock_fetch_uniprot.return_value = "AC   P12345; O74763;\n"
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_not_called()
+    mock_fetch_uniprot.assert_called_once_with("O74763")
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_dead_review_accession_falls_back_to_symbol_resolution(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, tmp_path
+):
+    """A deleted review accession must not prevent a self-healing refresh."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
     mock_resolve.return_value = "P12345"
     mock_fetch_uniprot.side_effect = [
-        "AC   P12345; O74763;\n",
-        "AC   P12345; O74763;\n",
+        ValueError("deleted accession"),
+        "AC   P12345;\n",
     ]
     mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
 
