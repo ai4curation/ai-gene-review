@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0501 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0501</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QJ1" target="_blank" class="term-link">
+                        Q88QJ1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0501";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QJ1" data-a="DESCRIPTION: PP_0501 encodes a predicted soluble NAD-dependent ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0501 encodes a predicted soluble NAD-dependent nucleotide-sugar epimerase/dehydratase-family protein. Sequence/domain evidence supports an extended-SDR nucleotide-sugar enzyme, but its substrate and reaction remain unresolved. It should not be treated as a second UDP-glucose 4-epimerase while the canonical GalE/PP_3129 is present.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0501/PP_0501-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK PP_0501 (Q88QJ1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt provides only a submitter-supplied NAD-dependent epimerase/dehydratase-family description and no EC or GO assignment.</div>
+
+                        <div class="finding-text">"DE   SubName: Full=NAD-dependent epimerase/dehydratase family protein {ECO:0000313|EMBL:AAN66129.1};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0501/PP_0501-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research for PSEPK PP_0501</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports an extended-SDR nucleotide-sugar enzyme but found no direct characterization and could not establish the substrate.</div>
+
+                        <div class="finding-text">"No direct experimental characterization."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which nucleotide sugar is the physiological substrate of PP_0501, and is its pathway linked to the adjacent deoxy-sugar biosynthesis gene PP_0500?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QJ1" data-a="Q: Which nucleotide sugar is the physiological substr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should the KEGG K01784 UDP-glucose 4-epimerase mapping be removed from PP_0501 in favor of a substrate-neutral family assignment?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QJ1" data-a="Q: Should the KEGG K01784 UDP-glucose 4-epimerase map..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_0501 and screen UDP-, dTDP-, and GDP-linked hexose and deoxyhexose substrates using LC-MS product identification, followed by a knockout and cell-surface glycan analysis.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: substrate-screening enzymology and glycomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88QJ1" data-a="EXPERIMENT: Purify PP_0501 and screen UDP-, dTDP-, and GDP-lin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0501-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QJ1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_0501 (Q88QJ1): A Cytoplasmic NAD-Dependent Nucleotide-Sugar Epimerase/Dehydratase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">3 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T14:00:47.981848</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0501-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0501-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_0501-q88qj1-a-cytoplasmic-nad-dependent-nucleotide-sugar-epimerasedehydratase-in-pseudomonas-putida-kt2440">Functional Annotation of PP_0501 (Q88QJ1): A Cytoplasmic NAD-Dependent Nucleotide-Sugar Epimerase/Dehydratase in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_0501 · <strong>UniProt:</strong> Q88QJ1 (Q88QJ1_PSEPK) · <strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) · <strong>Protein length:</strong> 310 aa (~33.3 kDa) · <strong>Protein existence:</strong> Predicted (level 4)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>PP_0501 encodes a soluble, cytoplasmic NAD⁺-dependent nucleotide-sugar (NDP-sugar) epimerase/dehydratase belonging to the extended short-chain dehydrogenase/reductase (SDR) superfamily</strong>, of which UDP-galactose-4-epimerase (GalE) is the archetype. This assignment rests on an unambiguous constellation of sequence and structural diagnostics: an N-terminal Rossmann dinucleotide-binding fingerprint (GGAGFIG, residues 10–16, matching the TGxxGxxG consensus), the catalytic Tyr146–Lys150 (YxxxK) couple that defines the family's active site, an acidic residue (Asp34) positioned to hydrogen-bond the adenosine ribose (a signature of NAD rather than NADP preference), and a high-confidence AlphaFold model (mean pLDDT = 94.9) that reproduces the characteristic two-lobed GalE fold. The domain architecture is consistent across databases: Pfam PF01370 (Epimerase), InterPro IPR001509 / IPR050177 / IPR036291, Gene3D 3.40.50.720 + 3.90.25.10, SUPFAM SSF51735, eggNOG COG0451, and PANTHER PTHR43245.</p>
+<p><strong>The enzyme functions in the cytoplasm as a producer of activated sugar donors that feed the biosynthesis of cell-surface glycans</strong> — lipopolysaccharide (LPS) O-antigen and/or exopolysaccharide (EPS). The protein has no signal peptide, lipobox, or transmembrane segment, consistent with a soluble cytosolic role generating NDP-sugars upstream of membrane-associated glycosyltransfer and export. Critically, although sequence-database pipelines (KEGG) best-hit-annotate PP_0501 as UDP-glucose 4-epimerase (EC 5.1.3.2, K01784), the housekeeping Leloir-pathway 4-epimerase role in KT2440 is filled by a distinct paralog, <strong>galE (PP_3129)</strong>, which carries the canonical gene name. PP_0501 is therefore a divergent, accessory paralog whose exact NDP-sugar substrate has <strong>not</strong> been experimentally established.</p>
+<p><strong>The most specific functional signal comes from genomic context.</strong> PP_0501 overlaps by 8 bp with, and is co-oriented with, the immediately upstream <strong>PP_0500</strong>, annotated as dTDP-4-dehydrorhamnose reductase (RmlD; K00067; EC 1.1.1.133) — a committed enzyme of the dTDP-L-rhamnose pathway. This tight translational coupling, together with a STRING functional-partner network dominated by sugar-nucleotide biosynthesis enzymes (galU, udg, galE, rmlC, rfbC/D, algD, and a putative sugar transferase), points to a role in <strong>6-deoxyhexose (rhamnose-type) NDP-sugar metabolism</strong> rather than in canonical UDP-Glc/UDP-Gal interconversion. In short: PP_0501 is confidently placed at the mechanistic level (an NAD-dependent transient-oxidation NDP-sugar epimerase/dehydratase of the GalE/SDR family, acting in the cytoplasm to supply glycosyl donors for surface polysaccharides), while its precise substrate remains an open, testable question.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>The mandatory identity checks were completed before functional analysis:</p>
+<table>
+<thead>
+<tr>
+<th>Verification step</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "PP_0501" matches UniProt description?</td>
+<td><strong>Yes.</strong> PP_0501 is the OrderedLocusName for Q88QJ1, described as "NAD-dependent epimerase/dehydratase family protein" (EMBL AAN66129.1).</td>
+</tr>
+<tr>
+<td>Organism correct?</td>
+<td><strong>Yes.</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK). All genomic-context analysis was performed within the KT2440 genome.</td>
+</tr>
+<tr>
+<td>Domains align with literature?</td>
+<td><strong>Yes.</strong> Pfam PF01370, InterPro IPR001509/IPR050177/IPR036291 correspond to the NAD-dependent epimerase/dehydratase (GalE/SDR) superfamily discussed in the cited literature.</td>
+</tr>
+<tr>
+<td>Risk of confusing with a same-symbol gene in another organism?</td>
+<td><strong>Low.</strong> "PP_0501" is a strain-specific ordered-locus name unique to KT2440; there is no competing well-characterized gene of the same symbol. The caveat is not misidentification but <em>sparse direct experimental literature</em> for this specific protein — its function is inferred from family/domain signatures and genomic context, as the task instructions permit.</td>
+</tr>
+</tbody>
+</table>
+<p>UniProt lists Q88QJ1 protein existence as <strong>"Predicted" (evidence level 4)</strong>, with no experimental EC number, GO terms, or curated functional comments. This report therefore rests on rigorous sequence/structure bioinformatics and comparative genomics, explicitly flagged as inference where experimental data are absent.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_0501-is-a-single-domain-extended-sdr-nad-dependent-nucleotide-sugar-epimerasedehydratase">Finding 1 — PP_0501 is a single-domain extended-SDR NAD-dependent nucleotide-sugar epimerase/dehydratase</h3>
+<p>The 310-residue, ~33.3 kDa soluble protein carries <strong>all diagnostic motifs of the extended SDR / UDP-galactose-4-epimerase (GalE) superfamily</strong>:</p>
+<ol>
+<li><strong>N-terminal Rossmann dinucleotide-binding fingerprint</strong> — GGAGFIG at residues 10–16, matching the canonical TGxxGxxG glycine-rich loop that cradles the pyrophosphate of the NAD cofactor. The mature N-terminus (MADAPILITGGAGFIG…) begins directly with the Rossmann βαβ fold.</li>
+<li><strong>Conserved catalytic Tyr146–Lys150 couple</strong> — the YxxxK motif (YAVDK) that is the signature catalytic dyad of SDR enzymes; the tyrosine acts as the catalytic acid/base and the lysine lowers the tyrosine pKa and binds the nicotinamide ribose.</li>
+<li><strong>NAD (not NADP) specificity determinant</strong> — an acidic residue (Asp34) positioned to hydrogen-bond the 2′- and 3′-hydroxyls of the adenosine ribose, the classic discriminator that excludes the 2′-phosphate of NADP.</li>
+</ol>
+<p>These features are corroborated by a consistent, multi-database domain architecture: <strong>Pfam PF01370</strong> (Epimerase); <strong>InterPro IPR001509</strong> (NAD-dependent epimerase/dehydratase), IPR050177 (Lipid A modification metabolic enzyme cluster), IPR036291 (NAD(P)-binding Rossmann superfamily); <strong>Gene3D 3.40.50.720 + 3.90.25.10</strong> (UDP-galactose 4-epimerase domain architecture); <strong>SUPFAM SSF51735</strong>; <strong>eggNOG COG0451</strong>; <strong>PANTHER PTHR43245</strong>.</p>
+<p>The family to which PP_0501 belongs has a <strong>conserved structure and mechanism</strong>. As Zhang et al. state, "<em>These NDP-sugar 4-epimerases (NS-4Es) play critical roles in diverse carbohydrate metabolic pathways across all domains of life and exhibit conserved structures and mechanism</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/42425474/">PMID: 42425474</a>. The archetypal reaction is defined by GalE: "<em>UDP-glucose 4-epimerase (GalE) is a key enzyme in the Leloir pathway that catalyzes the reversible conversion of UDP-glucose to UDP-galactose and plays a central role in galactose metabolism</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/42250718/">PMID: 42250718</a>. The mechanism proceeds by transient oxidation of the sugar C4′ hydroxyl by the tightly bound NAD⁺ to a 4-keto intermediate, non-stereospecific reduction from the opposite face, and release of the epimerized (or otherwise modified) product — with the cofactor recycled in situ, so no net redox change occurs.</p>
+<h3 id="finding-2-pp_0501-is-a-paralog-of-the-housekeeping-gale-pp_3129-its-precise-ndp-sugar-substrate-is-undefined">Finding 2 — PP_0501 is a paralog of the housekeeping galE (PP_3129); its precise NDP-sugar substrate is undefined</h3>
+<p>The KT2440 genome assigns <strong>two genes</strong> to KEGG orthology K01784 (UDP-glucose 4-epimerase, EC 5.1.3.2): <strong>PP_3129</strong>, which carries the explicit gene name <em>galE</em>, and <strong>PP_0501</strong>. PP_3129 bears the canonical <em>galE</em> name, marking it as the housekeeping Leloir-pathway 4-epimerase, while PP_0501 is a <strong>divergent paralog assigned by best-hit similarity only</strong>. Because a single organism rarely needs two identical housekeeping GalE enzymes, this gene duplication strongly suggests functional divergence of PP_0501 toward a specialized substrate.</p>
+<p>This caution is warranted because the NS-4E family is functionally promiscuous across evolution. The review documents that "<em>a plethora of homologous 4-epimerases has been reported with activities on a variety of other nucleotide sugars, including UDP-D-N-acetyl-galacto/glucosamine, UDP-xylose/L-arabinose, UDP-galacturonic/glucuronic acid, dTDP-L-rhamnose/6-deoxy-L-talose and/or GDP-hexoses</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/42425474/">PMID: 42425474</a>. The same review expanded the recognized specificity classes from three to seven, underscoring that a best-hit KEGG label of "UDP-glucose 4-epimerase" is an unreliable predictor of the true substrate of a divergent paralog. Consistent with this, UniProt classifies Q88QJ1 as <strong>"Predicted"</strong> with no experimental EC number.</p>
+<h3 id="finding-3-genomic-context-couples-pp_0501-to-dtdp-6-deoxysugar-rhamnose-type-biosynthesis">Finding 3 — Genomic context couples PP_0501 to dTDP-6-deoxysugar (rhamnose-type) biosynthesis</h3>
+<p>The strongest substrate-level clue is positional. PP_0501 (coordinates 590,754–591,686, + strand) <strong>overlaps by 8 bp</strong> with the immediately upstream <strong>PP_0500</strong> (589,877–590,761, + strand). PP_0500 is annotated by KEGG as <strong>dTDP-4-dehydrorhamnose reductase (RmlD; K00067; EC 1.1.1.133)</strong> — the committed, final enzyme of the dTDP-L-rhamnose biosynthetic pathway. An 8-bp overlap with shared orientation is a hallmark of <strong>translational coupling within a single operon</strong>, implying the two gene products act in the same pathway and are co-regulated.</p>
+<p>Importantly, KT2440 already possesses a <strong>complete canonical rhamnose pathway elsewhere</strong> in the genome (rmlC at PP_0265/PP_1782; dTDP-glucose 4,6-dehydratase rmlB at PP_1785; rmlD at PP_1784). PP_0500–PP_0501 therefore constitute a <strong>second, accessory deoxysugar-modifying unit</strong>, likely dedicated to a specific surface-glycan structure rather than to the core rhamnose supply. dTDP- and UDP-6-deoxysugars (rhamnose, fucose, and their derivatives) are classic building blocks of bacterial O-antigen/LPS and exopolysaccharides. As one study frames the pathway class, the work "<em>aimed to better understand the biosynthesis of the 6-deoxy sugars, fucose and rhamnose</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/40511930/">PMID: 40511930</a>. This places PP_0501 most plausibly as an epimerase/dehydratase acting on a dTDP- or UDP-linked (possibly 6-deoxy) hexose destined for a surface glycan.</p>
+<div class="codehilite"><pre><span></span><code>KT2440 genome, PP_0500–PP_0501 accessory deoxysugar unit
+(coordinates, + strand)
+
+589,877 ─────────────── 590,761   PP_0500  RmlD (dTDP-4-dehydrorhamnose reductase, EC 1.1.1.133)
+          ╎ 8-bp overlap (translational coupling)
+      590,754 ─────────────── 591,686   PP_0501  Q88QJ1 (NAD-dependent NDP-sugar epimerase/dehydratase)
+
+Interpretation: one operon → shared pathway → NDP-(6-deoxy)hexose modification → surface glycan
+</code></pre></div>
+
+<h3 id="finding-4-pp_0501-functions-in-the-cytoplasm-as-a-soluble-metabolic-enzyme">Finding 4 — PP_0501 functions in the cytoplasm as a soluble metabolic enzyme</h3>
+<p>The 310-aa sequence has <strong>no N-terminal Sec/Tat signal peptide, no lipobox, and no hydrophobic transmembrane segment</strong>; the N-terminus (MADAPILITGGAGFIG…) begins directly with the Rossmann βαβ fold. NDP-hexose epimerases/dehydratases of the GalE/SDR family are canonically <strong>soluble cytosolic enzymes</strong> that generate activated (nucleotide-linked) sugar donors upstream of membrane-associated glycosyltransfer and export steps. eggNOG COG0451 members (nucleotide-sugar epimerase/dehydratase) are cytoplasmic. The subcellular location of PP_0501's catalytic activity is therefore the <strong>cytoplasm</strong>, where it contributes to the pool of activated sugar precursors; the polysaccharide products it ultimately supplies are assembled at the inner membrane and displayed on the cell surface.</p>
+<h3 id="finding-5-pp_0501-sits-within-the-activated-sugar-biosynthesis-network-feeding-cell-surface-glycans-alphafold-confirms-a-high-confidence-rossmann-fold">Finding 5 — PP_0501 sits within the activated-sugar biosynthesis network feeding cell-surface glycans; AlphaFold confirms a high-confidence Rossmann fold</h3>
+<p>A STRING (v12, <em>P. putida</em> KT2440) analysis places PP_0501 firmly inside the sugar-nucleotide biosynthesis network. Its high-confidence functional partners are:</p>
+<table>
+<thead>
+<tr>
+<th>Partner</th>
+<th>Annotation</th>
+<th>STRING score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>udg / PP_2926</td>
+<td>UDP-glucose 6-dehydrogenase</td>
+<td>0.980</td>
+</tr>
+<tr>
+<td>PP_0500</td>
+<td>RmlD, dTDP-4-dehydrorhamnose reductase (operon neighbor)</td>
+<td>0.975</td>
+</tr>
+<tr>
+<td>galE / PP_3129</td>
+<td>UDP-glucose 4-epimerase (housekeeping paralog)</td>
+<td>0.935</td>
+</tr>
+<tr>
+<td>galU</td>
+<td>UTP–glucose-1-phosphate uridylyltransferase</td>
+<td>0.934</td>
+</tr>
+<tr>
+<td>rmlC</td>
+<td>dTDP-4-dehydrorhamnose 3,5-epimerase</td>
+<td>0.896</td>
+</tr>
+<tr>
+<td>rfbD / PP_1784</td>
+<td>RmlD</td>
+<td>0.889</td>
+</tr>
+<tr>
+<td>rfbC</td>
+<td>dTDP-4-dehydrorhamnose 3,5-epimerase</td>
+<td>0.870</td>
+</tr>
+<tr>
+<td>algD / PP_1288</td>
+<td>GDP-mannose 6-dehydrogenase (alginate)</td>
+<td>0.838</td>
+</tr>
+<tr>
+<td>PP_3142</td>
+<td>putative sugar (glycosyl)transferase</td>
+<td>0.727</td>
+</tr>
+</tbody>
+</table>
+<p>These partners span <strong>UDP-glucose synthesis</strong> (galU), <strong>UDP-glucuronate synthesis</strong> (udg), <strong>UDP-hexose epimerization</strong> (galE), <strong>dTDP-L-rhamnose synthesis</strong> (rml/rfb), <strong>GDP-mannuronate/alginate</strong> (algD), and <strong>glycan assembly</strong> (sugar transferase). The network is thus unambiguously that of <strong>nucleotide-sugar biosynthesis for cell-surface polysaccharides</strong>. Independently, the AlphaFold model <strong>AF-Q88QJ1-F1 (v6)</strong> has a <strong>mean pLDDT of 94.9</strong>, indicating a confidently predicted, well-ordered globular protein whose fold matches the two-lobed Rossmann (NAD-binding lobe + substrate-binding lobe) architecture of the GalE family — structural confirmation independent of sequence-motif analysis.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating the five findings yields a coherent picture. PP_0501 is a <strong>cytoplasmic, NAD⁺-dependent, transient-oxidation NDP-sugar epimerase/dehydratase</strong> that operates within the activated-sugar supply network for surface-glycan biosynthesis.</p>
+<h3 id="the-catalytic-mechanism-galesdr-family">The catalytic mechanism (GalE/SDR family)</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">NAD</span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">tightly</span><span class="w"> </span><span class="n">bound</span><span class="p">)</span><span class="w">                 </span><span class="n">NADH</span><span class="w">                        </span><span class="n">NAD</span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">recycled</span><span class="p">)</span>
+<span class="w">      </span><span class="err">│</span><span class="w">                                </span><span class="err">│</span><span class="w">                                </span><span class="err">│</span>
+<span class="w">      </span><span class="err">▼</span><span class="w">                                </span><span class="err">▼</span><span class="w">                                </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">NDP</span><span class="err">–</span><span class="n">sugar</span><span class="w"> </span><span class="err">────</span><span class="w"> </span><span class="n">C4</span><span class="err">′</span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="n">Cx</span><span class="p">)</span><span class="w"> </span><span class="n">oxidation</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">NDP</span><span class="err">–</span><span class="mh">4</span><span class="o">-</span><span class="n">keto</span><span class="o">-</span><span class="n">sugar</span><span class="w"> </span><span class="err">────</span><span class="w"> </span><span class="n">reduction</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">NDP</span><span class="err">–</span><span class="n">sugar</span><span class="p">&#39;</span>
+<span class="w">  </span><span class="p">(</span><span class="n">substrate</span><span class="p">)</span><span class="w">     </span><span class="n">by</span><span class="w"> </span><span class="n">Tyr146</span><span class="o">/</span><span class="n">Lys150</span><span class="w">            </span><span class="n">intermediate</span><span class="w">       </span><span class="n">opposite</span><span class="w"> </span><span class="n">face</span><span class="w">      </span><span class="p">(</span><span class="n">epimer</span><span class="o">/</span>
+<span class="w">  </span><span class="n">catalytic</span><span class="w"> </span><span class="n">couple</span><span class="w">                                </span><span class="p">(</span><span class="n">non</span><span class="o">-</span><span class="n">stereo</span><span class="o">-</span><span class="w">        </span><span class="n">modified</span>
+<span class="w">                                                   </span><span class="n">specific</span><span class="p">)</span><span class="w">          </span><span class="n">product</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nl">Net:</span><span class="w"> </span><span class="n">no</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">change</span><span class="p">;</span><span class="w"> </span><span class="n">cofactor</span><span class="w"> </span><span class="n">regenerated</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">situ</span><span class="p">.</span><span class="w"> </span><span class="n">Reaction</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">reversible</span><span class="p">.</span>
+</code></pre></div>
+
+<ul>
+<li><strong>Cofactor:</strong> NAD⁺ (not NADP⁺), inferred from Asp34 ribose contact.</li>
+<li><strong>Catalytic residues:</strong> Tyr146 (acid/base) and Lys150 (pKa modulation, ribose binding) — the YxxxK couple.</li>
+<li><strong>Cofactor binding:</strong> Rossmann GGAGFIG loop (res 10–16).</li>
+<li><strong>Reaction class:</strong> reversible epimerization and/or dehydration of a nucleotide-activated sugar.</li>
+</ul>
+<h3 id="placement-in-the-cellular-pathway">Placement in the cellular pathway</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">  </span><span class="n">Central</span><span class="w"> </span><span class="n">carbon</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">glucose</span><span class="mi">-1</span><span class="o">-</span><span class="n">P</span><span class="w"> </span><span class="err">──</span><span class="n">galU</span><span class="err">──►</span><span class="w"> </span><span class="n">UDP</span><span class="o">-</span><span class="n">glucose</span><span class="w"> </span><span class="err">──┬──</span><span class="w"> </span><span class="n">galE</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3129</span><span class="p">)</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">UDP</span><span class="o">-</span><span class="n">galactose</span><span class="w">  </span><span class="p">[</span><span class="n">housekeeping</span><span class="w"> </span><span class="n">Leloir</span><span class="p">]</span>
+<span class="w">                                         </span><span class="err">│</span>
+<span class="w">                                         </span><span class="err">├──</span><span class="w"> </span><span class="n">udg</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">UDP</span><span class="o">-</span><span class="n">glucuronate</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="p">...</span>
+<span class="w">                                         </span><span class="err">│</span>
+<span class="w">     </span><span class="n">dTDP</span><span class="o">-</span><span class="n">glucose</span><span class="w"> </span><span class="err">──</span><span class="n">rmlB</span><span class="err">──►</span><span class="w"> </span><span class="n">dTDP</span><span class="mi">-4</span><span class="o">-</span><span class="n">keto</span><span class="mi">-6</span><span class="o">-</span><span class="n">deoxyglucose</span><span class="w"> </span><span class="err">──</span><span class="n">rmlC</span><span class="err">──►</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">──</span><span class="n">rmlD</span><span class="p">(</span><span class="n">PP_0500</span><span class="p">)</span><span class="err">──►</span><span class="w"> </span><span class="n">dTDP</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">rhamnose</span>
+<span class="w">                                                    </span><span class="err">│</span>
+<span class="w">                                                    </span><span class="err">└───────►</span><span class="w">  </span><span class="n">PP_0501</span><span class="w"> </span><span class="p">(</span><span class="n">accessory</span>
+<span class="w">                                                               </span><span class="n">NDP</span><span class="o">-</span><span class="p">(</span><span class="mi">6</span><span class="o">-</span><span class="n">deoxy</span><span class="p">)</span><span class="n">sugar</span>
+<span class="w">                                                               </span><span class="n">epimerase</span><span class="o">/</span><span class="n">dehydratase</span><span class="p">)</span>
+<span class="w">                                                                       </span><span class="err">│</span>
+<span class="w">                                         </span><span class="err">┌─────────────────────────────┘</span>
+<span class="w">                                         </span><span class="err">▼</span>
+<span class="w">                            </span><span class="n">glycosyltransferases</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">g</span><span class="p">.</span><span class="w"> </span><span class="n">PP_3142</span><span class="p">)</span>
+<span class="w">                                         </span><span class="err">│</span>
+<span class="w">                                         </span><span class="err">▼</span>
+<span class="w">              </span><span class="n">LPS</span><span class="w"> </span><span class="n">O</span><span class="o">-</span><span class="n">antigen</span><span class="w">  </span><span class="o">/</span><span class="w">  </span><span class="n">Exopolysaccharide</span><span class="w">  </span><span class="p">(</span><span class="n">cell</span><span class="w"> </span><span class="n">surface</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The consensus interpretation is that PP_0501 acts on a <strong>dTDP- or UDP-linked (possibly 6-deoxy) hexose</strong> — most plausibly a rhamnose-pathway intermediate or a related deoxysugar — feeding a specific cell-surface glycan structure. This is distinct from the housekeeping UDP-Glc↔UDP-Gal interconversion, which is handled by galE/PP_3129. The two-paralog arrangement (one canonical GalE, one divergent accessory enzyme physically coupled to RmlD) is the central mechanistic insight of this investigation.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports / bears on the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42425474/">42425474</a></td>
+<td><em>Enhanced GDP-d-mannose 4-epimerization and dynamic insights into NDP-sugar 4-epimerase substrate specificity</em></td>
+<td>Establishes that NS-4Es have conserved structure and mechanism (supports mechanistic inference for Q88QJ1) AND that the family is functionally promiscuous across many nucleotide sugars (justifies caution about the best-hit UDP-glucose label). Underpins Findings 1 and 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42250718/">42250718</a></td>
+<td><em>Use of UDP-glucose 4-epimerase all4713 from Nostoc sp. PCC 7120 in the synthesis of galactose</em></td>
+<td>Defines the archetypal GalE reaction (reversible UDP-glucose ↔ UDP-galactose) and NAD dependence of the family to which Q88QJ1 belongs by sequence/domain. Supports Finding 1.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40511930/">40511930</a></td>
+<td><em>Rhamnose biosynthesis is not impaired by the deletion of putative genes…</em></td>
+<td>Frames rhamnose and fucose as 6-deoxysugars built via nucleotide-sugar pathways for surface polysaccharides — the pathway class implicated by PP_0501's operon neighbor PP_0500 (RmlD). Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41519345/">41519345</a></td>
+<td><em>Effects of temperature on exopolysaccharides from Pseudoalteromonas…</em></td>
+<td>Illustrates that dTDP-rhamnose synthesis genes are upregulated in coordination with rhamnose-rich EPS production in bacteria — contextual support for a rhamnose-pathway enzyme feeding surface polysaccharide.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35273305/">35273305</a></td>
+<td><em>New insights into the BceAB-type transporter SaNsrFP</em></td>
+<td>Notes UDP-glucose 4-epimerase among proteins associated with cell-wall modification — contextual link between GalE-family enzymes and surface/cell-wall glycan remodeling.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on literature scope.</strong> Direct primary literature on PP_0501 itself is essentially absent — the protein is annotated "Predicted." The evidence base therefore combines (i) authoritative family/mechanism reviews, (ii) comparative genomics within the KT2440 genome (operon structure, paralog identification), (iii) STRING functional-association networks, and (iv) high-confidence AlphaFold structural prediction. This is exactly the inference-from-structure/evolution/bioinformatics evidence the task prioritizes when precise experimental studies are unavailable.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental characterization.</strong> Q88QJ1 has UniProt evidence level 4 ("Predicted"). No purified-enzyme assay, kinetic data, crystal structure, or knockout phenotype exists specifically for PP_0501. All functional claims below the family level are inferential.</li>
+<li><strong>Exact substrate is undetermined.</strong> The NS-4E family acts on at least seven substrate classes (UDP-Glc/Gal, UDP-GlcNAc/GalNAc, UDP-Xyl/Ara, UDP-GlcA/GalA, dTDP-rhamnose/6-deoxy-talose, GDP-hexoses). Genomic context favors a dTDP-/UDP-(6-deoxy)hexose, but this is a hypothesis, not a measured activity. Whether PP_0501 is an epimerase, a dehydratase, or bifunctional is not established.</li>
+<li><strong>Cofactor preference is inferred, not measured.</strong> The Asp34 ribose contact indicates NAD⁺ over NADP⁺, but this has not been confirmed biochemically.</li>
+<li><strong>Operon boundaries and regulation are predicted.</strong> The 8-bp overlap with PP_0500 strongly implies co-transcription, but transcriptomic/RNA-seq confirmation of a single mRNA and shared promoter is lacking.</li>
+<li><strong>STRING associations are computational.</strong> High-confidence scores reflect co-occurrence, co-expression, and text-mining signals, not physical complexes or validated pathway membership.</li>
+<li><strong>Product glycan identity unknown.</strong> Whether the downstream product is LPS O-antigen, a specific EPS, or another surface glycan has not been resolved for this particular enzyme.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant enzyme assay with a substrate panel.</strong> Express and purify His-tagged PP_0501; screen candidate NDP-sugars (UDP-Glc, UDP-Gal, UDP-GlcNAc, UDP-GalNAc, UDP-GlcA, dTDP-glucose, dTDP-4-keto-6-deoxyglucose, dTDP-rhamnose intermediates, GDP-mannose) by capillary electrophoresis or LC-MS to detect epimerization/dehydration. <strong>This is the single most decisive experiment.</strong></li>
+<li><strong>Cofactor determination.</strong> Measure bound cofactor (NAD⁺ vs NADP⁺) by denaturation/HPLC and test activity dependence on added cofactor; mutate Asp34 to test the ribose-discrimination hypothesis.</li>
+<li><strong>Genetic operon test.</strong> RT-PCR / RNA-seq across the PP_0500–PP_0501 junction to confirm co-transcription; construct clean deletions of PP_0501 (and the PP_0500–PP_0501 pair) and characterize LPS/EPS by SDS-PAGE silver stain, glycosyl-composition GC-MS, and immunoblotting for O-antigen changes.</li>
+<li><strong>Complementation/epistasis with galE (PP_3129).</strong> Test whether PP_0501 can complement a galE deletion (to probe overlap with housekeeping activity) and whether double mutants reveal specialized function.</li>
+<li><strong>Structural validation.</strong> Solve a crystal or cryo-EM structure (or refine the AlphaFold model against experimental data) with bound cofactor and substrate analog to confirm the active-site geometry and substrate specificity determinants.</li>
+<li><strong>Phenotypic profiling.</strong> Assess the PP_0501 mutant for biofilm formation, surface adhesion, phage sensitivity, and stress tolerance — readouts sensitive to O-antigen/EPS composition changes.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_0501 (Q88QJ1) is confidently identified — at the mechanistic and structural level — as a <strong>cytoplasmic, NAD⁺-dependent nucleotide-sugar epimerase/dehydratase of the extended-SDR (GalE) superfamily</strong>, carrying the full complement of Rossmann NAD-binding, YxxxK catalytic, and NAD-specificity motifs and a high-confidence GalE-fold AlphaFold model. It generates activated sugar donors in the cytoplasm to supply the biosynthesis of cell-surface polysaccharides. While databases best-hit-label it UDP-glucose 4-epimerase, that housekeeping function is carried by the paralog galE (PP_3129); PP_0501's operonic coupling to the dTDP-4-dehydrorhamnose reductase PP_0500 and its sugar-nucleotide STRING network instead implicate it in <strong>6-deoxyhexose (rhamnose-type) NDP-sugar biosynthesis for LPS O-antigen and/or exopolysaccharide</strong>. Its exact substrate remains experimentally undetermined and is the priority target for future work.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0501-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0501-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:42425474</li>
+<li>PMID:42250718</li>
+<li>PMID:40511930</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QJ1
+gene_symbol: PP_0501
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_0501 encodes a predicted soluble NAD-dependent nucleotide-sugar
+  epimerase/dehydratase-family protein. Sequence/domain evidence supports an
+  extended-SDR nucleotide-sugar enzyme, but its substrate and reaction remain
+  unresolved. It should not be treated as a second UDP-glucose 4-epimerase
+  while the canonical GalE/PP_3129 is present.
+existing_annotations: []
+references:
+- id: file:PSEPK/PP_0501/PP_0501-uniprot.txt
+  title: UniProtKB entry for PSEPK PP_0501 (Q88QJ1)
+  findings:
+  - statement: &gt;-
+      UniProt provides only a submitter-supplied NAD-dependent
+      epimerase/dehydratase-family description and no EC or GO assignment.
+    supporting_text: &#34;DE   SubName: Full=NAD-dependent epimerase/dehydratase family protein {ECO:0000313|EMBL:AAN66129.1};&#34;
+- id: file:PSEPK/PP_0501/PP_0501-deep-research-openscientist.md
+  title: OpenScientist deep research for PSEPK PP_0501
+  findings:
+  - statement: &gt;-
+      The report supports an extended-SDR nucleotide-sugar enzyme but found no
+      direct characterization and could not establish the substrate.
+    supporting_text: &#34;No direct experimental characterization.&#34;
+aliases: []
+core_functions: []
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which nucleotide sugar is the physiological substrate of PP_0501, and is
+    its pathway linked to the adjacent deoxy-sugar biosynthesis gene PP_0500?
+- question: &gt;-
+    Should the KEGG K01784 UDP-glucose 4-epimerase mapping be removed from
+    PP_0501 in favor of a substrate-neutral family assignment?
+suggested_experiments:
+- description: &gt;-
+    Purify PP_0501 and screen UDP-, dTDP-, and GDP-linked hexose and deoxyhexose
+    substrates using LC-MS product identification, followed by a knockout and
+    cell-surface glycan analysis.
+  experiment_type: substrate-screening enzymology and glycomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
