@@ -22,6 +22,18 @@ import yaml
 import re
 
 
+# Official UniProtKB accession syntax (6 or 10 characters).
+# https://www.uniprot.org/help/accession_numbers
+_UNIPROT_ACCESSION_RE = re.compile(
+    r"^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$"
+)
+
+
+def is_uniprot_accession(value: str) -> bool:
+    """Return whether ``value`` has the shape of a UniProtKB accession."""
+    return bool(_UNIPROT_ACCESSION_RE.fullmatch(value))
+
+
 def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Dict[str, str]]:
     """Extract alternative products (isoforms) from UniProt data.
 
@@ -251,7 +263,8 @@ def fetch_gene_data(
 
     Args:
         gene_info: Tuple of (organism, gene_name) e.g. ("human", "CFAP300")
-        uniprot_id: Optional UniProt accession ID. If not provided, will attempt to resolve.
+        uniprot_id: Optional UniProt accession ID. Precedence is explicit ID, then the
+            accession in an existing review, then gene-symbol resolution.
         base_path: Base directory for output files. Defaults to current directory.
         seed_annotations: If True, creates/seeds ai-review.yaml with GOA annotations.
         fetch_titles: If True, fetch actual titles from PubMed when seeding (default: True).
@@ -300,10 +313,12 @@ def fetch_gene_data(
     # UniProt and GOA snapshots. Reuse it before querying by symbol: MOD-standard
     # symbols are not always present in UniProt's gene_exact index (for example,
     # S. pombe dca7 is stored under systematic locus SPBC17D11.08).
+    reused_review_accession: Optional[str] = None
     if uniprot_id is None:
         yaml_file = gene_dir / f"{file_prefix}-ai-review.yaml"
-        uniprot_id = _existing_review_uniprot_id(yaml_file)
-        if uniprot_id:
+        reused_review_accession = _existing_review_uniprot_id(yaml_file)
+        if reused_review_accession:
+            uniprot_id = reused_review_accession
             print(
                 f"  - Reusing UniProt ID {uniprot_id} from "
                 f"{file_prefix}-ai-review.yaml"
@@ -315,8 +330,29 @@ def fetch_gene_data(
     uniprot_file = gene_dir / f"{file_prefix}-uniprot.txt"
     goa_file = gene_dir / f"{file_prefix}-goa.tsv"
 
-    # Fetch UniProt and GOA data
+    # Fetch UniProt data first so a reused secondary/demerged accession cannot be
+    # sent to QuickGO, which returns a header-only response for such accessions.
     uniprot_data = fetch_uniprot_data(uniprot_id)
+    primary_accession = _primary_uniprot_accession(uniprot_data)
+    if reused_review_accession and primary_accession != reused_review_accession:
+        if primary_accession:
+            print(
+                f"  ⚠ Review accession {reused_review_accession} resolves to UniProt "
+                f"primary accession {primary_accession}; resolving {gene_name} again "
+                "before fetching GOA"
+            )
+        else:
+            print(
+                f"  ⚠ Could not confirm review accession {reused_review_accession} "
+                f"against the fetched UniProt entry; resolving {gene_name} again "
+                "before fetching GOA"
+            )
+        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+        resolved_primary = _primary_uniprot_accession(uniprot_data)
+        if resolved_primary:
+            uniprot_id = resolved_primary
+
     goa_data = fetch_goa_data(uniprot_id)
 
     # Check for differences
@@ -520,7 +556,17 @@ def _existing_review_uniprot_id(review_file: Path) -> Optional[str]:
     accession = accession.strip()
     if accession.startswith("UniProtKB:"):
         accession = accession.split(":", 1)[1]
-    return accession or None
+    return accession if is_uniprot_accession(accession) else None
+
+
+def _primary_uniprot_accession(uniprot_data: str) -> Optional[str]:
+    """Extract the primary accession from a UniProt flat-file entry."""
+    for line in uniprot_data.splitlines():
+        if not line.startswith("AC   "):
+            continue
+        accession = line[5:].split(";", 1)[0].strip()
+        return accession if is_uniprot_accession(accession) else None
+    return None
 
 
 def expand_organism_name(organism: str) -> str:

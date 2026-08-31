@@ -189,3 +189,72 @@ def test_explicit_accession_overrides_existing_review_accession(
     mock_resolve.assert_not_called()
     mock_fetch_uniprot.assert_called_once_with("P12345")
     mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@pytest.mark.parametrize(
+    "review_content",
+    [
+        None,
+        "gene_symbol: dca7\n",
+        "id: '  '\ngene_symbol: dca7\n",
+        "id: URS000075D95B_9606\ngene_symbol: XIST\n",
+        "id: [\n",
+    ],
+)
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_fetch_gene_data_falls_back_when_review_has_no_protein_accession(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, review_content, tmp_path
+):
+    """Missing, invalid, ncRNA, and malformed review IDs use symbol resolution."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    if review_content is not None:
+        (gene_dir / "dca7-ai-review.yaml").write_text(review_content)
+    mock_resolve.return_value = "P12345"
+    mock_fetch_uniprot.return_value = "AC   P12345;\n"
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_called_once_with("dca7", "SCHPO")
+    mock_fetch_uniprot.assert_called_once_with("P12345")
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_stale_review_accession_is_resolved_before_fetching_goa(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, tmp_path
+):
+    """QuickGO must receive the current primary accession, not a stale review ID."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
+    mock_resolve.return_value = "P12345"
+    mock_fetch_uniprot.side_effect = [
+        "AC   P12345; O74763;\n",
+        "AC   P12345; O74763;\n",
+    ]
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_called_once_with("dca7", "SCHPO")
+    assert [call.args[0] for call in mock_fetch_uniprot.call_args_list] == [
+        "O74763",
+        "P12345",
+    ]
+    mock_fetch_goa.assert_called_once_with("P12345")
