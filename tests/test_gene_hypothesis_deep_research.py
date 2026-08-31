@@ -296,6 +296,30 @@ def test_template_vars_use_explicit_placeholders_for_missing_source(
 
     assert variables["source_file"] == ghr.UNSPECIFIED_SOURCE
     assert variables["source_selector"] == ghr.UNSPECIFIED_SOURCE
+    assert all(variables.values())
+
+
+def test_direct_free_text_record_tracks_review_source(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "core_function",
+            "--hypothesis",
+            "IBAT has a test function",
+        ]
+    )
+
+    record = ghr.direct_record_from_args(args)
+
+    assert record.source_file == genes_root / "human" / "IBAT" / "IBAT-ai-review.yaml"
+    assert record.source_selector == "free-text"
 
 
 def test_function_support_from_term_id(tmp_path: Path) -> None:
