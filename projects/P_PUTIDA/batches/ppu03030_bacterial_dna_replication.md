@@ -59,5 +59,5 @@ already cover the corresponding proofreading and helicase roles.
 
 ## Evidence
 
-- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial-chromosomal-dna-replication__ppu03030-deep-research-openscientist.md)
+- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial_chromosomal_dna_replication__ppu03030-deep-research-openscientist.md)
 - `modules/bacterial_chromosomal_dna_replication.yaml`
