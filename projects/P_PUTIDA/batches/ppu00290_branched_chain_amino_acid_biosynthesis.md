@@ -121,13 +121,20 @@ advisory warnings remain non-blocking and are unrelated to this batch.
   module is not grounded only by the PSEPK instance.
 - Added five activity-specific PAINT IBD nodes whose experimental seed lists
   support the corresponding leaf functions. The IlvH catalytic PAINT
-  assertion and the broad IlvD lyase node were inspected but deliberately not
-  promoted.
-- Replaced affected legacy family selectors with exact PANTHER family or
-  subfamily identifiers, retaining official labels verbatim and documenting
-  misleading mitochondrial wording where applicable.
+  assertion, the GO:0009099 process assertion at the same node, and the broad
+  IlvD lyase node were inspected but deliberately not promoted. For
+  PTN000767018, the local export does not establish Q88DY9 descent, and its
+  catalytic assertion is inappropriate for the non-catalytic small subunit.
+- Replaced affected legacy selectors with exact PANTHER subfamilies where
+  local member containment is confirmed. IlvI retains the more precise
+  `NCBIfam:TIGR00118`; IlvE records two exact PANTHER subfamilies because its
+  reviewed bacterial exemplars occupy distinct lineages.
 - Changed the IlvA-to-IlvIH relationship to `PROVIDES_INPUT_FOR`: IlvA supplies
   the isoleucine-specific 2-oxobutanoate input, while valine synthesis enters
   IlvI-IlvH from pyruvate without an IlvA prerequisite.
 - Restored explicit supporting evidence for retained non-core localization
-  annotations in ilvH, ilvD, leuA, and leuB.
+  annotations in ilvH, leuA, and leuB. The ilvD cytosol call remains non-core,
+  with its reason explicitly limited to TreeGrafter propagation because no
+  independent UniProt localization statement is available.
+- Re-ran the PANTHER member refresh. It confirms the actual second IlvA
+  accession, Q88CN1, in `PTHR48078:SF11`; no Q88CJ4 module member exists.
