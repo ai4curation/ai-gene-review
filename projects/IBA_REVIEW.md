@@ -211,6 +211,14 @@ mere bookkeeping. Note the limits: it is accession-keyed, so `FB:`/`SGD:`/`RGD:`
 identifiers are **not** lookups in it, and a family whose directory is absent from
 `interpro/panther/` resolves nothing.
 
+**A MOD-id seed can therefore only be name-matched, and a name match returns every
+species' ortholog — so check the taxon column.** `PTHR10836` carries `Gapdh2` for
+*D. melanogaster* (`P07487`), *D. pseudoobscura* (`O44104`) and *D. subobscura*
+(`O44105`); matching on the gene name alone picks whichever comes first. A name match
+corroborates that the family contains such a gene; it does not establish that the
+`FB:`/`SGD:` id in the `WITH/FROM` **is** that entry. Say "corroborated", not
+"resolved", when that is what happened.
+
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
 An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
