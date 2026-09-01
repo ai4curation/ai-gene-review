@@ -3,7 +3,7 @@ title: "PSEPK ppu00946 Degradation of flavonoids batch"
 maturity: DRAFT
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEPK]
-genes: [PP_3195, PP_3197, PP_3198, PP_3199, PP_3204, PP_3205, PP_3206]
+genes: [bglX, PP_3195, PP_3197, PP_3198, PP_3199, PP_3204, PP_3205, PP_3206]
 autolink_gene_symbols: false
 ---
 
@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 6
 - Existing review files: 8
 - Curated review files: 8
-- Existing completed OpenScientist research files: 4
+- Existing completed OpenScientist research files: 5
 
 ## Required Workflow
 
@@ -40,7 +40,7 @@ autolink_gene_symbols: false
 | [x] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | DRAFT | FAILED (DNS) | Predicted FdeD Rieske [2Fe-2S] partner; electron-transfer partner remains unknown |
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
 | [x] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | DRAFT | RUNNING | Predicted FdeH cupin component; independent molecular function unresolved |
-| [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | DRAFT | RUNNING | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
+| [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
 | [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
 
 ## Notes
@@ -62,3 +62,6 @@ autolink_gene_symbols: false
   parts (R13074-R13079), keeps molecular functions on leaf annotons, uses
   UniProt exemplars without unverified PANTHER/PTN claims, and leaves the FdeH
   and R13079 molecular functions unset where the chemistry is unresolved.
+- The completed PP_3205 report recovered K26185/FdeI and explicitly called the
+  two assigned reactions provisional. Its unsupported localization, regulatory,
+  metal, and active-site claims were not promoted to annotations.

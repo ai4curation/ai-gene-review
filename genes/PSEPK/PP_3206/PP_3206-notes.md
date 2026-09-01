@@ -19,5 +19,7 @@
   meta-cleavage [PMID:27059806 "After meta-cleavage of the A-ring, the subsequent
   metabolic steps generate oxaloacetic acid that is metabolized via the
   tricarboxylic acid cycle."]. Neither paper identifies PP_3206 as the catalyst.
-- GO:0016822 and GO:0009812 are therefore provisional ISS annotations. No
-  cellular-component term or sugar-epimerase function is asserted.
+- GO:0009812 is retained as an ISS pathway annotation. GO:0016822 is not
+  asserted because the donor is also uncharacterized for R13076 and the
+  epimerase/dehydratase fold does not establish carbon-carbon hydrolase
+  chemistry. The exact R13076 activity remains a proposed term and knowledge gap.

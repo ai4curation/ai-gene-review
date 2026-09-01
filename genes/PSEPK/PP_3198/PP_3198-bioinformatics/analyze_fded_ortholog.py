@@ -59,7 +59,7 @@ def main() -> None:
         if a != "-" and b != "-"
     ]
     identities = sum(a == b for a, b in ungapped_pairs)
-    kegg_link = fetch_text("https://rest.kegg.jp/link/ko/ppu:PP_3198")
+    kegg_link = fetch_text("https://rest.kegg.jp/link/ko/ppu:PP_3198").replace("\t", " -> ")
     kegg_reaction = fetch_text("https://rest.kegg.jp/get/R13074")
     reaction_summary = "\n".join(
         line for line in kegg_reaction.splitlines() if line.startswith(("DEFINITION", "COMMENT"))

@@ -10,10 +10,12 @@
   [PMID:39107441 "the fdeE, the FMO from Herbaspirillum seropedicae SmR1 that is
   a part of the naringenin degradation pathway and is active towards a wide
   range of flavonoids-flavanones, flavones, isoflavones, and flavonols."].
-- A committed global alignment reproduces 40.4% identity between Q88I03 and
-  D8J0W9 [file:PSEPK/PP_3199/PP_3199-bioinformatics/RESULTS.md "Pairwise identity
-  over aligned residue pairs: 40.4%"]. This supports ISS but is lower than the
-  report's unreproduced 41.4% figure.
+- A committed global alignment gives 40.4% identity between Q88I03 and D8J0W9
+  [file:PSEPK/PP_3199/PP_3199-bioinformatics/RESULTS.md "Pairwise identity over
+  aligned residue pairs: 40.4%"]. MMseqs searches against both complete
+  proteomes recover the pair as reciprocal best hits
+  [file:PSEPK/PP_3199/PP_3199-bioinformatics/RESULTS.md "Reciprocal best-hit
+  relationship: true"], substantially strengthening the ISS assignment.
 - The report also overstates exact motif conservation: only its cited `GADG`
   motif is identical in both sequences. The target-specific substrate range,
   C-8 regioselectivity, cofactor preference, and localization therefore remain

@@ -15,7 +15,7 @@ containing a residue from both proteins.
 - Aligned residue pairs: 103
 - Identical aligned residues: 47
 - Pairwise identity over aligned residue pairs: 45.6%
-- KEGG target mapping: `ppu:PP_3198	ko:K26179`
+- KEGG target mapping: `ppu:PP_3198 -> ko:K26179`
 - KEGG R13074 summary: `DEFINITION  Naringenin <=> 5,7,8-Trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one
 COMMENT     hydroxylation`
 

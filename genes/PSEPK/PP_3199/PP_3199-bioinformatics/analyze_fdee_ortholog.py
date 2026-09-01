@@ -9,6 +9,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from Bio import Align
@@ -33,6 +37,35 @@ def fetch_fasta(accession: str) -> tuple[str, str]:
     if not lines or not lines[0].startswith(">"):
         raise RuntimeError(f"UniProt returned no FASTA record for {accession}")
     return lines[0][1:], "".join(lines[1:])
+
+
+def fetch_proteome(query: str, output: Path) -> None:
+    url = "https://rest.uniprot.org/uniprotkb/stream?" + urlencode(
+        {"query": query, "format": "fasta"}
+    )
+    request = Request(url, headers={"User-Agent": "ai-gene-review/PP_3199-rbh"})
+    with urlopen(request, timeout=300) as response:
+        output.write_bytes(response.read())
+
+
+def accession(header: str) -> str:
+    fields = header.split("|")
+    return fields[1] if len(fields) >= 3 else header
+
+
+def mmseqs_hits(query: Path, database: Path, output: Path, tmp: Path) -> list[list[str]]:
+    if not shutil.which("mmseqs"):
+        raise RuntimeError("mmseqs is required for the reciprocal proteome search")
+    subprocess.run(
+        [
+            "mmseqs", "easy-search", str(query), str(database), str(output), str(tmp),
+            "--format-output", "query,target,evalue,bits,alnlen,pident",
+            "--max-seqs", "10",
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+    return [line.split("\t") for line in output.read_text().splitlines() if line]
 
 
 def main() -> None:
@@ -62,6 +95,30 @@ def main() -> None:
         fasta_lines.extend([f">{name} {header}", sequence])
     (OUT_DIR / "sequences.fasta").write_text("\n".join(fasta_lines) + "\n")
     (OUT_DIR / "alignment.txt").write_text(str(alignment) + "\n")
+
+    with tempfile.TemporaryDirectory(prefix="pp3199-rbh-") as tmp_name:
+        tmp = Path(tmp_name)
+        psepk = tmp / "psepk.fasta"
+        hsero = tmp / "hsero.fasta"
+        forward_query = tmp / "d8j0w9.fasta"
+        reverse_query = tmp / "q88i03.fasta"
+        fetch_proteome("proteome:UP000000556", psepk)
+        fetch_proteome("organism_id:757424", hsero)
+        forward_query.write_text(f">D8J0W9\n{ortholog}\n")
+        reverse_query.write_text(f">Q88I03\n{target}\n")
+        forward = mmseqs_hits(forward_query, psepk, tmp / "forward.tsv", tmp / "mm-forward")
+        reverse = mmseqs_hits(reverse_query, hsero, tmp / "reverse.tsv", tmp / "mm-reverse")
+
+    forward_best = accession(forward[0][1])
+    reverse_best = accession(reverse[0][1])
+    reciprocal = forward_best == "Q88I03" and reverse_best == "D8J0W9"
+    hit_lines = ["direction\trank\ttarget\tevalue\tbits\taligned_length\tpercent_identity"]
+    for direction, hits in (("D8J0W9_to_PSEPK", forward), ("Q88I03_to_Hsero", reverse)):
+        for rank, hit in enumerate(hits, start=1):
+            hit_lines.append(
+                "\t".join([direction, str(rank), accession(hit[1]), *hit[2:]])
+            )
+    (OUT_DIR / "reciprocal_hits.tsv").write_text("\n".join(hit_lines) + "\n")
 
     motif_lines = []
     for motif in MOTIFS:
@@ -93,13 +150,16 @@ proteins.
 - Aligned residue pairs: {len(ungapped_pairs)}
 - Identical aligned residues: {identities}
 - Pairwise identity over aligned residue pairs: {identity_fraction:.1%}
+- D8J0W9 best hit in the PSEPK proteome: {forward_best}
+- Q88I03 best hit in the H. seropedicae proteome: {reverse_best}
+- Reciprocal best-hit relationship: {str(reciprocal).lower()}
 {chr(10).join(motif_lines)}
 
-The whole-protein similarity, shared monooxygenase architecture, and conserved
-flavonoid-degradation locus support an ISS relationship between PP_3199 and the
-experimentally characterized Hsero_1007 FdeE. They do not constitute direct
-evidence that PP_3199 has identical substrate range, regioselectivity, or
-cofactor preference in KT2440.
+The reciprocal best-hit result, whole-protein similarity, shared monooxygenase
+architecture, and conserved flavonoid-degradation locus support an ISS
+relationship between PP_3199 and the experimentally characterized Hsero_1007
+FdeE. They do not constitute direct evidence that PP_3199 has identical
+substrate range, regioselectivity, or cofactor preference in KT2440.
 
 ## Reproduction
 

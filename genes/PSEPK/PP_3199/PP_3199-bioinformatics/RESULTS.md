@@ -15,15 +15,18 @@ proteins.
 - Aligned residue pairs: 374
 - Identical aligned residues: 151
 - Pairwise identity over aligned residue pairs: 40.4%
+- D8J0W9 best hit in the PSEPK proteome: Q88I03
+- Q88I03 best hit in the H. seropedicae proteome: D8J0W9
+- Reciprocal best-hit relationship: true
 - `GGGIGG`: not found identically in both sequences
 - `GADG`: present at Q88I03 residues 157-160 and D8J0W9 residues 158-161
 - `GDAAH`: not found identically in both sequences
 
-The whole-protein similarity, shared monooxygenase architecture, and conserved
-flavonoid-degradation locus support an ISS relationship between PP_3199 and the
-experimentally characterized Hsero_1007 FdeE. They do not constitute direct
-evidence that PP_3199 has identical substrate range, regioselectivity, or
-cofactor preference in KT2440.
+The reciprocal best-hit result, whole-protein similarity, shared monooxygenase
+architecture, and conserved flavonoid-degradation locus support an ISS
+relationship between PP_3199 and the experimentally characterized Hsero_1007
+FdeE. They do not constitute direct evidence that PP_3199 has identical
+substrate range, regioselectivity, or cofactor preference in KT2440.
 
 ## Reproduction
 

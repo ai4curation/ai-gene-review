@@ -16,10 +16,11 @@
   sequences [file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md "Pairwise
   identity over aligned residue pairs: 81.6%"]. Neither protein has direct
   R13077 evidence.
-- GO:0052689 is retained as the substrate-neutral core MF. The automated
-  serine-type peptidase and proteolysis annotations are removed because no
-  peptide substrate or biological proteolysis role is supported. GO:0009812 is
-  added at ISS level for the predicted pathway role.
+- GO:0052689 is retained as the substrate-neutral core MF. Proteolysis is
+  removed because no biological proteolysis role is supported. Serine-type
+  peptidase activity is marked over-annotated: the Peptidase S9/IPR001375 and
+  COG1506 family signal is real, but it does not identify a peptide substrate
+  for this paralog. GO:0009812 is added at ISS level for the predicted pathway role.
 - No cellular-component term is asserted. The report's AlphaFold triad geometry
   and cytoplasmic localization were not independently reproduced and are not
   needed to capture the defensible function.
