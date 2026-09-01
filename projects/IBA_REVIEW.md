@@ -237,6 +237,17 @@ for the accession is not a substitute: a hit may be an unnamed `ECO:0000250` or 
 reference, or a substring collision with an EMBL id (`AAP97287.1` matches `P97287`), and a
 miss tells you only that the repository is silent. Check the route, not the grep.
 
+The middle verb has a worked example too, and it is the one place all three states
+appear in a single claim. `genes/mouse/Bcl2` cites `Q64373` as mouse Bcl2l1: the
+accession is **named in no cached record** (so "resolved" is unavailable), *and* the
+identification is nonetheless **corroborated**, because `BCL2L1-goa.tsv` carries it as
+the mouse-ortholog donor (`UniProtKB:Q64373|ensembl:ENSMUSP00000105445`) in the
+`GO_REF:0000107` Ensembl-compara rows on human BCL2L1 — an orthology assertion is not a
+name, but it establishes which gene the accession is. Note the route: an accession absent
+from every `entries.csv` can still be corroborated by a **GOA `WITH/FROM` column in
+another gene's file**, which is why "the family has no index" settles the first verb but
+not the second.
+
 Finally, do not assert the lookup in the same breath as disclaiming it. "The UniProt
 cross-reference for this MOD id **points to** `ACC`" states the mapping as fact — which is
 the step the sentence exists to say is uncheckable. Write "the accession `ACC` **is asserted

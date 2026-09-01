@@ -238,6 +238,81 @@ for _s, _want in (
             f"inverted-framing predicate is wrong for {_s!r} "
             f"(expected flagged={_want}) - SELF_SEED_INVERTED_PROSE will misreport")
 
+
+# ---------------------------------------------------------------------------
+# MANGLED_PROSE: punctuation damage from bulk string substitution.
+#
+# Written after a sed-style rewrite of 8 source_entities comments consumed the
+# opening "(" of a trailing "(ACC)" while leaving the ")", producing sentences like
+# "...appears in no cached record under a name)." and, worse, "...under a name, )."
+# -- a hole where an accession had been. Nothing in the schema or the validator sees
+# this: the YAML parses, the enums are legal, and inside a folded scalar the damage
+# does not even land on one line, so a line-wise grep misses it too. It has to be
+# checked on the JOINED value.
+#
+# Scope is an ALLOWLIST of author-written prose fields, not a denylist. supporting_text
+# is verbatim publication quotation and is legitimately unbalanced ~10 times in
+# genes/mouse alone ("(LCAD-/-) develop hepatic steatosis", "emerges from 1) ...");
+# machine-fetched titles and labels are equally not ours to judge. An allowlist also
+# means a new machine-sourced field cannot start false-positiving later.
+#
+# HONEST LIMIT, stated because the temptation is to call this a guard for the class:
+# it catches the UNBALANCED and EMPTY-SLOT shapes, which was 5 of the 8 comments that
+# prompted it. The other 3 were the mirror artifact -- a new sentence prepended while
+# the original trailing parenthetical was left in place -- which is balanced, reads as
+# ordinary prose, and is only detectable as duplication. This rule does not catch that,
+# and no attempt at a duplication heuristic survived contact with prose that names an
+# accession twice for good reason.
+_PROSE_FIELDS = {'comment', 'reason', 'summary', 'review_notes'}
+# A delimiter immediately before ")" is the signature of a consumed slot ("name, )"),
+# as is a wholly empty "()" -- both balance, so the depth scan alone misses them.
+_EMPTY_SLOT = re.compile(r'\(\s*[,;]?\s*\)|[,;]\s*\)')
+
+def _mangled_prose(s):
+    """True if s shows punctuation damage: unbalanced or empty round brackets."""
+    depth = 0
+    for ch in s:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+            # Order matters, not just the count: "a) (b" balances but is still wrong.
+            if depth < 0:
+                return True
+    return depth != 0 or bool(_EMPTY_SLOT.search(s))
+
+def _walk_prose(o, path, key=None):
+    """Yield (path, value) for every author-written prose scalar in a review doc."""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            yield from _walk_prose(v, f"{path}.{k}", k)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            yield from _walk_prose(v, f"{path}[{i}]", key)
+    elif isinstance(o, str) and key in _PROSE_FIELDS:
+        yield path, o
+
+# Self-test, same reasoning as the predicate above: the corpus is clean, so this rule
+# reports success by finding nothing, and a broken version is indistinguishable from a
+# healthy corpus. The first four cases are the exact strings this was written for.
+for _s, _want in (
+        ("appears in no cached record under a name).", True),
+        ("in no local entries index or cached record under a name, ).", True),
+        ("Anti-apoptotic donor (asserted from external knowledge, ).", True),
+        ("under a name); same role and sign as the target.", True),
+        ("a) (b", True),                      # balances by count, still damaged
+        ("the empty pair () is a hole too", True),
+        ("(a", True), ("a)", True),
+        # Must NOT fire on ordinary prose.
+        ("Rodent donor, corroborated through the cross-reference (Q07813).", False),
+        ("nested (a (b) c) d", False),
+        ("no brackets at all", False),
+        ("SF4 PROTEIN SLIT, but also worm glp-1 (P13508) and zebrafish notch1a (P46530)", False)):
+    if _mangled_prose(_s) != _want:
+        _selftest_failures.append(
+            f"mangled-prose predicate is wrong for {_s!r} "
+            f"(expected flagged={_want}) - MANGLED_PROSE will misreport")
+
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
     for _f in _selftest_failures:
@@ -311,6 +386,12 @@ for f in files:
     org, g = _parts[-2], _parts[-1]
     own_ids = own.get((org,g), set())
     d=yaml.safe_load(open(f))
+    # Whole-document, not per-propagation_review-block: the substitution that motivated
+    # this also rewrote `reason`, and a review with no propagation_review at all is just
+    # as capable of carrying the damage.
+    for _path, _txt in _walk_prose(d, ''):
+        if _mangled_prose(_txt):
+            issues.append((f"{org}/{g}{_path}", 'MANGLED_PROSE', _txt[-70:]))
     for i,a in enumerate(d.get('existing_annotations') or []):
         r=a.get('review') or {}
         pr=r.get('propagation_review')
