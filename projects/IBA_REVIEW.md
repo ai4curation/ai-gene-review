@@ -296,19 +296,57 @@ qualifier and the aspect before accepting that a biological argument bites.**
 
 **A shared reason is suspicious only under a corrective action.** Reuse alone is not a
 signal: a reason string whose rows span ≥3 distinct terms occurs in **201 groups** across
-`genes/mouse`, up to 243 rows on one string, nearly all `KEEP_AS_NON_CORE` or `ACCEPT` where
-one class rationale is defensible. Scoped to `REMOVE` — where the reason must justify a
-corrective verdict — it collapses to **10 groups over 93 rows** (Casp3 23; Ang2 18, 8, 4 and
-3; Uox 12; Hsp90aa1 8; Cyp1a1 7; Agtr1a 5; Ednra 5). The action is the discriminator, not the
-count.
+`genes/mouse`, up to 243 rows on one string. Where those groups sit is the whole point:
 
-Reproduce both, as of the commit that ships the script
+| action | groups | rows | largest |
+|---|---:|---:|---:|
+| `KEEP_AS_NON_CORE` | 83 | 2952 | 228 |
+| `ACCEPT` | 60 | 1648 | 139 |
+| `MARK_AS_OVER_ANNOTATED` | 30 | **587** | 202 |
+| `MODIFY` | 14 | 108 | 18 |
+| `REMOVE` | 10 | **93** | 23 |
+| `UNDECIDED` | 3 | 21 | 9 |
+
+(The scoped rows do not sum to 5432: qualification is per-scope, so a group can clear ≥3
+terms overall and not within one action, or the reverse.)
+
+Reproduce every figure here, as of the commit that ships the script
 (`git log --oneline -1 -- projects/IBA_REVIEW/shared_reason_groups.py`):
 
 ```
 python3 projects/IBA_REVIEW/shared_reason_groups.py
 python3 projects/IBA_REVIEW/shared_reason_groups.py --action REMOVE --list
+python3 projects/IBA_REVIEW/shared_reason_groups.py --action MARK_AS_OVER_ANNOTATED --list
 ```
+
+**`REMOVE` is not the whole of "corrective", and scoping to it hid the larger half.** An
+earlier revision of this paragraph reported only the `REMOVE` row — 10 groups over 93 —
+and called the rest "nearly all `KEEP_AS_NON_CORE` or `ACCEPT`". `MARK_AS_OVER_ANNOTATED` is
+corrective too, and carries **587 rows, six times as many**, with a single string on 202 of
+them. "Nearly all" was also wrong on its own terms: `KEEP_AS_NON_CORE` and `ACCEPT` together
+are 85% of scoped rows and 72% of groups, not nearly all.
+
+The lesson is about operationalization, not arithmetic. The rule names a *property*
+("corrective"); the measurement named *one action*; and because the narrower figure was the
+one that made the point cleanly, nothing prompted a check that the two matched. When a rule
+and its measurement are worded differently, the gap is where the finding hides.
+
+The `REMOVE` breakdown, for reference, is Casp3 23; Ang2 18, 8, 4 and 3; Uox 12; Hsp90aa1 8;
+Cyp1a1 7; Agtr1a 5; Ednra 5.
+
+**A caveat that the `MARK_AS_OVER_ANNOTATED` figure does not settle.** The two actions are
+not equally exposed to the objection. `REMOVE` withdraws an annotation, so its reason has to
+carry a per-annotation verdict; `MARK_AS_OVER_ANNOTATED` withdraws nothing and records a
+scoping judgement, where one class rationale across many terms is more often the honest
+description. So the 587 is not 587 defects. But it is 587 rows the rule as stated reaches and
+the measurement did not — and the second-largest group, `Bcl2`'s 35 rows over 19 terms on
+*"this term is too indirect, broad, or mechanistically ambiguous"*, is a three-way disjunction
+that never says which disjunct applies, which is exactly the shape dismantled under `REMOVE`
+in that same file. (The largest, 202 rows, spans four genes on *"This overstates the direct
+role of the gene product; the curated model…"* — a cross-file class rationale, and a different
+question.) Measured and recorded here; not repaired, because doing it
+properly is per-term work across 19 terms and this paragraph's own history is a warning
+against opportunistic rewrites (see the Ang2 note below).
 
 **That script exists because these figures had been wrong twice before it did**, the second
 time in a way no reader could have caught. The published pair — 160 groups, and 7 over 63
@@ -351,11 +389,21 @@ The question that separates them is **what the reason is about**:
   catalytic deficiency, because Angrp's ribonucleolytic activity toward tRNA is somewhat
   *greater* than Ang's; and an inability to bind cellular receptors is implicated, with poor
   conservation of the receptor recognition sequence 58-69. The middle finding is quoted as
-  `supporting_text` **twice in the same file**, to `ACCEPT` `GO:0004540 RNA nuclease activity`
-  — so one document was simultaneously accepting that Angrp is the *better* RNase and removing
-  RNase-driven terms on the ground that it had lost activity. The reasons now state all three
-  findings and rest on the receptor-binding defect, which is what actually blocks the
-  receptor-mediated uptake that ANG's nuclear and stress-response biology depends on.
+  `supporting_text` **six times in the same file** — on four `ACCEPT`ed rows (`GO:0004540` as
+  IBA, IEA and ISO, and the narrower `GO:0004549 tRNA-specific ribonuclease` as ISO), in
+  `core_functions`, and in the `reference_review.findings` — so one document was
+  simultaneously accepting that Angrp is the *better* RNase, on a *more specific* RNase term,
+  and removing RNase-driven terms on the ground that it had lost activity. The reasons now
+  state all three findings and rest on the receptor-binding defect, which is what actually
+  blocks the receptor-mediated uptake that ANG's nuclear and stress-response biology depends
+  on.
+
+  Note where the right reading already lived: the file's own `references[].findings` for
+  this PMID recorded all three results, including that the angiogenic loss is "attributed to
+  defective cellular receptor binding rather than loss of RNase catalytic capacity" — while 20
+  `reason` fields citing the same paper said otherwise. A `reference_review` is the curator's
+  reading of the paper; when a `reason` citing that paper disagrees with it, the `reason` is
+  the thing to check first.
 
   The `summary` fields were left as they are, deliberately. "Transferred heparin binding from
   human ANG, not shown for mouse Ang2" is an accurate *description* of the annotation and its

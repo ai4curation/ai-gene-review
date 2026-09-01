@@ -92,6 +92,21 @@ def qualifying(groups):
     }
 
 
+def action_error(action, actions_seen, known):
+    """Message explaining why `action` cannot be measured, or None if it can.
+
+    Split out of main() so the self-test can reach it: a guard with no anchor is one
+    refactor away from vanishing while the suite still reports green.
+    """
+    if action is None or action in actions_seen:
+        return None
+    if known and action not in known:
+        return (f"--action {action!r} is not an ActionEnum value. "
+                f"Known: {', '.join(sorted(known))}")
+    present = ', '.join(sorted(a for a in actions_seen if a))
+    return f"--action {action!r} matches no reasoned row. Present: {present}"
+
+
 def _self_test():
     """Assert the predicate bites, on constructed input.
 
@@ -111,6 +126,18 @@ def _self_test():
         return "three rows over only two terms should NOT qualify"
     if len(qualifying(three_terms)["r"]) != 3:
         return "qualifying() must report ROW count, not distinct-term count"
+
+    seen, known = {"REMOVE"}, {"REMOVE", "ACCEPT"}
+    if action_error("REMOVE", seen, known) is not None:
+        return "an action present in the corpus must be measurable"
+    if action_error(None, seen, known) is not None:
+        return "no --action must be measurable"
+    if "not an ActionEnum value" not in (action_error("remove", seen, known) or ""):
+        return "a typo'd action must be rejected as not an ActionEnum value"
+    if "matches no reasoned row" not in (action_error("ACCEPT", seen, known) or ""):
+        return "a valid action with no rows must be rejected, not reported as zero"
+    if action_error("ACCEPT", seen, set()) is None:
+        return "an unreadable schema must still reject an action with no rows"
     return None
 
 
@@ -150,14 +177,9 @@ def main(argv):
         return 2
 
     raw, actions_seen = collect(paths, action)
-    if action is not None and action not in actions_seen:
-        known = _known_actions()
-        if known and action not in known:
-            print(f"--action {action!r} is not an ActionEnum value. Known: "
-                  f"{', '.join(sorted(known))}")
-        else:
-            print(f"--action {action!r} matches no reasoned row in "
-                  f"{len(paths)} files. Present: {', '.join(sorted(a for a in actions_seen if a))}")
+    problem = action_error(action, actions_seen, _known_actions())
+    if problem:
+        print(f"{problem} ({len(paths)} files)")
         return 2
     groups = qualifying(raw)
     rows = sum(len(v) for v in groups.values())
