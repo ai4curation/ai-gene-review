@@ -35,7 +35,8 @@ autolink_gene_symbols: false
 
 The exact KT2440 members are PutP Q88D81 (PP_4946) and PutA Q88D80
 (PP_4947). PMID:10613867 directly identifies PutP as an integral inner-membrane
-proline-uptake protein and shows that one PutA polypeptide carries both
+proline-uptake protein and genetically links PutA to proline utilization; its
+domain analysis suggests that one PutA polypeptide carries both
 proline-to-glutamate catalytic steps. PMID:11097893 separately establishes
 PutA-dependent repression of the divergent promoters; that regulatory role is
 retained in the gene review but excluded from the metabolic module. UniProt
