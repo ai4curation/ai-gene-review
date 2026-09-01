@@ -36,6 +36,22 @@ VALID_SS={'SUPPORTS_TRANSFER','SUPPORTS_SOURCE_BUT_NOT_TARGET','SOURCE_BAD','SOU
 # self-seed map: gene -> set of own ids
 import sys
 
+def _require_pair_value(val):
+    """Reject an empty --pair value instead of letting it disable the comparison.
+
+    '--pair=' and '--pair ""' both yield '', which is falsy -- so BOTH the pre-audit
+    validation and the comparison block are skipped, and the run reports clean having
+    silently ignored the flag. The realistic path is a CI wrapper invoking
+    --pair "$PAIR_GENES" with the variable unset, which is exactly the case --strict
+    exists to make trustworthy.
+    """
+    if not val.strip():
+        print("--pair: empty value. Give two genes, e.g. --pair Mapk1,Mapk3 "
+              "(or --pair mouse/Mapk1,mouse/Mapk3).")
+        raise SystemExit(2)
+    return val
+
+
 def _parse_argv(argv):
     """Split argv into (file globs, --pair value).
 
@@ -48,9 +64,9 @@ def _parse_argv(argv):
     while i < len(argv):
         tok = argv[i]
         if tok == '--pair' and i + 1 < len(argv):
-            pair = argv[i + 1]; i += 2; continue
+            pair = _require_pair_value(argv[i + 1]); i += 2; continue
         if tok.startswith('--pair='):
-            pair = tok[len('--pair='):]; i += 1; continue
+            pair = _require_pair_value(tok[len('--pair='):]); i += 1; continue
         if tok == '--strict':
             strict = True; i += 1; continue
         # Anything else that LOOKS like a flag is a typo, not a glob. Falling through
@@ -219,7 +235,12 @@ for f in files:
         pr=r.get('propagation_review')
         if not pr: continue
         n+=1
-        loc=f"{g}[{i}] {(a.get('term') or {}).get('id')}"
+        # Key by organism/gene, not the bare basename. The dedupe collapses on the
+        # full tuple, so mouse Casp3[12] and rat Casp3[12] emitting the same issue
+        # would otherwise merge into one finding -- an UNDERCOUNT, and the third
+        # place this same bare-basename keying has had to be fixed (after `own` and
+        # `_paths`). Latent until the ISO run populates the colliding genes.
+        loc=f"{org}/{g}[{i}] {(a.get('term') or {}).get('id')}"
         rc=pr.get('root_cause'); fms=pr.get('failure_modes') or []; act=r.get('action')
         if rc not in VALID_RC: issues.append((loc,'BAD_ROOT_CAUSE',rc))
         for m in fms:
@@ -317,7 +338,9 @@ else:
 cross = []
 for fa, fb in _combos:
     ma, mb = action_map(fa), action_map(fb)
-    ga = os.path.basename(os.path.dirname(fa)); gb = os.path.basename(os.path.dirname(fb))
+    # organism/gene: an explicit --pair mouse/Casp3,rat/Casp3 is permitted (the
+    # caller disambiguated deliberately), and 'Casp3 vs Casp3' would be useless.
+    ga = '/'.join(_org_gene(fa)); gb = '/'.join(_org_gene(fb))
     for k in sorted(set(ma) & set(mb)):
         if ma[k] != mb[k]:
             cross.append((f"{ga} vs {gb}", k[0], k[1], sorted(ma[k]), sorted(mb[k])))
