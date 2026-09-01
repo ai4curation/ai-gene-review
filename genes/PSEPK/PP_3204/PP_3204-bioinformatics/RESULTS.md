@@ -13,7 +13,7 @@ KEGG mapping and reaction records were fetched through KEGG REST.
 - Aligned residue pairs: 184
 - Identical aligned residues: 106
 - Pairwise identity over aligned residue pairs: 57.6%
-- KEGG target mapping: `ppu:PP_3204	ko:K26182`
+- KEGG target mapping: `ppu:PP_3204 -> ko:K26182`
 - KEGG R13075 summary: `DEFINITION  5,7,8-Trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one <=> (2E,4E)-2,4-Dihydroxy-4-[6-(4-hydroxyphenyl)-2,4-dioxodihydro-2H-pyran-3(4H)-ylidene]but-2-enoate
 COMMENT     dioxygenation
 ORTHOLOGY   K26181  naringenin degradation protein FdeC

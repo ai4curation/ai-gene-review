@@ -13,7 +13,7 @@ KEGG mapping and reaction records were fetched through KEGG REST.
 - Aligned residue pairs: 321
 - Identical aligned residues: 200
 - Pairwise identity over aligned residue pairs: 62.3%
-- KEGG target mapping: `ppu:PP_3205	ko:K26185`
+- KEGG target mapping: `ppu:PP_3205 -> ko:K26185`
 - KEGG reaction summaries: `R13078: DEFINITION  5-Hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate <=> 4-Hydroxy-4-(4-hydroxyphenyl)-butan-2-one + CO2
 COMMENT     decarboxylation
             unclear reaction | R13079: DEFINITION  4-Hydroxy-4-(4-hydroxyphenyl)-butan-2-one <=> 4-Hydroxycinnamoylmethane + H2O

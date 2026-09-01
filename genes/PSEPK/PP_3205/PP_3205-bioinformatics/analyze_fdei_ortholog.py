@@ -37,7 +37,7 @@ def main() -> None:
     alignment = aligner.align(target, ortholog)[0]
     pairs = [(a, b) for a, b in zip(str(alignment[0]), str(alignment[1]), strict=True) if a != "-" and b != "-"]
     identities = sum(a == b for a, b in pairs)
-    kegg_link = fetch("https://rest.kegg.jp/link/ko/ppu:PP_3205")
+    kegg_link = fetch("https://rest.kegg.jp/link/ko/ppu:PP_3205").replace("\t", " -> ")
     summaries = []
     for reaction_id in ("R13078", "R13079"):
         reaction = fetch(f"https://rest.kegg.jp/get/{reaction_id}")

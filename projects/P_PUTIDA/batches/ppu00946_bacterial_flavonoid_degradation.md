@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Primary bucket genes: 6
 - Existing review files: 8
 - Curated review files: 8
-- Existing completed OpenScientist research files: 5
+- Existing completed OpenScientist research files: 6
 
 ## Required Workflow
 
@@ -34,14 +34,14 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | DRAFT | FAILED (DNS) | Periplasmic GH3 beta-glucosidase; no evidence for membership in the naringenin core |
-| [x] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeB/R13077 carboxylic ester hydrolase; peptidase transfer removed |
-| [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
-| [x] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | DRAFT | FAILED (DNS) | Predicted FdeD Rieske [2Fe-2S] partner; electron-transfer partner remains unknown |
-| [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
-| [x] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | DRAFT | RUNNING | Predicted FdeH cupin component; independent molecular function unresolved |
-| [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
-| [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
+| [x] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | COMPLETE | FAILED (DNS) | Periplasmic GH3 beta-glucosidase; no evidence for membership in the naringenin core |
+| [x] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeB/R13077 carboxylic ester hydrolase; peptidase transfer removed |
+| [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
+| [x] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | COMPLETE | FAILED (DNS) | Predicted FdeD Rieske [2Fe-2S] partner; electron-transfer partner remains unknown |
+| [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | COMPLETE | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
+| [x] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeH cupin component; independent molecular function unresolved |
+| [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
+| [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
 
 ## Notes
 
@@ -65,3 +65,6 @@ autolink_gene_symbols: false
 - The completed PP_3205 report recovered K26185/FdeI and explicitly called the
   two assigned reactions provisional. Its unsupported localization, regulatory,
   metal, and active-site claims were not promoted to annotations.
+- The completed PP_3204 report recovered K26182/FdeH and confirmed the absence
+  of direct target or reaction-level experiments. Its speculative metal,
+  localization, and catalytic-class claims were not promoted to annotations.
