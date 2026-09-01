@@ -117,3 +117,91 @@ Primary quotes now used (all verified against `publications/`):
   paraphrases and an "Adult Tissue Homeostasis and Immune Function" section that
   the review no longer asserts. Left untouched as it is outside the scope of this
   annotation re-review.
+
+## Family-level pass (2026-08-31): PTHR11699 FamilyReview + machine-checkable residue claims
+
+Second IBA-curation pass using the FamilyReview framework (PR #2757). Created
+`interpro/panther/PTHR11699/PTHR11699-review.yaml` (structured; the free-text
+`PTHR11699-review.md` remains as the legacy Falcon integration, with which the
+structured review agrees: no family-wide GO mapping is safe) and upgraded both
+IBA `propagation_review` blocks here to cite it.
+
+### Node assessments (both SOUND)
+
+- **PANTHER:PTN000192666 → GO:0004029** (paint snapshot 20260828). Deep
+  pan-kingdom node; 33 seeds copied verbatim from `PTHR11699-paint.tsv`
+  spanning bacteria (*E. coli* betB), fungi (*A. nidulans* aldA, yeast
+  ALD4/ALD5), *Drosophila* Aldh, and mammalian ALDH1A/2/9A1/1L1 members —
+  generic NAD+-dependent aldehyde oxidation is the only assertable shared
+  activity, so the generic term is the *correct* call, and the target's own
+  ortholog group (human ALDH1A2 O94788, mouse Aldh1a2 MGI:107928) is among
+  the seeds. **Node-id discrepancy documented**: the GOA row (20250411) cites
+  `PANTHER:PTN000192421` in WITH/FROM; that id is absent from the current
+  paint slice, whose GO:0004029 IBD sits at PTN000192666 with an essentially
+  matching, expanded seed list — read as a PANTHER re-release renumbering,
+  recorded in both files rather than silently swapped.
+- **PANTHER:PTN002619055 → GO:0046185** (paint snapshot 20260409, Eumetazoa,
+  seed human ALDH2). The GOA row (20250320) still shows this node asserting
+  GO:0006081 seeded by mouse Aldh1a2 + human ALDH1A3 + human/rat ALDH2 +
+  *Drosophila* Aldh. Conservative-but-correct under either version (the clade
+  mixes retinaldehyde-specific and non-retinoid members, so GO:0002138 is not
+  assertable at the node) — confirms the 2026-08-29 KEEP_AS_NON_CORE call.
+  The second GO:0004029 IBD at PTN000192422 (seeds human ALDH7A1 P49419 +
+  AT5G62530, i.e. the ALDH7 branch) does not back this gene's IBA and was
+  deliberately not assessed.
+
+### Residue verification (all positions checked against real sequences)
+
+Fetched live UniProt records on 2026-08-31 and verified feature-table
+positions against the actual sequences, then mapped to the target by ad hoc
+pairwise alignment (biopython, blastp scoring) against three anchors —
+identical correspondences from all three:
+
+| protein | general-base Glu | catalytic Cys | context |
+|---|---|---|---|
+| human ALDH1A2 O94788 (SV3, anchor) | E286 (ACT_SITE Proton acceptor) | C320 (ACT_SITE Nucleophile) | LKRVTL[E]LGGKSP / FNQGQC[C] |
+| human ALDH2 P05091 (SV2) | E285 | C319 | identical blocks |
+| human ALDH1A1 P00352 (SV2) | E269 | C303 | identical blocks |
+| **XENTR aldh1a2 Q28CC8 (SV1, target)** | **E279** | **C313** | identical blocks |
+
+Recorded as two family `residue_sites` (`catalytic_cys`, `general_base_glu`,
+anchored on O94788 with P05091/P00352 as independent positive controls) and
+two `RETAINED` residue claims on the GO:0004029 row (`site_ref`
+`PANTHER:PTHR11699#catalytic_cys` / `#general_base_glu`). The BP row carries
+`residue_claims_not_applicable` (granularity judgment, not a residue question).
+
+**Error found and fixed**: the previous review reason said the frog protein
+retains "the catalytic cysteine (PROSITE ALDEHYDE_DEHYDR_CYS, active site
+Cys279)". Position 279 of Q28CC8 is the general-base **glutamate** (the
+record's single ACT_SITE feature is evidenced by PROSITE-ProRule PRU10007,
+the Glu rule); the catalytic cysteine is at 313. The conclusion (no catalytic
+loss) survives; the stated mechanism was wrong — exactly the failure class
+the residue-claim machinery exists to catch.
+
+### Honest omissions
+
+- **ALDH16A1 (Q8IZ83)** carries the UniProt CAUTION "The active site cysteine
+  and glutamate residues are not conserved in this protein. Its activity is
+  therefore unsure." — the family's documented degenerate member. Global and
+  local alignments to O94788 both fail to map its active-site region
+  confidently (4/21 window identity at the Glu, Cys unaligned), so it is
+  documented in prose only, **not** as a machine-checkable negative control.
+  Consequently both `required_for` strengths are held at CONTRIBUTES (REQUIRED
+  demands positive *and* negative controls, rightly).
+- **Subfamily ids**: only SF102 (RETINAL DEHYDROGENASE 2) is anchored by a
+  locally indexed member (O94788 per `panther-members.tsv`). Q28CC8's own
+  UniProt record carries a family-level PANTHER xref only, so the target's SF
+  is not asserted; SF209/SF140/SF303 grants in the GO:0001758 term assessment
+  rest on PANTHER's official subfamily names (stated explicitly in the
+  scope_reason). Two SFs share the official name RETINAL DEHYDROGENASE 2
+  (SF102, SF303).
+- Q28CC8 and P05091/P00352 are not yet in `panther-members.tsv`;
+  `just refresh-panther-members` deliberately **not** run (shared file —
+  orchestrator runs it once).
+
+### Validation
+
+`just validate-families`: PTHR11699-review.yaml passes all four stages
+(schema; GO id/label; residue sites vs UniProt sequences — 0 fail; family/gene
+cross-check — 0 conflicts; the only UNRESOLVED rows are another family's
+membership gaps). `just validate XENTR aldh1a2`: pass (see below).
