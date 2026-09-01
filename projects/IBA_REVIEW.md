@@ -266,13 +266,18 @@ curator read is usually not in `publications/`. Applying that across `genes/mous
 test sharper than "is the reason biological?", and the two ways of getting it wrong are both
 on the record here.
 
-**The condition, not the phrasing.** A first pass selected rows by matching phrases in the
-reason and missed a row whose immediate neighbour it caught — same gene, same PMID, same
-evidence code, same argument, differing only in that one said "The paper concerns" and the
-other "This physiology belongs to". Key on the condition instead: an experimental evidence
-code, a cited PMID whose cache is `full_text_available: false`, and a reason that turns on
-**what the paper contains or which gene it studies**. Re-derived that way the class was 42
-rows, not the 25 the phrase list found.
+**The condition, not the phrasing — but that is necessary, not sufficient.** A first pass
+selected rows by matching phrases in the reason and missed a row whose immediate neighbour it
+caught — same gene, same PMID, same evidence code, same argument, differing only in that one
+said "The paper concerns" and the other "This physiology belongs to". Key on the condition
+instead: an experimental evidence code, a cited PMID whose cache is
+`full_text_available: false`, and a reason that turns on **what the paper contains or which
+gene it studies**. That took the class from the 25 the phrase list found to 42.
+
+The class is actually **48 rows across 17 genes**. The last six were routed into the *keep*
+bucket because their shared reason cited biology — and it took reading each row's qualifier
+to get them out. So the residual error does not live in the sweep; it lives in the triage of
+what the sweep keeps, which is what the table below is for.
 
 **Then ask whether the cited biology contradicts *this* annotation, given its qualifier and
 aspect.** This is the step that separates a sound `REMOVE` from one that only sounds sound:
@@ -290,11 +295,18 @@ catalysis; two were `located_in` cellular-component calls, which assert neither.
 qualifier and the aspect before accepting that a biological argument bites.**
 
 **A shared reason is suspicious only under a corrective action.** Reuse alone is not a
-signal: a reason string repeated across ≥3 annotations with ≥3 distinct terms occurs in 161
-groups across `genes/mouse`, up to 177 rows on one string, nearly all `KEEP_AS_NON_CORE` or
+signal: a reason string repeated across ≥3 annotations with ≥3 distinct terms occurs in **160
+groups** across `genes/mouse`, up to 177 rows on one string, nearly all `KEEP_AS_NON_CORE` or
 `ACCEPT` where one class rationale is defensible. Scoped to `REMOVE` — where the reason must
-justify a per-annotation verdict — it collapses to 8 groups over 71 rows. The action is the
-discriminator, not the count.
+justify a per-annotation verdict — it collapses to **7 groups over 63 rows** (Casp3 23, Uox
+12, Hsp90aa1 8, Cyp1a1 7, Agtr1a 5, Ednra 5, Ang2 3). The action is the discriminator, not the
+count.
+
+Both figures are as of the commit that corrected them, and both moved while this section was
+being written: the earlier draft said 161 and 8/71, measured before six Bcl2 rows were given
+per-row reasons — which dropped that group below the threshold in both counts. Re-derive
+rather than quote: `grep`-able counts of a folded scalar need a parser, and a figure a reader
+cannot reproduce goes wrong quietly.
 
 **A self-seed marks node membership always; it marks independent grounding only when the
 target's own same-term annotation is itself retained.** `CLAUDE.md` glosses a self-seed as
@@ -304,9 +316,10 @@ only same-term experimental row is one this review removes, the self-seed still 
 target is inside the clade and `SUPPORTS_TRANSFER` is still right (`CIRCULAR_OR_REDUNDANT`
 is forbidden for a self-seed), yet citing it as grounding leans on evidence the same file
 rejects. Say node membership and say explicitly that grounding is not claimed. One block in
-`genes/mouse` needed this (`Agtr1a GO:0006954`, whose own IGI at the term is `REMOVE`d on
-full text that *is* available); the other twelve self-seed claims cite annotations the file
-retains, so the canonical gloss holds for them.
+`genes/mouse` needed this — `Agtr1a GO:0006954`, whose own IGI at the term is `REMOVE`d on
+full text that *is* available. Its comment asserted the canonical gloss until `9ce63aa88`, so
+the block as it now stands is the corrected form, not the defect. The other twelve self-seed
+claims cite annotations their files retain, so the canonical gloss holds for them.
 
 **Finally, keep the row's own evidence pointing the same way as its verdict.** When an action
 is withdrawn, the `summary` and the `supported_by` have to move with it; otherwise the block
