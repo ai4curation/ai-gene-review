@@ -14,8 +14,8 @@ autolink_gene_symbols: false
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
 - Existing review files: 8
-- Curated review files: 3
-- Existing completed OpenScientist research files: 3
+- Curated review files: 4
+- Existing completed OpenScientist research files: 4
 
 ## Required Workflow
 
@@ -35,7 +35,7 @@ autolink_gene_symbols: false
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [ ] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | INITIALIZED | RUNNING | Periplasmic beta-glucosidase (EC 3.2.1.21) (Beta-D-glucoside glucohydrolase) (Cellobiase) (Gentiobiase) |
-| [ ] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein |
+| [x] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeB/R13077 carboxylic ester hydrolase; peptidase transfer removed |
 | [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
 | [ ] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Ferredoxin, 2Fe-2S |
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
