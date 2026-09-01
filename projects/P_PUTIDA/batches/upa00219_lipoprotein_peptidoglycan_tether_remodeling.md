@@ -23,7 +23,8 @@ release of that tether. It is separated from glycan polymerization, canonical
 - [x] Complete module research.
 - [x] Complete module + pathway + taxon research.
 - [x] Validate and render the reviews, module, and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR: [#2847](https://github.com/ai4curation/ai-gene-review/pull/2847).
+- [ ] Clear review and CI.
 
 ## Selected Genes
 
@@ -51,12 +52,27 @@ release of that tether. It is separated from glycan polymerization, canonical
   either tether enzyme or the OprI substrate. `PP_2320`, `PP_1451`, and `oprI`
   (`PP_2322`) are therefore retained as a literature- and orthology-supported
   module outside the KEGG peptidoglycan-biosynthesis gene set.
-- The taxon-specific OpenScientist report classified `PP_1451` as uncertain.
-  Inspection of PMID:37255442 and exact PANTHER subfamily membership resolves
-  the discrepancy: the activity is a defensible prediction from the matched
-  LdtPae3/YafK subfamily, but the Pseudomonas experiment itself described the
-  hydrolysis assignment as tentative rather than directly demonstrating it.
+- The taxon-specific OpenScientist report classified `PP_1451` as uncertain
+  from low-sensitivity k-mer and local-alignment comparisons. Exact
+  PTHR36699:SF1 membership instead groups PP_1451 with PA14
+  LdtPae3/A0A0H2ZF55 and experimentally characterized E. coli
+  DpaA/LdtF/P0AA99; the review records why this family-level evidence
+  supersedes the report's candidate call while retaining the absence of a
+  direct KT2440 assay as an open gap.
 - The gene-level OpenScientist request for `PP_1451` reached the configured
   7200-second provider limit and returned no report. The review therefore
-  remains grounded in UniProt, exact PANTHER-subfamily correspondence, and
-  PMID:37255442; no provider file was synthesized manually.
+  remains grounded in UniProt, exact PANTHER-subfamily correspondence,
+  PAINT, PMID:37255442, PMID:33941679, and PMID:33947763; no provider file was
+  synthesized manually.
+
+## 2026-09-01 review follow-up
+
+- Added the two direct E. coli DpaA/LdtF papers, PMID:33941679 and
+  PMID:33947763, and the reviewed P0AA99 protein as an experimental exemplar.
+- Resolved the PA14 experimental proteins by locus: PA14_27180/LdtPae2 is
+  A0A0H2ZCT9 and PA14_15840/LdtPae3 is A0A0H2ZF55. Added the independently
+  validated PAO1 PA2854/Q9HZZ0 anchoring exemplar.
+- Revised PP_1451 from carboxypeptidase activity to PAINT-supported
+  GO:0004175 endopeptidase activity, removed the contradicted peptidoglycan
+  biosynthesis annotation, and changed signal-peptide localization evidence
+  from ISS to ISM.
