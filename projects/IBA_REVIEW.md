@@ -522,7 +522,16 @@ ortholog transfer with no PANTHER node behind it — so its *presence* tracks wh
 reviewer happened to work, while the *verdict* is what must agree. Mirroring a subset would
 make things worse rather than better: filling the three ciliary blocks leaves eight twins
 still bare, and a reader who saw the file made symmetric on three would reasonably infer it
-was symmetric on all. Either do all 11 or state the convention. This states it.
+was symmetric on all. Either do all 11 or state the convention. This states it — and names
+the 11, so choosing the other option does not start with a re-derivation.
+
+Mapk1's 18 blocks are **2 IBA + 16 ISO**, and the 16 split **11 with a bare `Mapk3` twin**
+plus **5 whose term has no `Mapk3` row at all**, which is what lets the paragraph be checked
+against the files:
+
+- **the 11**: `GO:0005929`, `GO:0010759`, `GO:0032206`, `GO:0032991`, `GO:0034198`,
+  `GO:0036064`, `GO:0046697`, `GO:0051403`, `GO:0061514`, `GO:0097542`, `GO:0120041`
+- **the 5**: `GO:0010800`, `GO:0042307`, `GO:0043627`, `GO:0045542`, `GO:0045893`
 
 Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
 159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, split
