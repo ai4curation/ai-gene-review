@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pbpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pbpC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88QC2" target="_blank" class="term-link">
+                        Q88QC2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pbpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88QC2" data-a="DESCRIPTION: PbpC/PBP1C is a membrane-anchored class-A penicill..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PbpC/PBP1C is a membrane-anchored class-A penicillin-binding protein whose best-supported physiological activity is accessory peptidoglycan glycan polymerization. It contains GT51 and transpeptidase-like domains, but ortholog evidence does not establish peptide-crosslinking activity in vivo.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QC2" data-a="GO:0008658" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP1C has a conserved penicillin-recognizing domain but an atypical beta-lactam-binding profile.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The family assignment and intact active-site motifs support penicillin binding without implying a core transpeptidase role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    GO:0008955
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QC2" data-a="GO:0008955" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The GT51 domain polymerizes lipid II into peptidoglycan glycan strands.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glycan polymerization is the experimentally supported primary activity of the characterized PBP1C ortholog.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QC2" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PbpC provides accessory glycan-polymerization capacity during peptidoglycan synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its glycosyltransferase reaction directly contributes to assembly of the sacculus.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88QC2" data-a="GO:0030288" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The catalytic domains are predicted to project into the periplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An N-terminal membrane anchor and conserved class-A PBP topology place glycan polymerization on the periplasmic face.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Accessory PBP1C-family peptidoglycan glycosyltransferase.</h3>
+                <span class="vote-buttons" data-g="Q88QC2" data-a="FUNCTION: Accessory PBP1C-family peptidoglycan glycosyltrans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                            peptidoglycan glycosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pbpC/pbpC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">its physiologically relevant activity is glycan-chain polymerization rather than peptide cross-linking</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pbpC/pbpC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK PbpC/PBP1C (Q88QC2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports a primary accessory glycan-polymerase role and leaves transpeptidation unresolved.</div>
+
+                        <div class="finding-text">"its physiologically relevant activity is glycan-chain polymerization rather than peptide cross-linking"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the intact transpeptidase-like domain of KT2440 PbpC has condition-specific or partner-dependent activity is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Sequence conservation alone does not justify a D,D-transpeptidase annotation when the characterized ortholog is transglycosylase-only in vivo.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pbpC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88QC2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *pbpC* (PP_0572, UniProt Q88QC2) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T23:36:22.198800</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="pbpC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="pbpC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pbpc-pp_0572-uniprot-q88qc2-in-pseudomonas-putida-kt2440">Functional Annotation of <em>pbpC</em> (PP_0572, UniProt Q88QC2) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>pbpC</strong> (ordered locus <strong>PP_0572</strong>; UniProt <strong>Q88QC2</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>penicillin-binding protein 1C (PBP1C)</strong>, an ~85.7 kDa, 784-residue <strong>class A penicillin-binding protein</strong> of the bacterial cell-wall (peptidoglycan) biosynthetic machinery. Its primary molecular function is <strong>peptidoglycan glycosyltransferase activity (EC 2.4.99.28)</strong>: it catalyzes the polymerization of the membrane-linked precursor <strong>lipid II</strong> into the linear glycan strands (repeating β-1,4-linked GlcNAc–MurNAc–pentapeptide units) that form the backbone of the murein sacculus, releasing undecaprenyl diphosphate and a proton with each condensation. This reaction is carried out by the protein's family-51 glycosyltransferase (GT51) domain and, like all GT51 enzymes, is inhibited by moenomycin.</p>
+<p>The functional assignment rests on a convergent chain of evidence. Bioinformatically, Q88QC2 possesses the diagnostic tripartite class A PBP architecture — an N-terminal transmembrane anchor, a GT51 glycosyltransferase domain, a penicillin-binding transpeptidase domain, and the PBP1C-specific C-terminal PBP_1c domain (IPR011815). It is a <strong>full-length, colinear ortholog of the experimentally characterized <em>Escherichia coli</em> PBP1C (P76577)</strong>, sharing ~59% amino-acid identity across all three domains and the same gene symbol <em>pbpC</em>. The GT51 catalytic glutamate and all three canonical transpeptidase active-site motifs (SxxK / SxN / KTG) are sequence-intact. However, the experimentally studied <em>E. coli</em> ortholog binds β-lactams atypically and was concluded to <strong>function <em>in vivo</em> as a transglycosylase only</strong>, meaning that although Q88QC2 retains an intact-looking transpeptidase active site, its physiologically relevant activity is glycan-chain polymerization rather than peptide cross-linking.</p>
+<p>In terms of localization and pathway, PBP1C is anchored by a single N-terminal transmembrane helix in the <strong>cytoplasmic (inner) membrane</strong>, with its catalytic domains projecting into the <strong>periplasm</strong> where peptidoglycan is assembled. It is a <strong>non-essential, accessory component of the peptidoglycan-synthesizing multienzyme complex</strong>: in <em>E. coli</em>, PBP1C physically associates with the major murein polymerase PBP1B, the essential transpeptidases PBP2 and PBP3, and the lytic transglycosylase MltA. Thus, PBP1C contributes glycan-strand polymerization capacity to a membrane-embedded cell-wall synthesis/remodeling assembly rather than acting as a stand-alone essential enzyme.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<p>Before presenting findings, the target identity was confirmed against the UniProt record and orthology analysis. The gene symbol <em>pbpC</em>, the EC number 2.4.99.28, the domain complement (Glyco_trans_51 / IPR001264; Beta-lactam/transpept-like / IPR012338; PBP_1c / IPR011815), and the organism (<em>P. putida</em> KT2440) are all mutually consistent and match the class A PBP / PBP1C interpretation. The most decisive verification is the orthology result: Q88QC2 aligns colinearly with <em>E. coli</em> PBP1C (P76577, gene name <em>pbpC</em>, protein "Penicillin-binding protein 1C", curated evidence level PE=1) at ~59% identity over the full length. <strong>This is the correct gene</strong>, and the literature on <em>E. coli</em> PBP1C is directly transferable by orthology. Where the report cites biochemistry from other class A PBPs (e.g., <em>S. pneumoniae</em> PBP2a, <em>L. monocytogenes</em> PBP4), it does so to illustrate the shared GT51 reaction mechanism, not to substitute a different gene.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pbpc-encodes-the-p-putida-ortholog-of-penicillin-binding-protein-1c-a-membrane-anchored-class-a-pbp">Finding 1 — <em>pbpC</em> encodes the <em>P. putida</em> ortholog of penicillin-binding protein 1C, a membrane-anchored class A PBP</h3>
+<p>The 784-residue product of Q88QC2 (85.7 kDa) exhibits the canonical modular architecture of a <strong>class A penicillin-binding protein</strong>. A Kyte–Doolittle hydrophobicity analysis identifies a single <strong>N-terminal transmembrane anchor</strong> spanning approximately residues 14–32 (peak hydrophobicity 1.99, well above the 1.6 threshold used to call transmembrane helices). Following the anchor are the <strong>glycosyltransferase family 51 (GT51) domain</strong> (≈ residues 64–230), the <strong>penicillin-binding transpeptidase domain</strong> (≈ residues 307–423), and the <strong>PBP1C-specific C-terminal domain</strong> (PBP_1c, IPR011815; ≈ residues 694–780). The PBP_1c C-terminal domain is the specific InterPro signature that distinguishes PBP1C from its paralogs PBP1A and PBP1B, and its presence identifies Q88QC2 unambiguously as a <strong>PBP1C ortholog</strong> rather than a generic class A PBP.</p>
+<p>This architecture matches that of the founding member of the family, <em>E. coli</em> PBP1C, which was cloned and characterized as "a third member of the multimodular class A penicillin-binding proteins of <em>Escherichia coli</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>). That study established PBP1C as a close homolog of the bifunctional transpeptidase/transglycosylase enzymes PBP1A and PBP1B: <em>"PBP1C is a close homologue to the bifunctional transpeptidases/transglycosylases PBP1A and PBP1B and likewise shows murein polymerizing activity, which can be blocked by the transglycosylase inhibitor moenomycin."</em> The moenomycin-sensitive murein-polymerizing activity described there corresponds directly to the GT51 domain present in Q88QC2.</p>
+<h3 id="finding-2-primary-function-peptidoglycan-glycosyltransferase-ec-249928-that-polymerizes-lipid-ii-the-transpeptidase-acts-in-vivo-as-a-glycosyltransferase-only">Finding 2 — Primary function: peptidoglycan glycosyltransferase (EC 2.4.99.28) that polymerizes lipid II; the transpeptidase acts <em>in vivo</em> as a glycosyltransferase only</h3>
+<p>The primary, physiologically relevant reaction catalyzed by PBP1C is <strong>glycan-chain polymerization</strong>. The UniProt catalytic-activity annotation for Q88QC2 specifies EC 2.4.99.28: the disaccharide-peptide unit of <strong>lipid II</strong> [GlcNAc-(1→4)-MurNAc(oyl-L-Ala-γ-D-Glu-L-Lys-D-Ala-D-Ala)-di-<em>trans</em>,octa-<em>cis</em>-undecaprenyl diphosphate] is condensed onto the reducing end of the nascent glycan chain (n → n+1), releasing <strong>undecaprenyl diphosphate</strong> and a proton. The reaction is assigned to the pathway <em>"Cell wall biogenesis; peptidoglycan biosynthesis."</em></p>
+<p>The GT51 reaction is well established biochemically for class A PBPs generally. As summarized in a review of glycosyltransferase-targeted antibacterials, <em>"Synthesis of bacterial cell wall peptidoglycan requires glycosyltransferase enzymes that transfer the disaccharide-peptide from lipid II onto the growing glycan chain"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26358369/">PMID: 26358369</a>). Direct kinetic demonstrations on related class A PBPs include the <em>S. pneumoniae</em> PBP2a glycosyltransferase domain, which polymerizes dansyl-lipid II with k_cat/K_m ≈ 1 × 10⁻³ M⁻¹ s⁻¹ and is inhibited by moenomycin and vancomycin (<a href="https://pubmed.ncbi.nlm.nih.gov/12867450/">PMID: 12867450</a>), and <em>L. monocytogenes</em> PBP4, which polymerizes <em>E. coli</em> lipid II with an efficiency of 1,400 M⁻¹ s⁻¹ (<a href="https://pubmed.ncbi.nlm.nih.gov/16484198/">PMID: 16484198</a>).</p>
+<p>Crucially, for PBP1C specifically, the <em>E. coli</em> study found that the transpeptidase (penicillin-binding) side of the enzyme is atypical. PBP1C <em>"does not bind to the same variety of penicillin derivatives as PBPs 1A and 1B"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>), and the authors concluded that <em>"it is suggested that PBP1C functions in vivo as a transglycosylase only"</em>. Thus, although the transpeptidase domain is present and its active-site residues are conserved in sequence (Finding 4), the <strong>operational function of PBP1C is glycan-chain polymerization</strong>, not peptide cross-linking. By orthology (Finding 5), this conclusion applies to <em>P. putida</em> Q88QC2.</p>
+<h3 id="finding-3-localization-periplasmic-face-of-the-inner-membrane-within-a-peptidoglycan-synthesizing-multienzyme-complex">Finding 3 — Localization: periplasmic face of the inner membrane, within a peptidoglycan-synthesizing multienzyme complex</h3>
+<p>PBP1C is a <strong>cytoplasmic (inner) membrane protein</strong>. Its single N-terminal transmembrane helix (residues ~14–32) anchors it in the membrane while the GT51, transpeptidase, and PBP_1c domains face the <strong>periplasm</strong>, where peptidoglycan is synthesized and remodeled. (UniProt does not carry a separate curated SUBCELLULAR LOCATION comment for Q88QC2; this topology is inferred from the hydrophobicity profile and from the biochemistry of the <em>E. coli</em> ortholog.)</p>
+<p>PBP1C does not act in isolation. Affinity-chromatography experiments in <em>E. coli</em> showed that PBP1C covalently coupled to Sepharose specifically retained the murein polymerase <strong>PBP1B</strong>, the transpeptidases <strong>PBP2</strong> and <strong>PBP3</strong>, and the lytic transglycosylase <strong>MltA</strong>. The authors concluded that <em>"the specific interaction with these proteins suggests that PBP1C is assembled into a multienzyme complex consisting of both murein polymerases and hydrolases"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>). The reciprocal experiment confirmed the association: MltA-Sepharose <em>"specifically retained the penicillin-binding proteins (PBPs) 1B, 1C, 2, and 3"</em> from membrane extracts (<a href="https://pubmed.ncbi.nlm.nih.gov/10037771/">PMID: 10037771</a>). Together these results place PBP1C at the periplasmic face of the inner membrane, physically integrated into a <strong>cell-wall synthesis/remodeling holoenzyme</strong> that couples glycan polymerization, cross-linking, and controlled hydrolysis.</p>
+<h3 id="finding-4-all-catalytic-motifs-are-sequence-intact-the-gt51-glutamate-and-the-three-transpeptidase-motifs-sxxk-sxn-ktg">Finding 4 — All catalytic motifs are sequence-intact: the GT51 glutamate and the three transpeptidase motifs (SxxK / SxN / KTG)</h3>
+<p>A motif scan of Q88QC2 confirms that the protein's catalytic machinery is conserved at the sequence level. The <strong>GT51 domain</strong> contains the conserved donor-glutamate signature (E-D-x-x-F, "EDRWF" at residue ~88), the hallmark catalytic glutamate of family-51 peptidoglycan glycosyltransferases that is essential for glycosyl transfer. The <strong>transpeptidase module</strong> carries the three sequential penicilloyl-serine transpeptidase motifs in the correct order and spacing characteristic of active-site serine penicillin-recognizing enzymes:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Consensus</th>
+<th>Sequence in Q88QC2</th>
+<th>Approx. residue</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Motif 1</td>
+<td>S-x-x-K</td>
+<td>STLK</td>
+<td>Ser346 / Lys349</td>
+<td>Catalytic nucleophile serine + general base lysine</td>
+</tr>
+<tr>
+<td>Motif 2</td>
+<td>S-x-N</td>
+<td>SLN</td>
+<td>~400</td>
+<td>Active-site loop, substrate positioning</td>
+</tr>
+<tr>
+<td>Motif 3</td>
+<td>K-(T/S)-G-(T/S)</td>
+<td>KTGT</td>
+<td>~517</td>
+<td>β-strand lining the active-site cleft</td>
+</tr>
+</tbody>
+</table>
+<p>The presence and correct spacing of these motifs indicate that the transpeptidase fold is structurally preserved. This is not in contradiction with Finding 2: sequence conservation of the active site does not guarantee physiologically significant transpeptidation, and the <em>E. coli</em> ortholog — despite an analogous architecture — binds β-lactams atypically and is thought to act as a transglycosylase only <em>in vivo</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>). The intact GT51 glutamate, by contrast, is fully consistent with robust glycosyltransferase activity.</p>
+<h3 id="finding-5-orthology-59-identity-to-e-coli-pbp1c-confirms-the-assignment-across-all-three-domains">Finding 5 — Orthology: ~59% identity to <em>E. coli</em> PBP1C confirms the assignment across all three domains</h3>
+<p>A Needleman–Wunsch global alignment (match +1, mismatch −1, gap −2) of Q88QC2 (784 aa) against <em>E. coli</em> PBP1C (P76577 / PBPC_ECOLI, 770 aa; UniProt gene name <em>pbpC</em>, protein "Penicillin-binding protein 1C", curated evidence level PE=1) yields <strong>468/788 identical positions = 59.4% identity</strong> over the aligned length (60.8% relative to the shorter sequence), with only 22 gap columns. The alignment is <strong>colinear and full-length</strong>, spanning all three functional modules (GT51, transpeptidase, and the PBP1C-specific C-terminal domain). The two proteins share the same gene symbol <em>pbpC</em> and the same modular architecture.</p>
+<p>This level of identity across the entire protein — far above the ~30% threshold generally regarded as sufficient for confident functional transfer — <strong>seals the orthology</strong> and licenses the transfer of the experimentally established <em>E. coli</em> PBP1C functional model to <em>P. putida</em> Q88QC2. In practical terms, it means the conclusions that PBP1C is a moenomycin-sensitive glycan-chain polymerase, that it acts <em>in vivo</em> as a transglycosylase only, and that it participates in a multienzyme peptidoglycan-synthesis complex are all reasonably inferred for the <em>P. putida</em> protein.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings integrate into a coherent mechanistic picture of PBP1C as an accessory glycan-strand polymerase embedded in the inner-membrane peptidoglycan-synthesis machinery.</p>
+<h3 id="domain-architecture-n-c-terminus">Domain architecture (N → C terminus)</h3>
+<div class="codehilite"><pre><span></span><code> Cytoplasm │ Inner membrane │            Periplasm (site of PG synthesis)
+   │                │
+   N-term ─┤   TM anchor    ├─[ GT51 ]───[ Transpeptidase ]───[ PBP_1c C-term ]─ C-term
+   │  res ~14–32    │  res ~64–230   res ~307–423        res ~694–780
+   │                │  (E88 catalytic)  (SxxK/SxN/KTG)   (IPR011815, PBP1C-specific)
+</code></pre></div>
+
+<h3 id="reaction-catalyzed-ec-249928">Reaction catalyzed (EC 2.4.99.28)</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="p">[</span><span class="n">glycan</span><span class="w"> </span><span class="n">chain</span><span class="p">]</span><span class="n">_n</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">lipid</span><span class="w"> </span><span class="n">II</span><span class="w">  </span><span class="err">──</span><span class="n">GT51</span><span class="err">──▶</span><span class="w">  </span><span class="p">[</span><span class="n">glycan</span><span class="w"> </span><span class="n">chain</span><span class="p">]</span><span class="n">_</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">undecaprenyl</span><span class="o">-</span><span class="n">PP</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="n">H</span><span class="o">+</span>
+<span class="w">                            </span><span class="p">(</span><span class="n">moenomycin</span><span class="o">-</span><span class="n">inhibitable</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The GT51 domain binds the growing glycan chain in its <strong>donor site</strong> (the moenomycin-binding site) and the incoming lipid II precursor in its <strong>acceptor site</strong>, then forms a new β-1,4 glycosidic bond, extruding the C55 lipid carrier (undecaprenyl diphosphate) for recycling. Studies of related GT51 enzymes reveal <strong>positive cooperativity between the acceptor and donor sites</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/25462814/">PMID: 25462814</a>), and this reaction is the validated target of moenomycin and, indirectly, of the glycopeptide antibiotics (<a href="https://pubmed.ncbi.nlm.nih.gov/16298347/">PMID: 16298347</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26358369/">PMID: 26358369</a>).</p>
+<h3 id="functional-role-in-the-cell">Functional role in the cell</h3>
+<p>PBP1C is best understood as an <strong>accessory / back-up glycan polymerase</strong> rather than an essential enzyme. In <em>E. coli</em>, the two "housekeeping" class A PBPs PBP1A and PBP1B are jointly essential — cells cannot survive loss of both — but a large deletion study showed that cells can survive on a very limited PBP complement, and that PBP1C is dispensable for viability (<a href="https://pubmed.ncbi.nlm.nih.gov/10383966/">PMID: 10383966</a>). The physiological picture that emerges is:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>PBP1C</th>
+<th>Comparison (PBP1A/1B)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Class</td>
+<td>Class A PBP</td>
+<td>Class A PBP</td>
+</tr>
+<tr>
+<td>GT51 glycosyltransferase</td>
+<td>Yes (primary activity)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Transpeptidase <em>in vivo</em></td>
+<td>Degenerate / "transglycosylase only"</td>
+<td>Yes (bifunctional)</td>
+</tr>
+<tr>
+<td>β-lactam binding</td>
+<td>Atypical / limited</td>
+<td>Broad</td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>Non-essential (accessory)</td>
+<td>Jointly essential</td>
+</tr>
+<tr>
+<td>Complex partners</td>
+<td>PBP1B, PBP2, PBP3, MltA</td>
+<td>Various</td>
+</tr>
+</tbody>
+</table>
+<p>The physical association of PBP1C with <strong>both polymerases (PBP1B) and hydrolases (MltA)</strong> suggests it participates in the coordinated make-and-break chemistry of cell-wall growth: as glycan strands are polymerized and cross-linked, lytic transglycosylases like MltA cleave existing strands to allow insertion of new material. Placing PBP1C within this complex (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/10037771/">PMID: 10037771</a>) implies its polymerizing activity is spatially and temporally coordinated with wall remodeling, possibly contributing to a specific "mode" of murein synthesis under certain growth conditions. Because <em>P. putida</em> Q88QC2 is a 59%-identical, colinear ortholog (Finding 5), this same accessory glycan-polymerase role is the most parsimonious model for its function.</p>
+<h3 id="localization-summary">Localization summary</h3>
+<p>The enzyme operates <strong>at the periplasmic face of the cytoplasmic (inner) membrane</strong> — anchored in the lipid bilayer by its N-terminal helix, with its catalytic domains reaching into the periplasm where lipid II is flipped, polymerized, and cross-linked into the sacculus.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">10542235</a></td>
+<td><em>Cloning and characterization of PBP 1C … of E. coli</em></td>
+<td><strong>Central reference.</strong> Establishes PBP1C as a class A PBP with moenomycin-sensitive murein-polymerizing activity, atypical β-lactam binding, "transglycosylase only" <em>in vivo</em> role, and membership in a multienzyme complex.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10037771/">10037771</a></td>
+<td><em>Interactions between PBP1B, MltA, and MipA of E. coli</em></td>
+<td>Reciprocal affinity chromatography: MltA retains PBPs 1B, 1C, 2, 3 — defines PBP1C's periplasmic complex partners.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26358369/">26358369</a></td>
+<td><em>Targeting Bacterial Cell Wall PG Synthesis by Inhibition of GT Activity</em></td>
+<td>Defines the GT51 reaction (lipid II → glycan chain) that EC 2.4.99.28 catalyzes.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12867450/">12867450</a></td>
+<td><em>GT domain of PBP2a from S. pneumoniae polymerizes murein glycan chains</em></td>
+<td>Direct kinetic demonstration of a class A PBP GT51 reaction (dansyl-lipid II; moenomycin/vancomycin inhibition).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16484198/">16484198</a></td>
+<td><em>Bifunctional GT/acyltransferase PBP4 of L. monocytogenes</em></td>
+<td>Quantifies class A PBP glycan polymerization (1,400 M⁻¹ s⁻¹ from E. coli lipid II); shows moenomycin sensitivity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10383966/">10383966</a></td>
+<td><em>E. coli mutants lacking all combinations of 8 PBPs</em></td>
+<td>Demonstrates PBP1C is non-essential; only loss of both PBP1A and PBP1B is lethal.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25462814/">25462814</a></td>
+<td><em>Positive cooperativity between acceptor and donor sites of PG GT</em></td>
+<td>Mechanistic detail of GT51 donor/acceptor site cooperativity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16298347/">16298347</a></td>
+<td><em>Targeting the forgotten transglycosylases</em></td>
+<td>Reviews moenomycin as the archetypal inhibitor of the transglycosylation step.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33830599/">33830599</a></td>
+<td><em>d-canavanine affects PG structure … in Rhizobiales</em></td>
+<td>Uses <em>P. putida</em> as a model for cell-wall chemistry; organism-relevant context.</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence is <strong>highly convergent</strong>: no reviewed source contradicts the assignment of Q88QC2 as PBP1C or the conclusion that its primary function is glycan-chain polymerization. Several papers in the literature set concern β-lactam pharmacology and PBP-binding profiles (e.g., PMIDs 3073932, 3090016, 3897174, 3918982); these consistently note that PBP1C is a minor/atypical penicillin-binding protein — corroborating, rather than contradicting, the "transglycosylase-only" model.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> protein.</strong> All mechanistic conclusions for Q88QC2 are inferred by orthology from <em>E. coli</em> PBP1C. Although the ~59% full-length identity strongly supports functional transfer, no enzyme assay, deletion phenotype, or localization study has been performed on the <em>P. putida</em> protein itself.</p>
+</li>
+<li>
+<p><strong>The transpeptidase activity remains formally unresolved.</strong> The transpeptidase active-site motifs (SxxK/SxN/KTG) are sequence-intact in Q88QC2, yet the <em>E. coli</em> ortholog is thought to act as a transglycosylase only. Whether the <em>P. putida</em> enzyme retains any residual cross-linking or carboxypeptidase activity is untested. The intact motifs leave open the possibility of condition-specific or partner-dependent transpeptidation.</p>
+</li>
+<li>
+<p><strong>Subcellular localization is inferred, not measured.</strong> UniProt carries no curated SUBCELLULAR LOCATION comment for Q88QC2; the inner-membrane/periplasmic topology is derived from the hydrophobicity profile and orthology.</p>
+</li>
+<li>
+<p><strong>Complex membership in <em>P. putida</em> is assumed.</strong> The multienzyme-complex model (association with PBP1B, PBP2, PBP3, MltA) is established in <em>E. coli</em>. <em>P. putida</em> encodes orthologs of these partners, but the specific interactions have not been demonstrated in this organism.</p>
+</li>
+<li>
+<p><strong>Physiological/regulatory role is unknown.</strong> The precise conditions under which PBP1C contributes to cell-wall synthesis — its "mode" of murein synthesis, expression regulation, and any role under stress, stationary phase, or β-lactam challenge — remain uncharacterized in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>In vitro glycosyltransferase assay.</strong> Express and purify the soluble (membrane-anchor-truncated) form of <em>P. putida</em> PBP1C and measure lipid II polymerization using dansyl-lipid II or a continuous fluorescence assay, with moenomycin as a positive-control inhibitor — directly testing the GT51 activity predicted here (cf. <a href="https://pubmed.ncbi.nlm.nih.gov/12867450/">PMID: 12867450</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16484198/">PMID: 16484198</a>).</p>
+</li>
+<li>
+<p><strong>Transpeptidase / β-lactam binding test.</strong> Perform a Bocillin-FL (fluorescent penicillin) binding assay across a panel of β-lactams to determine whether the <em>P. putida</em> transpeptidase site binds penicillins atypically, as reported for <em>E. coli</em> PBP1C (<a href="https://pubmed.ncbi.nlm.nih.gov/10542235/">PMID: 10542235</a>).</p>
+</li>
+<li>
+<p><strong>Deletion phenotyping.</strong> Construct a clean ΔPP_0572 mutant and characterize growth rate, cell morphology, peptidoglycan composition (HPLC/LC-MS muropeptide analysis), and β-lactam/moenomycin susceptibility — testing the predicted non-essential, accessory role (<a href="https://pubmed.ncbi.nlm.nih.gov/10383966/">PMID: 10383966</a>).</p>
+</li>
+<li>
+<p><strong>Localization.</strong> Construct a functional fluorescent fusion (e.g., PBP1C-GFP) or perform cell fractionation/immunodetection to confirm inner-membrane localization and any subcellular positioning (lateral wall vs. septum).</p>
+</li>
+<li>
+<p><strong>Interaction mapping.</strong> Use bacterial two-hybrid, co-immunoprecipitation, or affinity chromatography in <em>P. putida</em> to test whether PBP1C associates with PBP1B, PBP2, PBP3, and lytic transglycosylase orthologs, validating the multienzyme-complex model (<a href="https://pubmed.ncbi.nlm.nih.gov/10037771/">PMID: 10037771</a>).</p>
+</li>
+<li>
+<p><strong>Structural confirmation.</strong> Obtain an experimental or high-confidence predicted (AlphaFold) structure of Q88QC2 and superpose the GT51 and transpeptidase domains onto characterized templates to verify active-site geometry and the integrity/degeneracy of the transpeptidase pocket.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>pbpC</em> (PP_0572, Q88QC2) of <em>Pseudomonas putida</em> KT2440 encodes <strong>penicillin-binding protein 1C</strong>, a membrane-anchored <strong>class A PBP</strong> and full-length ortholog (~59% identity) of experimentally characterized <em>E. coli</em> PBP1C. Its <strong>primary function is peptidoglycan glycosyltransferase activity (EC 2.4.99.28)</strong> — polymerizing the lipid II precursor into linear glycan strands of the cell wall via its moenomycin-sensitive GT51 domain, releasing undecaprenyl diphosphate. Although its transpeptidase active-site motifs are sequence-intact, the ortholog acts <em>in vivo</em> as a <strong>transglycosylase only</strong>. The enzyme operates at the <strong>periplasmic face of the inner membrane</strong> as a <strong>non-essential, accessory component of the peptidoglycan-synthesizing multienzyme complex</strong>, associating with murein polymerase PBP1B, transpeptidases PBP2/PBP3, and the lytic transglycosylase MltA.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pbpC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="pbpC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:10542235</li>
+<li>PMID:26358369</li>
+<li>PMID:12867450</li>
+<li>PMID:16484198</li>
+<li>PMID:10037771</li>
+<li>PMID:25462814</li>
+<li>PMID:16298347</li>
+<li>PMID:10383966</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88QC2
+gene_symbol: pbpC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PbpC/PBP1C is a membrane-anchored class-A penicillin-binding protein whose
+  best-supported physiological activity is accessory peptidoglycan glycan
+  polymerization. It contains GT51 and transpeptidase-like domains, but
+  ortholog evidence does not establish peptide-crosslinking activity in vivo.
+existing_annotations:
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: PBP1C has a conserved penicillin-recognizing domain but an atypical beta-lactam-binding profile.
+    action: ACCEPT
+    reason: The family assignment and intact active-site motifs support penicillin binding without implying a core transpeptidase role.
+- term:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The GT51 domain polymerizes lipid II into peptidoglycan glycan strands.
+    action: ACCEPT
+    reason: Glycan polymerization is the experimentally supported primary activity of the characterized PBP1C ortholog.
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PbpC provides accessory glycan-polymerization capacity during peptidoglycan synthesis.
+    action: ACCEPT
+    reason: Its glycosyltransferase reaction directly contributes to assembly of the sacculus.
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: The catalytic domains are predicted to project into the periplasm.
+    action: ACCEPT
+    reason: An N-terminal membrane anchor and conserved class-A PBP topology place glycan polymerization on the periplasmic face.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pbpC/pbpC-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK PbpC/PBP1C (Q88QC2)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: The report supports a primary accessory glycan-polymerase role and leaves transpeptidation unresolved.
+    supporting_text: its physiologically relevant activity is glycan-chain polymerization rather than peptide cross-linking
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Used as retrieval support; activity transfer is from the approximately 59%-identical E. coli PBP1C ortholog.
+core_functions:
+- description: Accessory PBP1C-family peptidoglycan glycosyltransferase.
+  molecular_function:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: file:PSEPK/pbpC/pbpC-deep-research-openscientist.md
+    supporting_text: its physiologically relevant activity is glycan-chain polymerization rather than peptide cross-linking
+knowledge_gaps:
+- gap_statement: Whether the intact transpeptidase-like domain of KT2440 PbpC has condition-specific or partner-dependent activity is unknown.
+  status: OPEN
+  gap_kind: [BIOLOGY, CURATION]
+  significance: Sequence conservation alone does not justify a D,D-transpeptidase annotation when the characterized ortholog is transglycosylase-only in vivo.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
