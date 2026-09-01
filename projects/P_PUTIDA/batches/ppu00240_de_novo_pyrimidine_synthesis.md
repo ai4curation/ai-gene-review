@@ -38,7 +38,7 @@ outside this module even though they occur in the broad KEGG bucket.
 - [x] Replace the three-node human fusion-centric module with six reusable reaction leaves.
 - [x] Add exact PSEPK UniProt exemplars while retaining CAD, DHODH, and UMPS as cross-species architecture exemplars.
 - [x] Complete module + `ppu00240` + PSEPK OpenScientist research.
-- [ ] Complete OpenScientist gene-level research for the seven focused genes.
+- [x] Complete OpenScientist gene-level research for the seven focused genes.
 - [x] Validate the module and all focused gene reviews.
 - [x] Render the gene reviews and batch page.
 - [x] Open [PR #2483](https://github.com/ai4curation/ai-gene-review/pull/2483) for this module; review and CI are in progress.
