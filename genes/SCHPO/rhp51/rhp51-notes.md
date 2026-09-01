@@ -92,3 +92,31 @@ MCM interaction at forks:
 - nuclear envelope (HDA): KEEP_AS_NON_CORE (localization, not primary site of action).
 - DNA repair, DNA metabolic process, DNA binding, nucleotide binding (IEA high-level): MARK as generic/over-broad -> KEEP_AS_NON_CORE or MODIFY to more specific (DNA binding -> already have ssDNA/dsDNA). These are accurate but redundant/generic.
 - ATP-dependent DNA damage sensor activity GO:0140664 (IEA InterPro): MODIFY/REMOVE — Rad51 is a recombinase, not a damage sensor; this is an InterPro over-propagation. Use MARK_AS_OVER_ANNOTATED.
+
+## Re-review journal — 2026-09-01
+
+- Refreshed UniProt and GOA through `just fetch-gene SCHPO rhp51 --force`. UniProt
+  now gives the primary gene name as `rad51` and `rhp51` as a synonym
+  [UniProt:P36601, `GN Name=rad51; Synonyms=rhp51`], so the review's `gene_symbol`
+  was updated while retaining the legacy directory name.
+- Reconciled GOA reference churn: obsolete IEA tuples for double-stranded DNA binding
+  (`GO_REF:0000002`) and nucleus (`GO_REF:0000044`) were replaced by the current
+  combined-annotation tuples (`GO_REF:0000120`). Their ACCEPT decisions remain
+  supported by purified-protein biochemistry [PMID:15899844 "Rad51 and Dmc1 proteins
+  catalyze ATP-dependent strand exchange reactions with homologous duplex DNA"]
+  and the S. pombe localization dataset [PMID:16823372 "we determined the localization
+  of 4,431 proteins"].
+- Rechecked the experimental nucleus row against the cached full text. The paper
+  contains a dedicated Rad51 immunofluorescence assay with DAPI staining
+  [PMID:34157114 "Rad51 foci detection by immunofluorescence"], so the curator's
+  EXP call is retained with a more assay-specific evidence excerpt.
+- Rechecked the Hus5 interaction citation. The abstract explicitly says that human
+  HsUbc9 interacts with human Rad51 and discusses mouse spermatocytes
+  [PMID:8610150 "HsUbc9 protein interacts with human recombination protein Rad51"].
+  It does not directly assay the S. pombe Rad51-Hus5 pair, so this GOA IPI is now
+  UNDECIDED rather than treated as verified non-core binding; it is not removed.
+- Project/module check: the existing PANTHER IBA and InterPro project rows already
+  capture this review's conserved-function and over-annotation decisions. The
+  `YEAST_DNA_REPAIR_CHROMATIN` project is explicitly scoped to S. cerevisiae, so
+  this S. pombe review was not added there. No unresolved biochemical hypothesis
+  warranted an OpenScientist job.
