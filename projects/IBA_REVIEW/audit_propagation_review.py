@@ -30,8 +30,6 @@ import sys
 PATTERNS = sys.argv[1:] or ['genes/mouse/*/*-ai-review.yaml']
 
 # Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
-# The DR line name and the id prefix used in GOA differ for several of these.
-# Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
 # Each entry is (GOA id prefix, which ';'-separated DR field holds the id GOA cites).
 # Two traps here, both of which have silently broken this check before:
 #   * MGI's DR value ALREADY carries the "MGI:" prefix and GOA doubles it, so the
@@ -80,6 +78,12 @@ for d in sorted(glob.glob('genes/*/*/')):
 # before. If these stop holding, SELF_SEED_* can never fire and the audit passes
 # vacuously on the affected organism -- which is worse than failing loudly.
 _selftest_failures = []
+# Guard the guards: if `own` is empty (run from the wrong cwd, so glob matched nothing)
+# every conditional check below is skipped and SELF_SEED_* passes vacuously -- the exact
+# failure shape this self-test exists to prevent.
+if not own:
+    _selftest_failures.append(
+        "no gene directories found under genes/*/*/ - wrong working directory?")
 if ('mouse', 'Mapk1') in own and 'MGI:MGI:1346858' not in own[('mouse', 'Mapk1')]:
     _selftest_failures.append(
         "MGI self-seed ids must carry the doubled prefix (MGI:MGI:...) as GOA writes them")
@@ -123,13 +127,18 @@ for f in files:
             issues.append((loc,'NO_FAILURE_WITH_MODES',f"{rc}+{fms}"))
         if act=='MODIFY' and rc and rc.startswith('NO_FAILURE'):
             issues.append((loc,'MODIFY_WITH_NO_FAILURE',rc))
-        # Third arm of the same consistency rule: a DEFECT root cause sitting under an
-        # action that accepts the annotation. Usually a stale block left behind when the
-        # action was softened, so the machine-readable field contradicts the prose.
-        DEFECT_RC = {'SOURCE_BAD','SOURCE_STALE_OR_MISSING','SOURCE_WEAK_OR_INFERRED',
-                     'EVIDENCE_CIRCULAR_OR_REDUNDANT','PROPAGATION_BAD','TERM_SCOPING_PROBLEM'}
-        if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in DEFECT_RC:
+        # Third arm: a root cause that says the TRANSFER ITSELF failed, sitting under an
+        # action that accepts the annotation. Deliberately narrow. TERM_SCOPING_PROBLEM is
+        # excluded because it is routinely coherent with KEEP_AS_NON_CORE -- the term is
+        # over-scoped but the annotation is still worth keeping (e.g. human IDO1
+        # GO:0034354, which contributes only the pathway's entry step). The three below
+        # assert the propagation or its source is wrong, which accepting contradicts.
+        CONTRADICTORY_RC = {'PROPAGATION_BAD','SOURCE_BAD','EVIDENCE_CIRCULAR_OR_REDUNDANT'}
+        if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in CONTRADICTORY_RC:
             issues.append((loc,'DEFECT_ROOT_CAUSE_UNDER_ACCEPTING_ACTION',f"{act}+{rc}"))
+        # Fourth arm: the inverse -- a corrective action declaring no failure at all.
+        if act in ('REMOVE','MARK_AS_OVER_ANNOTATED') and rc and rc.startswith('NO_FAILURE'):
+            issues.append((loc,'CORRECTIVE_ACTION_WITH_NO_FAILURE',f"{act}+{rc}"))
         for se in (pr.get('source_entities') or []):
             ss=se.get('source_status'); sid=se.get('source_id') or ''
             # source_status is OPTIONAL in the schema; only flag values that are present
