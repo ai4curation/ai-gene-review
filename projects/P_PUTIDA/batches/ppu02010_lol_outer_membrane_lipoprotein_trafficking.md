@@ -18,8 +18,8 @@ periplasm, and into the outer membrane.
 - [ ] Complete OpenScientist gene research (lolB and lolC complete; three jobs running).
 - [x] Curate every GOA row for all five genes.
 - [x] Create a species-neutral, multi-part module.
-- [ ] Complete generic module research.
-- [ ] Complete module + pathway + taxon research.
+- [x] Complete generic module research.
+- [x] Complete module + pathway + taxon research.
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -56,3 +56,18 @@ periplasm, and into the outer membrane.
 - LolB research supports the terminal receptor/insertion role but found no
   direct KT2440 structure, biochemistry, or essentiality experiment; detailed
   mechanism remains transferred from E. coli and Pseudomonas aeruginosa.
+- Generic module research supports the three-stage post-maturation boundary
+  and confirms that LolCDE extracts cargo by mechanotransmission rather than
+  translocating it through a membrane pore.
+- The canonical route is not universal across all diderms: some lineages use
+  homodimeric LolF-like extractors or lack canonical LolB. This module is the
+  reusable LolCDE-LolA-LolB implementation, with lineage replacements left for
+  grounded variants.
+- The species-aware report correctly finds all five KT2440 components and no
+  biological gap. Its additional claim that the ppu02010 candidate set contains
+  no Lol genes is rejected: the wrapper prompt displayed only the first 80 of
+  207 candidates, while the local partition explicitly assigns lolC, lolD, and
+  lolE to ppu02010.
+- Recent model-organism bypass experiments caution against asserting universal
+  LolA/LolB essentiality. No such bypass or essentiality result is projected
+  onto KT2440.
