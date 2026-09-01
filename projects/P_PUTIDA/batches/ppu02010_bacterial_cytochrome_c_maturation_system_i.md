@@ -30,8 +30,8 @@ This batch extracts the Ccm system I machinery from the broad `ppu02010` ABC-tra
 
 | Order | Role | PSEPK implementation | UniProt | Decision |
 |---:|---|---|---|---|
-| 1a | ATP-dependent holo-CcmE processing | `ccmA`, `ccmB` | Q88EX5, Q88EX6 | Covered; transported substrate unresolved |
-| 1b | CcmCDE heme transfer and holo-CcmE formation | `ccmC`, `ccmD`, `ccmE` | Q88EX7, Q88EX8, Q88EX9 | Covered |
+| 1a | CcmCDE heme transfer and holo-CcmE formation | `ccmC`, `ccmD`, `ccmE` | Q88EX7, Q88EX8, Q88EX9 | Covered |
+| 1b | ATP-dependent holo-CcmE processing | `ccmA`, `ccmB` | Q88EX5, Q88EX6 | Covered; transported substrate unresolved |
 | 2 | Apocytochrome disulfide reduction/redox preparation | `ccmG`, `ccmH` | Q88EY1, A0A140FWM4 | Covered; architecture-dependent direct substrates retained as a caveat |
 | 3 | CcmF/CcmH holocytochrome-c synthase complex | `ccmF`, `ccmH` | Q88EY0, A0A140FWM4 | Covered at complex level |
 | 3 optional | Lineage-dependent CcmI/CycH-family maturation support | `cycH` | A0A140FWM3 | Accessory process role covered; direct activity unresolved |
@@ -53,8 +53,8 @@ The PSEPK locus provides all conserved system I functions plus a lineage-variabl
 
 ## Boundary
 
-The module starts with two distinct functional assemblies: ATP-dependent CcmAB
-energy coupling and CcmCDE-dependent heme transfer/holo-CcmE formation. A
+The module starts with CcmCDE-dependent heme transfer and holo-CcmE formation,
+followed by ATP-dependent CcmAB energy coupling for processing and release. A
 CcmG/CcmH thiol-redox branch converges with holo-CcmE at the CcmF/CcmH
 holocytochrome-c synthase complex. CcmH is therefore represented in both redox
 preparation and ligation, while the CcmI/CycH-family factor is optional.
