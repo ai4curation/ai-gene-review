@@ -166,7 +166,8 @@ overlap by one. The CnoX comprehensive review likewise refetched its committed G
 snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
 raw reference total by three and the exact overlaps by two; its completed review added
 evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
-from the core, leaving `GO:0051087` as an evidence-backed core activity and overlap.
+from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
+not predict.
 Most recently, `BACSU/lipA` followed the obsoletion of `GO:0009107`: both lipoate
 biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
 carried, so the post-review reference total fell by one distinct term, and the
