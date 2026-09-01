@@ -78,10 +78,12 @@ The broad candidate inventory and its exact metadata are retained in
 
 The reusable module's mutarotase leaf is now grounded on
 `PANTHER:PTHR10091:SF0` (`GALACTOSE MUTAROTASE`) rather than the heterogeneous
-parent aldose-1-epimerase family. Human GALM Q96C23 is an indexed member of that
-subfamily. The unresolved KT2440 aldose 1-epimerase candidate PP_1165 is not
-used as a galactose-specific representative, so this refinement does not fill
-the absent PSEPK Leloir route.
+parent aldose-1-epimerase family. Reviewed E. coli GalM P0A9C3 and human GALM
+Q96C23 both belong to that subfamily. The module also records the verified
+PAINT node PTN000009552, which supports GO:0004034 and GO:0033499 from those
+bacterial and human seeds. The unresolved KT2440 aldose 1-epimerase candidate
+PP_1165 is not used as a galactose-specific representative, so this refinement
+does not fill the absent PSEPK Leloir route.
 
 The broad GALE parent family remains intentional: human GALE resolves to
 PTHR43725:SF47, while current PSEPK metadata assigns Q88I72 to the heterogeneous
