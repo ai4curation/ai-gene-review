@@ -422,6 +422,13 @@ def _yaml_comment_truncations(raw, doc):
         # then require a "#" after horizontal space only -- never across a newline.
         # Requiring same-line is what structurally excludes block scalars (where "#" is
         # literal and nothing is lost) and standalone comment lines after a value.
+        # A clip-style "|" block keeps its trailing newline, so its tail ends with one.
+        # The "#" test below would then match an INDENTED comment on the following line
+        # and report a truncation where nothing was lost. (No live instance today -- every
+        # indented comment in the corpus follows a folded or plain scalar -- but 717 clip
+        # blocks and 20 files with indented comments both exist, so the ingredients do.)
+        if _value.endswith('\n'):
+            continue
         _tail = re.escape(_value[-25:]).replace(r'\ ', r'\s+')
         _all = list(re.finditer(_tail, raw))
         _cut = [_m for _m in _all if re.match(r'[ \t]+#', raw[_m.end():])]
@@ -443,21 +450,21 @@ def _yaml_comment_truncations(raw, doc):
         #     evidence describes..."). The defect is certain; the attribution is not.
         #     Suppressing the finding on that basis would lose eight real truncations to
         #     protect a payload, so report the finding and say the payload is ambiguous.
-        _lost = {raw[_m.end():].split('\n', 1)[0] for _m in _cut}
         if len(_cut) != len(_all):
             continue
+        _lost = {raw[_m.end():].split('\n', 1)[0] for _m in _cut}
         yield _path, (_lost.pop() if len(_lost) == 1 else
                       f"<{len(_lost)} variants at {len(_all)} identical tails, "
                       f"e.g. {sorted(_lost)[0][:40]!r}>")
 
-def _walk_all_scalars(o, path, key=None):
+def _walk_all_scalars(o, path):
     """Every string scalar, machine-sourced included: the parser cuts them all."""
     if isinstance(o, dict):
         for k, v in o.items():
-            yield from _walk_all_scalars(v, f"{path}.{k}", k)
+            yield from _walk_all_scalars(v, f"{path}.{k}")
     elif isinstance(o, list):
         for i, v in enumerate(o):
-            yield from _walk_all_scalars(v, f"{path}[{i}]", key)
+            yield from _walk_all_scalars(v, f"{path}[{i}]")
     elif isinstance(o, str):
         yield path, o
 
@@ -476,6 +483,24 @@ if [k for k in _tt_hits if k != '.description']:
     _selftest_failures.append(
         f"YAML_COMMENT_TRUNCATION fires on undamaged values {sorted(_tt_hits)} - "
         "a standalone comment line or a quoted '#' is not a truncation")
+
+# A clip "|" block followed by an INDENTED comment: nothing is lost, so nothing is
+# reported. The _tt_doc arm above only covers a comment at column 0, which is safe for a
+# different reason (no leading horizontal space before the "#"), so it does not reach this.
+# NOTE the first line: without a genuine inline "#" somewhere, _INLINE_HASH fails and the
+# function returns before reaching any value, so the assertion below would hold no matter
+# what the rule did. A first version of this arm omitted it and passed vacuously.
+_tt_clip = ("z: a plain scalar that is truncated here # lost\n"
+            "a:\n  b: |\n    text here that is long enough to test\n  # an indented comment\n")
+_tt_clip_hits = dict(_yaml_comment_truncations(_tt_clip, yaml.safe_load(_tt_clip)))
+if '.z' not in _tt_clip_hits:
+    _selftest_failures.append(
+        "YAML_COMMENT_TRUNCATION self-test input reaches no value - the inline-'#' gate "
+        "rejected it, so the clip-block assertion below cannot fail")
+if '.a.b' in _tt_clip_hits:
+    _selftest_failures.append(
+        "YAML_COMMENT_TRUNCATION reports a clip '|' block followed by an indented comment - "
+        "the block's trailing newline is not a truncation and nothing was lost")
 
 # The duplicate-tail arms, each on real YAML. These decide whether a finding appears at
 # all, so a silent regression here is a false positive or eight lost real defects.
