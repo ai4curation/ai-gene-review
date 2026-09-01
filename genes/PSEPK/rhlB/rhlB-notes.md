@@ -2,8 +2,9 @@
 
 ## 2026-08-31
 
-RhlB is curated as the ATP-dependent RNA helicase of the RNase E-centered
-degradosome. Full-text biochemical work shows that RhlB and PNPase can form a
+RhlB is curated for its ATP-dependent RNA-helicase role in RNA catabolism and
+as a candidate helicase of the RNase E-centered degradosome. Full-text
+biochemical work shows that RhlB and PNPase can form a
 ribonucleolytically active complex [PMID:16275923 "PNPase-alpha and RhlB form a
 ribonucleolytically active complex"] and that RhlB supports PNPase degradation
 of structured RNA. This is strong mechanistic evidence from *E. coli* and is
