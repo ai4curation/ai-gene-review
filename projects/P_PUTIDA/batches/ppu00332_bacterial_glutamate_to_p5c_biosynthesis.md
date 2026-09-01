@@ -1,19 +1,31 @@
 ---
-title: "PSEPK ppu00332 Carbapenem biosynthesis batch"
+title: "PSEPK ppu00332 glutamate-to-P5C precursor batch"
 maturity: DRAFT
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEPK]
 autolink_gene_symbols: false
 ---
 
-# PSEPK ppu00332: Carbapenem biosynthesis
+# PSEPK ppu00332: bacterial glutamate-to-P5C precursor module
 
 - Module seed: `bacterial_glutamate_to_p5c_biosynthesis`
 - Candidate genes from membership table: 2
 - Primary bucket genes: 2
-- Existing review files: 0
-- Curated review files: 0
+- Existing review files: 2
+- Curated review files: 2
 - Existing OpenScientist research files: 2
+
+## Curated Boundary
+
+- Required PSEPK realization: `proB` followed by `proA`.
+- The reusable module covers ATP-dependent glutamate phosphorylation and
+  NADPH-dependent reduction to L-glutamate 5-semialdehyde, which cyclizes to
+  P5C.
+- The downstream ProC/P5C-reductase reaction is outside this precursor module,
+  so this is not a complete proline-biosynthesis model.
+- `ppu00332` is retained as source-bucket provenance only. Its carbapenem label
+  is a KEGG cross-map artifact and does not describe a carbapenem pathway in
+  PSEPK.
 
 ## Required Workflow
 
@@ -39,3 +51,18 @@ autolink_gene_symbols: false
 Generated UTC: 2026-07-16T17:37:22.072385+00:00
 
 2026-07-16: OpenScientist timed out after 7200s for `proB` and `proA`; no gene-level report files were produced for those runs.
+
+2026-09-01 wave109 repair: Reused the completed generic and PSEPK pathway
+OpenScientist reports, both generated with the configured 7200s provider
+timeout. Removed redundant module-level cytoplasm while retaining supported
+leaf locations and leaf molecular functions. Added reviewed, experimentally
+characterized E. coli ProB/P0A7B5 and ProA/P07004 exemplars plus exact PAINT
+nodes `PTN000115542` and `PTN000115463`. Misleading PANTHER subfamily IDs were
+omitted. The required annotation-reviewer pass retained all proB/proA actions;
+it requested only a more cautious, cited rationale for the proB RNA-binding
+over-annotation, and no proA YAML change.
+
+2026-09-01 validation: Module schema and semantic validation passed; the only
+advisory was an unavailable ontology lookup for `NCBITaxon:2`. Both `proB` and
+`proA` reviews passed full validation. The module, changed gene review, and
+batch page were rendered, and `git diff --check` passed.
