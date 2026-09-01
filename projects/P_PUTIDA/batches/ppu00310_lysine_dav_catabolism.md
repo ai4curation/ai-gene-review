@@ -81,22 +81,22 @@ The available PANTHER subfamily calls are not reliable reaction selectors:
 DavB maps to a histone-demethylase-labeled subfamily, DavA to
 beta-ureidopropionase, DavT to leucine/methionine racemase, and DavD to a
 mixed succinate-semialdehyde-dehydrogenase family. Broad fold-level containers
-are retained only where they remain honest descriptors; the focused repair
-below documents the two identifiers that were omitted.
+are retained as architecture descriptors and constrained by exact exemplars,
+leaf molecular functions, and direct evidence.
 
 ## 2026-09-01 Family-evidence repair
 
 Repair PR: [#2863](https://github.com/ai4curation/ai-gene-review/pull/2863).
 
-The DavB and DavT leaves now rely on exact, experimentally characterized
-UniProt exemplars without asserting a PANTHER family identifier. DavB's only
-available PANTHER subfamily carries the official label "lysine-specific histone
-demethylase 2," which does not delimit the bacterial monooxygenase reaction.
-The DavT exemplars also encounter discordant family assignments despite both
-reviewed records supporting the same RHEA:10212 reaction. Encoding either
-classifier artifact as a reaction-specific family would be less accurate than
-leaving the optional identifier absent. The leaf GO functions, direct primary
-evidence, pathway order, and four-part reusable boundary are unchanged.
+The DavB leaf retains broad PTHR10742, whose official family label "flavin
+monoamine oxidase" honestly describes the fold; the misleading
+histone-demethylase wording belongs only to SF410 and is not asserted. The
+DavT leaf likewise retains broad PTHR11986 "aminotransferase class III" for the
+target Q88RB9. Reviewed Pseudomonas aeruginosa Q9I6M4 remains an intentionally
+out-of-family exemplar because its exact record supports the same RHEA:10212
+reaction despite a different local PANTHER placement. The advisory documents
+that grouping rather than invalidating it. Leaf functions, primary evidence,
+pathway order, and the four-part reusable boundary are unchanged.
 The same audit moved DavD's electronic cytosol annotation to non-core and
 removed it from the synthesized core function because no direct localization
 evidence is available.
