@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lolB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lolB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PX4" target="_blank" class="term-link">
+                        Q88PX4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lolB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PX4" data-a="DESCRIPTION: Outer-membrane-anchored LolB-family receptor that ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Outer-membrane-anchored LolB-family receptor that accepts mature lipoproteins from the periplasmic carrier LolA and promotes their incorporation into the outer membrane.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                    GO:0009279
+                                </a>
+                            </span>
+                            <span class="term-label">cell outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PX4" data-a="GO:0009279" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolB is a lipid-anchored outer-membrane protein.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015031" target="_blank" class="term-link">
+                                    GO:0015031
+                                </a>
+                            </span>
+                            <span class="term-label">protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PX4" data-a="GO:0015031" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True at a broad level, but lipoprotein localization to the outer membrane captures LolB&#39;s role much more precisely.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                    GO:0044874
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein localization to outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PX4" data-a="GO:0044874" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolB receives LolA-bound lipoproteins and incorporates them into the outer membrane.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acceptance of mature lipoproteins from LolA and their delivery into the bacterial outer membrane.</h3>
+                <span class="vote-buttons" data-g="Q88PX4" data-a="FUNCTION: Acceptance of mature lipoproteins from LolA and th..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                lipoprotein localization to outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                cell outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lolB/lolB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Plays a critical role in the incorporation of lipoproteins in</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lolB/lolB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">LolB is the **outer-membrane receptor/inserter for lipoproteins</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolB/lolB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Pseudomonas putida KT2440 LolB (Q88PX4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88PX4 as an outer-membrane LolB-family protein that incorporates lipoproteins after their release by LolA.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolB/lolB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research for Pseudomonas putida KT2440 LolB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LolB is the terminal outer-membrane receptor and insertion factor in the LolCDE-LolA-LolB relay.</div>
+
+                        <div class="finding-text">"LolB is the **outer-membrane receptor/inserter for lipoproteins"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Detailed mechanism is inferred mainly from characterized E. coli LolB rather than direct Q88PX4 experiments.</div>
+
+                        <div class="finding-text">"Nearly all mechanistic detail derives from the *E. coli* ortholog"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 outer-membrane lipoproteins depend most strongly on LolB for insertion?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PX4" data-a="Q: Which KT2440 outer-membrane lipoproteins depend mo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Deplete LolB and quantify membrane partitioning of representative outer-membrane lipoproteins, followed by complementation with Q88PX4.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: membrane fractionation and complementation</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PX4" data-a="EXPERIMENT: Deplete LolB and quantify membrane partitioning of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PX4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: LolB (Outer-Membrane Lipoprotein LolB)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T02:24:58.304771</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-lolb-outer-membrane-lipoprotein-lolb">Functional Annotation Report: LolB (Outer-Membrane Lipoprotein LolB)</h1>
+<p><strong>Gene:</strong> <em>lolB</em> (OrderedLocusName PP_0724)<br />
+<strong>Protein:</strong> Outer-membrane lipoprotein LolB (Precursor)<br />
+<strong>UniProt:</strong> Q88PX4 (LOLB_PSEPK)<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)<br />
+<strong>Family:</strong> LolB family; Pfam PF03550 (LolB); InterPro IPR004565 (OM_lipoprot_LolB), IPR029046 (LolA/LolB/LppX fold)<br />
+<strong>Date:</strong> 2026-09-01</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>LolB is the <strong>outer-membrane (OM) receptor that catalyzes the terminal step of the Lol lipoprotein-sorting pathway</strong>. It is not an enzyme in the classical sense (it catalyzes no covalent chemistry); rather it is a lipoprotein-specific <strong>chaperone/receptor that physically inserts triacylated lipoproteins into the outer membrane</strong> after receiving them from the periplasmic chaperone LolA. Its substrate is the general population of OM-destined bacterial lipoproteins (defined by their N-terminal lipid anchor, not by sequence), which it accepts from LolA and hands off to the OM lipid bilayer. LolB carries out its function at the <strong>periplasmic (inner) leaflet of the outer membrane</strong>, to which it is itself tethered by an N-terminal triacyl-cysteine anchor. The pathway it completes — <strong>Lol (Localization of Lipoproteins): LolCDE → LolA → LolB</strong> — is essential for outer-membrane biogenesis and hence for viability in Gram-negative bacteria, including <em>Pseudomonas</em>.</p>
+<p>The gene identity is unambiguous: the symbol <em>lolB</em>, the LolB protein family/domains, and the γ-proteobacterial organism all align, and the <em>P. putida</em> sequence itself carries every hallmark of a functional LolB (see §5). Function is assigned by HAMAP rule MF_00233 and is supported by direct sequence evidence plus an extensive body of primary mechanistic work on the <em>Escherichia coli</em> ortholog and confirmation of pathway conservation within <em>Pseudomonas</em>.</p>
+<hr />
+<h2 id="2-biological-context-the-lol-pathway">2. Biological Context: The Lol Pathway</h2>
+<p>Gram-negative bacteria express dozens of lipoproteins (~90 species in <em>E. coli</em>) that are anchored to either the inner membrane (IM) or the outer membrane by an N-terminal S-diacylglyceryl-cysteine that is further N-acylated (triacylation). OM-destined lipoproteins must be moved from their site of synthesis (the outer leaflet of the IM) across the aqueous periplasm to the OM. This is accomplished by the <strong>Lol machinery</strong>, which comprises five proteins working in a strict relay [PMID 15672528; PMID 19307584]:</p>
+<ol>
+<li><strong>LolCDE</strong> — an ATP-binding-cassette (ABC) transporter in the IM. It recognizes and, using ATP hydrolysis, <strong>extracts</strong> OM-destined lipoproteins from the IM outer leaflet, extruding them onto the periplasmic chaperone. Unlike most ABC transporters, it does not move substrate across a membrane but detaches a membrane-anchored substrate [PMID 18218629].</li>
+<li><strong>LolA</strong> — a soluble <strong>periplasmic chaperone</strong> that receives the lipoprotein from LolCDE, shielding its acyl chains inside a hydrophobic cavity, and diffuses across the periplasm.</li>
+<li><strong>LolB</strong> — the <strong>OM receptor</strong> that accepts the lipoprotein from LolA and <strong>incorporates it into the outer membrane</strong>, completing sorting [PMID 19307584; PMID 15672528].</li>
+</ol>
+<p>Membrane specificity is set at the first step by the <strong>"position-2 rule"</strong>: a lipoprotein with <strong>aspartate at the residue immediately following the lipidated cysteine (+2)</strong> is retained in the IM (an "Lol-avoidance" signal that depends on phosphatidylethanolamine), whereas other residues at +2 permit LolCDE recognition and export to the OM [PMID 15672528; PMID 12032293; PMID 12823819]. Notably, neither LolA nor LolB re-checks this signal — sorting fidelity is imposed upstream at LolCDE [PMID 12823819].</p>
+<hr />
+<h2 id="3-primary-function-of-lolb">3. Primary Function of LolB</h2>
+<p><strong>LolB is the outer-membrane receptor/inserter for lipoproteins — the last, committed step of the Lol pathway.</strong></p>
+<ul>
+<li>LolA "transports lipoproteins to the outer membrane where an outer membrane receptor, LolB, incorporates lipoproteins into the outer membrane" [PMID 19307584]. When the LolA–lipoprotein complex "interacts with outer membrane receptor LolB, the lipoproteins are transferred from LolA to LolB and then localized to the outer membrane" [PMID 15672528].</li>
+<li>LolB acts <strong>catalytically</strong>: in reconstituted assays, <strong>a single LolB molecule catalyzes the incorporation of more than 100 molecules</strong> of the lipoprotein Pal into outer membranes, and it does so by engaging specifically the <strong>liganded</strong> (cargo-loaded) form of LolA [PMID 18029423].</li>
+<li>LolB is <strong>required and rate-controlling</strong> for the final step: depletion of LolB causes lipoproteins to accumulate in the periplasm (bound to LolA) rather than reaching the OM [PMID 18029423].</li>
+</ul>
+<p><strong>Substrate specificity.</strong> LolB has no sequence-specific substrate; its "substrate" is the acyl anchor of essentially any OM-directed lipoprotein delivered by LolA. This sequence-independence is structurally rationalized — the LolA/LolB cavity contacts the acyl chains, not the polypeptide, so structurally diverse cargoes are handled by the same machinery [PMID 36037338; PMID 18029423].</p>
+<hr />
+<h2 id="4-mechanism-and-structure">4. Mechanism and Structure</h2>
+<p><strong>Shared fold, opposite roles.</strong> LolA and LolB have "remarkably similar" structures — an <strong>unclosed (incomplete) β-barrel capped by an α-helical lid</strong>, forming a <strong>hydrophobic cavity</strong> that sequesters the lipoprotein's acyl chains away from water [PMID 15672528]. This fold defines the LolA/LolB/LppX superfamily (IPR029046).</p>
+<p><strong>Energy-independent, unidirectional transfer.</strong> The LolA→LolB hand-off occurs in the periplasm where <strong>no ATP is available</strong>; directionality is thermodynamic, driven by an <strong>affinity gradient</strong> in which LolB binds cargo more avidly than LolA (LolCDE → LolA → LolB → membrane) [PMID 15672528]. In-vivo photo-cross-linking (p-benzoyl-phenylalanine scanning) mapped a shared "<strong>hot</strong>" interaction area at the <strong>entrance of the hydrophobic cavity</strong> in both proteins, through which they dock in a <strong>"mouth-to-mouth"</strong> fashion, allowing acyl chains to pass directly between cavities without exposure to the aqueous phase; the same LolA surface engages the IM subunit LolC [PMID 19307584].</p>
+<p><strong>The LolB-specific membrane-insertion element (Leu68 loop).</strong> What makes LolB a productive terminal <em>transferase</em> rather than a second chaperone is a <strong>loop that protrudes from LolB into the aqueous environment, with no analogous loop in LolA</strong> [PMID 24569999]. Mutagenesis of a soluble LolB (mLolB) showed that replacing <strong>Leu68</strong> in this loop with acidic residues yields, for the first time, derivatives that <strong>still accept lipoproteins from LolA but can no longer localize them to the OM</strong> — cleanly uncoupling cargo binding from membrane insertion [PMID 24569999]. The hydrophobic loop is thus proposed to contact/penetrate the OM bilayer and deliver the acyl chains into it.</p>
+<p><strong>Two separable activities.</strong> Consistent with this, dissection of LolB function distinguishes (i) <strong>lipoprotein binding</strong>, (ii) <strong>membrane targeting</strong>, and (iii) <strong>lipoprotein anchoring</strong> [PMID 19678842].</p>
+<hr />
+<h2 id="5-localization-and-the-p-putida-ortholog">5. Localization and the <em>P. putida</em> Ortholog</h2>
+<p><strong>Where LolB acts.</strong> LolB is itself a <strong>lipoprotein anchored to the outer membrane</strong> (UniProt: "Cell outer membrane; Lipid-anchor"), positioning it at the periplasmic leaflet of the OM where it receives LolA and inserts cargo.</p>
+<p><strong>LolB is itself a Lol substrate.</strong> Because LolB is an OM lipoprotein with a non-Asp +2 signal (Ala in Q88PX4), it is trafficked to the OM by the same pathway it completes. A recent cryo-EM study captured LolCDE in complex with three substrates — Lpp, Pal, and <strong>LolB itself</strong> — showing LolB is recognized and extruded via a sequence-independent, structurally conserved interaction with a cleft on the periplasmic domain of LolE [PMID 41557797]. Thus newly made LolB is released by LolCDE, carried by LolA, and anchored in the OM like any other cargo — a self-referential feature of the receptor.</p>
+<p><strong>Role of LolB's own lipid anchor.</strong> A soluble, anchorless derivative (<strong>mLolB</strong>) still binds lipoproteins, supports <em>E. coli</em> growth, and transfers cargo from LolA to membranes — so the anchor is <strong>not required for the core transfer chemistry</strong> [PMID 19678842]. However, OM-anchored LolB is <strong>more active</strong> and correctly enforces OM specificity, whereas periplasmic mLolB shows <strong>no membrane preference</strong> (it will deposit cargo into IM, OM, or liposomes) and transiently mislocalizes some OM lipoproteins to the IM; phosphatidylethanolamine stimulates mLolB-mediated incorporation [PMID 19678842]. Thus the anchor <strong>concentrates and orients</strong> the receptor at the OM to give the terminal reaction its efficiency and destination fidelity.</p>
+<p><strong>Direct evidence that Q88PX4 is a genuine LolB.</strong> Analysis of the 205-residue <em>P. putida</em> precursor confirms all diagnostic features:<br />
+- A type II (lipoprotein) <strong>signal peptide</strong> (residues 1–17) ending in a canonical <strong>lipobox L15-A16-G17-C18</strong> (matching the [LVI][ASTVI][GAS]C consensus).<br />
+- <strong>Cys18</strong> annotated as both <strong>S-diacylglycerol</strong> and <strong>N-palmitoyl cysteine</strong> — i.e., a mature <strong>triacylated</strong> lipoprotein tethered by three acyl chains (mature chain 18–205).<br />
+- <strong>Alanine at the +2 position</strong> (Ala19), a <strong>non-aspartate</strong> residue that by the position-2 rule directs OM localization via the Lol pathway [PMID 15672528].<br />
+- A single <strong>LolB-family domain</strong> (PF03550; LolA/LolB/LppX fold).</p>
+<p>These features, together with the demonstrated conservation of the Lol machinery in <em>Pseudomonas</em>, support transferring the <em>E. coli</em> LolB function to Q88PX4 on the basis of direct evidence rather than annotation alone.</p>
+<p><strong>Conservation in <em>Pseudomonas</em>.</strong> In <em>P. aeruginosa</em>, the LolABCDE machinery traffics lipoproteins from IM to OM and is "<strong>essential for the biogenesis of the Gram-negative cell envelope and, consequently, for bacterial viability</strong>" [PMID 32989085]. <em>E. coli</em> LolCDE correctly sorts <em>P. aeruginosa</em> lipoproteins, demonstrating cross-species mechanistic conservation [PMID 30992347], and the <em>P. aeruginosa</em> LolA structure confirms the same acyl-chain-binding chaperone mechanism, explicitly transferring cargo "to the OM receptor LolB" [PMID 20620146]. <em>P. putida</em> KT2440, a γ-proteobacterium, encodes the full pathway with <em>lolB</em> = PP_0724.</p>
+<p><strong>Evolutionary relationship (bioinformatic evidence).</strong> A global pairwise alignment of <em>P. putida</em> LolB (Q88PX4, 205 aa) against the experimentally characterized <em>E. coli</em> K-12 LolB (P61320, 207 aa) yields ≈<strong>26% identity and ≈42% similarity</strong> over the full length (this work; Needleman–Wunsch with a simplified substitution matrix, values approximate). This modest identity is typical of the LolB family, whose members <strong>conserve the β-barrel/α-helical-lid fold and hydrophobic cavity far more strongly than their primary sequence</strong> [PMID 24569999]. Together with the identical domain assignment (PF03550), shared lipobox architecture, and HAMAP MF_00233, this establishes Q88PX4 as a clear — if divergent — LolB ortholog whose function is defined by conserved structure rather than sequence. (One caveat: because of this divergence, the residue in Q88PX4 corresponding to <em>E. coli</em> LolB's functional Leu68 loop cannot be mapped reliably by simple pairwise alignment and would require structure-based superposition, e.g., of an AlphaFold model.)</p>
+<hr />
+<h2 id="6-pathway-position-and-physiological-significance">6. Pathway Position and Physiological Significance</h2>
+<ul>
+<li><strong>Pathway:</strong> Lol lipoprotein-sorting/localization pathway (a protein-targeting pathway, not a metabolic one). LolB occupies the <strong>terminal, OM-insertion node</strong>: LolCDE (release) → LolA (transit) → <strong>LolB (OM incorporation)</strong>.</li>
+<li><strong>Biological process:</strong> <strong>Outer-membrane / cell-envelope biogenesis and maintenance.</strong> By delivering OM lipoproteins (many of which are themselves components of essential envelope machines, e.g., the Bam and Lpt systems, and structural proteins such as Lpp and Pal), LolB is required to build and maintain the OM permeability barrier.</li>
+<li><strong>Essentiality / therapeutic relevance:</strong> LolB is an <strong>essential</strong> OM lipoprotein [PMID 19678842], and the Lol pathway is a validated, actively pursued <strong>antibacterial target</strong> in Gram-negatives; small-molecule inhibitors (e.g., pyridineimidazoles acting on LolCDE) block lipoprotein OM targeting [PMID 25583975; PMID 32989085]. This essentiality is not a pleiotropic side-effect but a direct consequence of LolB's role — without OM lipoprotein delivery the envelope cannot be assembled.</li>
+</ul>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- LolB is the OM receptor for the terminal step of the Lol pathway (multiple reconstitution studies) — <strong>strongly supported</strong>.<br />
+- LolB works catalytically and specifically on liganded LolA (&gt;100 substrates/LolB) — <strong>supported</strong> [PMID 18029423].<br />
+- LolA→LolB transfer is ATP-independent and driven by an affinity/structural gradient via mouth-to-mouth cavity docking — <strong>supported</strong> [PMID 15672528; PMID 19307584].<br />
+- A LolB-unique protruding loop (Leu68) executes membrane insertion, separable from cargo binding — <strong>supported</strong> [PMID 24569999].<br />
+- Q88PX4 is a genuine triacylated OM lipoprotein with OM sorting signal — <strong>supported by direct sequence evidence</strong>.<br />
+- Pathway is conserved and essential in <em>Pseudomonas</em> — <strong>supported</strong> [PMID 30992347; PMID 32989085].</p>
+<p><strong>Refuted / excluded:</strong><br />
+- LolB is <strong>not</strong> a metabolic enzyme (no catalyzed chemical reaction; no cofactor/active-site chemistry).<br />
+- LolB's lipid anchor is <strong>not</strong> required for the intrinsic transfer chemistry (anchorless mLolB is functional) [PMID 19678842].<br />
+- LolB does <strong>not</strong> enforce the OM-vs-IM sorting decision (that is set at LolCDE; LolA/LolB do not reject Asp-at-+2 cargo) [PMID 12823819].</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li>Nearly all mechanistic detail derives from the <em>E. coli</em> ortholog; no <em>P. putida</em>-specific LolB structure or biochemistry was found. Conclusions for Q88PX4 rest on strong sequence conservation, HAMAP annotation, and demonstrated <em>Pseudomonas</em> pathway conservation (chiefly from <em>P. aeruginosa</em>).</li>
+<li>Residue numbering for the functionally critical loop (Leu68) is <em>E. coli</em>-based; the precise equivalent residue in <em>P. putida</em> Q88PX4 was not experimentally mapped here.</li>
+<li>Direct genetic essentiality of <em>lolB</em> specifically in <em>P. putida</em> KT2440 was inferred from genus/family data rather than a KT2440 knockout study.</li>
+<li>Future work: an experimental or AlphaFold structure of Q88PX4 to locate its protruding loop; verification of triacylation and OM localization in KT2440; and targeted essentiality testing in <em>P. putida</em>.</li>
+</ul>
+<hr />
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>Okuda &amp; Tokuda 2009, PNAS — mouth-to-mouth transfer model (PMID 19307584)</li>
+<li>Tokuda &amp; Matsuyama 2004 — review of OM lipoprotein sorting; LolA/LolB fold and energetics (PMID 15672528)</li>
+<li>Watanabe et al. 2007 — LolB catalytic incorporation, liganded-LolA specificity (PMID 18029423)</li>
+<li>Tsukahara et al. 2009 — dissection of LolB function; dispensable anchor (PMID 19678842)</li>
+<li>Hayashi et al. 2014 — LolB protruding loop / Leu68 membrane-insertion role (PMID 24569999)</li>
+<li>Kaplan et al. 2022 — structural basis of lipoprotein recognition by LolA (PMID 36037338)</li>
+<li>Lorenz et al. 2019 — Lol sorting fidelity in <em>P. aeruginosa</em> (PMID 30992347)</li>
+<li>Lorenz et al. 2020 — Lol essentiality for envelope biogenesis in <em>P. aeruginosa</em> (PMID 32989085)</li>
+<li>Remans et al. 2010 — <em>P. aeruginosa</em> LolA structure (PMID 20620146)</li>
+<li>McLeod et al. 2015 — Lol pathway inhibitors (PMID 25583975)</li>
+<li>Szewczyk et al. 2026 — cryo-EM of LolCDE with substrates including LolB itself (PMID 41557797)</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lolB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lolB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PX4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lolb-curation-notes">lolB curation notes</h1>
+<ul>
+<li>Q88PX4 is the reviewed KT2440 LolB ortholog [file:PSEPK/lolB/lolB-uniprot.txt, "RecName: Full=Outer-membrane lipoprotein LolB"].</li>
+<li>Its role is terminal delivery after LolA, not generic protein transport [file:PSEPK/lolB/lolB-uniprot.txt, "incorporation of lipoproteins in the outer membrane after they are released by the LolA protein"].</li>
+<li>GO:0044874 and cell outer membrane localization capture the core role; broad GO:0015031 is marked over-annotated.</li>
+<li>OpenScientist supports the terminal receptor/insertion role and the<br />
+  separation of cargo binding from membrane delivery<br />
+  [file:PSEPK/lolB/lolB-deep-research-openscientist.md "Two separable activities"].</li>
+<li>Nearly all mechanistic experiments are on E. coli LolB, and no direct<br />
+  KT2440 LolB biochemistry or structure was found<br />
+  [file:PSEPK/lolB/lolB-deep-research-openscientist.md "Nearly all mechanistic detail derives from the <em>E. coli</em> ortholog"].</li>
+<li>Essentiality in KT2440 is not asserted as established because it was inferred<br />
+  from other diderm bacteria rather than a KT2440 knockout.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PX4
+gene_symbol: lolB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Outer-membrane-anchored LolB-family receptor that accepts mature lipoproteins
+  from the periplasmic carrier LolA and promotes their incorporation into the
+  outer membrane.
+existing_annotations:
+  - term:
+      id: GO:0009279
+      label: cell outer membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: LolB is a lipid-anchored outer-membrane protein.
+      action: ACCEPT
+  - term:
+      id: GO:0015031
+      label: protein transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        True at a broad level, but lipoprotein localization to the outer
+        membrane captures LolB&#39;s role much more precisely.
+      action: MARK_AS_OVER_ANNOTATED
+  - term:
+      id: GO:0044874
+      label: lipoprotein localization to outer membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: LolB receives LolA-bound lipoproteins and incorporates them into the outer membrane.
+      action: ACCEPT
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:PSEPK/lolB/lolB-uniprot.txt
+    title: UniProt record for Pseudomonas putida KT2440 LolB (Q88PX4)
+    findings:
+      - statement: &gt;-
+          UniProt identifies Q88PX4 as an outer-membrane LolB-family protein
+          that incorporates lipoproteins after their release by LolA.
+  - id: file:PSEPK/lolB/lolB-deep-research-openscientist.md
+    title: OpenScientist research for Pseudomonas putida KT2440 LolB
+    findings:
+      - statement: &gt;-
+          LolB is the terminal outer-membrane receptor and insertion factor in
+          the LolCDE-LolA-LolB relay.
+        supporting_text: LolB is the **outer-membrane receptor/inserter for lipoproteins
+        reference_section_type: RESULTS
+      - statement: &gt;-
+          Detailed mechanism is inferred mainly from characterized E. coli
+          LolB rather than direct Q88PX4 experiments.
+        supporting_text: Nearly all mechanistic detail derives from the *E. coli* ortholog
+        reference_section_type: DISCUSSION
+    reference_review:
+      relevance: HIGH
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Useful retrieval and Q88PX4 feature analysis; primary mechanistic and
+        essentiality evidence is ortholog- or genus-derived.
+core_functions:
+  - description: &gt;-
+      Acceptance of mature lipoproteins from LolA and their delivery into the
+      bacterial outer membrane.
+    directly_involved_in:
+      - id: GO:0044874
+        label: lipoprotein localization to outer membrane
+    locations:
+      - id: GO:0009279
+        label: cell outer membrane
+    supported_by:
+      - reference_id: file:PSEPK/lolB/lolB-uniprot.txt
+        supporting_text: Plays a critical role in the incorporation of lipoproteins in
+      - reference_id: file:PSEPK/lolB/lolB-deep-research-openscientist.md
+        supporting_text: LolB is the **outer-membrane receptor/inserter for lipoproteins
+suggested_questions:
+  - question: Which KT2440 outer-membrane lipoproteins depend most strongly on LolB for insertion?
+suggested_experiments:
+  - description: Deplete LolB and quantify membrane partitioning of representative outer-membrane lipoproteins, followed by complementation with Q88PX4.
+    experiment_type: membrane fractionation and complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

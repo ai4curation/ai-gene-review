@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lolC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lolC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KY5" target="_blank" class="term-link">
+                        Q88KY5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lolC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KY5" data-a="DESCRIPTION: Multi-pass inner-membrane LolC subunit of the LolC..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Multi-pass inner-membrane LolC subunit of the LolCDE ABC complex. Together with LolE it forms the membrane machinery that extracts outer-membrane-destined mature lipoproteins and transfers them to LolA.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY5" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolC is an integral bacterial inner-membrane protein.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY5" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but redundant with the more specific plasma membrane annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042953" target="_blank" class="term-link">
+                                    GO:0042953
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY5" data-a="GO:0042953" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolC is a membrane subunit of the lipoprotein-releasing LolCDE complex.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                    GO:0044874
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein localization to outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY5" data-a="GO:0044874" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolCDE initiates transport of outer-membrane-destined lipoproteins.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098797" target="_blank" class="term-link">
+                                    GO:0098797
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane protein complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY5" data-a="GO:0098797" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolC is an integral subunit of the inner-membrane LolCDE complex.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Integral-membrane LolC contribution to LolCDE-dependent extraction and release of mature outer-membrane-destined lipoproteins, including the LolA-docking interface.</h3>
+                <span class="vote-buttons" data-g="Q88KY5" data-a="FUNCTION: Integral-membrane LolC contribution to LolCDE-depe..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                lipoprotein localization to outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lolC/lolC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the ABC-4 integral membrane protein family.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lolC/lolC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">LolC operates by mechanotransmission, not by transmembrane substrate passage</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolC/lolC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Pseudomonas putida KT2440 LolC (Q88KY5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns Q88KY5 to the multi-pass membrane LolC/E subfamily.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolC/lolC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research for Pseudomonas putida KT2440 LolC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LolC is the LolA-docking membrane subunit of the LolCDE extraction complex rather than a pore-forming transmembrane transporter.</div>
+
+                        <div class="finding-text">"LolC operates by mechanotransmission, not by transmembrane substrate passage"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct experimental characterization of Q88KY5 was not found.</div>
+
+                        <div class="finding-text">"No study in the knowledge base characterizes *P. putida* KT2440 LolC"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What distinct substrate-contacting role does KT2440 LolC have relative to LolE?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KY5" data-a="Q: What distinct substrate-contacting role does KT244..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute LolCDE with systematic LolC and LolE substitutions and measure lipoprotein release to LolA.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteoliposome transport assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KY5" data-a="EXPERIMENT: Reconstitute LolCDE with systematic LolC and LolE ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KY5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: LolC (Q88KY5 / PP_2154) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">18 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T02:26:28.684710</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-lolc-q88ky5-pp_2154-in-pseudomonas-putida-kt2440">Functional Annotation Report: LolC (Q88KY5 / PP_2154) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>LolC (UniProt Q88KY5; ordered locus PP_2154) is a transmembrane subunit of the essential inner-membrane ABC transporter LolCDE, the molecular machine that initiates the outer-membrane lipoprotein-sorting (Lol) pathway in the Gram-negative bacterium <em>Pseudomonas putida</em> KT2440.</strong> LolCDE selectively extracts mature, triacylated, outer-membrane-destined lipoproteins from the outer leaflet of the inner membrane and hands them to the periplasmic chaperone LolA, which ferries them across the periplasm to the outer-membrane receptor LolB for insertion into the inner leaflet of the outer membrane. LolC does not itself hydrolyze ATP (that is the role of the LolD nucleotide-binding subunit) and does not conduct substrate through a membrane pore; instead it belongs to the MacB/FtsX superfamily of "mechanotransmission" ABC transporters, which convert cytoplasmic nucleotide-binding-domain movements into conformational work at the periplasmic face of the membrane.</p>
+<p>Within the heterodimeric LolCDE complex (one LolC, one LolE, two LolD), LolC and LolE play <strong>distinct, non-redundant</strong> roles. LolC is specifically the <strong>LolA-docking subunit</strong>: its large periplasmic domain recruits soluble LolA from the periplasm and "primes" it to receive the lipoprotein cargo. High-resolution structural work identifies two LolC structural elements — a solvent-exposed β-hairpin loop termed the <strong>"Hook"</strong> and a trio of surface residues termed the <strong>"Pad"</strong> — as the essential features for LolA recruitment, and shows that this docking step is independent of ATP binding and hydrolysis. Substrate selectivity of the complex follows the well-established <strong>"+2 rule"</strong>: lipoproteins bearing aspartate at position 2 (in combination with certain position-3 residues) carry a "Lol-avoidance signal" and are retained in the inner membrane, whereas lipoproteins with any other residue at position 2 are released to the outer membrane. Full N-acylation of the N-terminal cysteine (yielding the mature triacylated form) is a prerequisite for release, independent of the sorting signal.</p>
+<p>The specific <em>P. putida</em> KT2440 assignment is well supported. Genomic-neighborhood analysis shows a canonical, contiguous <strong>lolCDE operon</strong> (PP_2154 = lolC, PP_2155 = lolD, PP_2156 = lolE), and a global sequence alignment demonstrates that Q88KY5 is unambiguously the <strong>LolC ortholog</strong> (55.4% identity to <em>E. coli</em> LolC vs. 49.3% to <em>E. coli</em> LolE), not LolE. Because lipoprotein trafficking by the Lol machinery is essential for cell-envelope biogenesis and viability — demonstrated directly in <em>Pseudomonas aeruginosa</em> as well as <em>E. coli</em> — LolCDE (including LolC) is a validated, actively pursued antibacterial drug target, with multiple small-molecule inhibitors whose resistance mutations map to LolC and LolE.</p>
+<hr />
+<h2 id="gene-protein-identity-verification">Gene / Protein Identity Verification</h2>
+<p>Before reporting function, the identity of the target was verified against the UniProt record and the primary literature, as mandated by the research brief.</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88KY5</td>
+</tr>
+<tr>
+<td>Gene name</td>
+<td><em>lolC</em></td>
+</tr>
+<tr>
+<td>Ordered locus</td>
+<td>PP_2154</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>416 aa</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>ABC-4 integral membrane protein family</td>
+</tr>
+<tr>
+<td>Diagnostic domains</td>
+<td>LolCE_TM (IPR011925), FtsX (PF02687), MacB_PCD (IPR025857), ABC3_permease_C (IPR003838), Lipoprotein-release_system (IPR051447)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verdict: identity confirmed.</strong> The gene symbol <em>lolC</em>, the ABC-4 / MacB-family domain architecture, and the operon context all align consistently with the LolC subunit of the Lol lipoprotein-sorting machinery. A global Needleman–Wunsch alignment (see Finding F006) resolves the potential LolC-vs-LolE ambiguity decisively in favor of LolC. This is therefore <em>not</em> a case of an ambiguous or mis-annotated symbol; the functional literature — although developed largely in <em>E. coli</em> — transfers to Q88KY5 with high confidence, reinforced by direct experimental work in the closely related <em>Pseudomonas aeruginosa</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-lolc-is-a-transmembrane-subunit-of-the-lolcde-abc-transporter-that-initiates-outer-membrane-lipoprotein-sorting">F001 — LolC is a transmembrane subunit of the LolCDE ABC transporter that initiates outer-membrane lipoprotein sorting</h3>
+<p>LolC is one of the two integral membrane subunits of the <strong>LolCDE complex</strong>, an ATP-binding cassette (ABC) transporter that constitutes the inner-membrane component of the Lol (Localization of Lipoproteins) machinery. The complete Lol system comprises three functional modules: the inner-membrane LolCDE transporter, the periplasmic carrier protein LolA, and the outer-membrane receptor LolB. As stated in the authoritative review of the pathway, <em>"The Lol system comprises an inner-membrane ABC transporter LolCDE complex, a periplasmic carrier protein, LolA, and an outer membrane receptor protein, LolB"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20419407/">PMID: 20419407</a>). The complex is the initiating enzyme of the pathway: <em>"The ATP-binding cassette (ABC) transporter LolCDE initiates the Lol pathway by selectively extracting and transporting lipoproteins for trafficking"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/36228045/">PMID: 36228045</a>). Its subunit stoichiometry is defined biochemically: <em>"LolCDE is composed of one copy each of membrane subunits LolC and LolE, and two copies of nucleotide-binding subunit LolD"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19809197/">PMID: 19809197</a>). The UniProt assignment of Q88KY5 to the ABC-4 integral membrane protein family, carrying the LolCE_TM (IPR011925), FtsX (PF02687) and MacB_PCD domains, is fully consistent with this role.</p>
+<h3 id="f002-lolc-operates-by-mechanotransmission-not-by-transmembrane-substrate-passage">F002 — LolC operates by mechanotransmission, not by transmembrane substrate passage</h3>
+<p>LolC belongs to the <strong>MacB/FtsX superfamily</strong> of ABC transporters, which are mechanistically distinct from classical channel-forming ABC transporters. Q88KY5 carries the MacB periplasmic-domain (MacB_PCD) and FtsX transmembrane signatures that define this superfamily. Critically, <em>"The MacB transmembrane domain lacks a central cavity through which substrates could be passed, but instead conveys conformational changes from one side of the membrane to the other, a process we term mechanotransmission"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29109272/">PMID: 29109272</a>). The LolCDE complex is explicitly identified as a member of this mechanotransmission superfamily: <em>"Homologs of MacB that do not form tripartite pumps, but share structural features underpinning mechanotransmission, include the LolCDE lipoprotein trafficking complex and FtsEX cell division signaling protein"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29109272/">PMID: 29109272</a>). The broader review of the family confirms that <em>"many MacB-like ABC transporters do not form tripartite pumps, but instead operate in diverse cellular processes including antibiotic sensing, cell division and lipoprotein trafficking"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29892271/">PMID: 29892271</a>). Mechanistically, this means reversible dimerization of the cytoplasmic LolD nucleotide-binding domains — driven by ATP binding/hydrolysis — is transmitted through the second transmembrane segment and coupling helix of LolC to open and close its periplasmic domain, powering the extraction of lipoprotein from the membrane rather than its passage through a pore.</p>
+<h3 id="f003-lolc-and-lole-have-distinct-non-redundant-roles-lolc-is-the-lola-docking-subunit">F003 — LolC and LolE have distinct, non-redundant roles; LolC is the LolA-docking subunit</h3>
+<p>Although LolC and LolE are sequence-similar and share an identical membrane topology — <em>"Both LolC and LolE were found to have four transmembrane segments with a large periplasmic loop exposed to the periplasm"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19809197/">PMID: 19809197</a>) — they are functionally differentiated. Sulfhydryl-reagent accessibility and lipoprotein-release-inhibition assays established that <em>"Inhibition of the release of lipoproteins by the sulfhydryl reagent supported a previous proposal that LolC and LolE have distinct functions"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19809197/">PMID: 19809197</a>). The distinguishing role of LolC is to serve as the <strong>hand-off subunit to LolA</strong>. The structure of LolA bound to lipoprotein shows that <em>"LolA, initially primed to receive lipoprotein by interaction with LolC, further opens to accommodate the three ligand acyl chains"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/36037338/">PMID: 36037338</a>), demonstrating that LolC specifically primes and docks LolA to receive the cargo. Complementary photo-crosslinking work maps a central four-helix lipoprotein-binding cavity contributed jointly by the LolC/LolE periplasmic domains (<a href="https://pubmed.ncbi.nlm.nih.gov/38156779/">PMID: 38156779</a>), positioning LolC at the interface where cargo is transferred out of the complex.</p>
+<h3 id="f004-the-substrate-is-mature-triacylated-lipoprotein-selectivity-is-governed-by-the-2-sorting-rule">F004 — The substrate is mature triacylated lipoprotein; selectivity is governed by the "+2 sorting rule"</h3>
+<p>The physiological substrate of LolCDE is a <strong>mature, triacylated lipoprotein</strong> anchored to the membrane by lipids attached to an N-terminal cysteine. Whether a given lipoprotein is extracted is determined by the residue at position 2, immediately following the lipidated cysteine. The classic study of retention signals states: <em>"The inner membrane retention signal, Asp at position 2 in combination with certain residues at position 3, functions as a Lol avoidance signal, i.e. the signal inhibits the recognition of lipoproteins by LolCDE that releases lipoproteins from the inner membrane"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12896969/">PMID: 12896969</a>). In other words, <strong>Asp at +2 = inner-membrane retention (Lol avoidance); any other residue = release to the outer membrane.</strong> Mechanistically the avoidance signal depends on a critical length of negative charge at residue 2. A separate prerequisite for release is complete N-acylation of the N-terminal cysteine (the Lnt-catalyzed step producing the triacylated form): <em>"We show here that the aminoacylation is essential for the Lol-dependent release of lipoproteins from membranes"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12198129/">PMID: 12198129</a>), and this requirement is independent of the sorting signal. LolC/LolE thus recognize a fully matured acyl anchor while reading the +2 position to decide whether to act.</p>
+<h3 id="f005-lolcde-including-lolc-is-essential-for-viability-and-is-a-validated-antibacterial-target-in-pseudomonas">F005 — LolCDE (including LolC) is essential for viability and is a validated antibacterial target in <em>Pseudomonas</em></h3>
+<p>Lipoprotein trafficking by the Lol machinery is indispensable for building the Gram-negative cell envelope. <em>"The LolCDE ABC transporter is the inner membrane component, which is essential for bacterial viability"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/29339384/">PMID: 29339384</a>), and <em>"Lipoprotein transport from the inner to the outer membrane, carried out by the Lol machinery, is essential for the biogenesis of the Gram-negative cell envelope and, consequently, for bacterial viability"</em> — a statement established in <em>Pseudomonas aeruginosa</em> itself (<a href="https://pubmed.ncbi.nlm.nih.gov/32989085/">PMID: 32989085</a>), lending direct genus-level support to the same role in <em>P. putida</em>. Consistent with essentiality, LolCDE is being actively exploited for antibiotic discovery, and LolC is directly implicated as part of the drug-binding machinery: <em>"Resistance to the pyrazole compound mapped to mutations in either LolC or LolE, components of the essential LolCDE transporter complex, which is required for trafficking of lipoproteins to the outer membrane"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25733621/">PMID: 25733621</a>). Additional chemotypes — the pyrrolopyrimidinedione G0507 (<a href="https://pubmed.ncbi.nlm.nih.gov/29339384/">PMID: 29339384</a>), SMT-738 (<a href="https://pubmed.ncbi.nlm.nih.gov/38084954/">PMID: 38084954</a>), and abaucin targeting the homodimeric LolDF variant (<a href="https://pubmed.ncbi.nlm.nih.gov/42091888/">PMID: 42091888</a>) — reinforce the LolCDE/LolDF transporter as a tractable target.</p>
+<h3 id="f006-sequence-analysis-confirms-q88ky5-is-a-genuine-lolc-ortholog-not-lole">F006 — Sequence analysis confirms Q88KY5 is a genuine LolC ortholog (not LolE)</h3>
+<p>To resolve the LolC-vs-LolE ambiguity, full-length UniProt sequences were aligned by global Needleman–Wunsch alignment. <em>P. putida</em> KT2440 LolC (Q88KY5, 416 aa) shares <strong>55.4% identity (205/370 aligned columns) with <em>E. coli</em> K-12 LolC (P0ADC3)</strong> versus <strong>49.3% (188/381) with <em>E. coli</em> LolE (P75958)</strong>. For reference, the two <em>E. coli</em> paralogs LolC and LolE share only 43.1% identity with each other, so the clearly higher similarity of Q88KY5 to LolC identifies it as the LolC ortholog rather than a second LolE. Both the length (~416 aa, matching the ~400-aa LolC architecture) and the conserved domain set (LolCE_TM/IPR011925, FtsX/PF02687, MacB_PCD/IPR025857, ABC3_permease_C/IPR003838) match the <em>E. coli</em> LolC architecture, validating functional transfer from the <em>E. coli</em> model.</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>% identity</th>
+<th>Aligned columns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q88KY5 (P. putida LolC) vs <em>E. coli</em> LolC (P0ADC3)</td>
+<td><strong>55.4%</strong></td>
+<td>205/370</td>
+</tr>
+<tr>
+<td>Q88KY5 (P. putida LolC) vs <em>E. coli</em> LolE (P75958)</td>
+<td>49.3%</td>
+<td>188/381</td>
+</tr>
+<tr>
+<td><em>E. coli</em> LolC vs <em>E. coli</em> LolE (paralog baseline)</td>
+<td>43.1%</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="f007-lolc-acts-at-the-inner-membraneperiplasm-interface-as-the-entry-step-of-lipoprotein-biogenesis-and-sorting">F007 — LolC acts at the inner-membrane/periplasm interface as the entry step of lipoprotein biogenesis-and-sorting</h3>
+<p>LolC's site of action places it at the culmination of a multi-stage lipoprotein maturation pathway. Pre-prolipoproteins are first exported across the inner membrane, predominantly by the Sec translocon: <em>"Lipoproteins are synthesized as precursors in the cytosol and then translocated across the inner membrane by the Sec translocon to the outer leaflet of the inner membrane, where lipoprotein precursors are processed to mature lipoproteins"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/20419407/">PMID: 20419407</a>). At the outer leaflet of the inner membrane they are lipid-modified by Lgt (diacylglyceryl transferase), cleaved by signal peptidase II (LspA), and N-acylated by Lnt to give mature triacylated lipoproteins. Only then does the Lol pathway act: <em>"Fully modified lipoproteins that are destined to be anchored in the inner leaflet of the outer membrane (OM) are selected, transported and inserted by the Lol (lipoprotein outer membrane localization) pathway machinery, which consists of the inner-membrane (IM) ABC transporter-like LolCDE complex, the periplasmic LolA chaperone and the OM LolB lipoprotein receptor"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/24780125/">PMID: 24780125</a>). LolC itself is an integral inner-membrane protein whose large periplasmic domain is <em>"exposed to the periplasm"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19809197/">PMID: 19809197</a>) — the compartment in which it recruits and primes LolA.</p>
+<h3 id="f008-lolcs-periplasmic-domain-recruits-and-primes-lola-via-the-hook-hairpin-and-pad-residues-nucleotide-independently">F008 — LolC's periplasmic domain recruits and primes LolA via the "Hook" β-hairpin and "Pad" residues, nucleotide-independently</h3>
+<p>The precise structural basis for the LolC→LolA hand-off was revealed by a crystal structure of <em>E. coli</em> LolA bound to the LolC periplasmic domain. <em>"The structure reveals how a solvent-exposed β-hairpin loop (termed the 'Hook') and trio of surface residues (the 'Pad') of LolC are essential for recruiting LolA from the periplasm and priming it to receive lipoproteins"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30012603/">PMID: 30012603</a>). Importantly, this recruitment is decoupled from the ATPase cycle: <em>"Experiments with purified LolCDE complex demonstrate that association with LolA is independent of nucleotide binding and hydrolysis"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30012603/">PMID: 30012603</a>). Homology models based on MacB place the LolA-recruitment site at least ~50 Å above the inner membrane, at the distal tip of LolC's periplasmic domain — consistent with a two-step logic in which LolA docking (nucleotide-independent) precedes ATP-driven cargo extraction and transfer.</p>
+<h3 id="f009-p-putida-kt2440-encodes-a-canonical-contiguous-lolcde-operon-pp_2154pp_2155pp_2156">F009 — <em>P. putida</em> KT2440 encodes a canonical contiguous <em>lolCDE</em> operon (PP_2154–PP_2155–PP_2156)</h3>
+<p>Genomic-neighborhood analysis confirms the physiological complex in the target organism. PP_2154 = <em>lolC</em> (Q88KY5, 416 aa, membrane permease) is immediately followed by <strong>PP_2155 = <em>lolD</em></strong> (Q88KY4, 227 aa, Lipoprotein-releasing system ATP-binding protein LolD, EC 7.6.2.-) and <strong>PP_2156 = <em>lolE</em></strong> (Q88KY3, 413 aa, Lipoprotein-releasing system permease). Both LolC and LolE carry the identical diagnostic domain set (LolCE_TM/IPR011925, ABC3_permease_C/IPR003838, MacB_PCD/IPR025857, Lipoprotein-release_system/IPR051447), consistent with a heterodimeric LolCDE transporter (one LolC, one LolE, two LolD) exactly as characterized in <em>E. coli</em>. The upstream gene PP_2153 is an unrelated PilZ-domain protein, indicating the operon boundary. This genomic organization independently confirms that <em>P. putida</em> assembles a canonical heterodimeric LolCDE machine.</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Length</th>
+<th>Product</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2153</td>
+<td>(pilZ)</td>
+<td>—</td>
+<td>—</td>
+<td>PilZ-domain protein (unrelated; operon boundary)</td>
+</tr>
+<tr>
+<td><strong>PP_2154</strong></td>
+<td><strong>lolC</strong></td>
+<td><strong>Q88KY5</strong></td>
+<td><strong>416 aa</strong></td>
+<td><strong>Membrane permease (LolA-docking subunit) — this protein</strong></td>
+</tr>
+<tr>
+<td>PP_2155</td>
+<td>lolD</td>
+<td>Q88KY4</td>
+<td>227 aa</td>
+<td>ABC ATP-binding protein LolD (EC 7.6.2.-)</td>
+</tr>
+<tr>
+<td>PP_2156</td>
+<td>lolE</td>
+<td>Q88KY3</td>
+<td>413 aa</td>
+<td>Membrane permease LolE</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent picture of LolC as the <strong>LolA-docking, cargo-priming transmembrane subunit</strong> of the essential inner-membrane LolCDE machine. The Lol pathway can be summarized as a relay across the Gram-negative envelope:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">CYTOPLASM</span><span class="w">        </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w">          </span><span class="n">PERIPLASM</span><span class="w">              </span><span class="n">OUTER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+<span class="w">    </span><span class="p">(</span><span class="n">outer</span><span class="w"> </span><span class="n">leaflet</span><span class="p">)</span>
+
+<span class="w">  </span><span class="n">prolipoprotein</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="p">[</span><span class="n">Sec</span><span class="p">]</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">Lgt</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">LspA</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">Lnt</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">mature</span><span class="w"> </span><span class="n">triacylated</span><span class="w"> </span><span class="n">lipoprotein</span>
+<span class="w">                                             </span><span class="o">|</span>
+<span class="w">                                    </span><span class="o">+</span><span class="mi">2</span><span class="w"> </span><span class="n">residue</span><span class="w"> </span><span class="n">check</span><span class="o">:</span>
+<span class="w">                              </span><span class="n">Asp</span><span class="mi">@2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RETAINED</span><span class="w"> </span><span class="p">(</span><span class="n">Lol</span><span class="w"> </span><span class="n">avoidance</span><span class="p">)</span>
+<span class="w">                              </span><span class="n">other</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RELEASED</span>
+<span class="w">                                             </span><span class="o">|</span>
+<span class="w">                                             </span><span class="n">v</span>
+<span class="w">          </span><span class="o">+---------------------------------------------+</span>
+<span class="w">          </span><span class="o">|</span><span class="w">            </span><span class="n">LolCDE</span><span class="w">  </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="n">LolC</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">LolE</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="n">LolD</span><span class="p">)</span><span class="o">|</span>
+<span class="n">ATP</span><span class="w">  </span><span class="o">----&gt;</span><span class="w">  </span><span class="p">[</span><span class="w"> </span><span class="n">LolD</span><span class="o">-</span><span class="n">LolD</span><span class="w"> </span><span class="p">]</span><span class="w">  </span><span class="n">nucleotide</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">domains</span><span class="w"> </span><span class="p">(</span><span class="n">cytoplasm</span><span class="p">)</span><span class="o">|</span>
+<span class="n">hydrolysis</span><span class="w">      </span><span class="o">|</span><span class="w">  </span><span class="n">mechanotransmission</span><span class="w"> </span><span class="n">via</span><span class="w"> </span><span class="n">TM2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coupling</span><span class="w"> </span><span class="n">helix</span><span class="w">  </span><span class="o">|</span>
+<span class="w">        </span><span class="n">v</span><span class="w">                                                </span><span class="o">|</span>
+<span class="w">   </span><span class="p">[</span><span class="w"> </span><span class="n">LolC</span><span class="w"> </span><span class="p">]</span><span class="w">  </span><span class="n">periplasmic</span><span class="w"> </span><span class="n">domain</span><span class="w">  </span><span class="o">&lt;--</span><span class="w"> </span><span class="s">&quot;Hook&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;Pad&quot;</span><span class="w">      </span><span class="o">|</span>
+<span class="w">        </span><span class="o">|</span><span class="w">         </span><span class="n">recruits</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">primes</span><span class="w"> </span><span class="n">LolA</span><span class="w"> </span><span class="p">(</span><span class="n">ATP</span><span class="o">-</span><span class="n">independent</span><span class="p">)</span><span class="o">|</span>
+<span class="w">        </span><span class="o">+------------------|--------------------------+</span>
+<span class="w">                           </span><span class="n">v</span>
+<span class="w">                    </span><span class="n">LolA</span><span class="w"> </span><span class="p">(</span><span class="n">loaded</span><span class="p">)</span><span class="w"> </span><span class="o">---</span><span class="w"> </span><span class="n">crosses</span><span class="w"> </span><span class="n">periplasm</span><span class="w"> </span><span class="o">---&gt;</span><span class="w">  </span><span class="n">LolB</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">OM</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="n">leaflet</span>
+</code></pre></div>
+
+<p>Two mechanistically separable steps define LolC's job. <strong>Step 1 (nucleotide-independent):</strong> LolC's distal periplasmic domain — through its Hook β-hairpin and Pad residues — captures free LolA from the periplasm and primes its hydrophobic cavity to accept an acyl chain (F008). This step does not require ATP. <strong>Step 2 (ATP-driven):</strong> ATP binding and hydrolysis by the paired LolD subunits in the cytoplasm drive their reversible dimerization; because LolC/LolE lack a central membrane pore, this movement is transmitted mechanically ("mechanotransmission", F002) up through the transmembrane helices to reconfigure the periplasmic domains, extracting the lipoprotein from the outer leaflet of the inner membrane and transferring it into the primed LolA. The overlapping lipoprotein- and LolC-binding sites within the LolA cavity (F003) provide the structural logic for this hand-off: as LolA accepts the acyl chains it displaces from LolC and departs.</p>
+<p>Substrate selection is a two-filter process. First, only fully N-acylated (triacylated) lipoproteins are competent for release (F004) — an implicit quality-control checkpoint that couples maturation to sorting. Second, the +2 rule reads the residue adjacent to the lipidated cysteine: an aspartate (with the right +3 context) creates a negatively charged "avoidance signal" that prevents recognition, keeping the lipoprotein in the inner membrane, while any other residue permits extraction and delivery to the outer membrane (F004). LolC and LolE together form the four-helix cavity that binds the cargo, but LolC is uniquely responsible for the downstream LolA interface (F003).</p>
+<p>Because this relay is the sole route for delivering lipoproteins (including critical outer-membrane-biogenesis factors) to the outer membrane, loss of LolCDE function collapses envelope integrity and kills the cell (F005). This essentiality, combined with the surface-exposed, druggable periplasmic domain, explains why LolC and LolE are focal points of multiple inhibitor programs and why resistance mutations map directly to them.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20419407/">20419407</a></td>
+<td><em>Sorting of bacterial lipoproteins to the outer membrane by the Lol system</em></td>
+<td>Defines the Lol machinery (LolCDE + LolA + LolB) and the upstream Sec-dependent export/IM processing (F001, F007)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36228045/">36228045</a></td>
+<td><em>Cryo-EM structures of LolCDE reveal the molecular mechanism of bacterial lipoprotein sorting</em></td>
+<td>Establishes LolCDE's initiating, selective-extraction role (F001)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19809197/">19809197</a></td>
+<td><em>Membrane topology and functional importance of the periplasmic region of LolCDE</em></td>
+<td>Subunit stoichiometry, LolC topology (4 TM + periplasmic loop), and distinct LolC/LolE functions (F001, F003, F007)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29109272/">29109272</a></td>
+<td><em>Structure and mechanotransmission mechanism of the MacB ABC transporter superfamily</em></td>
+<td>Places LolCDE in the mechanotransmission superfamily; no central substrate pore (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29892271/">29892271</a></td>
+<td><em>Antibiotic Resistance Mediated by the MacB ABC Transporter Family</em></td>
+<td>Confirms lipoprotein trafficking as a MacB-superfamily function (F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36037338/">36037338</a></td>
+<td><em>Structural basis of lipoprotein recognition by the Lol chaperone LolA</em></td>
+<td>Shows LolA is primed by LolC before opening to accept acyl chains (F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38156779/">38156779</a></td>
+<td><em>Dissection of an ABC transporter LolCDE function analyzed by photo-crosslinking</em></td>
+<td>Maps the four-helix LolC/LolE cargo-binding cavity (F003)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12896969/">12896969</a></td>
+<td><em>Mechanism underlying inner membrane retention caused by Lol avoidance signals</em></td>
+<td>Establishes the +2 rule (Asp@2 = avoidance) (F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12198129/">12198129</a></td>
+<td><em>Aminoacylation of the N-terminal cysteine is essential for Lol-dependent release</em></td>
+<td>Shows mature N-acylation is a prerequisite for release (F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29339384/">29339384</a></td>
+<td><em>A Novel Inhibitor of the LolCDE ABC Transporter</em></td>
+<td>States LolCDE essentiality; G0507 inhibitor (F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25733621/">25733621</a></td>
+<td><em>Novel antibacterial targets revealed by a cell wall reporter assay</em></td>
+<td>Pyrazole resistance maps to LolC/LolE; validates LolC as target (F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32989085/">32989085</a></td>
+<td><em>Transcriptional Responses of P. aeruginosa to Lol inhibition</em></td>
+<td>Confirms Lol essentiality in <em>Pseudomonas</em> (genus-level transfer) (F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24780125/">24780125</a></td>
+<td><em>Secretion of bacterial lipoproteins: through the cytoplasmic membrane, the periplasm and beyond</em></td>
+<td>Describes the multi-stage biogenesis + Lol pathway (F007)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30012603/">30012603</a></td>
+<td><em>A structure of LolA bound to the LolC periplasmic domain</em></td>
+<td>Identifies the LolC "Hook" and "Pad"; nucleotide-independent LolA docking (F008)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42091888/">42091888</a></td>
+<td><em>Structure and druggable conformation of the homodimeric lipoprotein transporter of A. baumannii</em></td>
+<td>Structural/druggability context for LolCDE/LolDF; abaucin MOA (F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38084954/">38084954</a></td>
+<td><em>SMT-738: a small-molecule inhibitor of lipoprotein transport</em></td>
+<td>Additional validated LolCDE-targeting chemotype (F005)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of the evidence.</strong> The evidence base is internally consistent and mutually reinforcing across biochemistry (topology, sulfhydryl accessibility, in vitro release assays), structural biology (cryo-EM of LolCDE, crystal structure of LolA–LolC), genetics (resistance and gain-of-function mutations mapping to LolC/LolE/LolD), and comparative genomics (operon structure, orthology). No cited study contradicts the model; the principal caveat is that nearly all mechanistic data derive from <em>E. coli</em>, with essentiality independently confirmed in <em>P. aeruginosa</em>.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>Model-organism inference.</strong> No study in the knowledge base characterizes <em>P. putida</em> KT2440 LolC (Q88KY5) directly. The functional assignment rests on (a) strong orthology to <em>E. coli</em> LolC (55.4% identity; F006), (b) an intact <em>lolCDE</em> operon in KT2440 (F009), and (c) demonstrated Lol essentiality in the congeneric <em>P. aeruginosa</em> (F005). These provide high confidence but not direct experimental proof in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>No experimental structure of the <em>Pseudomonas</em> complex.</strong> The Hook/Pad LolA-recruitment elements and the four-helix cargo cavity are defined in <em>E. coli</em>. Whether <em>P. putida</em> LolC's periplasmic domain has identical Hook/Pad geometry has not been verified structurally (an AlphaFold model + comparison would close this gap).</p>
+</li>
+<li>
+<p><strong>Substrate repertoire in <em>P. putida</em> unknown.</strong> The +2 rule (F004) is an <em>E. coli</em> finding. The specific lipoprotein clientele of <em>P. putida</em> LolCDE, and whether the +2 avoidance rule operates identically in this species, have not been established.</p>
+</li>
+<li>
+<p><strong>Quantitative kinetics/energetics unspecified.</strong> The ATP-per-cargo stoichiometry and the precise coupling between LolD hydrolysis and LolC conformational change remain debated even in the <em>E. coli</em>/MacB literature (cf. the "molecular bellows" vs. hydrolysis-power-stroke discussion in <a href="https://pubmed.ncbi.nlm.nih.gov/33888866/">PMID: 33888866</a>).</p>
+</li>
+<li>
+<p><strong>Regulation in <em>P. putida</em>.</strong> Whether the Rcs stress-response feedback that couples defective sorting to <em>lolA</em> induction in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22563052/">PMID: 22563052</a>) operates in <em>P. putida</em> is unknown.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Structural verification in silico.</strong> Generate an AlphaFold2/3 model of <em>P. putida</em> LolC (Q88KY5) and superpose it on the <em>E. coli</em> LolC periplasmic domain (from <a href="https://pubmed.ncbi.nlm.nih.gov/30012603/">PMID: 30012603</a>) to confirm conservation of the Hook β-hairpin and Pad residues, and model the LolCDE heterodimer (with Q88KY4/LolD and Q88KY3/LolE) to inspect the four-helix cargo cavity.</p>
+</li>
+<li>
+<p><strong>Genetic essentiality test.</strong> Attempt conditional depletion / CRISPRi knockdown of PP_2154 in <em>P. putida</em> KT2440 to confirm essentiality and observe envelope defects (outer-membrane permeabilization, lipoprotein mislocalization).</p>
+</li>
+<li>
+<p><strong>Cargo mapping.</strong> Use bioinformatic +2-rule scanning of the <em>P. putida</em> lipoproteome to predict LolCDE substrates vs. inner-membrane-retained lipoproteins, then validate a subset by membrane fractionation.</p>
+</li>
+<li>
+<p><strong>In vitro reconstitution.</strong> Purify the <em>P. putida</em> LolCDE complex and a cognate LolA, and reconstitute ATP-dependent lipoprotein release to test whether the <em>E. coli</em> mechanism (nucleotide-independent LolA docking; ATP-driven extraction) is conserved.</p>
+</li>
+<li>
+<p><strong>Inhibitor cross-reactivity / drug discovery.</strong> Test whether existing LolCDE inhibitors (G0507, pyrazoles, SMT-738) engage the <em>P. putida</em> complex, and use the model as a scaffold for structure-based design; map candidate resistance residues onto LolC/LolE.</p>
+</li>
+<li>
+<p><strong>Regulatory circuit.</strong> Test whether Lol dysfunction in <em>P. putida</em> triggers an Rcs-like envelope stress response modulating <em>lolA/lolCDE</em> expression.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>LolC (Q88KY5 / PP_2154) is the LolA-docking, cargo-priming transmembrane subunit of the essential inner-membrane ABC transporter <strong>LolCDE</strong> in <em>Pseudomonas putida</em> KT2440. It initiates the Lol pathway: reading matured, triacylated outer-membrane-destined lipoproteins (selected by the +2 "Asp = retain" rule), it uses MacB-family mechanotransmission — powered by ATP hydrolysis at the paired LolD subunits — to extract them from the outer leaflet of the inner membrane and hand them, via its Hook/Pad-bearing periplasmic domain, to the primed periplasmic chaperone LolA for delivery through LolB to the outer membrane. Its site of action is the inner-membrane/periplasm interface, its role is non-redundant with LolE, and its function is essential for cell-envelope biogenesis and viability, making it a validated antibacterial target.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lolC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lolC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:20419407</li>
+<li>PMID:36228045</li>
+<li>PMID:19809197</li>
+<li>PMID:29109272</li>
+<li>PMID:29892271</li>
+<li>PMID:36037338</li>
+<li>PMID:38156779</li>
+<li>PMID:12896969</li>
+<li>PMID:12198129</li>
+<li>PMID:29339384</li>
+<li>PMID:32989085</li>
+<li>PMID:25733621</li>
+<li>PMID:38084954</li>
+<li>PMID:42091888</li>
+<li>PMID:24780125</li>
+<li>PMID:30012603</li>
+<li>PMID:33888866</li>
+<li>PMID:22563052</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KY5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lolc-curation-notes">lolC curation notes</h1>
+<ul>
+<li>Q88KY5 is a multi-pass membrane member of the ABC-4 LolC/E subfamily [file:PSEPK/lolC/lolC-uniprot.txt, "Belongs to the ABC-4 integral membrane protein family. LolC/E subfamily"].</li>
+<li>The PSEPK record lacks a direct function comment, so the specific pathway role remains orthology-based pending OpenScientist retrieval.</li>
+<li>LolC is modeled as an integral component of the LolCDE extraction machinery,<br />
+  not as an independent pore-forming transporter.</li>
+<li>OpenScientist distinguishes LolCDE from pore-forming ABC transporters:<br />
+  membrane conformational changes extract lipoprotein from the outer leaflet<br />
+  and transfer it to LolA<br />
+  [file:PSEPK/lolC/lolC-deep-research-openscientist.md "LolC operates by mechanotransmission, not by transmembrane substrate passage"].</li>
+<li>The initial generic GO:0022857 contribution was therefore removed from the<br />
+  core function and module. The specific biological-process role remains.</li>
+<li>LolA docking through LolC Hook/Pad elements is established in E. coli; no<br />
+  direct Q88KY5 experiment was found<br />
+  [file:PSEPK/lolC/lolC-deep-research-openscientist.md "No study in the knowledge base characterizes <em>P. putida</em> KT2440 LolC"].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KY5
+gene_symbol: lolC
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Multi-pass inner-membrane LolC subunit of the LolCDE ABC complex. Together
+  with LolE it forms the membrane machinery that extracts
+  outer-membrane-destined mature lipoproteins and transfers them to LolA.
+existing_annotations:
+  - term: {id: &#34;GO:0005886&#34;, label: plasma membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: LolC is an integral bacterial inner-membrane protein.
+      action: ACCEPT
+  - term: {id: &#34;GO:0016020&#34;, label: membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Correct but redundant with the more specific plasma membrane annotation.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0042953&#34;, label: lipoprotein transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: LolC is a membrane subunit of the lipoprotein-releasing LolCDE complex.
+      action: ACCEPT
+  - term: {id: &#34;GO:0044874&#34;, label: lipoprotein localization to outer membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: LolCDE initiates transport of outer-membrane-destined lipoproteins.
+      action: ACCEPT
+  - term: {id: &#34;GO:0098797&#34;, label: plasma membrane protein complex}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: part_of
+    review:
+      summary: LolC is an integral subunit of the inner-membrane LolCDE complex.
+      action: ACCEPT
+references:
+  - {id: &#34;GO_REF:0000002&#34;, title: Gene Ontology annotation through association of InterPro records with GO terms, findings: []}
+  - {id: &#34;GO_REF:0000044&#34;, title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping accompanied by conservative changes to GO terms applied by UniProt, findings: []}
+  - {id: &#34;GO_REF:0000118&#34;, title: TreeGrafter-generated GO annotations, findings: []}
+  - {id: &#34;GO_REF:0000120&#34;, title: Combined Automated Annotation using Multiple IEA Methods, findings: []}
+  - id: file:PSEPK/lolC/lolC-uniprot.txt
+    title: UniProt record for Pseudomonas putida KT2440 LolC (Q88KY5)
+    findings:
+      - statement: UniProt assigns Q88KY5 to the multi-pass membrane LolC/E subfamily.
+  - id: file:PSEPK/lolC/lolC-deep-research-openscientist.md
+    title: OpenScientist research for Pseudomonas putida KT2440 LolC
+    findings:
+      - statement: &gt;-
+          LolC is the LolA-docking membrane subunit of the LolCDE extraction
+          complex rather than a pore-forming transmembrane transporter.
+        supporting_text: LolC operates by mechanotransmission, not by transmembrane substrate passage
+        reference_section_type: RESULTS
+      - statement: Direct experimental characterization of Q88KY5 was not found.
+        supporting_text: No study in the knowledge base characterizes *P. putida* KT2440 LolC
+        reference_section_type: DISCUSSION
+    reference_review:
+      relevance: HIGH
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Supports subunit-aware modeling; detailed LolA-docking and
+        mechanotransmission evidence derives primarily from E. coli orthologs.
+core_functions:
+  - description: &gt;-
+      Integral-membrane LolC contribution to LolCDE-dependent extraction and
+      release of mature outer-membrane-destined lipoproteins, including the
+      LolA-docking interface.
+    directly_involved_in:
+      - {id: &#34;GO:0044874&#34;, label: lipoprotein localization to outer membrane}
+    locations:
+      - {id: &#34;GO:0005886&#34;, label: plasma membrane}
+    supported_by:
+      - reference_id: file:PSEPK/lolC/lolC-uniprot.txt
+        supporting_text: Belongs to the ABC-4 integral membrane protein family.
+      - reference_id: file:PSEPK/lolC/lolC-deep-research-openscientist.md
+        supporting_text: LolC operates by mechanotransmission, not by transmembrane substrate passage
+suggested_questions:
+  - question: What distinct substrate-contacting role does KT2440 LolC have relative to LolE?
+suggested_experiments:
+  - description: Reconstitute LolCDE with systematic LolC and LolE substitutions and measure lipoprotein release to LolA.
+    experiment_type: proteoliposome transport assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

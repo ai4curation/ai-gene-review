@@ -15,12 +15,12 @@ periplasm, and into the outer membrane.
 ## Workflow
 
 - [x] Fetch all five PSEPK Lol gene records.
-- [ ] Complete OpenScientist gene research (lolB, lolC, lolD, and lolE complete; lolA running).
+- [x] Complete OpenScientist gene research (lolB, lolC, lolD, and lolE completed; lolA reached the 7200-second limit without a report).
 - [x] Curate every GOA row for all five genes.
 - [x] Create a species-neutral, multi-part module.
 - [x] Complete generic module research.
 - [x] Complete module + pathway + taxon research.
-- [ ] Validate and render the reviews, module, and project page.
+- [x] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
@@ -77,3 +77,11 @@ periplasm, and into the outer membrane.
 - LolE research confirms the diagnostic MacB/FtsX-family topology and operon
   position. The E. coli cargo-cleft asymmetry is retained as ortholog-derived
   mechanistic context, not promoted as a KT2440-specific molecular function.
+
+## Provider Outcome
+
+The LolA OpenScientist request was allowed to run for the full configured 7200
+seconds on 2026-09-01 and returned no report. No provider-named file was
+synthesized manually. The LolA review remains grounded in its exact UniProt
+record and the completed generic, species-aware, and four other gene-level
+research reports.
