@@ -20,8 +20,8 @@ lipoprotein-peptidoglycan tether remodeling.
 - [x] Complete OpenScientist gene research.
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with experimental exemplars.
-- [ ] Complete module and module + pathway + taxon research.
-- [ ] Validate and render the reviews, module, and project page.
+- [x] Attempt module and module + pathway + taxon research; both OpenScientist jobs reached the 7200-second limit without reports.
+- [x] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
@@ -40,3 +40,12 @@ lipoprotein-peptidoglycan tether remodeling.
 - GO:0009002 is not treated as a synonym for D,D-endopeptidase activity.
 - The broad proteolysis annotations are removed because the substrates are
   peptidoglycan stem peptides rather than proteins.
+
+## Provider Outcome
+
+Both long-form OpenScientist requests were allowed to run for the full
+configured 7200 seconds on 2026-09-01. The generic module request and the
+module + ppu00550 + PSEPK request each timed out and returned no report. No
+provider-named file was synthesized manually. The module remains grounded in
+the completed dacB and pbpG gene reports, curated UniProt/GOA records,
+PANTHER exemplars, and cached primary literature.
