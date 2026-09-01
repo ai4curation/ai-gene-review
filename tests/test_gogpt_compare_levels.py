@@ -154,8 +154,14 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # completed review plus follow-up adds evidence-backed GO:0009408 to the
         # post-review set while removing general redox homeostasis from the core;
         # GO:0051087 remains an evidence-backed core activity and predicted overlap.
-        "post_review": {"overlap": 849, "total": 2761, "pred": 8871},
-        "core": {"overlap": 350, "total": 1230, "pred": 8871},
+        # BACSU/lipA follows GO:0009107's obsoletion: its two lipoate-biosynthesis
+        # rows become MODIFY to the replacement GO:0009249, which the review already
+        # carries, so the post-review set loses one distinct term. The core_functions
+        # entry keyed on the obsolete term was dropped for the same reason, removing
+        # one GO-valued core term. Both overlaps are unchanged -- GO:0009249 was
+        # already the predicted match at both levels.
+        "post_review": {"overlap": 849, "total": 2760, "pred": 8871},
+        "core": {"overlap": 350, "total": 1229, "pred": 8871},
     }
 
 
