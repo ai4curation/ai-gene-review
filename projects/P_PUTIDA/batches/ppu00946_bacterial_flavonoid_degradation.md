@@ -13,9 +13,9 @@ autolink_gene_symbols: false
 - Candidate genes from membership table: 7, plus PP_3199 recovered from the
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
-- Existing review files: 0
-- Curated review files: 0
-- Existing OpenScientist research files: 0
+- Existing review files: 8
+- Curated review files: 1
+- Existing completed OpenScientist research files: 1
 
 ## Required Workflow
 

@@ -13,6 +13,13 @@
   A-ring cleavage in that organism [PMID:27059806 "that is subsequently
   dioxygenated and cleaved at the A-ring by the FdeC"]. This is ISS support for
   PP_3197, not direct experimental evidence on KT2440.
-- The exact reaction has no cached GO term. GO:0051213 dioxygenase activity is
-  used as the conservative MF; exact substrate/product chemistry remains in the
-  prose core function and module-level reaction.
+- The exact reaction has no cached GO term. GO:0016702 is the most specific
+  available two-oxygen-atom-incorporating MF; GO:0009812 is the available broad
+  flavonoid BP because no catabolic child is present in the local ontology.
+- A committed pairwise alignment reproduces 69.5% identity over 305 aligned
+  residue pairs and exact conservation of the reported GCEHFTFHMG motif
+  [file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md "Pairwise identity over
+  aligned residue pairs: 69.5%"]. This replaces the report's unreproduced 71.3%
+  figure as the quantitative ISS support.
+- No cellular-component assertion is made: the soluble/cytoplasmic assignment
+  is prediction-only and is not needed to capture the core chemistry.
