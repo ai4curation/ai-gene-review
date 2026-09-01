@@ -467,19 +467,48 @@ symbol you cannot establish is a reason to write no label, not to invent one; th
 `SGD:S000004812` seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that
 reason, three lines below a labelled row whose comment makes no identity claim at all.
 
-**A self-label is not an identity claim, and does not need establishing.** Of the 89, **32**
-name the review target itself — "mouse Ccnb1 (this gene)", "the review target itself" — where
-the symbol is the file's own `gene_symbol` and there is nothing to look up. The rule reaches
-the other 57: labels naming a *different* gene, where the symbol asserts something a reader
-could not otherwise check. **28 of those carry a provenance clause; 29 do not**, across nine
-files (Sox2 6, Mapk1 5, Mapk3 4, Ifi204 4, Drd1 3, Frmpd2 3, Nf1 2, Agtr1a 1, Ccne1 1). That is
-a bounded, named residual rather than an open question: each is a one-line establish against
-`*-entries.csv` or a cached gene record, and none is a wrong label so far as any round has
-found. Recorded rather than repaired, for the reason the Bcl2 paragraph gives.
+**A self-label is not an identity claim, and does not need establishing.** Of the 89, **27**
+name the review target itself — "mouse Ccnb1 (this gene)", "the review target itself", or the
+bare symbol — where the symbol is the file's own `gene_symbol` and there is nothing to look
+up. The rule reaches the other **62**: labels naming a *different* gene, where the symbol
+asserts something a reader could not otherwise check. **31 of those carry a provenance
+clause; 31 do not**, across ten files: Sox2 6, Mapk1 5, Ifi204 4, Mapk3 4, Drd1 3, Frmpd2 3,
+Nf1 3, Agtr1a 1, Aldh2 1, Ccne1 1.
+
+**The classifier has to be stricter than "contains the target's symbol", and the first
+version was not.** An earlier revision matched the `gene_symbol` as a word anywhere in the
+label and published 32/57/28/29 — five rows too many on the self side, every one of them a
+*cross-species ortholog*: "rat Casp3" ×2, "rat Aldh2", "Drosophila Nf1", and a `Fbxo2` label
+whose whole point is *"not mouse Fbxo2, whose own record is MGI:2446216"*. Those are exactly
+the identity claims the rule exists for — "rat Casp3" in a mouse file asserts something about
+a rat gene a reader cannot check — and the loose match filed them under "nothing to
+establish". A label is a self-label only when it carries a self-marker ("this gene", "the
+review target itself") or *is* the bare symbol (optionally "mouse "-prefixed and with a
+parenthetical), and carries no other-species qualifier and no negation. `Ednra`'s "zebrafish
+ednraa" is why the symbol test must be an exact match rather than a substring.
+
+Two of the five were unprovenanced, so the residual gained a file. **`Aldh2 RGD:69219` is the
+highest-leverage entry**: `genes/rat/Aldh2` does not exist, the accession appears nowhere
+name-carrying in the repository, and it is the ISO donor for nine further rows in that same
+file — one establish would ground ten rows.
+
+Beware two numerical coincidences in this paragraph, since they are the kind that hide an
+error. **31 appears twice** and means different things — 31 third-party labels carry a
+provenance clause and 31 do not. And **32** is the count of *all* labelled MOD sources whose
+comment carries one of the three verbs, which is 31 third-party **plus one self-label**
+(`Gulo`), so 31 and 32 are both right about different sets rather than one being a correction
+of the other.
 
 The reason the split matters is that it stops the count from being read as a defect count.
-Fifty-seven unprovenanced labels would be alarming; 29 third-party labels in eight files is a
-chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse.
+Sixty-two unprovenanced labels would be alarming; 31 third-party labels in ten files is a
+chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse — and the
+32/57 revision above did the second thing to itself.
+
+**A `propagation_review` with no `source_entities` is the norm in at least one file, not an
+anomaly.** 16 of the 76 blocks carry none — 15 in `Mapk1`, 1 in `Scgb1a1` — so "no sources at
+all" is not the tell for the stale-block defect this document catalogues. The tell was the
+*accepting action* under a failure-asserting root cause, which is what the auditor's third
+arm keys on; a corrective action with no sources trips nothing, and should not.
 
 **A `propagation_review` block is not owed symmetrically across paralogs; the *action* is.**
 `Mapk1` carries **18** blocks against `Mapk3`'s **2**, and 11 of Mapk1's ISO-row blocks sit
@@ -497,10 +526,10 @@ was symmetric on all. Either do all 11 or state the convention. This states it.
 
 Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
 159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, split
-32 self / 57 third-party, and 32 of the 89 carry a `comment` matching one of the three
+27 self / 62 third-party, and 32 of the 89 carry a `comment` matching one of the three
 provenance verbs (*resolved* / *corroborated* / *asserted from external knowledge*) — the
-same regex that returned 26 before the repairs. Where a count here moves between revisions,
-it is the corpus that moved. An
+same regex that returned 26 before the repairs. Where a count here moves between revisions it
+is usually the corpus that moved; where the split moved, it was the classifier. An
 earlier revision of this paragraph said 66 ids over 91 sources, which is the same sweep run
 as *not-`UniProtKB`, not-`PANTHER`* — a filter that also admits the two `InterPro:` sources in
 `Serpinh1`. Same finding either way; different set.
