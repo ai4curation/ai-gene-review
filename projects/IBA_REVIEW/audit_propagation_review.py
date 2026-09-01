@@ -146,9 +146,15 @@ for f in files:
         # both deliberate and correct. The Mapk1 block this rule was written for had NO
         # source_entities at all, so nothing backed its PROPAGATION_BAD claim.
         CONTRADICTORY_RC = {'PROPAGATION_BAD','SOURCE_BAD','EVIDENCE_CIRCULAR_OR_REDUNDANT'}
+        # An ABSENT source_status is not an endorsement. ~14% of source entities corpus-wide
+        # carry no status (3354 status lines against 3902 source_id lines), so defaulting a
+        # missing one to SUPPORTS_TRANSFER would make this arm fire on blocks that simply
+        # never recorded a judgement. Fire only when there are no sources at all (the Mapk1
+        # case: nothing whatsoever backs the claimed failure) or when every source
+        # EXPLICITLY says SUPPORTS_TRANSFER.
         _srcs = pr.get('source_entities') or []
-        _unsubstantiated = all((se.get('source_status') or 'SUPPORTS_TRANSFER')
-                               == 'SUPPORTS_TRANSFER' for se in _srcs)
+        _unsubstantiated = (not _srcs) or all(
+            se.get('source_status') == 'SUPPORTS_TRANSFER' for se in _srcs)
         if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in CONTRADICTORY_RC and _unsubstantiated:
             issues.append((loc,'DEFECT_ROOT_CAUSE_UNDER_ACCEPTING_ACTION',f"{act}+{rc}"))
         # Fourth arm: the inverse -- a corrective action declaring no failure at all.
@@ -219,12 +225,16 @@ if cross:
     for c in cross:
         print(f"   {c[0]}  {c[1]} {c[2]}: {c[3]} vs {c[4]}")
 
-# The four consistency arms overlap: a NO_FAILURE_* block carrying failure_modes under a
-# corrective action trips arms 1 and 4 both. Report one per row so a count means "rows
-# with a problem" rather than "rules that fired".
+# Collapse only EXACT duplicates. Keying on (loc, issue_type) would discard the payload
+# when a per-value rule fires twice on one row -- BAD_FAILURE_MODE, BAD_SOURCE_STATUS,
+# SELF_SEED_MARKED_CIRCULAR, SELF_SEED_INVERTED_PROSE and PANTHER_LABEL_MISMATCH are all
+# emitted per source or per value, so a block with two offending sources would report
+# one. That is an undercount, which is the failure direction that matters here.
+# The overlapping arms are NOT collapsed (they emit different issue_type strings); the
+# "across N rows" figure below is what keeps the headline from overstating.
 _seen=set(); _dedup=[]
 for _i in issues:
-    _k=(_i[0], _i[1])
+    _k=tuple(_i)
     if _k in _seen: continue
     _seen.add(_k); _dedup.append(_i)
 _rows={_i[0] for _i in _dedup}
