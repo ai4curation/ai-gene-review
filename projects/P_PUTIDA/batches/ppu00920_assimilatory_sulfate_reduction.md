@@ -83,10 +83,11 @@ basis for the PSEPK realization and its explicit donor uncertainty.
 The gene-level `cysI` report correctly recovered the sulfite-reductase
 hemoprotein role but overgeneralized the classical *E. coli* CysJ architecture
 and promoted `PP_0860`/`PP_1703` from KEGG context. That inference was not
-imported. Q88KB9 instead maps to broad family PTHR32439, which contains the
-reviewed ferredoxin-dependent sulfite reductase Sir P9WJ02; classical E. coli
-CysI P17846 maps to PTHR11493:SF47. Because Q88KB9's own SF9 label is
-misleading, the activity proposal uses the family, exact Sir exemplar, and
+imported. Q88KB9 maps to broad family PTHR32439, which contains the reviewed
+ferredoxin-dependent sulfite reductase Sir P9WJ02. PTHR32439 and PTHR11493 each
+span sulfite reductases with different donor architectures, so family placement
+does not discriminate the route. Because Q88KB9's own SF9 label is misleading,
+the activity proposal uses the exact Sir exemplar, Pseudomonas genetics, and
 GO:0050311 function constraint rather than the SF name.
 
 PMID:23794620 used *P. putida* DSM 3601 rather than KT2440. It corroborates the
@@ -129,9 +130,9 @@ The reusable module now grounds the CysD activity with the exact local PAINT
 node `PTN001249481`, whose `PTHR43196` IBD record carries `GO:0004781` and is
 seeded by E. coli P21156. The terminal variant axis is described as an
 electron-supply architecture rather than an experimentally resolved immediate
-donor: Pseudomonas physiology supports an Fpr-linked CysI system, while reduced
-ferredoxin versus direct Fpr-to-CysI transfer remains an explicit knowledge
-gap. The direct APS route, three-step boundary, and exclusion of PP_0860 are
+donor: Pseudomonas physiology supports an Fpr-linked CysI system, while the
+immediate carrier and direct donor-specific activity remain explicit knowledge
+gaps. The direct APS route, three-step boundary, and exclusion of PP_0860 are
 unchanged. Fresh generic OpenScientist research completed in 845 seconds; its
 useful boundary synthesis was integrated, while overgeneralized claims were
 left in the generated report rather than promoted into curated structure.
