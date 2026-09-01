@@ -90,5 +90,5 @@ UniProt/QuickGO records and cached primary literature.
 2026-08-31: Opened focused draft PR #2829 after correcting the distinction
 between direct pathway evidence and homology-supported catalytic assignments,
 adding direct P. putida PutA-DNA structural evidence, and fixing broad-term and
-supporting-text decisions. The PSEPK module/pathway/taxon and generic-module
-retries completed and were integrated conservatively; the PutP retry remains active.
+supporting-text decisions. The PutP, PSEPK module/pathway/taxon, and
+generic-module retries all completed and were integrated conservatively.
