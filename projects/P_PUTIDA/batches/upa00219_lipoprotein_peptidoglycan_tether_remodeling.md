@@ -21,7 +21,7 @@ release of that tether. It is separated from glycan polymerization, canonical
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with experimental exemplars.
 - [x] Complete module research.
-- [ ] Complete module + pathway + taxon research.
+- [x] Complete module + pathway + taxon research.
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -47,3 +47,12 @@ release of that tether. It is separated from glycan polymerization, canonical
   but is strongly centered on enterobacterial Lpp. Its Lpp-specific
   C-terminal-lysine chemistry is not projected onto the Pseudomonas OprI
   system.
+- None of the 23 genes supplied from the KEGG `ppu00550` neighborhood represents
+  either tether enzyme or the OprI substrate. `PP_2320`, `PP_1451`, and `oprI`
+  (`PP_2322`) are therefore retained as a literature- and orthology-supported
+  module outside the KEGG peptidoglycan-biosynthesis gene set.
+- The taxon-specific OpenScientist report classified `PP_1451` as uncertain.
+  Inspection of PMID:37255442 and exact PANTHER subfamily membership resolves
+  the discrepancy: the activity is a defensible prediction from the matched
+  LdtPae3/YafK subfamily, but the Pseudomonas experiment itself described the
+  hydrolysis assignment as tentative rather than directly demonstrating it.
