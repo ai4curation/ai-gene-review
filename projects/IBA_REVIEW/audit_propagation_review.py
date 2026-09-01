@@ -250,11 +250,20 @@ for _s, _want in (
 # does not even land on one line, so a line-wise grep misses it too. It has to be
 # checked on the JOINED value.
 #
-# Scope is an ALLOWLIST of author-written prose fields, not a denylist. supporting_text
-# is verbatim publication quotation and is legitimately unbalanced ~10 times in
-# genes/mouse alone ("(LCAD-/-) develop hepatic steatosis", "emerges from 1) ...");
-# machine-fetched titles and labels are equally not ours to judge. An allowlist also
-# means a new machine-sourced field cannot start false-positiving later.
+# SCOPE is an ALLOWLIST, and it covers every author-written prose field rather than
+# only the ones the original damage landed in -- restricting it to {comment, reason,
+# summary, review_notes} would repeat the mistake of the sweep scoped to `comment:`
+# that missed `reason:`, which describes where a defect occurred rather than where one
+# could. So `description` (GeneReview, CoreFunction, ProposedOntologyTerm) and
+# `findings[].statement` are in.
+#
+# What stays OUT is machine-sourced text, and that exemption is load-bearing rather
+# than theoretical. supporting_text is verbatim publication quotation, legitimately
+# unbalanced ~10 times in genes/mouse alone ("(LCAD-/-) develop hepatic steatosis",
+# "emerges from 1) ..."); `name` carries machine-extracted isoform names whose UniProt
+# evidence tags are themselves truncated at a comma; titles carry "system xc()". A
+# denylist would fire on all of those on its first run. An allowlist also means a new
+# machine-sourced field cannot start false-positiving later.
 #
 # HONEST LIMIT, stated because the temptation is to call this a guard for the class:
 # it catches the UNBALANCED and EMPTY-SLOT shapes, which was 5 of the 8 comments that
@@ -263,15 +272,12 @@ for _s, _want in (
 # ordinary prose, and is only detectable as duplication. This rule does not catch that,
 # and no attempt at a duplication heuristic survived contact with prose that names an
 # accession twice for good reason.
-# Scope is every author-written prose field, NOT just the ones the original damage
-# landed in. Restricting to {comment, reason, summary, review_notes} would have been
-# the same mistake as the sweep that was scoped to `comment:` and missed `reason:` --
-# it describes where a defect happened to occur, not where it could. `description`
-# (top level, core_functions[], proposed_new_terms[]) and `findings[].statement` are
-# equally reviewer-authored, and adding them immediately surfaced two real truncations
-# in genes/human that the narrower set could not see: IL36RN core_functions[0], which
-# ends mid-word on "(PR", and EMC1 references[17].findings[0], which ends on "(OMIM".
-# Both left unfixed here -- out of scope for a mouse PR, reported instead.
+#
+# A second limit, found the hard way: the two genes/human values this rule reports
+# (IL36RN core_functions[0].description, EMC1 references[17].findings[0].statement)
+# look intact in the FILE and are damaged only in the PARSED value -- see
+# YAML_COMMENT_TRUNCATION below. This rule catches them incidentally, because the lost
+# text happened to contain a closing paren. It is not a detector for that class.
 _PROSE_FIELDS = {'comment', 'reason', 'summary', 'review_notes',
                  'description', 'statement'}
 # A delimiter immediately before ")" is the signature of a consumed slot ("name, )"),
@@ -357,6 +363,74 @@ for _s, _must_contain in (
             f"mangled-prose window does not show the damage {_must_contain!r} "
             f"for {_s[:60]!r} - MANGLED_PROSE findings would carry no evidence")
 
+
+# ---------------------------------------------------------------------------
+# YAML_COMMENT_TRUNCATION: text silently discarded by the YAML parser.
+#
+# In a PLAIN (unquoted) scalar, " #" starts a comment. So a reason written as
+#     reason: ... over-general term when more specific MFs are available; PR #758 review
+# is stored as "...are available; PR" -- everything from " #" is dropped at parse time.
+# The file looks complete, `git diff` looks complete, and a grep over the raw text finds
+# the full sentence. Only the parsed value is short, which is what every consumer sees:
+# the validator, the renderer, the auditor, and any downstream tool.
+#
+# This is why the two genes/human values MANGLED_PROSE reports look intact when checked
+# with grep. Both are real -- EMC1 references[17].findings[0].statement parses to 122
+# characters from a 357-character line, losing 235 -- but the mechanism is the parser,
+# not the author, and stating them as "truncations" without saying so invites exactly
+# the raw-text check that appears to refute them. They are the same defect as the ATG14
+# and LEMD2 rows below.
+#
+# MANGLED_PROSE catches 2 of the 13, and only by luck: the discarded text happened to
+# begin right after an unclosed "(" ("(OMIM", "(PR"). A truncation that leaves the
+# parens balanced -- which is 11 of 13, including every ATG14 row, where a whole
+# "[GO issue #29437] Same defect as ..." clause is lost -- is invisible to it. Hence a
+# separate rule keyed on the mechanism rather than on the symptom.
+#
+# The " #" must be on the SAME LINE as the scalar's text. A comment on its own line
+# after a value is ordinary YAML and discards nothing; an earlier version that searched
+# whitespace-normalised text conflated the two and reported 814 hits instead of 13.
+_TRUNCATION_MIN_LEN = 20
+
+def _yaml_comment_truncations(raw, doc):
+    """Yield (path, lost_text) for plain scalars the parser cut at an inline '#'."""
+    for _path, _value, _key in _walk_all_scalars(doc, ''):
+        if len(_value) < _TRUNCATION_MIN_LEN:
+            continue
+        # Match the value's tail in the raw text, allowing YAML line-folding inside it,
+        # then require a "#" after horizontal space only -- never across a newline.
+        _pat = re.escape(_value[-25:]).replace(r'\ ', r'\s+') + r'[ \t]+#'
+        _m = re.search(_pat, raw)
+        if _m:
+            yield _path, raw[_m.end() - 1:].split('\n', 1)[0]
+
+def _walk_all_scalars(o, path, key=None):
+    """Every string scalar, machine-sourced included: the parser cuts them all."""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            yield from _walk_all_scalars(v, f"{path}.{k}", k)
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            yield from _walk_all_scalars(v, f"{path}[{i}]", key)
+    elif isinstance(o, str):
+        yield path, o, key
+
+# Self-test on real YAML, because the whole point is what the PARSER does -- asserting
+# against hand-written expectations would just re-encode my belief about YAML.
+_tt_doc = ("description: over-general term; PR #758 review feedback.\n"
+           "quoted: \"a quoted # stays whole\"\n"
+           "folded: >-\n  a folded scalar with no hash\n"
+           "# a standalone comment line discards nothing\n"
+           "after_comment: this value is intact and long enough to test\n")
+_tt_hits = dict(_yaml_comment_truncations(_tt_doc, yaml.safe_load(_tt_doc)))
+if '.description' not in _tt_hits:
+    _selftest_failures.append(
+        "YAML_COMMENT_TRUNCATION misses an inline '#' in a plain scalar - the rule cannot fire")
+if [k for k in _tt_hits if k != '.description']:
+    _selftest_failures.append(
+        f"YAML_COMMENT_TRUNCATION fires on undamaged values {sorted(_tt_hits)} - "
+        "a standalone comment line or a quoted '#' is not a truncation")
+
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
     for _f in _selftest_failures:
@@ -435,6 +509,11 @@ for f in files:
     # as capable of carrying the damage.
     _ann_terms = {_j: ((_a.get('term') or {}).get('id'))
                   for _j, _a in enumerate(d.get('existing_annotations') or [])}
+    for _tpath, _lost in _yaml_comment_truncations(open(f).read(), d):
+        _ti = re.match(r'\.existing_annotations\[(\d+)\]', _tpath)
+        _tloc = (f"{org}/{g}[{_ti.group(1)}] {_ann_terms.get(int(_ti.group(1))) or '?'}"
+                 if _ti else f"{org}/{g}")
+        issues.append((_tloc, 'YAML_COMMENT_TRUNCATION', f"{_tpath}: lost {_lost[:60]!r}"))
     for _path, _txt in _walk_prose(d, ''):
         _pos = _mangled_prose(_txt)
         if _pos is not None:
@@ -444,7 +523,10 @@ for f in files:
             # when it also trips another rule. The path is more useful for LOCATING the
             # damage, so it moves into the payload rather than being dropped.
             _i = re.match(r'\.existing_annotations\[(\d+)\]', _path)
-            _loc = (f"{org}/{g}[{_i.group(1)}] {_ann_terms.get(int(_i.group(1)), '?')}"
+            # `or '?'` on the lookup, not just a dict default: _ann_terms stores None
+            # for an annotation with no `term`, and the index always exists, so the
+            # default could never fire and such a row would report "mouse/Foo[3] None".
+            _loc = (f"{org}/{g}[{_i.group(1)}] {_ann_terms.get(int(_i.group(1))) or '?'}"
                     if _i else f"{org}/{g}")
             issues.append((_loc, 'MANGLED_PROSE',
                            f"{_path}: {_damage_window(_txt, _pos)}"))
