@@ -39,6 +39,10 @@ lipoprotein-peptidoglycan tether remodeling.
 - DacB appears in both parts because the close Pseudomonas ortholog performs
   both reactions; PbpG is assigned only to crosslink hydrolysis.
 - GO:0009002 is not treated as a synonym for D,D-endopeptidase activity.
+- GO:0061785 is used for both experimentally grounded endopeptidase variants;
+  a D,D-crosslink-specific child remains a possible ontology refinement.
+- GO:0031504 is used instead of broad cell-wall organization for the direct
+  peptidoglycan remodeling process.
 - The broad proteolysis annotations are removed because the substrates are
   peptidoglycan stem peptides rather than proteins.
 
