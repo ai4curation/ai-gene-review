@@ -31,6 +31,7 @@ autolink_gene_symbols: false
 - [putA review](../../../genes/PSEPK/putA/putA-ai-review.yaml)
 - [Batch membership TSV](ppu00250_bacterial_fused_puta_proline_catabolism.tsv)
 - [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial_fused_puta_proline_catabolism__ppu00250-deep-research-openscientist.md)
+- [OpenScientist generic-module report](../../../modules/bacterial_fused_puta_proline_catabolism-deep-research-openscientist.md)
 
 ## Evidence Summary
 
@@ -62,6 +63,13 @@ this catabolic module, and treats the PP_3331 sodium:proline-symporter label as
 uncertain because its recorded domain architecture lacks the PutP/SSS-family
 signature.
 
+The generic-module report independently recovers the same three-event
+transport/oxidation architecture and the conserved PutA fusion model. Its claim
+that PSEPK PutA is only bifunctional was not imported: the direct P. putida
+operator-DNA structure and regulation literature already establish the
+additional DNA-binding autorepressor activity. That activity remains in the
+gene review and outside this connected metabolic module.
+
 QuickGO returned 14 source rows for putA. A forced putP refresh corrected the
 initial header-only artifact and returned 11 source rows covering five distinct
 UniProt-displayed terms plus six additional current inference rows. All 25
@@ -82,5 +90,5 @@ UniProt/QuickGO records and cached primary literature.
 2026-08-31: Opened focused draft PR #2829 after correcting the distinction
 between direct pathway evidence and homology-supported catalytic assignments,
 adding direct P. putida PutA-DNA structural evidence, and fixing broad-term and
-supporting-text decisions. The PSEPK module/pathway/taxon retry completed and
-was integrated conservatively; the PutP and generic-module retries remain active.
+supporting-text decisions. The PSEPK module/pathway/taxon and generic-module
+retries completed and were integrated conservatively; the PutP retry remains active.
