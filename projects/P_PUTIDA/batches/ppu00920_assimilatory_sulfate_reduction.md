@@ -45,8 +45,8 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Attempt OpenScientist gene-level research; `cysH`, `cysI`, and `PP_0860`
   returned reports, while the corrected `cysD`, `cysNC`, and `fpr-I` requests
   each exhausted the 7,200-second provider timeout without a report.
-- [x] Complete fresh generic module OpenScientist research with the full
-  7,200-second provider allowance and retain its generated artifacts.
+- [x] Complete fresh generic module OpenScientist research with a requested
+  7,200-second research timeout and retain its generated artifacts.
 - [x] Complete module + `ppu00920` + PSEPK OpenScientist research.
 - [x] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
 - [x] Integrate useful research findings without treating provider output as authority.
