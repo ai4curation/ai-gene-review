@@ -25,8 +25,13 @@ Defaults to genes/mouse/*/*-ai-review.yaml.
   --action REMOVE   restrict to rows whose review.action is REMOVE (the scoped figure)
   --list            print each qualifying group: rows, genes, and the reason's first line
 
-Exits 2 if the glob matches no files or the self-test fails; otherwise 0. This is a
-measurement tool, not a checker -- it has no notion of a finding.
+Exits 2 if the glob matches no files, the self-test fails, or --action names something the
+corpus has no rows for. That last case matters more than it looks: a typo ("remove",
+"REMOVED") silently filters to nothing, and "0 groups over 0 rows" reads as a clean corpus
+rather than as a mistyped flag. A vacuous pass in a tool whose whole output is figures other
+people quote is the failure this script exists to prevent, so it is an error, not a zero.
+
+Otherwise exits 0. This is a measurement tool, not a checker -- it has no notion of a finding.
 """
 import glob
 import sys
@@ -35,12 +40,18 @@ from collections import defaultdict
 import yaml
 
 DEFAULT_GLOB = "genes/mouse/*/*-ai-review.yaml"
+SCHEMA = "src/ai_gene_review/schema/gene_review.yaml"
 MIN_TERMS = 3
 
 
 def collect(paths, action=None):
-    """Return {reason: [(gene, term_id), ...]} for rows carrying a reason."""
+    """Return ({reason: [(gene, term_id), ...]}, actions_seen) for rows carrying a reason.
+
+    actions_seen covers every reasoned row in the glob regardless of the filter, so the
+    caller can tell "no rows have this action" apart from "no rows qualified".
+    """
     groups = defaultdict(list)
+    actions_seen = set()
     for path in paths:
         with open(path) as handle:
             doc = yaml.safe_load(handle) or {}
@@ -50,10 +61,26 @@ def collect(paths, action=None):
             reason = review.get("reason")
             if not reason:
                 continue
+            actions_seen.add(review.get("action"))
             if action is not None and review.get("action") != action:
                 continue
             groups[reason].append((gene, (ann.get("term") or {}).get("id")))
-    return groups
+    return groups, actions_seen
+
+
+def _known_actions():
+    """ActionEnum's permissible values, read from the schema. Empty set if unreadable.
+
+    Read rather than hardcoded so a new action does not turn this tool into a liar; an
+    unreadable schema degrades to the corpus-derived check below rather than failing.
+    """
+    try:
+        with open(SCHEMA) as handle:
+            schema = yaml.safe_load(handle) or {}
+    except OSError:
+        return set()
+    enum = (schema.get("enums") or {}).get("ActionEnum") or {}
+    return set((enum.get("permissible_values") or {}).keys())
 
 
 def qualifying(groups):
@@ -122,7 +149,17 @@ def main(argv):
         print(f"no files matched: {' '.join(patterns or [DEFAULT_GLOB])}")
         return 2
 
-    groups = qualifying(collect(paths, action))
+    raw, actions_seen = collect(paths, action)
+    if action is not None and action not in actions_seen:
+        known = _known_actions()
+        if known and action not in known:
+            print(f"--action {action!r} is not an ActionEnum value. Known: "
+                  f"{', '.join(sorted(known))}")
+        else:
+            print(f"--action {action!r} matches no reasoned row in "
+                  f"{len(paths)} files. Present: {', '.join(sorted(a for a in actions_seen if a))}")
+        return 2
+    groups = qualifying(raw)
     rows = sum(len(v) for v in groups.values())
     largest = max((len(v) for v in groups.values()), default=0)
     scope = f"action={action}" if action else "all actions"

@@ -340,12 +340,27 @@ The question that separates them is **what the reason is about**:
   since transferred-without-mouse-data is precisely what `ISO` asserts. The row-specific
   material sat in `summary` ("Transferred heparin binding from human ANG, not shown for mouse
   Ang2"), which restates the same absence. So 20 corrective verdicts rested on a
-  **tautology**, while the file's neighbouring rows carried the real argument — that Angrp is
-  a divergent paralog which PMID:8633065 shows lacks Ang's angiogenic activity, making blanket
-  transfer of human ANG biology unsafe. Those 20 now carry that argument (18 `ISO`
-  rows share the transfer-level wording; the 2 `IEA` rows name the automated import
-  instead). **No action changed**; what changed is that the reason now says something that
-  could be wrong.
+  **tautology**, while the file's neighbouring rows carried the real argument — the functional
+  divergence `PMID:8633065` documents. Those 20 now carry it (18 `ISO` rows share the
+  transfer-level wording; the 2 `IEA` rows name the automated import instead). **No action
+  changed**; what changed is that the reason now says something that could be wrong.
+
+  And the first repair got the paper wrong, which is the part worth keeping. It said
+  `PMID:8633065` showed Angrp "lacks Ang's angiogenic activity, **the one function directly
+  compared**". The abstract compares three things: Angrp is not angiogenic; that is *not* a
+  catalytic deficiency, because Angrp's ribonucleolytic activity toward tRNA is somewhat
+  *greater* than Ang's; and an inability to bind cellular receptors is implicated, with poor
+  conservation of the receptor recognition sequence 58-69. The middle finding is quoted as
+  `supporting_text` **twice in the same file**, to `ACCEPT` `GO:0004540 RNA nuclease activity`
+  — so one document was simultaneously accepting that Angrp is the *better* RNase and removing
+  RNase-driven terms on the ground that it had lost activity. The reasons now state all three
+  findings and rest on the receptor-binding defect, which is what actually blocks the
+  receptor-mediated uptake that ANG's nuclear and stress-response biology depends on.
+
+  The `summary` fields were left as they are, deliberately. "Transferred heparin binding from
+  human ANG, not shown for mouse Ang2" is an accurate *description* of the annotation and its
+  status; it was only a defect while it was also the whole argument. Summary describes, reason
+  argues — and conflating the two is what produced the tautology in the first place.
 
 Note what the two groups have in common after the fix: the repaired reason is *also* one
 shared string across 18 rows, and belongs there. Sharing was never the defect. A claim about
