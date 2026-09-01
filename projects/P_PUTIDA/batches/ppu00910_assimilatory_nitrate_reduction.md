@@ -88,12 +88,16 @@ coexistence nor universal exclusivity of nitrate-reductase architectures.
 
 Species-specific PP_1703 uncertainty has been removed from generic role and
 module-note prose and remains documented in this PSEPK batch and gene review.
-The ferredoxin-linked branch now uses reviewed bacterial NasA Q9L2E6 rather than
-P39458, whose current UniProt catalytic reaction is quinol-linked. Exact PANTHER
-subfamilies were added for NrtABCD components and NasC only where official labels
-and member containment match the role. PTN009073875 grounds nitrate transport and
-PTN008082957 grounds the NirD complex contribution; misleading or unresolved
-molybdopterin-reductase family/PTN identifiers remain omitted.
+The single-subunit NarB-like branch uses reviewed P39458 as an architecture
+exemplar but does not retain the unsupported ferredoxin-specific GO assertion;
+its current UniProt catalytic reaction is quinol-linked, so donor specificity is
+left protein-dependent. Exact PANTHER subfamilies were added for NrtABCD
+components and NasC only where official labels and member containment match the
+role. PTN009073875 grounds nitrate transport and PTN008082957 grounds the NirD
+complex contribution; misleading or unresolved molybdopterin-reductase
+family/PTN identifiers remain omitted. The exact pyridine-nucleotide function of
+the fused KT2440 Q88M71 exemplar remains an architecture- and context-based
+inference pending direct assay.
 
 The mandatory annotation-reviewer pass covered all GOA rows for nasA, PP_1703,
 nirB, and nirD. It found one required source-fidelity repair: all nine nasA rows
