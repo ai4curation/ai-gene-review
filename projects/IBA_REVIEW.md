@@ -358,9 +358,10 @@ prose, where the `comment` says how an identity was established. `source_label` 
 handle for the source *as it stands to this target* — the same role `preferred_term` plays
 beside a PANTHER `term.label`, which `CLAUDE.md` already separates from the checked field.
 
-That makes a cross-file consistency check on it actively wrong. Of 66 distinct MOD ids
-carrying a label in `genes/mouse`, three are labelled differently in different files, and all
-three are correct:
+That makes a cross-file consistency check on it actively wrong. Of **64 distinct MOD ids**
+carrying a label in `genes/mouse` (89 labelled sources; MOD = `MGI`/`RGD`/`SGD`/`FB`/`WB`/
+`ZFIN`/`TAIR`/`PomBase`/`dictyBase`/`CGD`/`Xenbase`), three are labelled differently in
+different files, and all three are correct:
 
 | id | in one file | in the other |
 |---|---|---|
@@ -369,10 +370,26 @@ three are correct:
 | `MGI:MGI:88316` | `mouse Ccne1 (cyclin E1)` | `mouse Ccne1 (this gene)` |
 
 The **identity half agrees in all three**; only the relationship clause differs, because the
-relationship differs. So check the symbol against the identity claim in the `comment` — that
-is where a provenance verb is owed — and leave the parenthetical alone. A label whose symbol
-you cannot establish is a reason to write no label, not to invent one; the `SGD:S000004812`
-seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that reason.
+relationship differs. So check the symbol, leave the parenthetical alone.
+
+Where to check it needs saying, because the obvious answer does not reach most rows. Only
+**26 of those 89** labelled sources have a `comment` carrying a provenance verb; on the other
+63 the comment is biological commentary ("A mammalian D-type cyclin seed at the same node")
+and the symbol is asserted in the label alone, with nothing to check it against. So the rule
+is not *check the label against the comment* — it is that **the symbol is an identity claim
+wherever it is written**, and is owed the same standard there: establish it from the local
+index (PAINT seeds, `*-entries.csv`, the GOA `WITH/FROM`) or write no label. A label whose
+symbol you cannot establish is a reason to write no label, not to invent one; the
+`SGD:S000004812` seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that
+reason, three lines below a labelled row whose comment makes no identity claim at all.
+
+Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
+159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, and 26
+of those 89 have a `comment` matching one of the three provenance verbs (*resolved* /
+*corroborated* / *asserted from external knowledge*). An
+earlier revision of this paragraph said 66 ids over 91 sources, which is the same sweep run
+as *not-`UniProtKB`, not-`PANTHER`* — a filter that also admits the two `InterPro:` sources in
+`Serpinh1`. Same finding either way; different set.
 
 **A self-seed marks node membership always; it marks independent grounding only when the
 target's own same-term annotation is itself retained.** `CLAUDE.md` glosses a self-seed as
