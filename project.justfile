@@ -189,6 +189,23 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Regenerate the PANTHER IBA project tables through public wrapper recipes.
+# These may download cached PAINT source data on the first run.
+[group('QC')]
+refresh-panther-iba-propagation:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+
+[group('QC')]
+refresh-panther-iba-node-annotations:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+
+[group('QC')]
+refresh-panther-iba-function-losses:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+
+[group('QC')]
+refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba-node-annotations refresh-panther-iba-function-losses
+
 # Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
 # This is the authority behind PANTHER family/subfamily id + label validation
 # (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
